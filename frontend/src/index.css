@@ -1,0 +1,124 @@
+@import 'tailwindcss';
+
+/*
+ * Sistema de diseño "blueprint" — la misma identidad visual que el documento de
+ * arquitectura (docs/arquitectura-sistema-visual.html): azul noche de plano,
+ * cian para acción/selección, ámbar para baja confianza, papel para el lienzo 2D.
+ * Todos los colores son tokens semánticos; los componentes nunca usan hex crudos.
+ */
+@theme {
+  --color-canvas: #070f22;
+  --color-surface: #0a1830;
+  --color-raised: #11294d;
+  --color-line: rgb(95 212 232 / 0.2);
+  --color-line-strong: rgb(95 212 232 / 0.45);
+  --color-fg: #eef1ea;
+  --color-muted: #a9bac8;
+  --color-subtle: #7f93a4;
+  --color-accent: #5fd4e8;
+  --color-accent-dim: #3a8fa3;
+  --color-accent-ink: #062030;
+  --color-warn: #e8a23d;
+  --color-danger: #f07167;
+  --color-ok: #6fd49a;
+  --color-paper: #eef0e6;
+  --color-ink: #122036;
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-sm: 3px;
+  --radius-md: 5px;
+}
+
+/* Tema claro: el mismo sistema invertido sobre papel. */
+[data-theme='light'] {
+  --color-canvas: #eef0e6;
+  --color-surface: #f7f8f2;
+  --color-raised: #e4e7da;
+  --color-line: rgb(18 32 54 / 0.14);
+  --color-line-strong: rgb(18 32 54 / 0.35);
+  --color-fg: #122036;
+  --color-muted: #3c4a5e;
+  --color-accent: #13606f;
+  --color-accent-dim: #2a6674;
+  --color-accent-ink: #ffffff;
+  --color-warn: #8a5300;
+  --color-danger: #b3261e;
+  --color-ok: #1d6b3d;
+  --color-subtle: #4f5d70;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+}
+
+@layer components {
+  /* retícula de plano, usada en fondos vacíos */
+  .blueprint-grid {
+    background-image:
+      linear-gradient(var(--color-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  /* marcas de esquina tipo plano técnico */
+  .corner-ticks {
+    position: relative;
+  }
+  .corner-ticks::before,
+  .corner-ticks::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-color: var(--color-line-strong);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .corner-ticks::before {
+    top: -1px;
+    left: -1px;
+    border-width: 1px 0 0 1px;
+  }
+  .corner-ticks::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 1px 1px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

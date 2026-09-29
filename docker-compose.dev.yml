@@ -1,0 +1,32 @@
+# Desarrollo con recarga en caliente:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Frontend (Vite + HMR) en http://localhost:5173 · API en http://localhost:8000/docs
+services:
+  frontend:
+    build:
+      target: dev
+    ports: ["5173:5173"]
+    environment:
+      API_PROXY_TARGET: http://api:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    healthcheck:
+      disable: true
+
+  api:
+    build:
+      target: dev
+    ports: ["8000:8000"]
+    volumes:
+      - ./backend:/app
+
+  worker:
+    build:
+      target: dev
+    command: ["arq", "plano3d.infrastructure.jobs.worker.WorkerSettings", "--watch", "src"]
+    volumes:
+      - ./backend:/app
+
+  postgres:
+    ports: ["5432:5432"]

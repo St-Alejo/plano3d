@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plano3d"
+version = "0.1.0"
+description = "Plano 2D (foto) -> modelo 3D navegable. Backend hexagonal con FastAPI."
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "python-multipart>=0.0.12",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "numpy>=2.0",
+  "opencv-python-headless>=4.10",
+  "shapely>=2.0",
+  "pillow>=11.0",
+  "pypdfium2>=4.30",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "asyncpg>=0.30",
+  "alembic>=1.14",
+  "aioboto3>=13.2",
+  "arq>=0.26",
+  "redis>=5.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=6.0",
+  "hypothesis>=6.118",
+  "httpx>=0.28",
+  "aiosqlite>=0.20",
+  "fakeredis>=2.26",
+  "ruff>=0.8",
+  "mypy>=1.13",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/plano3d"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "integration: requiere servicios externos (Postgres, Redis, MinIO)",
+]
+addopts = "-m 'not integration'"
+
+[tool.coverage.run]
+source = ["src/plano3d"]
+omit = ["src/plano3d/infrastructure/jobs/worker.py", "src/plano3d/main.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "N", "RUF"]
+ignore = ["N818"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["plano3d"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["cv2.*", "shapely.*", "pypdfium2.*", "aioboto3.*", "arq.*", "botocore.*"]
+ignore_missing_imports = true

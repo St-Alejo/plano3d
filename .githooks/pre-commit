@@ -1,0 +1,5 @@
+#!/bin/sh
+# Hook opcional: git config core.hooksPath .githooks
+set -e
+(cd backend && .venv/Scripts/python -m ruff check src tests 2>/dev/null || ruff check src tests)
+(cd frontend && npx eslint . && npx tsc -p tsconfig.app.json --noEmit)
