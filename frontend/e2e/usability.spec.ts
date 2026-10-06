@@ -47,8 +47,12 @@ for (const theme of ['dark', 'light'] as const) {
     test.skip(({ isMobile }) => isMobile, 'se audita en escritorio')
     test.beforeEach(async ({ page }) => setTheme(page, theme))
 
-    test('inicio, captura y 404', async ({ page }) => {
+    test('landing, proyectos, captura y 404', async ({ page }) => {
+      // la landing es siempre papel: se audita igual con cualquier tema de la app
       await page.goto('/')
+      await expect(page.getByRole('heading', { level: 1, name: /De la hoja/ }).first()).toBeVisible()
+      await expectAccessible(page, 'landing')
+      await page.goto('/proyectos')
       await expect(page.getByRole('heading', { name: 'Tus planos' })).toBeVisible()
       await expect(page.locator(`a[href="/p/${projectId}"]`)).toBeVisible()
       await expectAccessible(page, 'inicio')
@@ -132,7 +136,7 @@ test.describe('celular', () => {
   }
 
   test('objetivos táctiles de al menos 44 px y sin scroll horizontal', async ({ page }) => {
-    for (const url of ['/', '/nuevo', `/p/${projectId}`, `/p/${projectId}/3d`]) {
+    for (const url of ['/', '/proyectos', '/nuevo', `/p/${projectId}`, `/p/${projectId}/3d`]) {
       await page.goto(url)
       await page.waitForLoadState('networkidle')
       expect(await smallTargets(page), url).toEqual([])

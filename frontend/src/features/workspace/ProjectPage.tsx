@@ -21,7 +21,7 @@ export function ProjectPage() {
         <ErrorState
           title={error && 'status' in error && error.status === 404 ? 'Proyecto no encontrado' : 'No se pudo cargar el proyecto'}
           message={error?.message}
-          action={<Link className="text-accent underline" to="/">Volver a proyectos</Link>}
+          action={<Link className="text-accent underline" to="/proyectos">Volver a proyectos</Link>}
         />
       </div>
     )
@@ -41,7 +41,7 @@ export function ProjectPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 border-b border-line px-4 py-2">
-        <Link to="/" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-fg sm:min-h-0">
+        <Link to="/proyectos" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-fg sm:min-h-0">
           Proyectos
         </Link>
         <span className="text-subtle" aria-hidden>/</span>

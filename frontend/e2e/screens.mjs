@@ -28,7 +28,7 @@ await page.getByRole('slider', { name: /Opacidad/ }).focus()
 for (let i = 0; i < 6; i++) await page.keyboard.press('PageUp')
 await page.waitForTimeout(800)
 await page.screenshot({ path: `${out}/06-antes-despues.png` })
-await page.goto(`${base}/`)
+await page.goto(`${base}/proyectos`)
 await page.waitForTimeout(1200)
 await page.screenshot({ path: `${out}/07-proyectos.png` })
 

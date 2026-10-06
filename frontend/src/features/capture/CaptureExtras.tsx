@@ -26,7 +26,9 @@ export function CaptureWarnings({ file }: { file: File }) {
   }, [file])
   if (warnings.length === 0) return null
   return (
-    <ul role="status" aria-label="Avisos sobre la foto" className="flex flex-col gap-1 border-l-2 border-warn pl-3 text-sm">
+    // el role va en un contenedor: sobre el <ul> anularía la semántica de lista de sus <li>
+    <div role="status" aria-label="Avisos sobre la foto">
+    <ul className="flex flex-col gap-1 border-l-2 border-warn pl-3 text-sm">
       {warnings.map((w) => (
         <li key={w} className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden />
@@ -34,6 +36,7 @@ export function CaptureWarnings({ file }: { file: File }) {
         </li>
       ))}
     </ul>
+    </div>
   )
 }
 

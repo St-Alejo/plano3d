@@ -1,6 +1,6 @@
 import { Camera, Crop, FileUp, ScanLine, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { api, type Corners } from '@/api/client'
 import { Button, TextField } from '@/components/ui'
 import { CornerEditor } from './CornerEditor'
@@ -8,17 +8,24 @@ import { DEFAULT_CORNERS } from './corners'
 import { CaptureWarnings, ExtraShots } from './CaptureExtras'
 import { ACCEPT, MAX_MB, isDxf, isImage, validateFile } from './validateFile'
 
+const nameFromFile = (f: File) => f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80)
 
 export function NewPlanPage() {
   const navigate = useNavigate()
+  // un archivo soltado en la landing llega en el estado de la navegación
+  const handed = (useLocation().state as { file?: unknown } | null)?.file
+  const [initial] = useState(() => {
+    if (!(handed instanceof File)) return null
+    return { file: handed, error: validateFile(handed) }
+  })
   const cameraInput = useRef<HTMLInputElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [name, setName] = useState('')
+  const [file, setFile] = useState<File | null>(initial && !initial.error ? initial.file : null)
+  const [name, setName] = useState(initial && !initial.error ? nameFromFile(initial.file) : '')
   const [manual, setManual] = useState(false)
   const [corners, setCorners] = useState<Corners>(DEFAULT_CORNERS)
   const [extra, setExtra] = useState<File[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initial?.error ?? null)
   const [sending, setSending] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [detecting, setDetecting] = useState(false)
@@ -54,7 +61,7 @@ export function NewPlanPage() {
     setError(err)
     if (err) return
     setFile(f)
-    setName((n) => n || f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80))
+    setName((n) => n || nameFromFile(f))
     setManual(false)
     setCorners(DEFAULT_CORNERS)
   }

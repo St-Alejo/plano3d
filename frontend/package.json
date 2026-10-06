@@ -16,7 +16,10 @@
     "gen:api": "openapi-typescript src/api/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
+    "@radix-ui/react-context-menu": "^2.3.8",
     "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-dropdown-menu": "^2.1.25",
+    "@radix-ui/react-popover": "^1.2.0",
     "@radix-ui/react-slider": "^1.4.7",
     "@radix-ui/react-tabs": "^1.1.21",
     "@radix-ui/react-toggle-group": "^1.1.19",
@@ -26,6 +29,7 @@
     "clsx": "^2.1.1",
     "konva": "^10.7.0",
     "lucide-react": "^1.48.0",
+    "motion": "^14.0.0",
     "polygon-clipping": "^0.15.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

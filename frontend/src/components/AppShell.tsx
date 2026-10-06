@@ -48,7 +48,7 @@ export function AppShell() {
           <Logo />
           <nav className="flex items-center gap-1" aria-label="Principal">
             <NavLink
-              to="/"
+              to="/proyectos"
               end
               className={({ isActive }) =>
                 clsx('inline-flex min-h-11 items-center rounded-md px-3 text-sm sm:min-h-9', isActive ? 'text-fg' : 'text-muted hover:text-fg')

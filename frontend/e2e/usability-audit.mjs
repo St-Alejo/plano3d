@@ -64,7 +64,7 @@ const created = []
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await shot(page, 's1-01-inicio')
   await axe(page, S, 'inicio')
   let t = t0()
@@ -103,7 +103,7 @@ const created = []
 {
   const S = 'S2-teclado'
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage()
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   const order = []
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('Tab')
@@ -153,7 +153,7 @@ for (const [label, dev] of [['360', devices['Galaxy S9+']], ['320', { ...devices
   const S = `S3-movil-${label}`
   const ctx = await browser.newContext({ ...dev })
   const page = await ctx.newPage()
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await overflow(page, S, 'inicio')
   await smallTargets(page, S, 'inicio')
   await shot(page, `s3-${label}-01-inicio`)
@@ -216,7 +216,7 @@ for (const [label, dev] of [['360', devices['Galaxy S9+']], ['320', { ...devices
 {
   const S = 'S4-tema-claro'
   const page = await (await browser.newContext({ viewport: { width: 1366, height: 800 } })).newPage()
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await page.getByRole('button', { name: 'Usar tema claro' }).click()
   await shot(page, 's4-01-inicio-claro')
   await axe(page, S, 'inicio claro')
@@ -236,7 +236,7 @@ for (const [label, dev] of [['360', devices['Galaxy S9+']], ['320', { ...devices
 {
   const S = 'S5-zoom-200'
   const page = await (await browser.newContext({ viewport: { width: 640, height: 400 }, deviceScaleFactor: 2 })).newPage()
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await overflow(page, S, 'inicio')
   await shot(page, 's5-01-inicio')
   await page.goto(`${base}/p/${created[0]}`)
@@ -254,7 +254,7 @@ for (const [label, dev] of [['360', devices['Galaxy S9+']], ['320', { ...devices
   const cdp = await ctx.newCDPSession(page)
   await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 50_000, uploadThroughput: 25_000 })
   let t = t0()
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await page.getByRole('heading', { name: 'Tus planos' }).waitFor({ timeout: 60_000 })
   note(S, 'info', `inicio en red 3G lenta: ${((t0() - t) / 1000).toFixed(1)}s`)
   await page.getByRole('link', { name: /Nuevo plano/ }).click()
@@ -271,7 +271,7 @@ for (const [label, dev] of [['360', devices['Galaxy S9+']], ['320', { ...devices
   // servidor caído
   await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 })
   await page.route('**/api/**', (r) => r.abort())
-  await page.goto(base)
+  await page.goto(`${base}/proyectos`)
   await page.waitForTimeout(1500)
   await shot(page, 's6-02-servidor-caido')
   const msg = await page.getByRole('alert').textContent().catch(() => null)

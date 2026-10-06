@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const PHOTO = fileURLToPath(new URL('./fixtures/plano-foto.jpg', import.meta.url))
 
 test('en el celular: tomar foto → pestañas 2D / 3D / detalles', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/proyectos')
   await expect(page.getByRole('link', { name: 'Nuevo' })).toBeVisible()
   // sin scroll horizontal
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
