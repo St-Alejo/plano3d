@@ -7,7 +7,7 @@
  * se recalculan desde la geometría, conservando nombres por superposición.
  */
 import { create } from 'zustand'
-import type { BuildingModel, Room } from '@/api/types'
+import type { BuildingModel, Point, Room, Wall } from '@/api/types'
 import { CommandError, CommandHistory, type Command } from '@/domain/commands'
 import { recomputeRooms } from '@/domain/rooms'
 
@@ -20,7 +20,16 @@ export type Selection =
   | { kind: 'dimension'; id: string }
   | null
 
+export type Selected = NonNullable<Selection>
+
+/** Capas del plano que se pueden ocultar o bloquear (bloqueada = visible pero no seleccionable). */
+export type LayerKey = 'image' | 'rooms' | 'walls' | 'openings' | 'dimensions'
+
+export type ViewMode = '2d' | 'split' | '3d'
+
 export const GRID_STEPS = [0, 0.01, 0.05, 0.1] as const
+
+export const sameSelected = (a: Selected, b: Selected): boolean => a.kind === b.kind && a.id === b.id
 
 interface EditorState {
   projectId: string | null
@@ -32,7 +41,18 @@ interface EditorState {
   savedHead: Command | null
   levelId: string
   tool: Tool
+  /** elemento principal (el que muestra el inspector) */
   selection: Selection
+  /** todos los seleccionados; `selection` es el último de este grupo */
+  group: Selected[]
+  clipboard: Wall[]
+  hiddenLayers: ReadonlySet<LayerKey>
+  lockedLayers: ReadonlySet<LayerKey>
+  viewMode: ViewMode
+  /** posición del puntero sobre el plano, en metros (barra de estado) */
+  cursor: Point | null
+  /** zoom del editor 2D relativo al encuadre (1 = plano completo) */
+  zoom: number
   error: string | null
   gridStep: number
   showDimensions: boolean
@@ -47,6 +67,13 @@ interface EditorState {
   redo: () => void
   setTool: (tool: Tool) => void
   select: (sel: Selection) => void
+  /** Shift+clic: agrega o quita del grupo */
+  toggleSelect: (sel: Selected) => void
+  selectMany: (items: Selected[]) => void
+  setClipboard: (walls: Wall[]) => void
+  toggleLayer: (layer: LayerKey, which: 'hidden' | 'locked') => void
+  setViewMode: (mode: ViewMode) => void
+  setPointer: (cursor: Point | null, zoom?: number) => void
   markSaved: (revision?: number) => void
   setGridStep: (step: number) => void
   toggleDimensions: () => void
@@ -93,7 +120,15 @@ const initial = {
   levelId: 'lvl_0',
   tool: 'select' as Tool,
   selection: null,
+  group: [] as Selected[],
   error: null,
+}
+
+const toggled = <T,>(set: ReadonlySet<T>, v: T): ReadonlySet<T> => {
+  const next = new Set(set)
+  if (next.has(v)) next.delete(v)
+  else next.add(v)
+  return next
 }
 
 export const useEditor = create<EditorState>()((set, get) => {
@@ -108,6 +143,12 @@ export const useEditor = create<EditorState>()((set, get) => {
     ...initial,
     gridStep: 0.05,
     showDimensions: true,
+    clipboard: [],
+    hiddenLayers: new Set<LayerKey>(),
+    lockedLayers: new Set<LayerKey>(),
+    viewMode: 'split',
+    cursor: null,
+    zoom: 1,
     ...flags(),
 
     load: (projectId, model, revision = 0) => {
@@ -131,16 +172,29 @@ export const useEditor = create<EditorState>()((set, get) => {
 
     undo: () => {
       const { model } = get()
-      if (model) apply(history.undo(model), { selection: null })
+      if (model) apply(history.undo(model), { selection: null, group: [] })
     },
 
     redo: () => {
       const { model } = get()
-      if (model) apply(history.redo(model), { selection: null })
+      if (model) apply(history.redo(model), { selection: null, group: [] })
     },
 
-    setTool: (tool) => set({ tool, selection: tool === 'select' ? get().selection : null }),
-    select: (selection) => set({ selection }),
+    setTool: (tool) => (tool === 'select' ? set({ tool }) : set({ tool, selection: null, group: [] })),
+    select: (selection) => set({ selection, group: selection ? [selection] : [] }),
+    toggleSelect: (sel) => {
+      const { group } = get()
+      const next = group.some((g) => sameSelected(g, sel)) ? group.filter((g) => !sameSelected(g, sel)) : [...group, sel]
+      set({ group: next, selection: next.at(-1) ?? null })
+    },
+    selectMany: (items) => set({ group: items, selection: items.at(-1) ?? null }),
+    setClipboard: (clipboard) => set({ clipboard }),
+    toggleLayer: (layer, which) =>
+      which === 'hidden'
+        ? set({ hiddenLayers: toggled(get().hiddenLayers, layer) })
+        : set({ lockedLayers: toggled(get().lockedLayers, layer) }),
+    setViewMode: (viewMode) => set({ viewMode }),
+    setPointer: (cursor, zoom) => set(zoom === undefined ? { cursor } : { cursor, zoom }),
     markSaved: (revision) => set({ savedHead: get().head, ...(revision !== undefined ? { revision } : {}) }),
     setGridStep: (gridStep) => set({ gridStep }),
     toggleDimensions: () => set({ showDimensions: !get().showDimensions }),
