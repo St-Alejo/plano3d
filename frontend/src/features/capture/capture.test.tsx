@@ -134,3 +134,16 @@ describe('esquinas sugeridas', () => {
     await waitFor(() => expect(JSON.parse(sent!)).toEqual(detected))
   })
 })
+
+describe('pasos de la captura', () => {
+  it('marca el paso actual al elegir el archivo', async () => {
+    renderWithRouter(<NewPlanPage />)
+    const steps = screen.getByRole('list', { name: 'Pasos' })
+    const current = () => steps.querySelector('[aria-current="step"]')?.textContent
+    expect(current()).toMatch(/01/)
+    fireEvent.change(screen.getByTestId('file-input'), {
+      target: { files: [new File(['%PDF'], 'casa.pdf', { type: 'application/pdf' })] },
+    })
+    await waitFor(() => expect(current()).toMatch(/02/))
+  })
+})

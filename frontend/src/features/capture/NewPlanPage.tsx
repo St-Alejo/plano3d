@@ -8,6 +8,26 @@ import { DEFAULT_CORNERS } from './corners'
 import { CaptureWarnings, ExtraShots } from './CaptureExtras'
 import { ACCEPT, MAX_MB, isDxf, isImage, validateFile } from './validateFile'
 
+const STEPS = ['Elegir el plano', 'Revisar y nombrar', 'Convertir a 3D'] as const
+
+/** Indicador de pasos de la captura, numerado como las figuras de la lámina. */
+function CaptureSteps({ current }: { current: number }) {
+  return (
+    <ol aria-label="Pasos" className="mb-6 flex gap-2 font-mono text-xs">
+      {STEPS.map((label, i) => (
+        <li
+          key={label}
+          aria-current={i === current ? 'step' : undefined}
+          className={`flex-1 border-t-2 pt-2 ${i < current ? 'border-accent-dim text-muted' : i === current ? 'border-brand text-fg' : 'border-line text-subtle'}`}
+        >
+          <span className="mr-1.5">{String(i + 1).padStart(2, '0')}</span>
+          <span className="hidden sm:inline">{label}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 const nameFromFile = (f: File) => f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80)
 
 export function NewPlanPage() {
@@ -95,8 +115,9 @@ export function NewPlanPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <p className="font-mono text-xs text-accent-dim">02 — Captura</p>
-      <h1 className="mb-6 text-2xl font-semibold sm:text-3xl">Nuevo plano</h1>
+      <p className="font-mono text-xs tracking-[0.16em] text-subtle uppercase">02 — Captura</p>
+      <h1 className="mt-2 mb-6 font-serif text-5xl leading-none font-normal tracking-tight">Nuevo plano</h1>
+      <CaptureSteps current={sending ? 2 : file ? 1 : 0} />
 
       <input
         ref={cameraInput}
