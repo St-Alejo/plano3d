@@ -24,13 +24,14 @@ function useTheme(): [string, () => void] {
 
 export function Logo() {
   return (
-    <Link to="/" className="flex min-h-11 items-center gap-2 font-display text-lg font-bold tracking-tight">
+    <Link to="/" className="flex min-h-11 items-center gap-2" aria-label="Plano 3D, inicio">
       <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
         <rect width="32" height="32" rx="5" className="fill-raised" />
-        <path d="M7 23V9h18v14H7Zm0-7h10V9" fill="none" className="stroke-accent" strokeWidth="2.4" strokeLinejoin="round" />
+        <path d="M7 23V9h18v14H7Zm0-7h10V9" fill="none" className="stroke-brand" strokeWidth="2.4" strokeLinejoin="round" />
       </svg>
-      <span>
-        Plano<span className="text-accent">3D</span>
+      <span className="flex items-baseline gap-1">
+        <span className="font-serif text-2xl leading-none">Plano</span>
+        <span className="font-mono text-xs font-medium text-brand">3D</span>
       </span>
     </Link>
   )
@@ -58,7 +59,7 @@ export function AppShell() {
             </NavLink>
             <Link
               to="/nuevo"
-              className="ml-1 inline-flex h-11 items-center gap-1.5 sm:h-9 rounded-md bg-accent px-3 text-sm font-medium text-accent-ink hover:brightness-110"
+              className="ml-1 inline-flex h-11 items-center gap-1.5 sm:h-9 rounded-md bg-brand px-3 text-sm font-medium text-brand-ink hover:brightness-110"
             >
               <Plus className="size-4" aria-hidden />
               <span className="hidden sm:inline">Nuevo plano</span>

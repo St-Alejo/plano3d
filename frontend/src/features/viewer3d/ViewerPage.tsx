@@ -164,7 +164,7 @@ export function ViewerPage() {
             </div>
           ) : (
             <div className="pointer-events-auto rounded-md border border-line bg-canvas/85 p-3 text-xs text-muted backdrop-blur">
-              <button id="walk-start" type="button" className="mb-2 block rounded-md bg-accent px-3 py-2 text-sm font-medium text-accent-ink">
+              <button id="walk-start" type="button" className="mb-2 block rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-ink">
                 Clic para caminar
               </button>
               <Kbd>W A S D</Kbd> moverse · mouse para mirar · <Kbd>Esc</Kbd> soltar

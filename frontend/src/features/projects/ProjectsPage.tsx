@@ -95,7 +95,7 @@ export function ProjectsPage() {
           action={
             <Link
               to="/nuevo"
-              className="inline-flex h-11 items-center gap-2 rounded-md bg-accent px-5 font-medium text-accent-ink hover:brightness-110"
+              className="inline-flex h-11 items-center gap-2 rounded-md bg-brand px-5 font-medium text-brand-ink hover:brightness-110"
             >
               <Camera className="size-4" aria-hidden /> Tomar foto de un plano
             </Link>
