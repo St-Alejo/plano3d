@@ -8,6 +8,7 @@ const EXTRA: { group: ActionGroup; label: string; keys: string }[] = [
   { group: 'Edición', label: 'Mover la selección 5 cm (25 cm con Shift)', keys: '← ↑ → ↓' },
   { group: 'Selección', label: 'Agregar o quitar del grupo', keys: 'Shift+clic' },
   { group: 'Selección', label: 'Seleccionar por caja', keys: 'Shift+arrastrar' },
+  { group: 'Selección', label: 'Caja hacia la izquierda: también lo que toca', keys: '←' },
   { group: 'Herramientas', label: 'Largo exacto tras dibujar un muro', keys: '3,5 Enter' },
 ]
 

@@ -1,6 +1,6 @@
 import { Moon, Plus, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import clsx from 'clsx'
 
 function useTheme(): [string, () => void] {
@@ -39,8 +39,10 @@ export function Logo() {
 
 export function AppShell() {
   const [theme, toggleTheme] = useTheme()
+  // el editor ocupa exactamente la ventana en escritorio: cada panel hace su propio scroll
+  const editor = useMatch('/p/:id')
   return (
-    <div className="flex min-h-full flex-col">
+    <div className={clsx('flex flex-col', editor ? 'min-h-full lg:h-dvh lg:overflow-hidden' : 'min-h-full')}>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-ink">
         Saltar al contenido
       </a>
@@ -76,7 +78,7 @@ export function AppShell() {
           </nav>
         </div>
       </header>
-      <main id="main" className="flex flex-1 flex-col">
+      <main id="main" className="flex min-h-0 flex-1 flex-col">
         <Outlet />
       </main>
     </div>

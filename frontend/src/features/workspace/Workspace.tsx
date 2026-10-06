@@ -1,22 +1,26 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
-import { Box, Check, Save } from 'lucide-react'
+import * as ToggleGroup from '@radix-ui/react-toggle-group'
+import { Box, Check, Command, PanelLeft, Save } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
 import type { Point, Project } from '@/api/types'
 import { CalibrateScale, ReplaceModel } from '@/domain/commands'
-import { Button, Spinner } from '@/components/ui'
+import { Button, IconButton, Spinner } from '@/components/ui'
 import { CalibrateDialog } from '@/features/editor2d/CalibrateDialog'
 import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
-import { selectIsDirty, useEditor } from '@/store/editorStore'
+import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
 import { buildActions } from './actions'
 import { CommandPalette } from './CommandPalette'
 import { EditorContextMenu } from './EditorContextMenu'
+import { GroupInspector } from './GroupInspector'
 import { HistoryDialog } from './HistoryDialog'
+import { LayersPanel } from './LayersPanel'
 import { ShortcutsHelp } from './ShortcutsHelp'
+import { StatusBar } from './StatusBar'
 import { UnsavedChangesGuard } from './UnsavedChangesGuard'
 import { useEditorShortcuts } from './useShortcuts'
 
@@ -48,6 +52,10 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
   const select = useEditor((s) => s.select)
   const markSaved = useEditor((s) => s.markSaved)
   const revision = useEditor((s) => s.revision)
+  const viewMode = useEditor((s) => s.viewMode)
+  const setViewMode = useEditor((s) => s.setViewMode)
+  const groupSize = useEditor((s) => s.group.length)
+  const [layersOpen, setLayersOpen] = useState(true)
   const [conflict, setConflict] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -190,7 +198,41 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
       <Toolbar
         trailing={
           <>
-            <span className="hidden font-mono text-xs text-subtle lg:inline" aria-live="polite">
+            {desktop && (
+              <>
+                <IconButton label="Panel de capas" active={layersOpen} onClick={() => setLayersOpen((o) => !o)}>
+                  <PanelLeft className="size-5" aria-hidden />
+                </IconButton>
+                <ToggleGroup.Root
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(v) => v && setViewMode(v as ViewMode)}
+                  aria-label="Vista"
+                  className="flex rounded-md border border-line p-0.5"
+                >
+                  {(
+                    [
+                      ['2d', 'Plano', '1'],
+                      ['split', 'Dividido', '2'],
+                      ['3d', '3D', '3'],
+                    ] as const
+                  ).map(([v, l, k]) => (
+                    <ToggleGroup.Item
+                      key={v}
+                      value={v}
+                      title={`${l} (${k})`}
+                      className="h-7 rounded-sm px-2.5 text-xs text-muted data-[state=on]:bg-raised data-[state=on]:text-fg"
+                    >
+                      {l}
+                    </ToggleGroup.Item>
+                  ))}
+                </ToggleGroup.Root>
+                <IconButton label="Buscar un comando" shortcut="Ctrl+K" onClick={() => setPalette(true)}>
+                  <Command className="size-5" aria-hidden />
+                </IconButton>
+              </>
+            )}
+            <span className="hidden font-mono text-xs text-subtle xl:inline" aria-live="polite">
               {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
             </span>
             <Button
@@ -216,7 +258,7 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
           </>
         }
       />
-      {hint && <p className="border-b border-line bg-canvas px-3 py-1.5 text-xs text-muted">{hint}</p>}
+      {hint && !desktop && <p className="border-b border-line bg-canvas px-3 py-1.5 text-xs text-muted">{hint}</p>}
       {(error || saveError) && (
         <div role="alert" className="flex items-center justify-between gap-2 border-b border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
           <span>{error ?? saveError}</span>
@@ -227,13 +269,23 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
       )}
 
       {desktop ? (
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_280px]">
-          <section aria-label="Editor 2D" className="min-h-0 border-r border-line">{editor}</section>
-          <section aria-label="Vista 3D" className="min-h-0 border-r border-line">{viewer}</section>
-          <aside aria-label="Propiedades" className="overflow-y-auto bg-surface p-4">
-            <PropertiesPanel onSolve={() => void solve()} solving={solving} />
-          </aside>
-        </div>
+        <>
+          <div className={`grid min-h-0 flex-1 ${layersOpen ? 'grid-cols-[220px_minmax(0,1fr)_300px]' : 'grid-cols-[minmax(0,1fr)_300px]'}`}>
+            {layersOpen && (
+              <aside aria-label="Capas y objetos" className="min-h-0 overflow-y-auto border-r border-line bg-surface p-3">
+                <LayersPanel />
+              </aside>
+            )}
+            <div className={`grid min-h-0 ${viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {viewMode !== '3d' && <section aria-label="Editor 2D" className="min-h-0 border-r border-line">{editor}</section>}
+              {viewMode !== '2d' && <section aria-label="Vista 3D" className="min-h-0 border-r border-line">{viewer}</section>}
+            </div>
+            <aside aria-label="Propiedades" className="min-h-0 overflow-y-auto bg-surface p-4">
+              {groupSize > 1 ? <GroupInspector /> : <PropertiesPanel onSolve={() => void solve()} solving={solving} />}
+            </aside>
+          </div>
+          <StatusBar hint={hint} onHelp={() => setHelp(true)} />
+        </>
       ) : (
         <Tabs.Root defaultValue="2d" className="flex min-h-0 flex-1 flex-col">
           <Tabs.List className="grid grid-cols-3 border-b border-line bg-surface" aria-label="Vistas">

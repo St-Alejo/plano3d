@@ -5,6 +5,7 @@
  * menú contextual se construyen desde esta misma lista, así nunca se contradicen.
  */
 import type { ReactNode } from 'react'
+import { normalize } from '@/features/projects/listing'
 import { TOOLS } from '@/features/editor2d/tools'
 import { useEditor, type ViewMode } from '@/store/editorStore'
 import {
@@ -175,6 +176,12 @@ export function runShortcut(actions: EditorAction[], e: KeyboardEvent): boolean 
 }
 
 export const isAvailable = (a: EditorAction) => !a.enabled || a.enabled()
+
+/** Filtro de la paleta: por grupo y nombre, sin tildes; oculta lo no disponible ahora. */
+export function filterActions(actions: EditorAction[], query: string): EditorAction[] {
+  const q = normalize(query)
+  return actions.filter((a) => !a.hidden && isAvailable(a) && (!q || normalize(`${a.group} ${a.label}`).includes(q)))
+}
 
 /** acciones que tienen sentido sobre lo seleccionado (menú contextual) */
 export const CONTEXT_ACTIONS = ['edit.copy', 'edit.paste', 'edit.duplicate', 'edit.delete', 'select.all', 'select.none']

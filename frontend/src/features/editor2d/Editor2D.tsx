@@ -474,7 +474,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               closed
               stroke={C.wallSel}
               strokeWidth={1.5 / view.scale}
-              dash={[6 / view.scale, 4 / view.scale]}
+              // continua = ventana (solo lo que queda dentro); punteada = cruce (también lo que toca)
+              dash={box.b.x < box.a.x ? [6 / view.scale, 4 / view.scale] : undefined}
               fill="rgba(95,212,232,0.08)"
               listening={false}
             />

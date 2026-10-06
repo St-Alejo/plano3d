@@ -7,13 +7,7 @@ import clsx from 'clsx'
 import { Search } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Kbd } from '@/components/ui'
-import { normalize } from '@/features/projects/listing'
-import { isAvailable, type EditorAction } from './actions'
-
-export function filterActions(actions: EditorAction[], query: string): EditorAction[] {
-  const q = normalize(query)
-  return actions.filter((a) => !a.hidden && isAvailable(a) && (!q || normalize(`${a.group} ${a.label}`).includes(q)))
-}
+import { filterActions, type EditorAction } from './actions'
 
 export function CommandPalette({ open, onOpenChange, actions }: { open: boolean; onOpenChange: (o: boolean) => void; actions: EditorAction[] }) {
   const [query, setQuery] = useState('')

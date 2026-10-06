@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useEditor } from '@/store/editorStore'
 import { sampleModel } from '@/test/fixtures'
-import { buildActions, combo, runShortcut } from './actions'
-import { CommandPalette, filterActions } from './CommandPalette'
+import { buildActions, combo, filterActions, runShortcut } from './actions'
+import { CommandPalette } from './CommandPalette'
 import { ShortcutsHelp } from './ShortcutsHelp'
 
 const key = (k: string, mods: Partial<KeyboardEventInit> = {}) => new KeyboardEvent('keydown', { key: k, ...mods })
