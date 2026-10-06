@@ -1,9 +1,11 @@
-import { Camera, FileImage, Trash2 } from 'lucide-react'
+import { Camera, FileImage, Plus, Search, Trash2 } from 'lucide-react'
+import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '@/api/client'
 import type { ProjectSummary } from '@/api/types'
 import { Badge, Button, EmptyState, ErrorState, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
+import { listProjects, SORT_LABEL, totalArea, type ProjectSort } from './listing'
 import { STATUS_LABEL } from './status'
 
 
@@ -63,6 +65,11 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
 
 export function ProjectsPage() {
   const { data, error, loading, reload, setData } = useAsync(api.listProjects, [])
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<ProjectSort>('recent')
+  const shown = useMemo(() => listProjects(data ?? [], query, sort), [data, query, sort])
+  const searchId = useId()
+  const sortId = useId()
 
   const remove = async (p: ProjectSummary) => {
     if (!window.confirm(`¿Eliminar "${p.name}"? No se puede deshacer.`)) return
@@ -72,12 +79,57 @@ export function ProjectsPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-line pb-6">
         <div>
-          <p className="font-mono text-xs text-accent-dim">01 — Proyectos</p>
-          <h1 className="text-2xl font-semibold sm:text-3xl">Tus planos</h1>
+          <p className="font-mono text-xs tracking-[0.16em] text-subtle uppercase">01 — Proyectos</p>
+          <h1 className="mt-2 font-serif text-5xl leading-none font-normal tracking-tight sm:text-6xl">Tus planos</h1>
+          {data && data.length > 0 && (
+            <p className="mt-3 font-mono text-xs text-muted">
+              {data.length} {data.length === 1 ? 'plano' : 'planos'} · {totalArea(data).toFixed(1)} m² modelados
+            </p>
+          )}
         </div>
-      </div>
+        <Link
+          to="/nuevo"
+          className="inline-flex h-11 items-center gap-2 rounded-md bg-brand px-5 font-medium text-brand-ink hover:brightness-110"
+        >
+          <Plus className="size-4" aria-hidden /> Convertir un plano
+        </Link>
+      </header>
+
+      {data && data.length > 1 && (
+        <div className="mb-6 flex flex-wrap items-center gap-3" role="search">
+          <label htmlFor={searchId} className="sr-only">
+            Buscar planos
+          </label>
+          <div className="relative min-w-0 flex-1 sm:max-w-xs">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" aria-hidden />
+            <input
+              id={searchId}
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nombre"
+              className="h-11 w-full rounded-md border border-line-strong bg-surface pr-3 pl-9 text-sm placeholder:text-subtle sm:h-10"
+            />
+          </div>
+          <label htmlFor={sortId} className="ml-auto font-mono text-xs text-muted">
+            Ordenar
+          </label>
+          <select
+            id={sortId}
+            value={sort}
+            onChange={(e) => setSort(e.target.value as ProjectSort)}
+            className="h-11 rounded-md border border-line-strong bg-surface px-3 text-sm sm:h-10"
+          >
+            {(Object.keys(SORT_LABEL) as ProjectSort[]).map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABEL[k]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {loading && !data && <Spinner label="Cargando proyectos" />}
       {error && (
@@ -102,9 +154,14 @@ export function ProjectsPage() {
           }
         />
       )}
-      {data && data.length > 0 && (
+      {data && data.length > 0 && shown.length === 0 && (
+        <p role="status" className="py-12 text-center text-muted">
+          Ningún plano coincide con «{query}».
+        </p>
+      )}
+      {shown.length > 0 && (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Proyectos">
-          {data.map((p) => (
+          {shown.map((p) => (
             <ProjectCard key={p.id} p={p} onDelete={(x) => void remove(x)} />
           ))}
         </ul>

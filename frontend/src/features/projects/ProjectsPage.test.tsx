@@ -19,6 +19,20 @@ describe('ProjectsPage', () => {
     expect(within(items[1]!).getByText('— m²')).toBeInTheDocument()
   })
 
+  it('filtra por nombre y avisa cuando nada coincide', async () => {
+    renderWithRouter(<ProjectsPage />)
+    await screen.findByRole('list', { name: 'Proyectos' })
+    expect(screen.getByText(/2 planos · 60\.3 m² modelados/)).toBeInTheDocument()
+    const search = screen.getByRole('searchbox', { name: 'Buscar planos' })
+    await userEvent.type(search, 'casa')
+    const items = within(screen.getByRole('list', { name: 'Proyectos' })).getAllByRole('listitem')
+    expect(items).toHaveLength(1)
+    expect(within(items[0]!).getByText('Casa en L')).toBeInTheDocument()
+    await userEvent.clear(search)
+    await userEvent.type(search, 'xyz')
+    expect(screen.getByRole('status')).toHaveTextContent('Ningún plano coincide con «xyz»')
+  })
+
   it('muestra un estado vacío que invita a tomar la primera foto', async () => {
     server.use(http.get('/api/projects', () => HttpResponse.json([])))
     renderWithRouter(<ProjectsPage />)
