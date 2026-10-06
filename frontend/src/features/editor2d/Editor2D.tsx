@@ -7,12 +7,13 @@ import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Stage, Tag, Text } from 'react-konva'
 import type { Point, Wall } from '@/api/types'
-import { AddOpening, AddWall, MoveJoint, MoveWallEndpoint } from '@/domain/commands'
+import { AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetWallLength } from '@/domain/commands'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
 import { nearestWall, snapPoint, wallEndpoints } from '@/domain/snap'
-import { selectLevel, useEditor } from '@/store/editorStore'
+import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { PlanElements } from './PlanElements'
+import { contentBounds, parseLength, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
 
 const LOW_CONFIDENCE = 0.6
@@ -65,6 +66,12 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const tool = useEditor((s) => s.tool)
   const selection = useEditor((s) => s.selection)
   const select = useEditor((s) => s.select)
+  const toggleSelect = useEditor((s) => s.toggleSelect)
+  const selectMany = useEditor((s) => s.selectMany)
+  const group = useEditor((s) => s.group)
+  const hidden = useEditor((s) => s.hiddenLayers)
+  const locked = useEditor((s) => s.lockedLayers)
+  const setPointer = useEditor((s) => s.setPointer)
   const dispatch = useEditor((s) => s.dispatch)
   const gridStep = useEditor((s) => s.gridStep)
   const showDimensions = useEditor((s) => s.showDimensions)
@@ -75,18 +82,35 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
 
   // vista: escala y desplazamiento (zoom con rueda / pellizco, arrastre para desplazar)
   const [userView, setView] = useState<{ scale: number; x: number; y: number } | null>(null)
+  // encuadre: los muros del plano (no la hoja entera, que deja márgenes vacíos); sin muros, la imagen.
+  // Se calcula al cargar el proyecto o al cambiar el tamaño, no en cada edición.
+  const projectId = model?.project_id
+  const [bounds, setBounds] = useState(() => contentBounds(model))
+  const [boundsFor, setBoundsFor] = useState(projectId)
+  if (boundsFor !== projectId) {
+    setBoundsFor(projectId)
+    setBounds(contentBounds(model))
+  }
   const autoView = useMemo(() => {
-    const s = Math.min(size.width / imgW, size.height / imgH) * 0.95
-    return { scale: s, x: (size.width - imgW * s) / 2, y: (size.height - imgH * s) / 2 }
-  }, [size.width, size.height, imgW, imgH])
+    const box = bounds
+      ? { x: bounds.minX / mpp, y: bounds.minY / mpp, w: (bounds.maxX - bounds.minX) / mpp, h: (bounds.maxY - bounds.minY) / mpp }
+      : { x: 0, y: 0, w: imgW, h: imgH }
+    const s = Math.min(size.width / Math.max(box.w, 1), size.height / Math.max(box.h, 1)) * (bounds ? 0.86 : 0.95)
+    return { scale: s, x: (size.width - box.w * s) / 2 - box.x * s, y: (size.height - box.h * s) / 2 - box.y * s }
+  }, [size.width, size.height, imgW, imgH, mpp, bounds])
   const view = userView ?? autoView
   const fit = useCallback(() => setView(null), [])
+  useEffect(() => setPointer(null, view.scale / autoView.scale), [view.scale, autoView.scale, setPointer])
 
   const toPx = (p: Point) => ({ x: p.x / mpp, y: p.y / mpp })
   const toM = (p: Point) => ({ x: p.x * mpp, y: p.y * mpp })
   const screenTol = 12 / view.scale // px de imagen equivalentes a 12 px de pantalla
 
   const [draft, setDraft] = useState<{ a: Point; b: Point } | null>(null)
+  // selección por caja (Shift + arrastrar sobre el fondo)
+  const [box, setBox] = useState<{ a: Point; b: Point } | null>(null)
+  // largo tecleado para el último muro dibujado (estilo SketchUp: "3,5" + Enter)
+  const [typed, setTyped] = useState<{ wallId: string; text: string } | null>(null)
   const [measure, setMeasure] = useState<Point[]>([])
   const grid = gridStep > 0 ? gridStep / mpp : 0 // paso de rejilla en px de imagen
   // al cambiar de herramienta se descarta la medición en curso
@@ -100,6 +124,36 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     window.addEventListener('keydown', esc)
     return () => window.removeEventListener('keydown', esc)
   }, [])
+  if (typed && tool !== 'wall') setTyped(null)
+  useEffect(() => {
+    if (!typed) return
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
+      const k = e.key.toLowerCase()
+      const unit = (k === 'c' || k === 'm') && typed.text !== ''
+      if (/^[0-9.,]$/.test(e.key) || unit) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setTyped({ ...typed, text: typed.text + e.key })
+      } else if (e.key === 'Backspace' && typed.text) {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        setTyped({ ...typed, text: typed.text.slice(0, -1) })
+      } else if (e.key === 'Enter') {
+        const v = parseLength(typed.text)
+        try {
+          if (v !== null) dispatch(new SetWallLength(useEditor.getState().levelId, typed.wallId, v))
+        } catch {
+          /* largo inválido: se ignora */
+        }
+        setTyped(null)
+      } else if (e.key === 'Escape') setTyped(null)
+    }
+    // en captura: el largo tecleado tiene prioridad sobre los atajos de una letra
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [typed, dispatch])
 
   const pointerPx = (stage: Konva.Stage): Point | null => {
     const p = stage.getRelativePointerPosition()
@@ -158,22 +212,37 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
         if (dispatch(cmd)) select({ kind: 'opening', id: cmd.opening.id, wallId: hit.wall.id })
       }
     } else if (e.target === stage) {
-      select(null)
+      if (tool === 'select' && 'shiftKey' in e.evt && e.evt.shiftKey) {
+        stage.stopDrag()
+        setBox({ a: p, b: p })
+      } else select(null)
     }
   }
 
   const onMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if ('touches' in e.evt && touchPinch(e as Konva.KonvaEventObject<TouchEvent>)) return
-    if (!draft) return
     const stage = e.target.getStage()
     const p = stage && pointerPx(stage)
     if (!p) return
+    setPointer(toM(p))
+    if (box) {
+      setBox({ ...box, b: p })
+      return
+    }
+    if (!draft) return
     const b = tool === 'wall' ? snapPoint(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : p
     setDraft({ ...draft, b })
   }
 
   const onUp = () => {
     pinch.current = null
+    if (box && level) {
+      const inBox = wallsInBox(level.walls, toM(box.a), toM(box.b)).map((w): Selected => ({ kind: 'wall', id: w.id }))
+      const keep = group.filter((g) => !inBox.some((x) => x.id === g.id))
+      selectMany([...keep, ...inBox])
+      setBox(null)
+      return
+    }
     if (!draft || !level) return
     const { a, b } = draft
     setDraft(null)
@@ -183,7 +252,10 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       const template = level.walls[0]
       try {
         const cmd = new AddWall(level.id, toM(a), toM(b), { thickness: template?.thickness, height: template?.height })
-        if (dispatch(cmd)) select({ kind: 'wall', id: cmd.wall.id })
+        if (dispatch(cmd)) {
+          select({ kind: 'wall', id: cmd.wall.id })
+          setTyped({ wallId: cmd.wall.id, text: '' })
+        }
       } catch {
         /* muro demasiado corto: se ignora */
       }
@@ -191,6 +263,16 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       onCalibrate(toM(a), toM(b))
     }
   }
+
+  /** Clic: selecciona; con Shift agrega o quita del grupo. Las capas bloqueadas no responden. */
+  const pick = (sel: Selected) => (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (tool !== 'select') return
+    e.cancelBubble = true
+    if ('shiftKey' in e.evt && e.evt.shiftKey) toggleSelect(sel)
+    else select(sel)
+  }
+  const inGroup = (kind: Selected['kind'], id: string) => group.some((g) => g.kind === kind && g.id === id)
+  const lockedWalls = locked.has('walls')
 
   const selectedWall: Wall | undefined =
     selection?.kind === 'wall' ? level?.walls.find((w) => w.id === selection.id) : undefined
@@ -239,17 +321,18 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
         onTouchMove={onMove}
         onMouseUp={onUp}
         onTouchEnd={onUp}
+        onMouseLeave={() => setPointer(null)}
       >
-        <Layer listening={false}>{image && <KImage image={image} width={imgW} height={imgH} opacity={0.55} />}</Layer>
+        <Layer listening={false}>{image && !hidden.has('image') && <KImage image={image} width={imgW} height={imgH} opacity={0.55} />}</Layer>
 
         <Layer>
-          {level?.rooms.map((r) => {
+          {!hidden.has('rooms') && level?.rooms.map((r) => {
             const pts = r.polygon.flatMap((p) => [p.x / mpp, p.y / mpp])
             const c = toPx(polygonCentroid(r.polygon))
-            const sel = selection?.kind === 'room' && selection.id === r.id
+            const sel = inGroup('room', r.id)
             const low = r.confidence < LOW_CONFIDENCE
             return (
-              <Group key={r.id} onClick={() => tool === 'select' && select({ kind: 'room', id: r.id })} onTap={() => tool === 'select' && select({ kind: 'room', id: r.id })}>
+              <Group key={r.id} listening={!locked.has('rooms')} onClick={pick({ kind: 'room', id: r.id })} onTap={pick({ kind: 'room', id: r.id })}>
                 <Line points={pts} closed fill={sel ? C.roomSel : low ? C.roomLow : C.roomOk} stroke={low ? C.door : undefined} strokeWidth={low ? 1.5 / view.scale : 0} dash={[6 / view.scale, 4 / view.scale]} />
                 <Label x={c.x} y={c.y} offsetX={fontPx * 3.2} offsetY={fontPx * 1.4} listening={false}>
                   <Tag fill="rgba(238,240,230,0.92)" stroke={low ? C.door : 'rgba(18,32,54,0.25)'} strokeWidth={1 / view.scale} cornerRadius={3 / view.scale} />
@@ -267,10 +350,10 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
             )
           })}
 
-          {level?.walls.map((w) => {
+          {!hidden.has('walls') && level?.walls.map((w) => {
             const a = toPx(w.start)
             const b = toPx(w.end)
-            const sel = selectedWall?.id === w.id
+            const sel = inGroup('wall', w.id)
             const d = wallDirection(w)
             return (
               <Group key={w.id}>
@@ -281,8 +364,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   lineCap={w.bulge ? 'butt' : 'square'}
                   lineJoin="round"
                   hitStrokeWidth={Math.max(w.thickness / mpp, 14 / view.scale)}
-                  onClick={() => tool === 'select' && select({ kind: 'wall', id: w.id })}
-                  onTap={() => tool === 'select' && select({ kind: 'wall', id: w.id })}
+                  listening={!lockedWalls}
+                  onClick={pick({ kind: 'wall', id: w.id })}
+                  onTap={pick({ kind: 'wall', id: w.id })}
                 />
                 {showDimensions && (() => {
                   // cota: largo del muro sobre su línea, desplazada hacia afuera y legible (nunca cabeza abajo)
@@ -308,12 +392,12 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                     />
                   )
                 })()}
-                {w.openings.map((o) => {
+                {!hidden.has('openings') && w.openings.map((o) => {
                   const s = { x: w.start.x + d.x * o.offset, y: w.start.y + d.y * o.offset }
                   const e = { x: s.x + d.x * o.width, y: s.y + d.y * o.width }
                   const sp = toPx(s)
                   const ep = toPx(e)
-                  const osel = selection?.kind === 'opening' && selection.id === o.id
+                  const osel = inGroup('opening', o.id)
                   return (
                     <Line
                       key={o.id}
@@ -321,8 +405,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       stroke={osel ? C.wallSel : o.kind === 'door' ? C.door : C.window}
                       strokeWidth={(w.thickness / mpp) * 1.25}
                       hitStrokeWidth={Math.max(w.thickness / mpp, 14 / view.scale)}
-                      onClick={() => tool === 'select' && select({ kind: 'opening', id: o.id, wallId: w.id })}
-                      onTap={() => tool === 'select' && select({ kind: 'opening', id: o.id, wallId: w.id })}
+                      listening={!locked.has('openings')}
+                      onClick={pick({ kind: 'opening', id: o.id, wallId: w.id })}
+                      onTap={pick({ kind: 'opening', id: o.id, wallId: w.id })}
                     />
                   )
                 })}
@@ -330,18 +415,20 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
             )
           })}
 
-          {level && showDimensions && (
+          {level && showDimensions && !hidden.has('dimensions') && (
             <PlanElements
               level={level}
               mpp={mpp}
               scale={view.scale}
               selection={selection}
               onSelect={select}
-              interactive={tool === 'select'}
+              interactive={tool === 'select' && !locked.has('dimensions')}
             />
           )}
 
           {selectedWall &&
+            group.length === 1 &&
+            !lockedWalls &&
             (['start', 'end'] as const).map((end) => {
               const p = toPx(selectedWall[end])
               return (
@@ -375,6 +462,17 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               ))}
             </Group>
           )}
+          {box && (
+            <Line
+              points={[box.a.x, box.a.y, box.b.x, box.a.y, box.b.x, box.b.y, box.a.x, box.b.y]}
+              closed
+              stroke={C.wallSel}
+              strokeWidth={1.5 / view.scale}
+              dash={[6 / view.scale, 4 / view.scale]}
+              fill="rgba(95,212,232,0.08)"
+              listening={false}
+            />
+          )}
           {draft && (
             <Line
               points={[draft.a.x, draft.a.y, draft.b.x, draft.b.y]}
@@ -387,6 +485,17 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
           )}
         </Layer>
       </Stage>
+      {typed && (
+        <div role="status" aria-live="polite" className="absolute top-2 left-1/2 -translate-x-1/2 rounded-md border border-ink/20 bg-paper/95 px-3 py-2 font-mono text-xs text-ink shadow-sm">
+          {typed.text ? (
+            <>
+              Largo: <strong>{typed.text}</strong> m · Enter para aplicar
+            </>
+          ) : (
+            'Escribe el largo exacto del muro (p. ej. 3,5) y pulsa Enter'
+          )}
+        </div>
+      )}
       {tool === 'measure' && (
         <div role="status" aria-live="polite" className="absolute top-2 left-2 rounded-md border border-ink/20 bg-paper/95 px-3 py-2 font-mono text-xs text-ink shadow-sm">
           {measure.length === 0 ? (
