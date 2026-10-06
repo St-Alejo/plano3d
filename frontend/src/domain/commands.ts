@@ -140,6 +140,32 @@ export class TranslateWall extends JointEdit {
   }
 }
 
+/**
+ * Desplaza varios muros a la vez como un bloque. Las esquinas compartidas se mueven
+ * una sola vez (con `TranslateWall` repetido se desplazarían dos veces).
+ */
+export class TranslateWalls extends JointEdit {
+  readonly label: string
+  constructor(
+    levelId: string,
+    private readonly wallIds: string[],
+    private readonly dx: number,
+    private readonly dy: number,
+  ) {
+    super(levelId)
+    this.label = wallIds.length === 1 ? 'Mover muro' : `Mover ${wallIds.length} muros`
+  }
+  protected moves(level: Level) {
+    const mv = (p: Point): Point => ({ x: p.x + this.dx, y: p.y + this.dy })
+    const moves: JointMove[] = []
+    for (const id of this.wallIds) {
+      const w = findWall(level, id)
+      moves.push({ from: w.start, to: mv(w.start) }, { from: w.end, to: mv(w.end) })
+    }
+    return { moves }
+  }
+}
+
 /** Largo exacto: el inicio queda fijo y la esquina final se desplaza (arrastrando sus muros). */
 export class SetWallLength extends JointEdit {
   readonly label = 'Cambiar largo del muro'
@@ -442,5 +468,71 @@ export class ReplaceModel implements Command {
   }
   undo(model: BuildingModel): BuildingModel {
     return this.before ?? model
+  }
+}
+
+/**
+ * Patrón Composite: varias ediciones que se aplican y se deshacen como UNA sola
+ * entrada del historial (eliminar una selección, pegar un grupo...). Si una parte
+ * falla, se revierten las anteriores y el modelo queda intacto.
+ */
+export class CompositeCommand implements Command {
+  constructor(
+    readonly label: string,
+    private readonly parts: Command[],
+  ) {
+    if (parts.length === 0) throw new CommandError('No hay nada que hacer')
+  }
+  execute(model: BuildingModel): BuildingModel {
+    let m = model
+    const done: Command[] = []
+    try {
+      for (const c of this.parts) {
+        m = c.execute(m)
+        done.push(c)
+      }
+    } catch (e) {
+      for (const c of done.reverse()) m = c.undo(m)
+      throw e
+    }
+    return m
+  }
+  undo(model: BuildingModel): BuildingModel {
+    return [...this.parts].reverse().reduce((m, c) => c.undo(m), model)
+  }
+}
+
+/** Copias de muros (con sus aberturas) desplazadas y con ids nuevos: base de pegar y duplicar. */
+export function cloneWalls(walls: Wall[], dx: number, dy: number): Wall[] {
+  return walls.map((w) => ({
+    ...w,
+    id: newId('w'),
+    start: { x: w.start.x + dx, y: w.start.y + dy },
+    end: { x: w.end.x + dx, y: w.end.y + dy },
+    openings: w.openings.map((o) => ({ ...o, id: newId('o') })),
+    confidence: 1,
+  }))
+}
+
+/** Inserta muros ya construidos (pegar / duplicar). */
+export class InsertWalls implements Command {
+  readonly label: string
+  constructor(
+    private readonly levelId: string,
+    readonly walls: Wall[],
+    label?: string,
+  ) {
+    if (walls.length === 0) throw new CommandError('No hay muros para insertar')
+    walls.forEach((w) => checked(w))
+    this.label = label ?? (walls.length === 1 ? 'Pegar muro' : `Pegar ${walls.length} muros`)
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, walls: [...lv.walls, ...this.walls] })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const ids = new Set(this.walls.map((w) => w.id))
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, walls: lv.walls.filter((w) => !ids.has(w.id)) })
   }
 }
