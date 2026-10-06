@@ -272,6 +272,10 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     else select(sel)
   }
   const inGroup = (kind: Selected['kind'], id: string) => group.some((g) => g.kind === kind && g.id === id)
+  /** Clic derecho sobre algo no seleccionado: se selecciona antes de abrir el menú contextual. */
+  const pickForMenu = (sel: Selected) => () => {
+    if (tool === 'select' && !inGroup(sel.kind, sel.id)) select(sel)
+  }
   const lockedWalls = locked.has('walls')
 
   const selectedWall: Wall | undefined =
@@ -367,6 +371,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   listening={!lockedWalls}
                   onClick={pick({ kind: 'wall', id: w.id })}
                   onTap={pick({ kind: 'wall', id: w.id })}
+                  onContextMenu={pickForMenu({ kind: 'wall', id: w.id })}
                 />
                 {showDimensions && (() => {
                   // cota: largo del muro sobre su línea, desplazada hacia afuera y legible (nunca cabeza abajo)
@@ -408,6 +413,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       listening={!locked.has('openings')}
                       onClick={pick({ kind: 'opening', id: o.id, wallId: w.id })}
                       onTap={pick({ kind: 'opening', id: o.id, wallId: w.id })}
+                      onContextMenu={pickForMenu({ kind: 'opening', id: o.id, wallId: w.id })}
                     />
                   )
                 })}

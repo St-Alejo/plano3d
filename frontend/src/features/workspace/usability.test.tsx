@@ -14,6 +14,7 @@ import { server } from '@/test/server'
 import { useEditor } from '@/store/editorStore'
 import { UnsavedChangesGuard } from './UnsavedChangesGuard'
 import { useEditorShortcuts } from './useShortcuts'
+import { buildActions } from './actions'
 
 const L = 'lvl_0'
 const level = () => findLevel(useEditor.getState().model!, L)
@@ -48,7 +49,8 @@ describe('H3 · el editor se puede usar sin mouse', () => {
   })
 
   function Host() {
-    useEditorShortcuts()
+    const [actions] = useState(() => buildActions({ save: () => undefined, openPalette: () => undefined, openHelp: () => undefined, open3D: () => undefined }))
+    useEditorShortcuts(actions)
     return null
   }
 

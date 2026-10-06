@@ -1,8 +1,10 @@
 import { act, render, screen, within } from '@testing-library/react'
+import { useState } from 'react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { findLevel, findWall } from '@/domain/model'
 import { useEditorShortcuts } from '@/features/workspace/useShortcuts'
+import { buildActions } from '@/features/workspace/actions'
 import { sampleModel } from '@/test/fixtures'
 import { useEditor } from '@/store/editorStore'
 import { CalibrateDialog } from './CalibrateDialog'
@@ -145,8 +147,11 @@ describe('CalibrateDialog', () => {
   })
 })
 
+const noop = () => undefined
+
 function ShortcutsHost({ onSave }: { onSave: () => void }) {
-  useEditorShortcuts(onSave)
+  const [actions] = useState(() => buildActions({ save: onSave, openPalette: noop, openHelp: noop, open3D: noop }))
+  useEditorShortcuts(actions)
   return <input aria-label="campo" />
 }
 

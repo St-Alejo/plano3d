@@ -1,8 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Box, Check, Save } from 'lucide-react'
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
 import type { Point, Project } from '@/api/types'
 import { CalibrateScale, ReplaceModel } from '@/domain/commands'
@@ -12,7 +12,11 @@ import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
 import { selectIsDirty, useEditor } from '@/store/editorStore'
+import { buildActions } from './actions'
+import { CommandPalette } from './CommandPalette'
+import { EditorContextMenu } from './EditorContextMenu'
 import { HistoryDialog } from './HistoryDialog'
+import { ShortcutsHelp } from './ShortcutsHelp'
 import { UnsavedChangesGuard } from './UnsavedChangesGuard'
 import { useEditorShortcuts } from './useShortcuts'
 
@@ -105,7 +109,20 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
     }
   }, [project.id, save, dispatch, markSaved])
 
-  useEditorShortcuts(() => void save())
+  const navigate = useNavigate()
+  const [palette, setPalette] = useState(false)
+  const [help, setHelp] = useState(false)
+  const actions = useMemo(
+    () =>
+      buildActions({
+        save: () => void save(),
+        openPalette: () => setPalette(true),
+        openHelp: () => setHelp(true),
+        open3D: () => void navigate(`/p/${project.id}/3d`),
+      }),
+    [save, navigate, project.id],
+  )
+  useEditorShortcuts(actions)
 
   // aviso al salir con cambios sin guardar
   useEffect(() => {
@@ -122,9 +139,13 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
   const hint = coarse ? t?.touchHint : t?.hint
 
   const editor = (
-    <Suspense fallback={<Spinner label="Cargando editor 2D" />}>
-      <Editor2D imageUrl={imageUrl} onCalibrate={(a, b) => setCalib({ a, b })} />
-    </Suspense>
+    <EditorContextMenu actions={actions}>
+      <div className="size-full">
+        <Suspense fallback={<Spinner label="Cargando editor 2D" />}>
+          <Editor2D imageUrl={imageUrl} onCalibrate={(a, b) => setCalib({ a, b })} />
+        </Suspense>
+      </div>
+    </EditorContextMenu>
   )
   const viewer = (
     <Suspense fallback={<Spinner label="Cargando visor 3D" />}>
@@ -234,6 +255,8 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
         </Tabs.Root>
       )}
 
+      <CommandPalette open={palette} onOpenChange={setPalette} actions={actions} />
+      <ShortcutsHelp open={help} onOpenChange={setHelp} actions={actions} />
       <CalibrateDialog
         line={calib}
         onClose={() => setCalib(null)}
