@@ -74,6 +74,10 @@ class CVContext:
 
     original: Img | None = None
     rectified: Img | None = None
+    #: homografía 3x3 de píxeles de la imagen SUBIDA → píxeles de ``rectified``. Cada etapa
+    #: que mueve la imagen (reducción, rectificación, enderezado) la compone; sirve para
+    #: llevar anotaciones, cotas o la verdad de terreno de un sistema al otro.
+    transform: npt.NDArray[np.float64] = field(default_factory=lambda: np.eye(3))
     paper_detected: bool = False
     ink: Img | None = None  # 255 = tinta
     wall_mask: Img | None = None  # 255 = muro
@@ -84,6 +88,13 @@ class CVContext:
     rooms: list[PxRoom] = field(default_factory=list)
     model: BuildingModel | None = None
     metrics: dict[str, float] = field(default_factory=dict)
+
+    def then(self, m: npt.ArrayLike) -> None:
+        """Compone una transformación (3x3, o afín 2x3) aplicada a la imagen de trabajo."""
+        a = np.asarray(m, np.float64)
+        if a.shape == (2, 3):
+            a = np.vstack([a, [0.0, 0.0, 1.0]])
+        self.transform = a @ self.transform
 
     def require[T](self, value: T | None, name: str) -> T:
         if value is None:

@@ -70,7 +70,7 @@ export function ProjectPage() {
         </div>
       )}
 
-      {project.status === 'ready' && <Workspace project={project} />}
+      {project.status === 'ready' && <Workspace project={project} onReload={reload} />}
     </div>
   )
 }

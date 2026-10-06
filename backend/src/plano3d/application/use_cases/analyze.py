@@ -17,7 +17,8 @@ from plano3d.application.ports import (
     ProjectRepository,
 )
 from plano3d.application.use_cases.errors import NoDetectorAvailableError, ProjectNotFoundError
-from plano3d.domain import SourceImage
+from plano3d.application.use_cases.projects import DETECTION_SUMMARY
+from plano3d.domain import ModelRevision, SourceImage
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ CONTENT_TYPES = {
     "png": "image/png",
     "webp": "image/webp",
     "pdf": "application/pdf",
+    "dxf": "application/dxf",
 }
 
 
@@ -61,11 +63,17 @@ class DetectorSelector:
                 if d.name == preferred:
                     return d
             raise NoDetectorAvailableError(f"Detector {preferred!r} no está instalado")
-        quality = self._inspector.inspect(data, content_type)
+        quality: ImageQuality | None = None
         for d in self._detectors:
+            if not d.accepts(content_type, data):
+                continue
+            if not d.inspects_quality:
+                return d
+            if quality is None:
+                quality = self._inspector.inspect(data, content_type)
             if d.supports(quality):
                 return d
-        raise NoDetectorAvailableError("Ningún detector soporta esta imagen")
+        raise NoDetectorAvailableError("Ningún detector soporta este archivo")
 
 
 class AnalyzeFloorPlan:
@@ -107,6 +115,11 @@ class AnalyzeFloorPlan:
             )
             project.complete(model)
             await self._repo.save(project)
+            await self._repo.add_revision(
+                ModelRevision(
+                    project.id, project.revision, model, f"{DETECTION_SUMMARY} ({detector.name})"
+                )
+            )
             await self._progress.publish(
                 ProgressEventDTO(
                     project_id=project_id,

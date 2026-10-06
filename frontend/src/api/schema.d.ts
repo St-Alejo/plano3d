@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/capture/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Capture
+         * @description ¿La foto sirve? Avisa si está movida, con reflejo o con poca resolución.
+         */
+        post: operations["check_capture_api_capture_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/corners": {
         parameters: {
             query?: never;
@@ -128,6 +148,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Correction Quality */
+        get: operations["correction_quality_api_projects__project_id__quality_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/reanalyze": {
         parameters: {
             query?: never;
@@ -139,6 +176,57 @@ export interface paths {
         put?: never;
         /** Reanalyze */
         post: operations["reanalyze_api_projects__project_id__reanalyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Revisions */
+        get: operations["list_revisions_api_projects__project_id__revisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/revisions/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Revision */
+        get: operations["get_revision_api_projects__project_id__revisions__number__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/revisions/{number}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Revision */
+        post: operations["restore_revision_api_projects__project_id__revisions__number__restore_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -162,10 +250,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/solve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solve Dimensions
+         * @description Ajusta los muros a las cotas del plano (las medidas escritas mandan).
+         */
+        post: operations["solve_dimensions_api_projects__project_id__solve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_check_capture_api_capture_check_post */
+        Body_check_capture_api_capture_check_post: {
+            /**
+             * File
+             * @description Foto del plano
+             */
+            file: string;
+        };
         /** Body_create_project_api_projects_post */
         Body_create_project_api_projects_post: {
             /**
@@ -174,8 +290,13 @@ export interface components {
              */
             corners?: string | null;
             /**
+             * Extra
+             * @description Más fotos de la misma hoja, de izquierda a derecha (se unen)
+             */
+            extra?: string[] | null;
+            /**
              * File
-             * @description Foto, imagen o PDF del plano
+             * @description Foto, imagen, PDF o DXF del plano
              */
             file: string;
             /**
@@ -202,6 +323,11 @@ export interface components {
             /** Project Id */
             project_id: string;
             scale: components["schemas"]["ScaleDTO"];
+            /**
+             * Schema Version
+             * @description null = 1 (se actualiza a 2)
+             */
+            schema_version?: number | null;
             source_image?: components["schemas"]["SourceImageDTO"] | null;
             /**
              * Total Area
@@ -219,6 +345,60 @@ export interface components {
             /** Meters */
             meters: number;
         };
+        /** CaptureCheckDTO */
+        CaptureCheckDTO: {
+            /**
+             * Glare
+             * @description fracción de la imagen con reflejo
+             */
+            glare: number;
+            /** Height */
+            height: number;
+            /** Ok */
+            ok: boolean;
+            /** Paper Found */
+            paper_found: boolean;
+            /** Sharpness */
+            sharpness: number;
+            /**
+             * Warnings
+             * @default []
+             */
+            warnings: string[];
+            /** Width */
+            width: number;
+        };
+        /** ColumnDTO */
+        ColumnDTO: {
+            center: components["schemas"]["PointDTO"];
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /**
+             * Depth
+             * @default 0.3
+             */
+            depth: number;
+            /** Id */
+            id: string;
+            /**
+             * Rotation
+             * @default 0
+             */
+            rotation: number;
+            /**
+             * Round
+             * @default false
+             */
+            round: boolean;
+            /**
+             * Width
+             * @default 0.3
+             */
+            width: number;
+        };
         /** CornersDTO */
         CornersDTO: {
             /**
@@ -230,20 +410,118 @@ export interface components {
                 number
             ][] | null;
         };
+        /** CorrectionStatsDTO */
+        CorrectionStatsDTO: {
+            /** Area Detected M2 */
+            area_detected_m2: number;
+            /** Area Final M2 */
+            area_final_m2: number;
+            /**
+             * Correction Rate
+             * @description fracción de muros detectados que se corrigieron
+             */
+            correction_rate: number;
+            /** Openings Added */
+            openings_added: number;
+            /** Openings Deleted */
+            openings_deleted: number;
+            /** Openings Kind Changed */
+            openings_kind_changed: number;
+            /** Rooms Relabeled */
+            rooms_relabeled: number;
+            /** Walls Added */
+            walls_added: number;
+            /** Walls Deleted */
+            walls_deleted: number;
+            /** Walls Detected */
+            walls_detected: number;
+            /** Walls Final */
+            walls_final: number;
+            /** Walls Moved */
+            walls_moved: number;
+            /** Walls Unchanged */
+            walls_unchanged: number;
+        };
+        /**
+         * DimensionAxis
+         * @enum {string}
+         */
+        DimensionAxis: "aligned" | "horizontal" | "vertical";
+        /** DimensionDTO */
+        DimensionDTO: {
+            a: components["schemas"]["PointDTO"];
+            /** @default aligned */
+            axis: components["schemas"]["DimensionAxis"];
+            b: components["schemas"]["PointDTO"];
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /** Id */
+            id: string;
+            /**
+             * Measured
+             * @description solo salida, m
+             */
+            measured?: number | null;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Residual */
+            residual?: number | null;
+            /** @default dimension */
+            source: components["schemas"]["MeasureSource"];
+            /** @default inferred */
+            status: components["schemas"]["MeasureStatus"];
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /**
+             * Value
+             * @description valor escrito en el plano, m
+             */
+            value: number;
+            /**
+             * Wall Ids
+             * @default []
+             */
+            wall_ids: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /**
+         * LabelKind
+         * @enum {string}
+         */
+        LabelKind: "room_name" | "area" | "level" | "scale" | "axis" | "other";
         /** LevelDTO */
         LevelDTO: {
+            /** Columns */
+            columns?: components["schemas"]["ColumnDTO"][] | null;
+            /** Dimensions */
+            dimensions?: components["schemas"]["DimensionDTO"][] | null;
             /**
              * Elevation
              * @default 0
              */
             elevation: number;
+            /**
+             * Height
+             * @description entrepiso en m (null = 2,6)
+             */
+            height?: number | null;
             /** Id */
             id: string;
+            /** Labels */
+            labels?: components["schemas"]["TextLabelDTO"][] | null;
             /** Name */
             name: string;
             /**
@@ -251,12 +529,43 @@ export interface components {
              * @default []
              */
             rooms: components["schemas"]["RoomDTO"][];
+            /** Stairs */
+            stairs?: components["schemas"]["StairDTO"][] | null;
             /**
              * Walls
              * @default []
              */
             walls: components["schemas"]["WallDTO"][];
         };
+        /**
+         * MeasureDTO
+         * @description Procedencia de una longitud: exacta (cota o vector), inferida (escala) o en conflicto.
+         */
+        MeasureDTO: {
+            /** Dimension Id */
+            dimension_id?: string | null;
+            /**
+             * Error
+             * @description incertidumbre ± en metros
+             * @default 0
+             */
+            error: number;
+            /** @default scale */
+            source: components["schemas"]["MeasureSource"];
+            /** @default inferred */
+            status: components["schemas"]["MeasureStatus"];
+        };
+        /**
+         * MeasureSource
+         * @enum {string}
+         */
+        MeasureSource: "scale" | "dimension" | "vector" | "manual";
+        /**
+         * MeasureStatus
+         * @description Qué tan cierta es una medida respecto al plano original.
+         * @enum {string}
+         */
+        MeasureStatus: "exact" | "inferred" | "conflict";
         /** OpeningDTO */
         OpeningDTO: {
             /**
@@ -266,6 +575,8 @@ export interface components {
             confidence: number;
             /** Height */
             height: number;
+            /** Hinge At End */
+            hinge_at_end?: boolean | null;
             /** Id */
             id: string;
             kind: components["schemas"]["OpeningKind"];
@@ -274,6 +585,9 @@ export interface components {
              * @description metros desde Wall.start
              */
             offset: number;
+            /** Opens Left */
+            opens_left?: boolean | null;
+            operation?: components["schemas"]["OpeningOperation"] | null;
             /**
              * Sill
              * @default 0
@@ -287,6 +601,12 @@ export interface components {
          * @enum {string}
          */
         OpeningKind: "door" | "window";
+        /**
+         * OpeningOperation
+         * @description Cómo se abre una puerta o ventana.
+         * @enum {string}
+         */
+        OpeningOperation: "swing" | "double_swing" | "sliding" | "folding" | "fixed" | "casement" | "none";
         /** PointDTO */
         PointDTO: {
             /** X */
@@ -342,6 +662,12 @@ export interface components {
             model?: components["schemas"]["BuildingModelDTO"] | null;
             /** Name */
             name: string;
+            /**
+             * Revision
+             * @description versión del modelo; enviarla en If-Match al guardar
+             * @default 0
+             */
+            revision: number;
             /**
              * Room Count
              * @default 0
@@ -399,6 +725,22 @@ export interface components {
                 number
             ][] | null;
         };
+        /** RevisionDTO */
+        RevisionDTO: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Number */
+            number: number;
+            /** Summary */
+            summary: string;
+            /** Total Area */
+            total_area: number;
+            /** Wall Count */
+            wall_count: number;
+        };
         /** RoomDTO */
         RoomDTO: {
             /**
@@ -413,13 +755,26 @@ export interface components {
              * @default 1
              */
             confidence: number;
+            /**
+             * Declared Area
+             * @description área escrita en el plano
+             */
+            declared_area?: number | null;
+            /** Holes */
+            holes?: components["schemas"]["PointDTO"][][] | null;
             /** Id */
             id: string;
             /** Label */
             label: string;
             /** Polygon */
             polygon: components["schemas"]["PointDTO"][];
+            room_type?: components["schemas"]["RoomType"] | null;
         };
+        /**
+         * RoomType
+         * @enum {string}
+         */
+        RoomType: "bedroom" | "bathroom" | "kitchen" | "living" | "study" | "circulation" | "patio" | "laundry" | "storage" | "garage" | "stairs" | "other";
         /** ScaleDTO */
         ScaleDTO: {
             /**
@@ -434,7 +789,38 @@ export interface components {
              * @default estimated
              * @enum {string}
              */
-            source: "default" | "estimated" | "calibrated";
+            source: "default" | "estimated" | "calibrated" | "dimensions" | "vector";
+        };
+        /** SolveReportDTO */
+        SolveReportDTO: {
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: string[];
+            /** Dims Conflict */
+            dims_conflict: number;
+            /** Dims Exact */
+            dims_exact: number;
+            /** Dims Unlinked */
+            dims_unlinked: number;
+            /**
+             * Max Residual
+             * @description m: mayor diferencia entre cota y geometría
+             */
+            max_residual: number;
+            /**
+             * Moved Max
+             * @description m: lo que más se movió un nodo
+             */
+            moved_max: number;
+            /** Walls Exact */
+            walls_exact: number;
+        };
+        /** SolveResultDTO */
+        SolveResultDTO: {
+            project: components["schemas"]["ProjectDTO"];
+            report: components["schemas"]["SolveReportDTO"];
         };
         /** SourceImageDTO */
         SourceImageDTO: {
@@ -444,6 +830,56 @@ export interface components {
             key: string;
             /** Width Px */
             width_px: number;
+        };
+        /** StairDTO */
+        StairDTO: {
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /** @description llegada (arriba) */
+            end: components["schemas"]["PointDTO"];
+            /** Id */
+            id: string;
+            /**
+             * Riser
+             * @default 0.175
+             */
+            riser: number;
+            /** @description arranque (abajo) de la línea de huella */
+            start: components["schemas"]["PointDTO"];
+            /** Steps */
+            steps: number;
+            /** To Level Id */
+            to_level_id?: string | null;
+            /**
+             * Tread
+             * @description solo salida, huella en m
+             */
+            tread?: number | null;
+            /** Width */
+            width: number;
+        };
+        /** TextLabelDTO */
+        TextLabelDTO: {
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /** Id */
+            id: string;
+            /** @default other */
+            kind: components["schemas"]["LabelKind"];
+            position: components["schemas"]["PointDTO"];
+            /**
+             * Rotation
+             * @default 0
+             */
+            rotation: number;
+            /** Text */
+            text: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -461,6 +897,11 @@ export interface components {
         /** WallDTO */
         WallDTO: {
             /**
+             * Bulge
+             * @description flecha del arco en m (0 o null = recto); + hacia (-dy, dx)
+             */
+            bulge?: number | null;
+            /**
              * Confidence
              * @default 1
              */
@@ -473,6 +914,7 @@ export interface components {
             height: number;
             /** Id */
             id: string;
+            kind?: components["schemas"]["WallKind"] | null;
             /**
              * Length
              * @description solo salida
@@ -483,18 +925,26 @@ export interface components {
              * @default plaster
              */
             material: string;
+            measure?: components["schemas"]["MeasureDTO"] | null;
             /**
              * Openings
              * @default []
              */
             openings: components["schemas"]["OpeningDTO"][];
             start: components["schemas"]["PointDTO"];
+            /** Structural */
+            structural?: boolean | null;
             /**
              * Thickness
              * @default 0.15
              */
             thickness: number;
         };
+        /**
+         * WallKind
+         * @enum {string}
+         */
+        WallKind: "unknown" | "exterior" | "interior" | "partition";
     };
     responses: never;
     parameters: never;
@@ -504,6 +954,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    check_capture_api_capture_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_check_capture_api_capture_check_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaptureCheckDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     suggest_corners_api_corners_post: {
         parameters: {
             query?: never;
@@ -708,8 +1191,13 @@ export interface operations {
     };
     update_model_api_projects__project_id__model_put: {
         parameters: {
-            query?: never;
-            header?: never;
+            query?: {
+                summary?: string;
+            };
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -729,6 +1217,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProjectDTO"];
                 };
+            };
+            /** @description Otra persona guardó una versión más nueva */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -759,6 +1254,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProgressEventDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correction_quality_api_projects__project_id__quality_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionStatsDTO"];
                 };
             };
             /** @description Validation Error */
@@ -807,6 +1333,104 @@ export interface operations {
             };
         };
     };
+    list_revisions_api_projects__project_id__revisions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevisionDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_revision_api_projects__project_id__revisions__number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingModelDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_revision_api_projects__project_id__revisions__number__restore_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     calibrate_scale_api_projects__project_id__scale_post: {
         parameters: {
             query?: never;
@@ -829,6 +1453,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solve_dimensions_api_projects__project_id__solve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolveResultDTO"];
                 };
             };
             /** @description Validation Error */

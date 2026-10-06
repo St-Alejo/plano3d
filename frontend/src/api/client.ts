@@ -1,4 +1,4 @@
-import type { BuildingModel, Project, ProgressEvent, ProjectSummary } from './types'
+import type { BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck } from './types'
 
 export class ApiError extends Error {
   constructor(
@@ -75,19 +75,61 @@ export const api = {
     return res.corners
   },
 
+  /** ¿La foto sirve? (movida, reflejo, resolución) — antes de subir. */
+  checkCapture: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<CaptureCheck>('/capture/check', { method: 'POST', body: form })
+  },
+
   getProject: (id: string) => request<Project>(`/projects/${encodeURIComponent(id)}`),
 
-  createProject: (file: File, name: string, corners?: Corners, onProgress?: (fraction: number) => void) => {
+  createProject: (
+    file: File,
+    name: string,
+    corners?: Corners,
+    onProgress?: (fraction: number) => void,
+    extra: File[] = [],
+  ) => {
     const form = new FormData()
     form.append('file', file)
     form.append('name', name)
     if (corners) form.append('corners', JSON.stringify(corners))
+    // más fotos de la misma hoja (plano grande por partes): el servidor las une
+    for (const f of extra) form.append('extra', f)
     if (onProgress) return uploadWithProgress<{ id: string; status: string }>('/projects', form, onProgress)
     return request<{ id: string; status: string }>('/projects', { method: 'POST', body: form })
   },
 
-  saveModel: (id: string, model: BuildingModel) =>
-    request<Project>(`/projects/${encodeURIComponent(id)}/model`, { method: 'PUT', ...json(model) }),
+  /**
+   * Guarda con bloqueo optimista: `revision` es la versión sobre la que se editó.
+   * Si otra persona guardó antes responde 409 (ApiError.status === 409).
+   * `revision: '*'` fuerza el guardado (sobrescribe).
+   */
+  saveModel: (id: string, model: BuildingModel, revision?: number | '*', summary?: string) => {
+    const init = json(model)
+    const headers = { ...(init.headers as Record<string, string>) }
+    if (revision !== undefined) headers['If-Match'] = revision === '*' ? '*' : `"${revision}"`
+    const q = summary ? `?summary=${encodeURIComponent(summary)}` : ''
+    return request<Project>(`/projects/${encodeURIComponent(id)}/model${q}`, { method: 'PUT', ...init, headers })
+  },
+
+  listRevisions: (id: string) => request<Revision[]>(`/projects/${encodeURIComponent(id)}/revisions`),
+
+  restoreRevision: (id: string, number: number, revision?: number) =>
+    request<Project>(`/projects/${encodeURIComponent(id)}/revisions/${number}/restore`, {
+      method: 'POST',
+      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+    }),
+
+  /** Ajusta los muros a las cotas del plano (las medidas escritas mandan). */
+  solve: (id: string, revision?: number) =>
+    request<SolveResult>(`/projects/${encodeURIComponent(id)}/solve`, {
+      method: 'POST',
+      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+    }),
+
+  quality: (id: string) => request<CorrectionStats>(`/projects/${encodeURIComponent(id)}/quality`),
 
   reanalyze: (id: string, corners?: Corners) =>
     request<{ id: string; status: string }>(`/projects/${encodeURIComponent(id)}/reanalyze`, {

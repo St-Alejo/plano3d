@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 import copy
 import logging
 from collections import defaultdict
@@ -11,7 +12,8 @@ from pathlib import Path
 
 from plano3d.application.dto import ProgressEventDTO
 from plano3d.application.ports import FileStorage, JobQueue, ProgressBroker, ProjectRepository
-from plano3d.domain import Project
+from plano3d.domain import ModelRevision, Project
+from plano3d.domain.errors import ConcurrencyError
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +21,7 @@ log = logging.getLogger(__name__)
 class InMemoryProjectRepository(ProjectRepository):
     def __init__(self) -> None:
         self._items: dict[str, Project] = {}
+        self._revisions: dict[str, list[ModelRevision]] = defaultdict(list)
 
     async def add(self, project: Project) -> None:
         self._items[project.id] = copy.deepcopy(project)
@@ -30,13 +33,26 @@ class InMemoryProjectRepository(ProjectRepository):
     async def list(self) -> list[Project]:
         return [copy.deepcopy(p) for p in self._items.values()]
 
-    async def save(self, project: Project) -> None:
-        if project.id not in self._items:
+    async def save(self, project: Project, expected_revision: int | None = None) -> None:
+        stored = self._items.get(project.id)
+        if stored is None:
             raise KeyError(project.id)
+        if expected_revision is not None and stored.revision != expected_revision:
+            raise ConcurrencyError(expected_revision, stored.revision)
         self._items[project.id] = copy.deepcopy(project)
 
     async def delete(self, project_id: str) -> None:
         self._items.pop(project_id, None)
+        self._revisions.pop(project_id, None)
+
+    async def add_revision(self, revision: ModelRevision) -> None:
+        self._revisions[revision.project_id].append(revision)
+
+    async def list_revisions(self, project_id: str) -> builtins.list[ModelRevision]:
+        return sorted(self._revisions.get(project_id, []), key=lambda r: r.number, reverse=True)
+
+    async def get_revision(self, project_id: str, number: int) -> ModelRevision | None:
+        return next((r for r in self._revisions.get(project_id, []) if r.number == number), None)
 
 
 class InMemoryFileStorage(FileStorage):

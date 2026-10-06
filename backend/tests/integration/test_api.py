@@ -135,6 +135,45 @@ def test_suggest_corners(client: TestClient) -> None:
     assert bad.status_code == 415
 
 
+def test_revisions_etag_and_conflict(client: TestClient) -> None:
+    pid = _upload(client, encode(render(apartment()).image, ".png"), "image/png")
+    _wait_ready(client, pid)
+    r = client.get(f"/api/projects/{pid}")
+    assert r.headers["etag"] == '"1"' and r.json()["revision"] == 1
+    model = r.json()["model"]
+
+    model["levels"][0]["rooms"][0]["label"] = "Cocina"
+    ok = client.put(
+        f"/api/projects/{pid}/model?summary=Nombres", json=model, headers={"If-Match": '"1"'}
+    )
+    assert ok.status_code == 200 and ok.headers["etag"] == '"2"'
+
+    # otra pestaña todavía tenía la revisión 1 → 409 y no se pierde nada
+    stale = client.put(f"/api/projects/{pid}/model", json=model, headers={"If-Match": '"1"'})
+    assert stale.status_code == 409 and "cambió" in stale.json()["detail"]
+    assert (
+        client.put(
+            f"/api/projects/{pid}/model", json=model, headers={"If-Match": "abc"}
+        ).status_code
+        == 400
+    )
+
+    revs = client.get(f"/api/projects/{pid}/revisions").json()
+    assert [(r["number"], r["summary"]) for r in revs][:2] == [
+        (2, "Nombres"),
+        (1, "Detección automática (raster-vector)"),
+    ]
+    old = client.get(f"/api/projects/{pid}/revisions/1").json()
+    assert old["levels"][0]["rooms"][0]["label"] != "Cocina"
+    assert client.get(f"/api/projects/{pid}/revisions/42").status_code == 404
+
+    restored = client.post(f"/api/projects/{pid}/revisions/1/restore", headers={"If-Match": '"2"'})
+    assert restored.status_code == 200 and restored.json()["revision"] == 3
+
+    quality = client.get(f"/api/projects/{pid}/quality").json()
+    assert quality["walls_detected"] == 6 and quality["correction_rate"] == 0
+
+
 def test_errors(client: TestClient) -> None:
     assert client.get("/api/projects/nope").status_code == 404
     r = client.post("/api/projects", files={"file": ("a.gif", b"GIF89a", "image/gif")})
@@ -172,3 +211,101 @@ def test_delete(client: TestClient) -> None:
     _wait_ready(client, pid)
     assert client.delete(f"/api/projects/{pid}").status_code == 204
     assert client.get(f"/api/projects/{pid}").status_code == 404
+
+
+def test_dxf_upload_gives_exact_model(client: TestClient) -> None:
+    """Un DXF de CAD entra por la ruta vectorial: medidas exactas, sin corrección de esquinas."""
+    from tests.synth.complex_plans import casa_compleja
+    from tests.synth.to_dxf import plan_to_dxf
+
+    r = client.post(
+        "/api/projects",
+        # muchos navegadores mandan un .dxf como octet-stream: se reconoce por la extensión
+        files={"file": ("casa.dxf", plan_to_dxf(casa_compleja()), "application/octet-stream")},
+        data={"name": "Casa CAD"},
+    )
+    assert r.status_code == 202, r.text
+    body = _wait_ready(client, str(r.json()["id"]))
+    assert body["status"] == "ready", body.get("error")
+    model = body["model"]
+    assert model["scale"]["source"] == "vector"
+    level = model["levels"][0]
+    assert len(level["rooms"]) == 5
+    assert len(level["dimensions"]) == 8
+    assert all(w["measure"]["status"] == "exact" for w in level["walls"])
+    assert any(w["bulge"] for w in level["walls"])
+    img = client.get(f"/api/projects/{body['id']}/image?kind=rectified")
+    assert img.status_code == 200
+
+
+def test_rejects_unknown_type(client: TestClient) -> None:
+    r = client.post(
+        "/api/projects", files={"file": ("x.txt", b"hola", "text/plain")}, data={"name": "x"}
+    )
+    assert r.status_code == 415
+
+
+def test_corregir_una_cota_ajusta_los_muros(client: TestClient) -> None:
+    """El usuario corrige el valor de una cota → el solver mueve los muros a esa medida."""
+    from tests.synth.complex_plans import casa_compleja
+    from tests.synth.to_dxf import plan_to_dxf
+
+    r = client.post(
+        "/api/projects",
+        files={"file": ("casa.dxf", plan_to_dxf(casa_compleja()), "application/dxf")},
+        data={"name": "Casa"},
+    )
+    pid = str(r.json()["id"])
+    body = _wait_ready(client, pid)
+    model = body["model"]
+    level = model["levels"][0]
+    # la cota total horizontal (14,00) pasa a 14,50 en el plano corregido
+    total = max(
+        (d for d in level["dimensions"] if d["axis"] == "horizontal"), key=lambda d: d["value"]
+    )
+    total["value"] = 14.5
+    total["text"] = "14,50"
+    put = client.put(
+        f"/api/projects/{pid}/model", json=model, headers={"If-Match": f'"{body["revision"]}"'}
+    )
+    assert put.status_code == 200, put.text
+    solved = client.post(f"/api/projects/{pid}/solve")
+    assert solved.status_code == 200, solved.text
+    report = solved.json()["report"]
+    assert report["dims_conflict"] >= 1  # las parciales (5 + 4,5 + 4,5) ya no suman 14,5
+    lv = solved.json()["project"]["model"]["levels"][0]
+    xs = [p for w in lv["walls"] for p in (w["start"]["x"], w["end"]["x"])]
+    # el edificio se estira hacia la nueva cota (entre lo que dicen las parciales y la total)
+    assert 14.0 < max(xs) - min(xs) < 14.5 + 0.01
+    assert solved.headers["etag"] == f'"{body["revision"] + 2}"'
+
+
+def test_chequeo_de_captura(client: TestClient) -> None:
+    import cv2
+
+    photo = photograph(render(apartment()), seed=1)
+    blurry = cv2.GaussianBlur(photo.image, (0, 0), 6)
+    r = client.post(
+        "/api/capture/check", files={"file": ("x.jpg", encode(blurry, ".jpg"), "image/jpeg")}
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ok"] is False and any("movida" in w for w in body["warnings"])
+
+
+def test_plano_grande_en_varias_fotos(client: TestClient) -> None:
+    from tests.synth.complex_plans import STYLES, casa_compleja, render_complex
+    from tests.synth.plan_generator import photograph_tiles
+
+    shots = photograph_tiles(
+        render_complex(casa_compleja(), STYLES["cad"]), grid=(2, 1), overlap=0.4
+    )
+    files = [("file", ("a.jpg", encode(shots[0].image, ".jpg"), "image/jpeg"))]
+    files += [("extra", ("b.jpg", encode(shots[1].image, ".jpg"), "image/jpeg"))]
+    r = client.post("/api/projects", files=files, data={"name": "Casa A1"})
+    assert r.status_code == 202, r.text
+    body = _wait_ready(client, str(r.json()["id"]), timeout=120)
+    assert body["status"] == "ready", body.get("error")
+    assert len(body["model"]["levels"][0]["walls"]) >= 5
+    orig = client.get(f"/api/projects/{body['id']}/image?kind=original")
+    assert orig.headers["content-type"] == "image/png"  # la unión se guarda como PNG

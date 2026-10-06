@@ -30,11 +30,28 @@ export function snapToAxis(anchor: Point, p: Point, degTol = 6): Point {
   return p
 }
 
-/** Combina ambos: primero extremos (más fuerte), si no, ejes respecto al ancla. */
-export function snapPoint(p: Point, opts: { anchor?: Point; candidates: Point[]; tol: number; degTol?: number }): Point {
+/** Redondea a la rejilla (paso en las mismas unidades que el punto; 0 = sin rejilla). */
+export function snapToGrid(p: Point, step: number): Point {
+  if (!(step > 0)) return p
+  return { x: Math.round(p.x / step) * step, y: Math.round(p.y / step) * step }
+}
+
+/**
+ * Combina los imanes, del más fuerte al más débil: extremos existentes → ejes 0°/90°
+ * respecto del ancla → rejilla (sobre el eje libre, para no romper la alineación).
+ */
+export function snapPoint(
+  p: Point,
+  opts: { anchor?: Point; candidates: Point[]; tol: number; degTol?: number; grid?: number },
+): Point {
   const s = snapToPoints(p, opts.candidates, opts.tol)
   if (s.snapped) return s.point
-  return opts.anchor ? snapToAxis(opts.anchor, p, opts.degTol) : p
+  const axis = opts.anchor ? snapToAxis(opts.anchor, p, opts.degTol) : p
+  if (!opts.grid) return axis
+  const g = snapToGrid(axis, opts.grid)
+  if (opts.anchor && axis.y === opts.anchor.y) return { x: g.x, y: axis.y }
+  if (opts.anchor && axis.x === opts.anchor.x) return { x: axis.x, y: g.y }
+  return g
 }
 
 /** Muro más cercano a un punto (para colocar puertas/ventanas con un clic). */

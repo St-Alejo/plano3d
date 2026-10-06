@@ -23,6 +23,11 @@ class ImageDecodeError(ValueError):
 
 def decode(data: bytes, content_type: str, max_side: int = MAX_SIDE) -> Img:
     """Bytes → imagen BGR, respetando la orientación EXIF de las fotos del celular."""
+    return decode_scaled(data, content_type, max_side)[0]
+
+
+def decode_scaled(data: bytes, content_type: str, max_side: int = MAX_SIDE) -> tuple[Img, float]:
+    """Como ``decode`` pero devuelve también el factor de reducción aplicado (1.0 = ninguno)."""
     if content_type == "application/pdf":
         img = _decode_pdf(data)
     else:
@@ -34,10 +39,12 @@ def decode(data: bytes, content_type: str, max_side: int = MAX_SIDE) -> Img:
             raise ImageDecodeError(f"No se pudo leer la imagen: {exc}") from exc
         img = as_u8(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
     h, w = img.shape[:2]
-    if max(h, w) > max_side:
-        f = max_side / max(h, w)
-        img = as_u8(cv2.resize(img, (round(w * f), round(h * f)), interpolation=cv2.INTER_AREA))
-    return img
+    if max(h, w) <= max_side:
+        return img, 1.0
+    f = max_side / max(h, w)
+    nw, nh = round(w * f), round(h * f)
+    img = as_u8(cv2.resize(img, (nw, nh), interpolation=cv2.INTER_AREA))
+    return img, nw / w
 
 
 def _decode_pdf(data: bytes) -> Img:

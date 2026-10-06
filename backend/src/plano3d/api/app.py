@@ -15,6 +15,7 @@ from fastapi import (
     FastAPI,
     File,
     Form,
+    Header,
     HTTPException,
     Query,
     Request,
@@ -30,15 +31,23 @@ from fastapi.responses import JSONResponse
 from plano3d.application.dto import (
     BuildingModelDTO,
     CalibrateScaleDTO,
+    CaptureCheckDTO,
     CornersDTO,
+    CorrectionStatsDTO,
     ProgressEventDTO,
     ProjectCreatedDTO,
     ProjectDTO,
     ProjectSummaryDTO,
     ReanalyzeDTO,
+    RevisionDTO,
+    SolveReportDTO,
+    SolveResultDTO,
     model_from_dto,
+    model_to_dto,
     project_to_dto,
     project_to_summary,
+    revision_to_dto,
+    stats_to_dto,
 )
 from plano3d.application.use_cases.errors import (
     FileTooLargeError,
@@ -46,10 +55,16 @@ from plano3d.application.use_cases.errors import (
     ProjectNotFoundError,
     UnsupportedFileError,
 )
+from plano3d.application.use_cases.projects import normalize_content_type
 from plano3d.config import Settings
 from plano3d.container import Container, build_container
 from plano3d.domain import Point2D
-from plano3d.domain.errors import DomainError, InvalidStateTransitionError
+from plano3d.domain.errors import (
+    ConcurrencyError,
+    DomainError,
+    EntityNotFoundError,
+    InvalidStateTransitionError,
+)
 
 log = logging.getLogger(__name__)
 
@@ -90,8 +105,29 @@ async def suggest_corners(
 ) -> CornersDTO:
     """Detecta la hoja en la foto para precargar el ajuste manual de esquinas."""
     data = await file.read()
-    corners = await asyncio.to_thread(c.suggest_corners.execute, data, file.content_type or "")
+    ctype = normalize_content_type(file.content_type or "", file.filename)
+    corners = await asyncio.to_thread(c.suggest_corners.execute, data, ctype)
     return CornersDTO(corners=corners)
+
+
+@router.post("/capture/check", response_model=CaptureCheckDTO, tags=["captura"])
+async def check_capture(
+    c: ContainerDep,
+    file: Annotated[UploadFile, File(description="Foto del plano")],
+) -> CaptureCheckDTO:
+    """¿La foto sirve? Avisa si está movida, con reflejo o con poca resolución."""
+    data = await file.read()
+    ctype = normalize_content_type(file.content_type or "", file.filename)
+    r = await asyncio.to_thread(c.check_capture.execute, data, ctype)
+    return CaptureCheckDTO(
+        ok=not r.warnings,
+        sharpness=r.sharpness,
+        glare=r.glare,
+        width=r.width,
+        height=r.height,
+        paper_found=r.paper_found,
+        warnings=list(r.warnings),
+    )
 
 
 @router.get("/projects", response_model=list[ProjectSummaryDTO], tags=["proyectos"])
@@ -107,20 +143,57 @@ async def list_projects(c: ContainerDep) -> list[ProjectSummaryDTO]:
 )
 async def create_project(
     c: ContainerDep,
-    file: Annotated[UploadFile, File(description="Foto, imagen o PDF del plano")],
+    file: Annotated[UploadFile, File(description="Foto, imagen, PDF o DXF del plano")],
     name: Annotated[str, Form()] = "Plano sin nombre",
     corners: Annotated[str | None, Form(description="JSON [[x,y] x4] normalizado")] = None,
+    extra: Annotated[
+        list[UploadFile] | None,
+        File(description="Más fotos de la misma hoja, de izquierda a derecha (se unen)"),
+    ] = None,
 ) -> ProjectCreatedDTO:
     data = await file.read()
+    more = [
+        (await f.read(), normalize_content_type(f.content_type or "", f.filename))
+        for f in (extra or [])
+    ]
     project = await c.create_project.execute(
-        name, data, file.content_type or "", _parse_corners(corners)
+        name,
+        data,
+        normalize_content_type(file.content_type or "", file.filename),
+        _parse_corners(corners),
+        more,
     )
     return ProjectCreatedDTO(id=project.id, status=project.status)
 
 
+def _etag(revision: int) -> str:
+    return f'"{revision}"'
+
+
+def _parse_if_match(value: str | None) -> int | None:
+    """If-Match: "7" (o W/"7") → 7. Ausente o "*" → sin comprobación."""
+    if value is None or value.strip() == "*":
+        return None
+    raw = value.strip().removeprefix("W/").strip('"')
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise HTTPException(
+            400, 'If-Match debe ser la revisión entre comillas, p. ej. "3"'
+        ) from exc
+
+
+IfMatch = Annotated[
+    str | None,
+    Header(alias="If-Match", description="Revisión que se editó; si cambió, responde 409"),
+]
+
+
 @router.get("/projects/{project_id}", response_model=ProjectDTO, tags=["proyectos"])
-async def get_project(project_id: str, c: ContainerDep) -> ProjectDTO:
-    return project_to_dto(await c.get_project.execute(project_id))
+async def get_project(project_id: str, c: ContainerDep, response: Response) -> ProjectDTO:
+    project = await c.get_project.execute(project_id)
+    response.headers["ETag"] = _etag(project.revision)
+    return project_to_dto(project)
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["proyectos"])
@@ -129,12 +202,81 @@ async def delete_project(project_id: str, c: ContainerDep) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/projects/{project_id}/model", response_model=ProjectDTO, tags=["modelo"])
-async def update_model(project_id: str, body: BuildingModelDTO, c: ContainerDep) -> ProjectDTO:
+@router.put(
+    "/projects/{project_id}/model",
+    response_model=ProjectDTO,
+    responses={409: {"description": "Otra persona guardó una versión más nueva"}},
+    tags=["modelo"],
+)
+async def update_model(
+    project_id: str,
+    body: BuildingModelDTO,
+    c: ContainerDep,
+    response: Response,
+    if_match: IfMatch = None,
+    summary: Annotated[str, Query(max_length=200)] = "Corrección manual",
+) -> ProjectDTO:
     if body.project_id != project_id:
         raise HTTPException(422, "project_id del cuerpo no coincide con la URL")
-    project = await c.update_model.execute(project_id, model_from_dto(body))
+    project = await c.update_model.execute(
+        project_id, model_from_dto(body), _parse_if_match(if_match), summary
+    )
+    response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
+
+
+@router.get("/projects/{project_id}/revisions", response_model=list[RevisionDTO], tags=["modelo"])
+async def list_revisions(project_id: str, c: ContainerDep) -> list[RevisionDTO]:
+    return [revision_to_dto(r) for r in await c.list_revisions.execute(project_id)]
+
+
+@router.get(
+    "/projects/{project_id}/revisions/{number}", response_model=BuildingModelDTO, tags=["modelo"]
+)
+async def get_revision(project_id: str, number: int, c: ContainerDep) -> BuildingModelDTO:
+    return model_to_dto((await c.get_revision.execute(project_id, number)).model)
+
+
+@router.post(
+    "/projects/{project_id}/revisions/{number}/restore",
+    response_model=ProjectDTO,
+    tags=["modelo"],
+)
+async def restore_revision(
+    project_id: str, number: int, c: ContainerDep, response: Response, if_match: IfMatch = None
+) -> ProjectDTO:
+    project = await c.restore_revision.execute(project_id, number, _parse_if_match(if_match))
+    response.headers["ETag"] = _etag(project.revision)
+    return project_to_dto(project)
+
+
+@router.get("/projects/{project_id}/quality", response_model=CorrectionStatsDTO, tags=["modelo"])
+async def correction_quality(project_id: str, c: ContainerDep) -> CorrectionStatsDTO:
+    return stats_to_dto(await c.correction_stats.execute(project_id))
+
+
+@router.post("/projects/{project_id}/solve", response_model=SolveResultDTO, tags=["modelo"])
+async def solve_dimensions(
+    project_id: str,
+    response: Response,
+    c: ContainerDep,
+    if_match: Annotated[str | None, Header()] = None,
+) -> SolveResultDTO:
+    """Ajusta los muros a las cotas del plano (las medidas escritas mandan)."""
+    project, report = await c.solve_dimensions.execute(project_id, _parse_if_match(if_match))
+    response.headers["ETag"] = _etag(project.revision)
+    return SolveResultDTO(
+        project=project_to_dto(project),
+        report=SolveReportDTO(
+            dims_exact=report.dims_exact,
+            dims_conflict=report.dims_conflict,
+            dims_unlinked=report.dims_unlinked,
+            walls_exact=report.walls_exact,
+            max_residual=round(report.max_residual, 4),
+            moved_max=round(report.moved_max, 4),
+            conflicts=report.conflicts,
+        ),
+    )
 
 
 @router.post("/projects/{project_id}/scale", response_model=ProjectDTO, tags=["modelo"])
@@ -244,6 +386,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         (UnsupportedFileError, 415),
         (FileTooLargeError, 413),
         (InvalidStateTransitionError, 409),
+        (ConcurrencyError, 409),
+        (EntityNotFoundError, 404),
         (NoDetectorAvailableError, 422),
         (DomainError, 422),
     ]

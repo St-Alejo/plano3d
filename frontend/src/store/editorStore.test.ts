@@ -85,3 +85,48 @@ describe('editorStore', () => {
     expect(useEditor.getState().model).toBeNull()
   })
 })
+
+describe('ambientes derivados en el store', () => {
+  beforeEach(() => useEditor.getState().reset())
+
+  it('mover un muro recalcula el área del ambiente y conserva su nombre', async () => {
+    const { TranslateWall } = await import('@/domain/commands')
+    const { polygonArea } = await import('@/domain/model')
+    useEditor.getState().load('prj_1', sampleModel(), 1)
+    useEditor.getState().dispatch(new TranslateWall(L, 'w_right', 1, 0))
+    const cocina = selectLevel(useEditor.getState())!.rooms.find((r) => r.id === 'r_b')!
+    expect(cocina.label).toBe('Espacio 2')
+    expect(polygonArea(cocina.polygon)).toBeCloseTo(4.8 * 6.8, 6)
+  })
+
+  it('borrar un muro funde ambientes y deshacer recupera los nombres', async () => {
+    const { DeleteWall, RelabelRoom } = await import('@/domain/commands')
+    const st = useEditor.getState()
+    st.load('prj_1', sampleModel(), 1)
+    st.dispatch(new RelabelRoom(L, 'r_b', 'Cocina'))
+    useEditor.getState().dispatch(new DeleteWall(L, 'w_mid'))
+    expect(selectLevel(useEditor.getState())!.rooms).toHaveLength(1)
+    useEditor.getState().undo()
+    const labels = selectLevel(useEditor.getState())!.rooms.map((r) => r.label).sort()
+    expect(labels).toEqual(['Cocina', 'Sala'])
+  })
+
+  it('cambios que no tocan muros no recalculan (renombrar mantiene el polígono)', async () => {
+    const { RelabelRoom } = await import('@/domain/commands')
+    useEditor.getState().load('prj_1', sampleModel(), 1)
+    const before = selectLevel(useEditor.getState())!.rooms[0]!.polygon
+    useEditor.getState().dispatch(new RelabelRoom(L, 'r_a', 'Living'))
+    expect(selectLevel(useEditor.getState())!.rooms[0]!.polygon).toBe(before)
+  })
+
+  it('guardar actualiza la revisión y ajustes de rejilla/cotas', () => {
+    const st = useEditor.getState()
+    st.load('prj_1', sampleModel(), 4)
+    expect(useEditor.getState().revision).toBe(4)
+    st.markSaved(5)
+    expect(useEditor.getState().revision).toBe(5)
+    st.setGridStep(0.1)
+    st.toggleDimensions()
+    expect(useEditor.getState()).toMatchObject({ gridStep: 0.1, showDimensions: false })
+  })
+})

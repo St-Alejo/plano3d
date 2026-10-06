@@ -8,7 +8,17 @@ from collections.abc import AsyncIterator
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from plano3d.domain import BuildingModel, Level, Point2D, Project, Room, Scale, Wall
+from plano3d.domain import (
+    BuildingModel,
+    Level,
+    ModelRevision,
+    Point2D,
+    Project,
+    Room,
+    Scale,
+    Wall,
+)
+from plano3d.domain.errors import ConcurrencyError
 from plano3d.infrastructure.persistence.sqlalchemy_repository import (
     Base,
     SqlAlchemyProjectRepository,
@@ -50,7 +60,30 @@ async def _exercise(repo: SqlAlchemyProjectRepository) -> None:
     assert again.status == loaded.status
 
     assert [x.id for x in await repo.list()] == [p.id]
+    assert again.revision == 1
+
+    # historial
+    await repo.add_revision(ModelRevision(p.id, 1, again.model, "Detección automática"))  # type: ignore[arg-type]
+    again.update_model(_model(p.id).recalibrated(0.04), expected_revision=1)
+    await repo.save(again, expected_revision=1)
+    await repo.add_revision(ModelRevision(p.id, 2, again.model, "Corrección manual"))  # type: ignore[arg-type]
+    revs = await repo.list_revisions(p.id)
+    assert [(r.number, r.summary) for r in revs] == [
+        (2, "Corrección manual"),
+        (1, "Detección automática"),
+    ]
+    first = await repo.get_revision(p.id, 1)
+    assert first is not None and first.model == _model(p.id)
+    assert await repo.get_revision(p.id, 9) is None
+
+    # bloqueo optimista: una copia vieja no puede pisar la revisión 2
+    stale = await repo.get(p.id)
+    assert stale is not None and stale.revision == 2
+    with pytest.raises(ConcurrencyError):
+        await repo.save(stale, expected_revision=1)
+
     await repo.delete(p.id)
+    assert await repo.list_revisions(p.id) == []
     assert await repo.get(p.id) is None
     with pytest.raises(KeyError):
         await repo.save(loaded)

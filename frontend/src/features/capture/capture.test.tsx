@@ -18,6 +18,10 @@ describe('validateFile', () => {
     expect(validateFile(jpg())).toBeNull()
     expect(validateFile(new File(['x'], 'a.pdf', { type: 'application/pdf' }))).toBeNull()
     expect(validateFile(new File(['x'], 'a.gif', { type: 'image/gif' }))).toMatch(/no soportado/)
+    // DXF de CAD: el navegador lo manda sin tipo o como octet-stream; vale la extensión
+    expect(validateFile(new File(['SECTION'], 'casa.dxf', { type: '' }))).toBeNull()
+    expect(validateFile(new File(['x'], 'casa.DXF', { type: 'application/octet-stream' }))).toBeNull()
+    expect(validateFile(new File(['x'], 'casa.dwg', { type: 'application/octet-stream' }))).toMatch(/no soportado/)
     const huge = jpg('big.jpg')
     Object.defineProperty(huge, 'size', { value: 26 * 1024 * 1024 })
     expect(validateFile(huge)).toMatch(/25 MB/)

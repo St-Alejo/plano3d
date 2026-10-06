@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import cv2
 import numpy as np
@@ -40,6 +40,9 @@ class Case:
     #: homografía papel → imagen rectificada (identidad si es un escaneo limpio)
     to_rectified: npt.NDArray[np.float64]
     photo: Photo | None = None
+    #: homografía papel → imagen subida (identidad en un escaneo); compuesta con
+    #: ``CVContext.transform`` da la verdad de terreno exacta en la imagen de trabajo
+    paper_to_input: npt.NDArray[np.float64] = field(default_factory=lambda: np.eye(3))
 
     def run(self, until: str | None = None) -> CVContext:
         ctx = CVContext("prj_test", self.data, self.content_type)
@@ -61,12 +64,20 @@ class Case:
 
 
 def clean_case(name: str) -> Case:
-    r = render(PLANS[name]())
-    return Case(f"{name}-clean", r.plan, r, encode(r.image), "image/png", np.eye(3))
+    return scan_case_from(render(PLANS[name]()), f"{name}-clean")
 
 
 def photo_case(name: str, seed: int, **photo_params: float) -> Case:
-    r = render(PLANS[name]())
+    return photo_case_from(render(PLANS[name]()), f"{name}-photo{seed}", seed, **photo_params)
+
+
+def scan_case_from(r: RenderedPlan, name: str) -> Case:
+    """Escaneo limpio: la imagen rectificada es el papel tal cual."""
+    return Case(name, r.plan, r, encode(r.image), "image/png", np.eye(3))
+
+
+def photo_case_from(r: RenderedPlan, name: str, seed: int, **photo_params: float) -> Case:
+    """Foto simulada de cualquier plano renderizado, con la homografía papel → rectificada."""
     photo = photograph(r, seed=seed, **photo_params)  # type: ignore[arg-type]
     ph, pw = r.image.shape[:2]
     paper = np.array([[0, 0], [pw, 0], [pw, ph], [0, ph]], np.float32)
@@ -80,7 +91,16 @@ def photo_case(name: str, seed: int, **photo_params: float) -> Case:
     h_det = cv2.getPerspectiveTransform(quad.astype(np.float32), rect)
     shift = np.array([[1, 0, -int(w * INSET)], [0, 1, -int(h * INSET)], [0, 0, 1]], np.float64)
     data = encode(photo.image, ".jpg")
-    return Case(f"{name}-photo{seed}", r.plan, r, data, "image/jpeg", shift @ h_det @ h_true, photo)
+    return Case(
+        name,
+        r.plan,
+        r,
+        data,
+        "image/jpeg",
+        shift @ h_det @ h_true,
+        photo,
+        h_true.astype(np.float64),
+    )
 
 
 ALL_CASES = [f"{n}:clean" for n in PLANS] + [f"{n}:{s}" for n in PLANS for s in PHOTO_SEEDS]

@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 
 from plano3d.domain.building import BuildingModel, new_id
-from plano3d.domain.errors import DomainError, InvalidStateTransitionError
+from plano3d.domain.errors import ConcurrencyError, DomainError, InvalidStateTransitionError
 
 
 class ProjectStatus(StrEnum):
@@ -37,6 +37,8 @@ class Project:
     corners: list[tuple[float, float]] | None = None
     status: ProjectStatus = ProjectStatus.PENDING
     model: BuildingModel | None = None
+    #: versión del modelo: sube en cada guardado (bloqueo optimista + historial)
+    revision: int = 0
     error: str | None = None
     created_at: datetime = field(default_factory=_now)
     updated_at: datetime = field(default_factory=_now)
@@ -76,16 +78,35 @@ class Project:
             raise DomainError("El modelo pertenece a otro proyecto")
         self._transition(ProjectStatus.READY)
         self.model = model
+        self.revision += 1
 
     def fail(self, reason: str) -> None:
         self._transition(ProjectStatus.FAILED)
         self.error = reason
 
-    def update_model(self, model: BuildingModel) -> None:
-        """Corrección manual: solo tiene sentido cuando ya hay un modelo listo."""
+    def update_model(self, model: BuildingModel, expected_revision: int | None = None) -> None:
+        """Corrección manual: solo tiene sentido cuando ya hay un modelo listo.
+
+        Con ``expected_revision`` se aplica bloqueo optimista: si alguien guardó
+        después de que el editor cargó el modelo, se rechaza en lugar de pisarlo.
+        """
         if self.status is not ProjectStatus.READY:
             raise InvalidStateTransitionError("Solo se puede corregir un proyecto listo")
         if model.project_id != self.id:
             raise DomainError("El modelo pertenece a otro proyecto")
+        if expected_revision is not None and expected_revision != self.revision:
+            raise ConcurrencyError(expected_revision, self.revision)
         self.model = model
+        self.revision += 1
         self.updated_at = _now()
+
+
+@dataclass(frozen=True)
+class ModelRevision:
+    """Foto inmutable del modelo en un guardado (historial y restauración)."""
+
+    project_id: str
+    number: int
+    model: BuildingModel
+    summary: str
+    created_at: datetime = field(default_factory=_now)

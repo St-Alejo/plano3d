@@ -120,15 +120,20 @@ export function upsertRoom(lv: Level, room: Room): Level {
   return { ...lv, rooms: exists ? lv.rooms.map((r) => (r.id === room.id ? room : r)) : [...lv.rooms, room] }
 }
 
-/** Mueve un extremo; ajusta los offsets si se mueve el inicio para que las aberturas no "salten". */
+/**
+ * Mueve un extremo. Las aberturas conservan su distancia al extremo que NO se movió
+ * (los offsets se miden desde el inicio, así que mover el inicio los recalcula). Para
+ * movimientos a lo largo del muro equivale a no mover la abertura; para giros o
+ * desplazamientos grandes nunca la empuja fuera del muro.
+ */
 export function moveWallEndpoint(w: Wall, end: 'start' | 'end', to: Point): Wall {
   if (end === 'end') return { ...w, end: to }
-  const oldDir = wallDirection(w)
-  const shift = (to.x - w.start.x) * oldDir.x + (to.y - w.start.y) * oldDir.y
+  const oldLen = wallLength(w)
+  const newLen = wallLength({ start: to, end: w.end })
   return {
     ...w,
     start: to,
-    openings: w.openings.map((o) => ({ ...o, offset: o.offset - shift })),
+    openings: w.openings.map((o) => ({ ...o, offset: newLen - (oldLen - o.offset) })),
   }
 }
 

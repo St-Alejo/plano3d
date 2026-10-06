@@ -1,6 +1,8 @@
+import numpy as np
+
 from plano3d.application.pipeline import PipelineStage
 from plano3d.infrastructure.cv.context import CVContext
-from plano3d.infrastructure.cv.imageio import decode
+from plano3d.infrastructure.cv.imageio import decode_scaled
 
 
 class IngestStage(PipelineStage[CVContext]):
@@ -8,7 +10,8 @@ class IngestStage(PipelineStage[CVContext]):
     title = "Lectura de la imagen"
 
     def run(self, ctx: CVContext) -> CVContext:
-        ctx.original = decode(ctx.image_bytes, ctx.content_type)
+        ctx.original, f = decode_scaled(ctx.image_bytes, ctx.content_type)
+        ctx.then(np.diag([f, f, 1.0]))
         return ctx
 
     def metrics(self, ctx: CVContext) -> dict[str, float]:

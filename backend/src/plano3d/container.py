@@ -8,21 +8,38 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from plano3d.application.ports import FileStorage, JobQueue, ProgressBroker, ProjectRepository
+from plano3d.application.ports import (
+    FileStorage,
+    JobQueue,
+    ProgressBroker,
+    ProjectRepository,
+    TextReader,
+)
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
+    CheckCapture,
     CreateProject,
     DeleteProject,
+    GetCorrectionStats,
     GetProject,
+    GetRevision,
     ListProjects,
+    ListRevisions,
     ReanalyzeProject,
+    RestoreRevision,
+    SolveDimensions,
     SuggestCorners,
     UpdateBuildingModel,
 )
 from plano3d.config import Settings
+from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
+from plano3d.infrastructure.cv.raster_vector_detector import (
+    HybridPhotoDetector,
+    RasterVectorDetector,
+)
 from plano3d.infrastructure.memory import (
     InMemoryFileStorage,
     InMemoryProgressBroker,
@@ -30,6 +47,11 @@ from plano3d.infrastructure.memory import (
     InProcessJobQueue,
     LocalFileStorage,
 )
+from plano3d.infrastructure.ocr.claude import ClaudeTextReader, claude_available
+from plano3d.infrastructure.ocr.consensus import ConsensusReader
+from plano3d.infrastructure.ocr.rapid import RapidOcrReader
+from plano3d.infrastructure.ocr.rapid import available as ocr_available
+from plano3d.infrastructure.vector.detectors import DxfDetector, VectorPdfDetector
 
 
 @dataclass
@@ -43,7 +65,11 @@ class Container:
 
     @property
     def create_project(self) -> CreateProject:
-        return CreateProject(self.repo, self.storage, self.queue)
+        return CreateProject(self.repo, self.storage, self.queue, OpenCVStitcher())
+
+    @property
+    def check_capture(self) -> CheckCapture:
+        return CheckCapture(OpenCVCaptureInspector())
 
     @property
     def get_project(self) -> GetProject:
@@ -66,6 +92,26 @@ class Container:
         return CalibrateScale(self.repo)
 
     @property
+    def list_revisions(self) -> ListRevisions:
+        return ListRevisions(self.repo)
+
+    @property
+    def get_revision(self) -> GetRevision:
+        return GetRevision(self.repo)
+
+    @property
+    def restore_revision(self) -> RestoreRevision:
+        return RestoreRevision(self.repo)
+
+    @property
+    def correction_stats(self) -> GetCorrectionStats:
+        return GetCorrectionStats(self.repo)
+
+    @property
+    def solve_dimensions(self) -> SolveDimensions:
+        return SolveDimensions(self.repo)
+
+    @property
     def reanalyze(self) -> ReanalyzeProject:
         return ReanalyzeProject(self.repo, self.queue, self.progress)
 
@@ -85,8 +131,22 @@ class Container:
 
 
 def default_selector() -> DetectorSelector:
-    # Orden de preferencia. Fases futuras: [SamRoomsDetector(), CubiCasaDetector(), ...]
-    return DetectorSelector([ClassicCVDetector()], OpenCVImageInspector())
+    # Orden de preferencia: primero la ruta exacta (archivos vectoriales), la CV clásica
+    # queda siempre como respaldo para fotos e imágenes.
+    reader = text_reader()
+    photo = HybridPhotoDetector(RasterVectorDetector(reader), ClassicCVDetector())
+    return DetectorSelector(
+        [DxfDetector(), VectorPdfDetector(), photo, ClassicCVDetector()], OpenCVImageInspector()
+    )
+
+
+def text_reader() -> TextReader | None:
+    """OCR local; con credenciales de Anthropic, en consenso con Claude visión."""
+    local = RapidOcrReader() if ocr_available() else None
+    if claude_available():
+        claude = ClaudeTextReader()
+        return ConsensusReader(local, claude) if local else claude
+    return local
 
 
 def memory_container(storage: FileStorage | None = None) -> Container:

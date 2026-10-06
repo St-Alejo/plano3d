@@ -28,10 +28,27 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 Sin Docker (modo memoria, sin Postgres/Redis/S3):
 
 ```bash
-cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"   # Linux/Mac: .venv/bin/pip
+cd backend && python -m venv .venv && .venv/Scripts/pip install -e ".[dev,ocr]"   # Linux/Mac: .venv/bin/pip
+.venv/Scripts/pip install --no-deps rapidocr-onnxruntime   # OCR de cotas (sin su opencv con GUI)
 PLANO3D_MODE=memory .venv/Scripts/uvicorn plano3d.main:app --reload
 cd frontend && npm install && npm run dev                                      # http://localhost:5173
 ```
+
+## Planos complejos y medidas exactas
+
+| Entrada | Cómo se lee | Medidas |
+|---|---|---|
+| **DXF** (AutoCAD, BricsCAD, LibreCAD) | Capas, bloques de puertas/ventanas, arcos, **entidades de cota** (ADR-013) | Exactas (las del archivo) |
+| **PDF de CAD** | Líneas y curvas vectoriales; escala por las cotas (RANSAC) o el rótulo `ESC 1:N` | Exactas |
+| **Foto o escaneo** | Vectorización + lectura de cotas (OCR, y Claude visión si hay credenciales) + **ajuste a cotas** (ADR-014, ADR-015) | Exactas donde hay cotas; el resto, inferidas con su ± error |
+| **Plano grande en varias fotos** | Se unen en una sola imagen antes de analizar | Igual que una foto |
+
+Se reconocen muros en doble línea, achurados, de espesores mixtos, **curvos** y oblicuos;
+**columnas**, **escaleras** y puertas con su sentido de giro. Cada cota del plano queda en
+el modelo en verde (**exacta**), gris (**por verificar**) o rojo (**en conflicto**). En el editor
+se corrige el número y **Ajustar el plano a las cotas** mueve los muros. Claude visión es
+opcional: se activa con `ANTHROPIC_API_KEY` (o `ant auth login`); sin credenciales se usa
+solo el OCR local. Medición: `python scripts/eval.py --suite complex --detector raster`.
 
 ## Cómo se usa
 
@@ -39,8 +56,16 @@ cd frontend && npm install && npm run dev                                      #
    con **Ajustar esquinas** puedes moverlas (arrastrando o con las flechas).
 2. **Procesando**: se ven las 10 etapas del pipeline en vivo y el edificio aparece mientras se detecta.
 3. **Editor** (2D | 3D | propiedades): selecciona y corrige muros, puertas, ventanas y ambientes.
-   Los ambientes con baja confianza se marcan en ámbar. Atajos: `V` seleccionar, `W` muro,
-   `D` puerta, `N` ventana, `C` calibrar, `Supr` borrar, `Ctrl+Z` / `Ctrl+Shift+Z`, `Ctrl+S` guardar.
+   - Arrastrar una esquina mueve **todos** los muros unidos (Alt = despegar solo ese muro).
+   - Largo y ángulo exactos por teclado, cotas sobre cada muro y rejilla de imán (1/5/10 cm).
+   - Los **ambientes se recalculan solos** desde los muros, y las áreas siempre están al día.
+   - **Revisión del modelo**: lista de problemas (muros sueltos o duplicados, aberturas en esquinas,
+     escala sin calibrar…) que llevan al elemento con un clic.
+   - Atajos: `V` seleccionar, `W` muro, `D` puerta, `N` ventana, `M` medir (distancia y área),
+     `C` calibrar, flechas para mover el muro (Shift = 25 cm), `Supr` borrar, `Ctrl+Z` / `Ctrl+Shift+Z`,
+     `Ctrl+S` guardar.
+   - **Historial de versiones**: cada guardado queda registrado y se puede restaurar. Si otra
+     persona guardó mientras editabas, se ofrece recargar o sobrescribir (nada se pierde).
 4. **Calibrar**: traza una línea sobre una cota conocida (p. ej. "10.00") e ingresa los metros reales.
 5. **Recorrer**: orbitar o caminar (WASD + mouse, o joystick en el celular), comparar con el plano
    original (deslizador) y **exportar GLB** (se abre en Blender o cualquier visor glTF).
@@ -65,7 +90,8 @@ Patrones: **Strategy** (detectores), **Pipeline/Chain of Responsibility** (etapa
 y **Repository** (hexágono), **Observer** (progreso en vivo y store), **Command** (edición
 reversible), **Builder** (escena 3D), **Factory** (materiales).
 
-Documentación: [revisión de los docs](docs/revision-docs.md) · [usabilidad](docs/usabilidad.md) · [decisiones (ADR)](docs/adr/) ·
+Documentación: [revisión de los docs](docs/revision-docs.md) · [usabilidad](docs/usabilidad.md) ·
+[roadmap para arquitectos](docs/roadmap.md) · [decisiones (ADR)](docs/adr/) ·
 [diagramas UML](docs/uml/diagramas.md).
 
 ## Pruebas

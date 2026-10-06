@@ -5,7 +5,8 @@ import { api, type Corners } from '@/api/client'
 import { Button, TextField } from '@/components/ui'
 import { CornerEditor } from './CornerEditor'
 import { DEFAULT_CORNERS } from './corners'
-import { ACCEPT, MAX_MB, validateFile } from './validateFile'
+import { CaptureWarnings, ExtraShots } from './CaptureExtras'
+import { ACCEPT, MAX_MB, isDxf, isImage, validateFile } from './validateFile'
 
 
 export function NewPlanPage() {
@@ -16,6 +17,7 @@ export function NewPlanPage() {
   const [name, setName] = useState('')
   const [manual, setManual] = useState(false)
   const [corners, setCorners] = useState<Corners>(DEFAULT_CORNERS)
+  const [extra, setExtra] = useState<File[]>([])
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -41,7 +43,7 @@ export function NewPlanPage() {
   }
 
   const preview = useMemo(
-    () => (file && file.type !== 'application/pdf' ? URL.createObjectURL(file) : null),
+    () => (file && isImage(file) ? URL.createObjectURL(file) : null),
     [file],
   )
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview])
@@ -69,7 +71,13 @@ export function NewPlanPage() {
     setError(null)
     try {
       setProgress(0)
-      const res = await api.createProject(file, name.trim() || 'Plano sin nombre', manual ? corners : undefined, setProgress)
+      const res = await api.createProject(
+        file,
+        name.trim() || 'Plano sin nombre',
+        manual && extra.length === 0 ? corners : undefined,
+        setProgress,
+        isImage(file) ? extra : [],
+      )
       navigate(`/p/${res.id}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo subir el plano')
@@ -131,7 +139,7 @@ export function NewPlanPage() {
               Subir archivo
             </Button>
           </div>
-          <p className="text-xs text-subtle">JPG, PNG, WEBP o PDF · hasta {MAX_MB} MB · o arrástralo aquí</p>
+          <p className="text-xs text-subtle">JPG, PNG, WEBP, PDF o DXF · hasta {MAX_MB} MB · o arrástralo aquí</p>
         </div>
       )}
 
@@ -140,10 +148,19 @@ export function NewPlanPage() {
           <div className="corner-ticks border border-line bg-surface p-3">
             {preview && manual && <CornerEditor src={preview} corners={corners} onChange={setCorners} />}
             {preview && !manual && <img src={preview} alt="Vista previa del plano" className="mx-auto max-h-[60vh] object-contain" />}
-            {!preview && <p className="p-8 text-center text-sm text-muted">PDF: se usará la primera página ({file.name})</p>}
+            {!preview && (
+              <p className="p-8 text-center text-sm text-muted">
+                {isDxf(file)
+                  ? `DXF: se leerán los muros, aberturas y cotas exactas del archivo (${file.name})`
+                  : `PDF: se usará la primera página; si viene de CAD, con sus medidas exactas (${file.name})`}
+              </p>
+            )}
           </div>
 
-          {preview && (
+          {preview && <CaptureWarnings file={file} />}
+          {preview && <ExtraShots value={extra} onChange={setExtra} />}
+
+          {preview && extra.length === 0 && (
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <Button size="sm" variant={manual ? 'primary' : 'secondary'} icon={<Crop className="size-4" aria-hidden />} loading={detecting} onClick={() => void toggleManual()} aria-pressed={manual}>
                 {manual ? 'Esquinas manuales' : 'Ajustar esquinas'}

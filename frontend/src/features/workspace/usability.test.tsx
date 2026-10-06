@@ -1,5 +1,5 @@
 /** Regresiones de los hallazgos de la auditoría de usabilidad (docs/usabilidad.md). */
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { useState } from 'react'
@@ -26,7 +26,8 @@ beforeEach(() => {
 describe('H3 · el editor se puede usar sin mouse', () => {
   it('la lista de elementos permite seleccionar ambientes y muros con el teclado', async () => {
     render(<PropertiesPanel />)
-    const room = screen.getByRole('button', { name: /Espacio 2/ })
+    const list = screen.getByRole('region', { name: 'Ambientes' })
+    const room = within(list).getByRole('button', { name: /Espacio 2/ })
     room.focus()
     await userEvent.keyboard('{Enter}')
     expect(useEditor.getState().selection).toEqual({ kind: 'room', id: 'r_b' })
@@ -34,7 +35,9 @@ describe('H3 · el editor se puede usar sin mouse', () => {
 
   it('marca los ambientes de baja confianza también con texto (no solo color)', () => {
     render(<PropertiesPanel />)
-    expect(screen.getByRole('button', { name: /Espacio 2/ })).toContainElement(screen.getByLabelText('baja confianza'))
+    const list = screen.getByRole('region', { name: 'Ambientes' })
+    const item = within(list).getByRole('button', { name: /Espacio 2/ })
+    expect(item).toContainElement(within(item).getByLabelText('baja confianza'))
   })
 
   it('desde un muro se llega a sus aberturas', async () => {

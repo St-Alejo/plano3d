@@ -1,6 +1,21 @@
 {
   "components": {
     "schemas": {
+      "Body_check_capture_api_capture_check_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Foto del plano",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_check_capture_api_capture_check_post",
+        "type": "object"
+      },
       "Body_create_project_api_projects_post": {
         "properties": {
           "corners": {
@@ -15,9 +30,25 @@
             "description": "JSON [[x,y] x4] normalizado",
             "title": "Corners"
           },
+          "extra": {
+            "anyOf": [
+              {
+                "items": {
+                  "contentMediaType": "application/octet-stream",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Más fotos de la misma hoja, de izquierda a derecha (se unen)",
+            "title": "Extra"
+          },
           "file": {
             "contentMediaType": "application/octet-stream",
-            "description": "Foto, imagen o PDF del plano",
+            "description": "Foto, imagen, PDF o DXF del plano",
             "title": "File",
             "type": "string"
           },
@@ -64,6 +95,18 @@
           },
           "scale": {
             "$ref": "#/components/schemas/ScaleDTO"
+          },
+          "schema_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null = 1 (se actualiza a 2)",
+            "title": "Schema Version"
           },
           "source_image": {
             "anyOf": [
@@ -118,6 +161,95 @@
         "title": "CalibrateScaleDTO",
         "type": "object"
       },
+      "CaptureCheckDTO": {
+        "properties": {
+          "glare": {
+            "description": "fracción de la imagen con reflejo",
+            "title": "Glare",
+            "type": "number"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "paper_found": {
+            "title": "Paper Found",
+            "type": "boolean"
+          },
+          "sharpness": {
+            "title": "Sharpness",
+            "type": "number"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok",
+          "sharpness",
+          "glare",
+          "width",
+          "height",
+          "paper_found"
+        ],
+        "title": "CaptureCheckDTO",
+        "type": "object"
+      },
+      "ColumnDTO": {
+        "properties": {
+          "center": {
+            "$ref": "#/components/schemas/PointDTO"
+          },
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "depth": {
+            "default": 0.3,
+            "title": "Depth",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "rotation": {
+            "default": 0.0,
+            "title": "Rotation",
+            "type": "number"
+          },
+          "round": {
+            "default": false,
+            "title": "Round",
+            "type": "boolean"
+          },
+          "width": {
+            "default": 0.3,
+            "title": "Width",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "center"
+        ],
+        "title": "ColumnDTO",
+        "type": "object"
+      },
       "CornersDTO": {
         "properties": {
           "corners": {
@@ -152,6 +284,174 @@
         "title": "CornersDTO",
         "type": "object"
       },
+      "CorrectionStatsDTO": {
+        "properties": {
+          "area_detected_m2": {
+            "title": "Area Detected M2",
+            "type": "number"
+          },
+          "area_final_m2": {
+            "title": "Area Final M2",
+            "type": "number"
+          },
+          "correction_rate": {
+            "description": "fracción de muros detectados que se corrigieron",
+            "title": "Correction Rate",
+            "type": "number"
+          },
+          "openings_added": {
+            "title": "Openings Added",
+            "type": "integer"
+          },
+          "openings_deleted": {
+            "title": "Openings Deleted",
+            "type": "integer"
+          },
+          "openings_kind_changed": {
+            "title": "Openings Kind Changed",
+            "type": "integer"
+          },
+          "rooms_relabeled": {
+            "title": "Rooms Relabeled",
+            "type": "integer"
+          },
+          "walls_added": {
+            "title": "Walls Added",
+            "type": "integer"
+          },
+          "walls_deleted": {
+            "title": "Walls Deleted",
+            "type": "integer"
+          },
+          "walls_detected": {
+            "title": "Walls Detected",
+            "type": "integer"
+          },
+          "walls_final": {
+            "title": "Walls Final",
+            "type": "integer"
+          },
+          "walls_moved": {
+            "title": "Walls Moved",
+            "type": "integer"
+          },
+          "walls_unchanged": {
+            "title": "Walls Unchanged",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "walls_detected",
+          "walls_final",
+          "walls_unchanged",
+          "walls_moved",
+          "walls_added",
+          "walls_deleted",
+          "openings_added",
+          "openings_deleted",
+          "openings_kind_changed",
+          "rooms_relabeled",
+          "area_detected_m2",
+          "area_final_m2",
+          "correction_rate"
+        ],
+        "title": "CorrectionStatsDTO",
+        "type": "object"
+      },
+      "DimensionAxis": {
+        "enum": [
+          "aligned",
+          "horizontal",
+          "vertical"
+        ],
+        "title": "DimensionAxis",
+        "type": "string"
+      },
+      "DimensionDTO": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/PointDTO"
+          },
+          "axis": {
+            "$ref": "#/components/schemas/DimensionAxis",
+            "default": "aligned"
+          },
+          "b": {
+            "$ref": "#/components/schemas/PointDTO"
+          },
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "measured": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "solo salida, m",
+            "title": "Measured"
+          },
+          "offset": {
+            "default": 0.0,
+            "title": "Offset",
+            "type": "number"
+          },
+          "residual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MeasureSource",
+            "default": "dimension"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MeasureStatus",
+            "default": "inferred"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          },
+          "value": {
+            "description": "valor escrito en el plano, m",
+            "title": "Value",
+            "type": "number"
+          },
+          "wall_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Wall Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "a",
+          "b",
+          "value"
+        ],
+        "title": "DimensionDTO",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -165,16 +465,82 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "LabelKind": {
+        "enum": [
+          "room_name",
+          "area",
+          "level",
+          "scale",
+          "axis",
+          "other"
+        ],
+        "title": "LabelKind",
+        "type": "string"
+      },
       "LevelDTO": {
         "properties": {
+          "columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ColumnDTO"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Columns"
+          },
+          "dimensions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DimensionDTO"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimensions"
+          },
           "elevation": {
             "default": 0.0,
             "title": "Elevation",
             "type": "number"
           },
+          "height": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "entrepiso en m (null = 2,6)",
+            "title": "Height"
+          },
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TextLabelDTO"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labels"
           },
           "name": {
             "title": "Name",
@@ -187,6 +553,20 @@
             },
             "title": "Rooms",
             "type": "array"
+          },
+          "stairs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StairDTO"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stairs"
           },
           "walls": {
             "default": [],
@@ -204,6 +584,58 @@
         "title": "LevelDTO",
         "type": "object"
       },
+      "MeasureDTO": {
+        "description": "Procedencia de una longitud: exacta (cota o vector), inferida (escala) o en conflicto.",
+        "properties": {
+          "dimension_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Id"
+          },
+          "error": {
+            "default": 0.0,
+            "description": "incertidumbre ± en metros",
+            "title": "Error",
+            "type": "number"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MeasureSource",
+            "default": "scale"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MeasureStatus",
+            "default": "inferred"
+          }
+        },
+        "title": "MeasureDTO",
+        "type": "object"
+      },
+      "MeasureSource": {
+        "enum": [
+          "scale",
+          "dimension",
+          "vector",
+          "manual"
+        ],
+        "title": "MeasureSource",
+        "type": "string"
+      },
+      "MeasureStatus": {
+        "description": "Qué tan cierta es una medida respecto al plano original.",
+        "enum": [
+          "exact",
+          "inferred",
+          "conflict"
+        ],
+        "title": "MeasureStatus",
+        "type": "string"
+      },
       "OpeningDTO": {
         "properties": {
           "confidence": {
@@ -214,6 +646,17 @@
           "height": {
             "title": "Height",
             "type": "number"
+          },
+          "hinge_at_end": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hinge At End"
           },
           "id": {
             "title": "Id",
@@ -226,6 +669,27 @@
             "description": "metros desde Wall.start",
             "title": "Offset",
             "type": "number"
+          },
+          "opens_left": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opens Left"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OpeningOperation"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "sill": {
             "default": 0.0,
@@ -253,6 +717,20 @@
           "window"
         ],
         "title": "OpeningKind",
+        "type": "string"
+      },
+      "OpeningOperation": {
+        "description": "Cómo se abre una puerta o ventana.",
+        "enum": [
+          "swing",
+          "double_swing",
+          "sliding",
+          "folding",
+          "fixed",
+          "casement",
+          "none"
+        ],
+        "title": "OpeningOperation",
         "type": "string"
       },
       "PointDTO": {
@@ -404,6 +882,12 @@
             "title": "Name",
             "type": "string"
           },
+          "revision": {
+            "default": 0,
+            "description": "versión del modelo; enviarla en If-Match al guardar",
+            "title": "Revision",
+            "type": "integer"
+          },
           "room_count": {
             "default": 0,
             "title": "Room Count",
@@ -541,6 +1025,40 @@
         "title": "ReanalyzeDTO",
         "type": "object"
       },
+      "RevisionDTO": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "total_area": {
+            "title": "Total Area",
+            "type": "number"
+          },
+          "wall_count": {
+            "title": "Wall Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "number",
+          "summary",
+          "created_at",
+          "total_area",
+          "wall_count"
+        ],
+        "title": "RevisionDTO",
+        "type": "object"
+      },
       "RoomDTO": {
         "properties": {
           "area": {
@@ -571,6 +1089,35 @@
             "title": "Confidence",
             "type": "number"
           },
+          "declared_area": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "área escrita en el plano",
+            "title": "Declared Area"
+          },
+          "holes": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/PointDTO"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holes"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -585,6 +1132,16 @@
             },
             "title": "Polygon",
             "type": "array"
+          },
+          "room_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -594,6 +1151,24 @@
         ],
         "title": "RoomDTO",
         "type": "object"
+      },
+      "RoomType": {
+        "enum": [
+          "bedroom",
+          "bathroom",
+          "kitchen",
+          "living",
+          "study",
+          "circulation",
+          "patio",
+          "laundry",
+          "storage",
+          "garage",
+          "stairs",
+          "other"
+        ],
+        "title": "RoomType",
+        "type": "string"
       },
       "ScaleDTO": {
         "properties": {
@@ -611,7 +1186,9 @@
             "enum": [
               "default",
               "estimated",
-              "calibrated"
+              "calibrated",
+              "dimensions",
+              "vector"
             ],
             "title": "Source",
             "type": "string"
@@ -621,6 +1198,70 @@
           "meters_per_pixel"
         ],
         "title": "ScaleDTO",
+        "type": "object"
+      },
+      "SolveReportDTO": {
+        "properties": {
+          "conflicts": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "dims_conflict": {
+            "title": "Dims Conflict",
+            "type": "integer"
+          },
+          "dims_exact": {
+            "title": "Dims Exact",
+            "type": "integer"
+          },
+          "dims_unlinked": {
+            "title": "Dims Unlinked",
+            "type": "integer"
+          },
+          "max_residual": {
+            "description": "m: mayor diferencia entre cota y geometría",
+            "title": "Max Residual",
+            "type": "number"
+          },
+          "moved_max": {
+            "description": "m: lo que más se movió un nodo",
+            "title": "Moved Max",
+            "type": "number"
+          },
+          "walls_exact": {
+            "title": "Walls Exact",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dims_exact",
+          "dims_conflict",
+          "dims_unlinked",
+          "walls_exact",
+          "max_residual",
+          "moved_max"
+        ],
+        "title": "SolveReportDTO",
+        "type": "object"
+      },
+      "SolveResultDTO": {
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/ProjectDTO"
+          },
+          "report": {
+            "$ref": "#/components/schemas/SolveReportDTO"
+          }
+        },
+        "required": [
+          "project",
+          "report"
+        ],
+        "title": "SolveResultDTO",
         "type": "object"
       },
       "SourceImageDTO": {
@@ -644,6 +1285,108 @@
           "height_px"
         ],
         "title": "SourceImageDTO",
+        "type": "object"
+      },
+      "StairDTO": {
+        "properties": {
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "end": {
+            "$ref": "#/components/schemas/PointDTO",
+            "description": "llegada (arriba)"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "riser": {
+            "default": 0.175,
+            "title": "Riser",
+            "type": "number"
+          },
+          "start": {
+            "$ref": "#/components/schemas/PointDTO",
+            "description": "arranque (abajo) de la línea de huella"
+          },
+          "steps": {
+            "title": "Steps",
+            "type": "integer"
+          },
+          "to_level_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Level Id"
+          },
+          "tread": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "solo salida, huella en m",
+            "title": "Tread"
+          },
+          "width": {
+            "title": "Width",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "start",
+          "end",
+          "width",
+          "steps"
+        ],
+        "title": "StairDTO",
+        "type": "object"
+      },
+      "TextLabelDTO": {
+        "properties": {
+          "confidence": {
+            "default": 1.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LabelKind",
+            "default": "other"
+          },
+          "position": {
+            "$ref": "#/components/schemas/PointDTO"
+          },
+          "rotation": {
+            "default": 0.0,
+            "title": "Rotation",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "text"
+        ],
+        "title": "TextLabelDTO",
         "type": "object"
       },
       "ValidationError": {
@@ -688,6 +1431,18 @@
       },
       "WallDTO": {
         "properties": {
+          "bulge": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "flecha del arco en m (0 o null = recto); + hacia (-dy, dx)",
+            "title": "Bulge"
+          },
           "confidence": {
             "default": 1.0,
             "title": "Confidence",
@@ -704,6 +1459,16 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WallKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "length": {
             "anyOf": [
@@ -722,6 +1487,16 @@
             "title": "Material",
             "type": "string"
           },
+          "measure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeasureDTO"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "openings": {
             "default": [],
             "items": {
@@ -732,6 +1507,17 @@
           },
           "start": {
             "$ref": "#/components/schemas/PointDTO"
+          },
+          "structural": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Structural"
           },
           "thickness": {
             "default": 0.15,
@@ -746,6 +1532,16 @@
         ],
         "title": "WallDTO",
         "type": "object"
+      },
+      "WallKind": {
+        "enum": [
+          "unknown",
+          "exterior",
+          "interior",
+          "partition"
+        ],
+        "title": "WallKind",
+        "type": "string"
       }
     }
   },
@@ -756,6 +1552,48 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/capture/check": {
+      "post": {
+        "description": "¿La foto sirve? Avisa si está movida, con reflejo o con poca resolución.",
+        "operationId": "check_capture_api_capture_check_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_check_capture_api_capture_check_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureCheckDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Capture",
+        "tags": [
+          "captura"
+        ]
+      }
+    },
     "/api/corners": {
       "post": {
         "description": "Detecta la hoja en la foto para precargar el ajuste manual de esquinas.",
@@ -1024,6 +1862,35 @@
               "title": "Project Id",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "summary",
+            "required": false,
+            "schema": {
+              "default": "Corrección manual",
+              "maxLength": 200,
+              "title": "Summary",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
           }
         ],
         "requestBody": {
@@ -1046,6 +1913,9 @@
               }
             },
             "description": "Successful Response"
+          },
+          "409": {
+            "description": "Otra persona guardó una versión más nueva"
           },
           "422": {
             "content": {
@@ -1110,6 +1980,48 @@
         ]
       }
     },
+    "/api/projects/{project_id}/quality": {
+      "get": {
+        "operationId": "correction_quality_api_projects__project_id__quality_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionStatsDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Correction Quality",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
     "/api/projects/{project_id}/reanalyze": {
       "post": {
         "operationId": "reanalyze_api_projects__project_id__reanalyze_post",
@@ -1169,6 +2081,172 @@
         ]
       }
     },
+    "/api/projects/{project_id}/revisions": {
+      "get": {
+        "operationId": "list_revisions_api_projects__project_id__revisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RevisionDTO"
+                  },
+                  "title": "Response List Revisions Api Projects  Project Id  Revisions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Revisions",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/revisions/{number}": {
+      "get": {
+        "operationId": "get_revision_api_projects__project_id__revisions__number__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildingModelDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Revision",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/revisions/{number}/restore": {
+      "post": {
+        "operationId": "restore_revision_api_projects__project_id__revisions__number__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Revision",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
     "/api/projects/{project_id}/scale": {
       "post": {
         "operationId": "calibrate_scale_api_projects__project_id__scale_post",
@@ -1216,6 +2294,65 @@
           }
         },
         "summary": "Calibrate Scale",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/solve": {
+      "post": {
+        "description": "Ajusta los muros a las cotas del plano (las medidas escritas mandan).",
+        "operationId": "solve_dimensions_api_projects__project_id__solve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolveResultDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Solve Dimensions",
         "tags": [
           "modelo"
         ]

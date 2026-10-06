@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12', cache: pip }
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,ocr]" && pip install --no-deps "rapidocr-onnxruntime>=1.4"
       - run: ruff check src tests && ruff format --check src tests
       - run: mypy
       - run: pytest --cov --cov-fail-under=85

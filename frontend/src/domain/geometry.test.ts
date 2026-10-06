@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { door, rect, wall, windowOp } from '@/test/fixtures'
 import { obstaclesFromWalls, resolveCollision } from './collision'
-import { boxVolume, roomShapePoints, tourWaypoints, wallToBoxes } from './geometry'
+import {
+  boxVolume,
+  curvedWallBoxes,
+  doorLeaf,
+  roomShapePoints,
+  stairSteps,
+  tourWaypoints,
+  wallAxis,
+  wallToBoxes,
+} from './geometry'
 
 const T = 0.2
 const H = 2.6
@@ -122,5 +131,43 @@ describe('dirección inicial del recorrido', () => {
     expect(freeDistance({ x: 0, y: 0 }, -Math.PI / 2, o)).toBeLessThan(1)
     const a = bestViewAngle({ x: 0, y: 0 }, o)
     expect(Math.cos(a)).toBeGreaterThan(0.9) // hacia +x
+  })
+})
+
+describe('modelo v2 en 3D', () => {
+  const base = { id: 'w', thickness: 0.2, height: 2.6, material: 'x', openings: [], confidence: 1 }
+
+  it('el eje de un muro curvo pasa por sus extremos y por la flecha', () => {
+    const pts = wallAxis({ start: { x: 0, y: 0 }, end: { x: 4, y: 0 }, bulge: 1 })
+    expect(pts[0]!.x).toBeCloseTo(0)
+    expect(pts.at(-1)!.x).toBeCloseTo(4)
+    const mid = pts[Math.floor(pts.length / 2)]!
+    // flecha positiva = normal izquierda de (1,0) en imagen = (0, 1)
+    expect(mid.y).toBeCloseTo(1, 1)
+    expect(wallAxis({ start: { x: 0, y: 0 }, end: { x: 4, y: 0 } })).toHaveLength(2)
+  })
+
+  it('un muro curvo se arma con varios bloques sobre el arco', () => {
+    const w = { ...base, start: { x: 0, y: 0 }, end: { x: 0, y: 3 }, bulge: -1.2 }
+    const boxes = curvedWallBoxes(w as never)
+    expect(boxes.length).toBeGreaterThan(5)
+    const maxX = Math.max(...boxes.map((b) => b.center[0]))
+    expect(maxX).toBeGreaterThan(1.0) // sobresale ~1,2 m hacia +x
+  })
+
+  it('peldaños: uno por huella, subiendo de a una contrahuella', () => {
+    const steps = stairSteps({ start: { x: 0, y: 0 }, end: { x: 3, y: 0 }, width: 1, steps: 12, riser: 0.175 })
+    expect(steps).toHaveLength(12)
+    expect(steps.at(-1)!.size[1]).toBeCloseTo(2.1)
+    expect(steps[0]!.size[0]).toBeCloseTo(0.25)
+  })
+
+  it('la hoja de la puerta gira sobre su bisagra hacia el lado que abre', () => {
+    const w = { start: { x: 0, y: 0 }, end: { x: 4, y: 0 }, thickness: 0.15 }
+    const left = doorLeaf(w, { offset: 1, width: 0.9, height: 2.1, opens_left: true })
+    const right = doorLeaf(w, { offset: 1, width: 0.9, height: 2.1, opens_left: false })
+    expect(Math.sign(left.center[2])).toBe(-Math.sign(right.center[2]))
+    expect(left.center[0]).toBeGreaterThan(1)
+    expect(left.center[0]).toBeLessThan(1.9)
   })
 })

@@ -6,6 +6,7 @@ import math
 
 import cv2
 import numpy as np
+import numpy.typing as npt
 
 from plano3d.application.pipeline import PipelineStage
 from plano3d.infrastructure.cv.context import CVContext, Img, as_u8
@@ -69,9 +70,14 @@ def dominant_skew(ink: Img) -> float:
     return median
 
 
+def rotation_matrix(shape: tuple[int, ...], degrees: float) -> npt.NDArray[np.float64]:
+    h, w = shape[:2]
+    return np.asarray(cv2.getRotationMatrix2D((w / 2, h / 2), degrees, 1.0), np.float64)
+
+
 def rotate(img: Img, degrees: float, border: int) -> Img:
     h, w = img.shape[:2]
-    m = cv2.getRotationMatrix2D((w / 2, h / 2), degrees, 1.0)
+    m = rotation_matrix(img.shape, degrees)
     return as_u8(cv2.warpAffine(img, m, (w, h), flags=cv2.INTER_LINEAR, borderValue=border))
 
 
@@ -94,6 +100,7 @@ class PreprocessStage(PipelineStage[CVContext]):
         ctx.metrics["skew_deg"] = round(skew, 2)
         if abs(skew) > self._deskew_threshold:
             ctx.rectified = rotate(img, skew, border=255)
+            ctx.then(rotation_matrix(img.shape, skew))
             ink = rotate(ink, skew, border=0)
             ink = as_u8(cv2.threshold(ink, 127, 255, cv2.THRESH_BINARY)[1])
         ctx.ink = ink

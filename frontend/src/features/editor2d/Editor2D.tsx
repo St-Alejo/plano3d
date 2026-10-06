@@ -7,10 +7,12 @@ import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Stage, Tag, Text } from 'react-konva'
 import type { Point, Wall } from '@/api/types'
-import { AddOpening, AddWall, MoveWallEndpoint } from '@/domain/commands'
-import { polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
+import { AddOpening, AddWall, MoveJoint, MoveWallEndpoint } from '@/domain/commands'
+import { wallAxis } from '@/domain/geometry'
+import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
 import { nearestWall, snapPoint, wallEndpoints } from '@/domain/snap'
 import { selectLevel, useEditor } from '@/store/editorStore'
+import { PlanElements } from './PlanElements'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
 
 const LOW_CONFIDENCE = 0.6
@@ -64,6 +66,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const selection = useEditor((s) => s.selection)
   const select = useEditor((s) => s.select)
   const dispatch = useEditor((s) => s.dispatch)
+  const gridStep = useEditor((s) => s.gridStep)
+  const showDimensions = useEditor((s) => s.showDimensions)
 
   const mpp = model?.scale.meters_per_pixel ?? 0.01
   const imgW = model?.source_image?.width_px ?? image?.width ?? 1000
@@ -83,6 +87,19 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const screenTol = 12 / view.scale // px de imagen equivalentes a 12 px de pantalla
 
   const [draft, setDraft] = useState<{ a: Point; b: Point } | null>(null)
+  const [measure, setMeasure] = useState<Point[]>([])
+  const grid = gridStep > 0 ? gridStep / mpp : 0 // paso de rejilla en px de imagen
+  // al cambiar de herramienta se descarta la medición en curso
+  const [measureTool, setMeasureTool] = useState(tool)
+  if (measureTool !== tool) {
+    setMeasureTool(tool)
+    setMeasure([])
+  }
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMeasure([])
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [])
 
   const pointerPx = (stage: Konva.Stage): Point | null => {
     const p = stage.getRelativePointerPosition()
@@ -129,8 +146,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const p = pointerPx(stage)
     if (!p) return
     if (tool === 'wall' || tool === 'calibrate') {
-      const a = tool === 'wall' ? snapPoint(p, { candidates, tol: screenTol }) : p
+      const a = tool === 'wall' ? snapPoint(p, { candidates, tol: screenTol, grid }) : p
       setDraft({ a, b: a })
+    } else if (tool === 'measure') {
+      // actualización funcional: dos clics muy seguidos no pierden un punto
+      setMeasure((prev) => [...prev, snapPoint(p, { anchor: prev.at(-1), candidates, tol: screenTol, grid })])
     } else if (tool === 'door' || tool === 'window') {
       const hit = nearestWall(level, toM(p), screenTol * mpp)
       if (hit) {
@@ -148,7 +168,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const stage = e.target.getStage()
     const p = stage && pointerPx(stage)
     if (!p) return
-    const b = tool === 'wall' ? snapPoint(p, { anchor: draft.a, candidates, tol: screenTol }) : p
+    const b = tool === 'wall' ? snapPoint(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : p
     setDraft({ ...draft, b })
   }
 
@@ -175,16 +195,28 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const selectedWall: Wall | undefined =
     selection?.kind === 'wall' ? level?.walls.find((w) => w.id === selection.id) : undefined
 
+  /** Imanes para un extremo en arrastre: se excluye la propia esquina (si no, se pegaría a sí misma). */
+  const dragSnap = (w: Wall, end: 'start' | 'end', p: Point) => {
+    const own = toPx(w[end])
+    const anchor = toPx(end === 'start' ? w.end : w.start)
+    const others = candidates.filter((c) => Math.hypot(c.x - own.x, c.y - own.y) > 1e-6)
+    return snapPoint(p, { anchor, candidates: others, tol: screenTol, grid })
+  }
+
+  // arrastrar un extremo mueve la ESQUINA (todos los muros que llegan ahí); con Alt se despega solo este muro
   const dragEndpoint = (w: Wall, end: 'start' | 'end') => (e: Konva.KonvaEventObject<DragEvent>) => {
     if (!level) return
-    const anchor = toPx(end === 'start' ? w.end : w.start)
-    const own = candidates.filter((c) => !(Math.abs(c.x - anchor.x) < 1e-6 && Math.abs(c.y - anchor.y) < 1e-6))
-    const p = snapPoint({ x: e.target.x(), y: e.target.y() }, { anchor, candidates: own, tol: screenTol })
+    const p = dragSnap(w, end, { x: e.target.x(), y: e.target.y() })
     e.target.position(p)
-    dispatch(new MoveWallEndpoint(level.id, w.id, end, toM(p)))
+    const to = toM(p)
+    const ok = e.evt.altKey ? dispatch(new MoveWallEndpoint(level.id, w.id, end, to)) : dispatch(new MoveJoint(level.id, w[end], to))
+    if (!ok) e.target.position(toPx(w[end])) // edición rechazada: el tirador vuelve a su lugar
   }
 
   const cursor = tool === 'select' ? 'default' : 'crosshair'
+  const measureM = measure.map(toM)
+  const measureLen = measureM.slice(1).reduce((s, p, i) => s + Math.hypot(p.x - measureM[i]!.x, p.y - measureM[i]!.y), 0)
+  const measureArea = measureM.length >= 3 ? polygonArea(measureM) : 0
   const fontPx = 13 / view.scale
 
   return (
@@ -243,14 +275,39 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
             return (
               <Group key={w.id}>
                 <Line
-                  points={[a.x, a.y, b.x, b.y]}
+                  points={w.bulge ? wallAxis(w).flatMap((p) => [p.x / mpp, p.y / mpp]) : [a.x, a.y, b.x, b.y]}
                   stroke={sel ? C.wallSel : C.wall}
                   strokeWidth={w.thickness / mpp}
-                  lineCap="square"
+                  lineCap={w.bulge ? 'butt' : 'square'}
+                  lineJoin="round"
                   hitStrokeWidth={Math.max(w.thickness / mpp, 14 / view.scale)}
                   onClick={() => tool === 'select' && select({ kind: 'wall', id: w.id })}
                   onTap={() => tool === 'select' && select({ kind: 'wall', id: w.id })}
                 />
+                {showDimensions && (() => {
+                  // cota: largo del muro sobre su línea, desplazada hacia afuera y legible (nunca cabeza abajo)
+                  const len = wallLength(w)
+                  if (len * (1 / mpp) * view.scale < 40) return null // muy corto en pantalla: se omite
+                  let ang = (Math.atan2(d.y, d.x) * 180) / Math.PI
+                  if (ang > 90 || ang <= -90) ang += 180
+                  const off = w.thickness / mpp / 2 + 10 / view.scale
+                  const mid = { x: (a.x + b.x) / 2 - d.y * off, y: (a.y + b.y) / 2 + d.x * off }
+                  const txt = `${len.toFixed(2)}`
+                  return (
+                    <Text
+                      x={mid.x}
+                      y={mid.y}
+                      text={txt}
+                      rotation={ang}
+                      fontSize={11 / view.scale}
+                      fontFamily="IBM Plex Mono"
+                      fill="#2a6674"
+                      offsetX={(txt.length * 11 * 0.6) / view.scale / 2}
+                      offsetY={11 / view.scale / 2}
+                      listening={false}
+                    />
+                  )
+                })()}
                 {w.openings.map((o) => {
                   const s = { x: w.start.x + d.x * o.offset, y: w.start.y + d.y * o.offset }
                   const e = { x: s.x + d.x * o.width, y: s.y + d.y * o.width }
@@ -273,6 +330,17 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
             )
           })}
 
+          {level && showDimensions && (
+            <PlanElements
+              level={level}
+              mpp={mpp}
+              scale={view.scale}
+              selection={selection}
+              onSelect={select}
+              interactive={tool === 'select'}
+            />
+          )}
+
           {selectedWall &&
             (['start', 'end'] as const).map((end) => {
               const p = toPx(selectedWall[end])
@@ -286,15 +354,27 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   stroke={C.wallSel}
                   strokeWidth={2.5 / view.scale}
                   draggable
-                  onDragMove={(e) => {
-                    const anchor = toPx(end === 'start' ? selectedWall.end : selectedWall.start)
-                    e.target.position(snapPoint({ x: e.target.x(), y: e.target.y() }, { anchor, candidates, tol: screenTol }))
-                  }}
+                  onDragMove={(e) => e.target.position(dragSnap(selectedWall, end, { x: e.target.x(), y: e.target.y() }))}
                   onDragEnd={dragEndpoint(selectedWall, end)}
                 />
               )
             })}
 
+          {measure.length > 0 && (
+            <Group listening={false}>
+              <Line
+                points={measure.flatMap((p) => [p.x, p.y])}
+                closed={measure.length >= 3}
+                stroke="#b3261e"
+                strokeWidth={2 / view.scale}
+                dash={[6 / view.scale, 4 / view.scale]}
+                fill={measure.length >= 3 ? 'rgba(179,38,30,0.08)' : undefined}
+              />
+              {measure.map((p, i) => (
+                <Circle key={i} x={p.x} y={p.y} radius={4 / view.scale} fill="#b3261e" />
+              ))}
+            </Group>
+          )}
           {draft && (
             <Line
               points={[draft.a.x, draft.a.y, draft.b.x, draft.b.y]}
@@ -307,6 +387,23 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
           )}
         </Layer>
       </Stage>
+      {tool === 'measure' && (
+        <div role="status" aria-live="polite" className="absolute top-2 left-2 rounded-md border border-ink/20 bg-paper/95 px-3 py-2 font-mono text-xs text-ink shadow-sm">
+          {measure.length === 0 ? (
+            'Haz clic en el primer punto…'
+          ) : measure.length === 1 ? (
+            'Primer punto marcado: haz clic en el siguiente…'
+          ) : (
+            <>
+              <div>Distancia: {measureLen.toFixed(2)} m</div>
+              {measureArea > 0 && <div>Área: {measureArea.toFixed(2)} m²</div>}
+              <button type="button" className="mt-1 underline" onClick={() => setMeasure([])}>
+                Borrar medición
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <button
         type="button"
         onClick={fit}

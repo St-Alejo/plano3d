@@ -1,6 +1,7 @@
 """Núcleo del hexágono: lógica de negocio pura, sin dependencias de infraestructura."""
 
 from plano3d.domain.building import (
+    MODEL_SCHEMA_VERSION,
     BuildingModel,
     Level,
     Opening,
@@ -11,20 +12,49 @@ from plano3d.domain.building import (
     Wall,
     new_id,
 )
-from plano3d.domain.geometry import Point2D
-from plano3d.domain.project import Project, ProjectStatus
+from plano3d.domain.elements import (
+    Column,
+    Dimension,
+    DimensionAxis,
+    LabelKind,
+    Measure,
+    MeasureSource,
+    MeasureStatus,
+    OpeningOperation,
+    RoomType,
+    Stair,
+    TextLabel,
+    WallKind,
+)
+from plano3d.domain.geometry import Arc, Point2D
+from plano3d.domain.project import ModelRevision, Project, ProjectStatus
 
 __all__ = [
+    "MODEL_SCHEMA_VERSION",
+    "Arc",
     "BuildingModel",
+    "Column",
+    "Dimension",
+    "DimensionAxis",
+    "LabelKind",
     "Level",
+    "Measure",
+    "MeasureSource",
+    "MeasureStatus",
+    "ModelRevision",
     "Opening",
     "OpeningKind",
+    "OpeningOperation",
     "Point2D",
     "Project",
     "ProjectStatus",
     "Room",
+    "RoomType",
     "Scale",
     "SourceImage",
+    "Stair",
+    "TextLabel",
     "Wall",
+    "WallKind",
     "new_id",
 ]

@@ -49,6 +49,13 @@ def find_paper_quad(img: Img) -> Quad | None:
 
 
 def warp(img: Img, quad: Quad, inset: float = 0.004) -> Img:
+    return warp_with_matrix(img, quad, inset)[0]
+
+
+def warp_with_matrix(
+    img: Img, quad: Quad, inset: float = 0.004
+) -> tuple[Img, npt.NDArray[np.float64]]:
+    """Rectifica y devuelve también la homografía imagen → rectificada (incluido el recorte)."""
     tl, tr, br, bl = quad
     width = round(max(np.linalg.norm(tr - tl), np.linalg.norm(br - bl)))
     height = round(max(np.linalg.norm(bl - tl), np.linalg.norm(br - tr)))
@@ -58,7 +65,8 @@ def warp(img: Img, quad: Quad, inset: float = 0.004) -> Img:
         img, m, (width, height), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE
     )
     dx, dy = int(width * inset), int(height * inset)
-    return as_u8(out[dy : height - dy, dx : width - dx].copy())
+    shift = np.array([[1, 0, -dx], [0, 1, -dy], [0, 0, 1]], np.float64)
+    return as_u8(out[dy : height - dy, dx : width - dx].copy()), shift @ m
 
 
 class RectifyStage(PipelineStage[CVContext]):
@@ -77,7 +85,8 @@ class RectifyStage(PipelineStage[CVContext]):
             ctx.rectified = img
             ctx.paper_detected = False
         else:
-            ctx.rectified = warp(img, quad)
+            ctx.rectified, m = warp_with_matrix(img, quad)
+            ctx.then(m)
             ctx.paper_detected = True
         return ctx
 

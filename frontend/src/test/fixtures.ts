@@ -70,6 +70,7 @@ export function sampleProject(overrides: Partial<Project> = {}): Project {
     total_area: 60.3,
     room_count: 2,
     model: sampleModel(),
+    revision: 1,
     ...overrides,
   }
 }

@@ -5,9 +5,10 @@
  * entidad que toca (no del modelo completo), así el historial es liviano y
  * deshacer una edición no pisa otras ediciones posteriores de otras entidades.
  */
-import type { BuildingModel, Opening, OpeningKind, Point, Room, Wall } from '@/api/types'
+import type { BuildingModel, Dimension, Level, Opening, OpeningKind, Point, Room, Wall } from '@/api/types'
 import {
   DOOR,
+  MIN_WALL_LENGTH,
   WINDOW,
   findLevel,
   findWall,
@@ -19,8 +20,10 @@ import {
   upsertRoom,
   upsertWall,
   validateWall,
+  wallDirection,
   wallLength,
 } from './model'
+import { applyJointMoves, type JointMove } from './topology'
 
 export interface Command {
   readonly label: string
@@ -76,20 +79,101 @@ export class MoveWallEndpoint extends WallEdit {
   }
 }
 
-/** Desplaza el muro completo (flechas del teclado en el editor). */
-export class TranslateWall extends WallEdit {
+/**
+ * Edición que mueve UNIONES (esquinas y encuentros en T): puede cambiar varios muros a
+ * la vez. Guarda solo los muros tocados, así deshacer no pisa ediciones de otros muros.
+ */
+abstract class JointEdit implements Command {
+  abstract readonly label: string
+  private before: Wall[] = []
+  protected constructor(protected readonly levelId: string) {}
+
+  protected abstract moves(level: Level): { moves: JointMove[]; only?: Set<string> }
+
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const { moves, only } = this.moves(lv)
+    const changed = applyJointMoves(lv, moves, only)
+    if (changed.size === 0) throw new CommandError('No hay nada que mover')
+    changed.forEach((w) => checked(w))
+    this.before = lv.walls.filter((w) => changed.has(w.id))
+    return replaceLevel(model, { ...lv, walls: lv.walls.map((w) => changed.get(w.id) ?? w) })
+  }
+
+  undo(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const byId = new Map(this.before.map((w) => [w.id, w]))
+    return replaceLevel(model, { ...lv, walls: lv.walls.map((w) => byId.get(w.id) ?? w) })
+  }
+}
+
+/** Mueve una esquina: todos los muros que llegan a ella la siguen. */
+export class MoveJoint extends JointEdit {
+  readonly label = 'Mover esquina'
+  constructor(
+    levelId: string,
+    private readonly from: Point,
+    private readonly to: Point,
+  ) {
+    super(levelId)
+  }
+  protected moves() {
+    return { moves: [{ from: this.from, to: this.to }] }
+  }
+}
+
+/** Desplaza el muro completo; los muros unidos a sus puntas se estiran para seguirlo. */
+export class TranslateWall extends JointEdit {
   readonly label = 'Mover muro'
   constructor(
     levelId: string,
-    wallId: string,
+    private readonly wallId: string,
     private readonly dx: number,
     private readonly dy: number,
   ) {
-    super(levelId, wallId)
+    super(levelId)
   }
-  protected transform(w: Wall): Wall {
+  protected moves(level: Level) {
+    const w = findWall(level, this.wallId)
     const mv = (p: Point): Point => ({ x: p.x + this.dx, y: p.y + this.dy })
-    return { ...w, start: mv(w.start), end: mv(w.end) }
+    return { moves: [{ from: w.start, to: mv(w.start) }, { from: w.end, to: mv(w.end) }] }
+  }
+}
+
+/** Largo exacto: el inicio queda fijo y la esquina final se desplaza (arrastrando sus muros). */
+export class SetWallLength extends JointEdit {
+  readonly label = 'Cambiar largo del muro'
+  constructor(
+    levelId: string,
+    private readonly wallId: string,
+    private readonly length: number,
+  ) {
+    super(levelId)
+    if (!(length >= MIN_WALL_LENGTH)) throw new CommandError('El largo debe ser mayor a 5 cm')
+  }
+  protected moves(level: Level) {
+    const w = findWall(level, this.wallId)
+    const d = wallDirection(w)
+    return { moves: [{ from: w.end, to: { x: w.start.x + d.x * this.length, y: w.start.y + d.y * this.length } }] }
+  }
+}
+
+/** Ángulo exacto en grados (0° = derecha, 90° = abajo en planta), girando alrededor del inicio. */
+export class SetWallAngle extends JointEdit {
+  readonly label = 'Cambiar ángulo del muro'
+  constructor(
+    levelId: string,
+    private readonly wallId: string,
+    private readonly degrees: number,
+  ) {
+    super(levelId)
+    if (!Number.isFinite(degrees)) throw new CommandError('Ángulo inválido')
+  }
+  protected moves(level: Level) {
+    const w = findWall(level, this.wallId)
+    const len = wallLength(w)
+    const a = (this.degrees * Math.PI) / 180
+    return { moves: [{ from: w.end, to: { x: w.start.x + Math.cos(a) * len, y: w.start.y + Math.sin(a) * len } }] }
   }
 }
 
@@ -225,7 +309,11 @@ export class RelabelRoom implements Command {
   }
   undo(model: BuildingModel): BuildingModel {
     if (!this.before) return model
-    return replaceLevel(model, upsertRoom(findLevel(model, this.levelId), this.before))
+    const lv = findLevel(model, this.levelId)
+    const current = lv.rooms.find((r) => r.id === this.roomId)
+    if (!current) return model // el ambiente ya no existe (se recalculó sin él)
+    // solo nombre y confianza: el polígono pudo recalcularse después del renombrado
+    return replaceLevel(model, upsertRoom(lv, { ...current, label: this.before.label, confidence: this.before.confidence }))
   }
 }
 
@@ -301,5 +389,58 @@ export class CommandHistory {
   clear(): void {
     this.past = []
     this.future = []
+  }
+}
+
+
+/**
+ * Corrige el VALOR de una cota (lo que dice el plano). No mueve muros: eso lo hace el
+ * ajuste a cotas (solver del servidor), que se aplica después con `ReplaceModel`.
+ */
+export class SetDimensionValue implements Command {
+  readonly label = 'Corregir cota'
+  private before: Dimension | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly dimensionId: string,
+    private readonly value: number,
+  ) {
+    if (!(value > 0) || !Number.isFinite(value)) throw new CommandError('La cota debe ser positiva')
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const dims = lv.dimensions ?? []
+    const d = dims.find((x) => x.id === this.dimensionId)
+    if (!d) throw new CommandError('La cota no existe')
+    this.before = d
+    const text = this.value.toFixed(2).replace('.', ',')
+    // la escribió una persona: confianza total y fuente manual; el solver dirá si cierra
+    const next: Dimension = { ...d, value: this.value, text, source: 'manual', confidence: 1, status: 'inferred' }
+    return replaceLevel(model, { ...lv, dimensions: dims.map((x) => (x.id === d.id ? next : x)) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    if (!this.before) return model
+    const lv = findLevel(model, this.levelId)
+    const before = this.before
+    return replaceLevel(model, {
+      ...lv,
+      dimensions: (lv.dimensions ?? []).map((x) => (x.id === before.id ? before : x)),
+    })
+  }
+}
+
+/** Reemplaza el modelo entero por uno calculado afuera (p. ej. el ajuste a cotas). */
+export class ReplaceModel implements Command {
+  private before: BuildingModel | null = null
+  constructor(
+    private readonly next: BuildingModel,
+    readonly label = 'Ajuste a cotas',
+  ) {}
+  execute(model: BuildingModel): BuildingModel {
+    this.before = model
+    return this.next
+  }
+  undo(model: BuildingModel): BuildingModel {
+    return this.before ?? model
   }
 }

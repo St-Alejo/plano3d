@@ -48,6 +48,18 @@ export class MaterialFactory {
     )
   }
 
+  column(): THREE.MeshStandardMaterial {
+    return this.cached('column', () => new THREE.MeshStandardMaterial({ color: '#c9c6bd', roughness: 0.8 }))
+  }
+
+  stair(): THREE.MeshStandardMaterial {
+    return this.cached('stair', () => new THREE.MeshStandardMaterial({ color: '#a98c6a', roughness: 0.6 }))
+  }
+
+  door(): THREE.MeshStandardMaterial {
+    return this.cached('door', () => new THREE.MeshStandardMaterial({ color: '#8d6e4f', roughness: 0.55 }))
+  }
+
   glass(): THREE.MeshPhysicalMaterial {
     return this.cached(
       'glass',

@@ -14,13 +14,13 @@ WORKDIR /app
 FROM base AS deps
 COPY pyproject.toml ./
 RUN mkdir -p src/plano3d && touch src/plano3d/__init__.py \
- && pip install --prefix=/install .
+ && pip install --prefix=/install ".[ocr]"  && pip install --prefix=/install --no-deps "rapidocr-onnxruntime>=1.4"
 
 # ---------- dev: incluye herramientas de test/lint, código montado por volumen ----------
 FROM base AS dev
 COPY pyproject.toml ./
 RUN mkdir -p src/plano3d && touch src/plano3d/__init__.py \
- && pip install -e ".[dev]"
+ && pip install -e ".[dev,ocr]" && pip install --no-deps "rapidocr-onnxruntime>=1.4"
 COPY . .
 RUN pip install -e ".[dev]" --no-deps
 ENV PLANO3D_MODE=full

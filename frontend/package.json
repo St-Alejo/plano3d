@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "konva": "^10.7.0",
     "lucide-react": "^1.48.0",
+    "polygon-clipping": "^0.15.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-konva": "^19.3.0",

@@ -6,6 +6,7 @@ memoria para tests, lo que demuestra que el dominio no conoce los detalles.
 
 from __future__ import annotations
 
+import builtins
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, field
@@ -15,10 +16,21 @@ import numpy as np
 import numpy.typing as npt
 
 from plano3d.application.dto import ProgressEventDTO
-from plano3d.domain import BuildingModel, Project
+from plano3d.domain import BuildingModel, ModelRevision, Project
 
 Image = npt.NDArray[np.uint8]
-DetectorName = Literal["classic-cv", "cnn-cubicasa", "sam-rooms", "vlm-semantic"]
+DetectorName = Literal[
+    "classic-cv",
+    "raster-vector",
+    "cnn-cubicasa",
+    "sam-rooms",
+    "vlm-semantic",
+    "vector-dxf",
+    "vector-pdf",
+]
+
+#: entradas raster: lo que entiende un detector que trabaja sobre la imagen
+RASTER_TYPES = frozenset({"image/jpeg", "image/png", "image/webp", "application/pdf"})
 
 
 @dataclass(frozen=True)
@@ -66,6 +78,12 @@ class FloorPlanDetector(ABC):
     """Strategy: cada motor de detección (CV clásica, CNN, SAM, VLM) implementa esto."""
 
     name: DetectorName
+    #: si es False, el selector no mide la calidad de imagen (p. ej. un DXF no es imagen)
+    inspects_quality: bool = True
+
+    def accepts(self, content_type: str, data: bytes) -> bool:
+        """¿Entiende este motor el archivo? Por defecto: imágenes y PDF (rasterizado)."""
+        return content_type in RASTER_TYPES
 
     @abstractmethod
     def supports(self, quality: ImageQuality) -> bool:
@@ -103,10 +121,22 @@ class ProjectRepository(ABC):
     async def list(self) -> list[Project]: ...
 
     @abstractmethod
-    async def save(self, project: Project) -> None: ...
+    async def save(self, project: Project, expected_revision: int | None = None) -> None:
+        """Guarda. Con ``expected_revision`` falla (ConcurrencyError) si la revisión
+        almacenada no es esa: la comprobación es atómica en la base de datos."""
 
     @abstractmethod
     async def delete(self, project_id: str) -> None: ...
+
+    @abstractmethod
+    async def add_revision(self, revision: ModelRevision) -> None: ...
+
+    @abstractmethod
+    async def list_revisions(self, project_id: str) -> builtins.list[ModelRevision]:
+        """Más reciente primero."""
+
+    @abstractmethod
+    async def get_revision(self, project_id: str, number: int) -> ModelRevision | None: ...
 
 
 class FileStorage(ABC):
@@ -123,3 +153,49 @@ class FileStorage(ABC):
 class JobQueue(ABC):
     @abstractmethod
     async def enqueue_analysis(self, project_id: str) -> None: ...
+
+
+@dataclass(frozen=True)
+class ReadText:
+    """Lo que un lector reconoció en un recorte: texto y confianza (0..1)."""
+
+    text: str
+    confidence: float
+
+
+class TextReader(ABC):
+    """Strategy: reconoce el texto de recortes ya enderezados (cotas, nombres).
+
+    Se le pasan recortes, nunca la hoja entera: así un OCR local es rápido y un modelo
+    de visión (Claude) no pierde resolución al reducir la imagen.
+    """
+
+    name: str
+
+    @abstractmethod
+    def read(self, crops: Sequence[Image]) -> builtins.list[ReadText]:
+        """Un resultado por recorte, en el mismo orden (texto vacío si no leyó nada)."""
+
+
+@dataclass(frozen=True)
+class ShotReport:
+    """Calidad de una foto del plano y avisos para repetirla."""
+
+    sharpness: float
+    glare: float
+    width: int
+    height: int
+    paper_found: bool
+    warnings: tuple[str, ...] = ()
+
+
+class CaptureInspector(ABC):
+    @abstractmethod
+    def check(self, data: bytes, content_type: str) -> ShotReport: ...
+
+
+class ImageStitcher(ABC):
+    """Une varias fotos parciales de una hoja grande en una sola imagen (PNG)."""
+
+    @abstractmethod
+    def stitch(self, images: Sequence[bytes]) -> bytes: ...

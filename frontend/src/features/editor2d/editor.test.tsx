@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { findLevel, findWall } from '@/domain/model'
@@ -42,11 +42,44 @@ describe('Toolbar', () => {
 })
 
 describe('PropertiesPanel', () => {
-  it('resume el nivel y advierte escala estimada y baja confianza', () => {
+  it('resume el nivel y muestra la revisión del modelo con avisos que llevan al elemento', async () => {
     render(<PropertiesPanel />)
     expect(screen.getByText('Resumen')).toBeInTheDocument()
-    expect(screen.getByText(/La escala es una estimación/)).toBeInTheDocument()
-    expect(screen.getByText(/1 ambiente\(s\) con baja confianza/)).toBeInTheDocument()
+    const qa = screen.getByRole('region', { name: /Revisión del modelo/ })
+    expect(within(qa).getByText(/escala es estimada/)).toBeInTheDocument()
+    await userEvent.click(within(qa).getByRole('button', { name: /Espacio 2.*dudosa/ }))
+    expect(useEditor.getState().selection).toEqual({ kind: 'room', id: 'r_b' })
+  })
+
+  it('largo exacto del muro con un comando que arrastra la esquina', async () => {
+    act(() => useEditor.getState().select({ kind: 'wall', id: 'w_top' }))
+    render(<PropertiesPanel />)
+    const largo = screen.getByLabelText('Largo')
+    expect(largo).toHaveValue('10.00')
+    await userEvent.clear(largo)
+    await userEvent.type(largo, '10,5{Enter}')
+    expect(findWall(level(), 'w_top').end).toEqual({ x: 10.5, y: 0 })
+    expect(findWall(level(), 'w_right').start).toEqual({ x: 10.5, y: 0 })
+    expect(useEditor.getState().undoLabel).toBe('Cambiar largo del muro')
+  })
+
+  it('ángulo exacto del muro', async () => {
+    act(() => useEditor.getState().select({ kind: 'wall', id: 'w_right' }))
+    render(<PropertiesPanel />)
+    const ang = screen.getByLabelText('Ángulo')
+    expect(ang).toHaveValue('90.0')
+    await userEvent.clear(ang)
+    await userEvent.type(ang, '80{Enter}')
+    const w = findWall(level(), 'w_right')
+    expect(Math.atan2(w.end.y - w.start.y, w.end.x - w.start.x) * (180 / Math.PI)).toBeCloseTo(80)
+  })
+
+  it('ajustes de dibujo: rejilla y cotas', async () => {
+    render(<PropertiesPanel />)
+    await userEvent.selectOptions(screen.getByLabelText('Rejilla de imán'), '0.1')
+    expect(useEditor.getState().gridStep).toBe(0.1)
+    await userEvent.click(screen.getByLabelText('Mostrar cotas de muros'))
+    expect(useEditor.getState().showDimensions).toBe(false)
   })
 
   it('edita la altura de un muro con un comando', async () => {

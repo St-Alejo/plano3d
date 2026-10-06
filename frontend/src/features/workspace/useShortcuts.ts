@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { DeleteOpening, DeleteWall, TranslateWall } from '@/domain/commands'
 import { useEditor, type Tool } from '@/store/editorStore'
 
-const TOOL_KEYS: Record<string, Tool> = { v: 'select', w: 'wall', d: 'door', n: 'window', c: 'calibrate' }
+const TOOL_KEYS: Record<string, Tool> = { v: 'select', w: 'wall', d: 'door', n: 'window', c: 'calibrate', m: 'measure' }
 
 /** Atajos de teclado del editor. Se ignoran mientras se escribe en un campo. */
 export function useEditorShortcuts(onSave?: () => void): void {

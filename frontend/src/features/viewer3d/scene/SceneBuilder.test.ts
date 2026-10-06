@@ -72,3 +72,40 @@ describe('exportGlb', () => {
     expect(new TextDecoder().decode(header)).toBe('glTF')
   })
 })
+
+describe('SceneBuilder: elementos del modelo v2', () => {
+  it('columnas, escaleras, puertas y muros curvos', () => {
+    const m = sampleModel()
+    const lv = m.levels[0]!
+    lv.columns = [
+      { id: 'c1', center: { x: 5, y: 3.5 }, width: 0.3, depth: 0.3, round: false, rotation: 0, confidence: 1 },
+      { id: 'c2', center: { x: 2, y: 2 }, width: 0.4, depth: 0.4, round: true, rotation: 0, confidence: 1 },
+    ]
+    lv.stairs = [
+      { id: 's1', start: { x: 6, y: 1 }, end: { x: 9, y: 1 }, width: 1, steps: 12, riser: 0.175, confidence: 1 },
+    ]
+    lv.walls.push({
+      id: 'curva',
+      start: { x: 10, y: 1 },
+      end: { x: 10, y: 4 },
+      bulge: -1.2,
+      thickness: 0.2,
+      height: 2.6,
+      material: 'plaster',
+      openings: [],
+      confidence: 1,
+    })
+    const s = buildScene(m)
+    const kinds = s.elements.children.map((c) => c.userData.kind as string)
+    expect(kinds.filter((k) => k === 'column')).toHaveLength(2)
+    expect(kinds.filter((k) => k === 'stair')).toHaveLength(12)
+    expect(kinds.filter((k) => k === 'door').length).toBeGreaterThanOrEqual(1)
+    s.root.updateMatrixWorld(true)
+    const curved = s.walls.children.filter((c) => c.userData.wallId === 'curva')
+    expect(curved.length).toBeGreaterThan(5)
+    const box = new THREE.Box3()
+    for (const c of curved) box.expandByObject(c)
+    expect(box.max.x).toBeGreaterThan(11) // el bow window sobresale
+    disposeScene(s)
+  })
+})

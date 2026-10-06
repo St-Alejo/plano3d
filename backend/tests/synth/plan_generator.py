@@ -37,10 +37,45 @@ class SynthWall:
     b: Pt
     thickness: float = 0.2
     openings: tuple[SynthOpening, ...] = ()
+    #: flecha del arco en metros (0 = recto); positiva hacia la normal izquierda (-dy, dx)
+    bulge: float = 0.0
 
     @property
     def length(self) -> float:
+        """Longitud de la cuerda (para un muro recto, su largo)."""
         return math.dist(self.a, self.b)
+
+    def axis_points(self, step: float = 0.1) -> list[Pt]:
+        """Eje del muro muestreado (un arco si ``bulge`` != 0)."""
+        if abs(self.bulge) < 1e-9:
+            return [self.a, self.b]
+        (ax, ay), (bx, by) = self.a, self.b
+        c = self.length
+        s = self.bulge
+        radius = (c * c / 4 + s * s) / (2 * abs(s))
+        dx, dy = (bx - ax) / c, (by - ay) / c
+        nx, ny = -dy, dx
+        mx, my = (ax + bx) / 2, (ay + by) / 2
+        sign = 1.0 if s > 0 else -1.0
+        # el centro queda del lado opuesto a la flecha
+        d = radius - abs(s)
+        cx, cy = mx - sign * nx * d, my - sign * ny * d
+        a0 = math.atan2(ay - cy, ax - cx)
+        a1 = math.atan2(by - cy, bx - cx)
+        mid = math.atan2(my + sign * ny * abs(s) - cy, mx + sign * nx * abs(s) - cx)
+        # elegir el sentido de barrido que pasa por el punto medio del arco
+        sweep = (a1 - a0) % (2 * math.pi)
+        if not _angle_between(mid, a0, sweep):
+            sweep -= 2 * math.pi
+        n = max(8, math.ceil(abs(sweep) * radius / step))
+        return [
+            (cx + radius * math.cos(a0 + sweep * i / n), cy + radius * math.sin(a0 + sweep * i / n))
+            for i in range(n + 1)
+        ]
+
+
+def _angle_between(ang: float, start: float, sweep: float) -> bool:
+    return (ang - start) % (2 * math.pi) <= sweep
 
 
 @dataclass(frozen=True)
@@ -169,29 +204,7 @@ def render(
             pts = np.round(poly).astype(np.int32)
             cv2.fillPoly(img, [pts], (INK, INK, INK))
             cv2.fillPoly(mask, [pts], 255)
-        for op in wall.openings:
-            p0 = (ax + dx * op.offset, ay + dy * op.offset)
-            p1 = (ax + dx * (op.offset + op.width), ay + dy * (op.offset + op.width))
-            if op.kind == "window":
-                for k in (-h, 0.0, h):
-                    q0 = r.to_px((p0[0] + nx * k, p0[1] + ny * k))
-                    q1 = r.to_px((p1[0] + nx * k, p1[1] + ny * k))
-                    cv2.line(img, _ip(q0), _ip(q1), (INK,) * 3, thin, cv2.LINE_AA)
-            else:
-                # hoja de la puerta + arco de giro (hacia el lado +normal)
-                hinge = r.to_px(p0)
-                leaf_end = r.to_px((p0[0] + nx * op.width, p0[1] + ny * op.width))
-                cv2.line(img, _ip(hinge), _ip(leaf_end), (INK,) * 3, thin, cv2.LINE_AA)
-                ang0 = math.degrees(math.atan2(dy, dx))
-                ang1 = math.degrees(math.atan2(ny, nx))
-                if ang1 < ang0:
-                    ang0, ang1 = ang1, ang0
-                if ang1 - ang0 > 180:
-                    ang0, ang1 = ang1, ang0 + 360
-                rad = round(op.width * px_per_m)
-                cv2.ellipse(
-                    img, _ip(hinge), (rad, rad), 0, ang0, ang1, (INK,) * 3, thin, cv2.LINE_AA
-                )
+        draw_opening_symbols(img, r, wall, thin)
 
     for room in plan.rooms:
         r.rooms_px.append(np.array([r.to_px(p) for p in room.polygon], np.float64))
@@ -243,6 +256,36 @@ def render(
     return r
 
 
+def draw_opening_symbols(img: Img, r: RenderedPlan, wall: SynthWall, thin: int) -> None:
+    """Símbolos de aberturas: ventana = 3 líneas finas; puerta = hoja + arco de giro."""
+    ax, ay = wall.a
+    dx, dy = (wall.b[0] - ax) / wall.length, (wall.b[1] - ay) / wall.length
+    nx, ny = -dy, dx
+    h = wall.thickness / 2
+    px_per_m = r.px_per_m
+    for op in wall.openings:
+        p0 = (ax + dx * op.offset, ay + dy * op.offset)
+        p1 = (ax + dx * (op.offset + op.width), ay + dy * (op.offset + op.width))
+        if op.kind == "window":
+            for k in (-h, 0.0, h):
+                q0 = r.to_px((p0[0] + nx * k, p0[1] + ny * k))
+                q1 = r.to_px((p1[0] + nx * k, p1[1] + ny * k))
+                cv2.line(img, _ip(q0), _ip(q1), (INK,) * 3, thin, cv2.LINE_AA)
+        else:
+            # hoja de la puerta + arco de giro (hacia el lado +normal)
+            hinge = r.to_px(p0)
+            leaf_end = r.to_px((p0[0] + nx * op.width, p0[1] + ny * op.width))
+            cv2.line(img, _ip(hinge), _ip(leaf_end), (INK,) * 3, thin, cv2.LINE_AA)
+            ang0 = math.degrees(math.atan2(dy, dx))
+            ang1 = math.degrees(math.atan2(ny, nx))
+            if ang1 < ang0:
+                ang0, ang1 = ang1, ang0
+            if ang1 - ang0 > 180:
+                ang0, ang1 = ang1, ang0 + 360
+            rad = round(op.width * px_per_m)
+            cv2.ellipse(img, _ip(hinge), (rad, rad), 0, ang0, ang1, (INK,) * 3, thin, cv2.LINE_AA)
+
+
 def _ip(p: Pt) -> tuple[int, int]:
     return round(p[0]), round(p[1])
 
@@ -273,10 +316,20 @@ def photograph(
     noise: float = 6.0,
     blur: float = 1.0,
     jpeg_quality: int = 75,
+    fold: float = 0.0,
+    glare: float = 0.0,
 ) -> Photo:
-    """Simula una foto del papel sobre una mesa, tomada en ángulo."""
+    """Simula una foto del papel sobre una mesa, tomada en ángulo.
+
+    ``fold``: amplitud (fracción del lado) de la ondulación de un papel doblado.
+    ``glare``: intensidad de un reflejo de luz que satura parte de la hoja.
+    Ambos usan un generador aparte para no alterar las fotos de las pruebas existentes.
+    """
     rng = np.random.default_rng(seed)
+    extra = np.random.default_rng(seed + 10_000)
     paper = rendered.image
+    if fold > 0:
+        paper = _fold(paper, fold, extra)
     ph, pw = paper.shape[:2]
     cw, ch = int(pw * 1.35), int(ph * 1.35)
     bg = np.empty((ch, cw, 3), np.uint8)
@@ -311,6 +364,10 @@ def photograph(
     blob = np.exp(-(((xx - sx) ** 2 + (yy - sy) ** 2) / (2 * (0.25 * cw) ** 2)))
     light *= 1.0 - shadow * 0.6 * blob
     out = img.astype(np.float64) * light[..., None]
+    if glare > 0:
+        gx, gy = extra.uniform(0.25, 0.75) * cw, extra.uniform(0.25, 0.75) * ch
+        spot = np.exp(-(((xx - gx) ** 2 + (yy - gy) ** 2) / (2 * (0.12 * cw) ** 2)))
+        out = out * (1 - glare * spot[..., None]) + 255.0 * glare * spot[..., None]
     out += rng.normal(0, noise, out.shape)
     out = np.clip(out, 0, 255).astype(np.uint8)
     if blur > 0:
@@ -320,6 +377,65 @@ def photograph(
     decoded = cv2.imdecode(enc, cv2.IMREAD_COLOR)
     assert decoded is not None
     return Photo(decoded, dst, (pw, ph))
+
+
+def _fold(paper: Img, amount: float, rng: np.random.Generator) -> Img:
+    """Ondula el papel (pliegues): desplazamiento sinusoidal suave en ambos ejes."""
+    ph, pw = paper.shape[:2]
+    yy, xx = np.mgrid[0:ph, 0:pw].astype(np.float32)
+    fx, fy = rng.uniform(1.0, 2.5), rng.uniform(1.0, 2.5)
+    phx, phy = rng.uniform(0, 2 * math.pi, 2)
+    amp = amount * min(pw, ph)
+    map_x = xx + amp * np.sin(2 * math.pi * fy * yy / ph + phy).astype(np.float32)
+    map_y = yy + amp * np.sin(2 * math.pi * fx * xx / pw + phx).astype(np.float32)
+    out = cv2.remap(paper, map_x, map_y, cv2.INTER_LINEAR, borderValue=(PAPER,) * 3)
+    return np.asarray(out, np.uint8)
+
+
+@dataclass
+class Shot:
+    """Una toma parcial de una hoja grande: la foto y la homografía papel → foto."""
+
+    image: Img
+    paper_to_photo: npt.NDArray[np.float64]
+
+
+def photograph_tiles(
+    rendered: RenderedPlan,
+    grid: tuple[int, int] = (2, 1),
+    overlap: float = 0.3,
+    seed: int = 0,
+    tilt: float = 0.05,
+    noise: float = 4.0,
+    blur: float = 0.8,
+) -> list[Shot]:
+    """Varias fotos de una hoja grande (A1/A0), cada una cubriendo una zona con solape.
+
+    Las tomas NO muestran los bordes de la hoja: hay que unirlas por sus rasgos.
+    """
+    rng = np.random.default_rng(seed)
+    paper = rendered.image
+    ph, pw = paper.shape[:2]
+    cols, rows = grid
+    tw = pw / (cols - (cols - 1) * overlap)
+    th = ph / (rows - (rows - 1) * overlap)
+    shots: list[Shot] = []
+    for j in range(rows):
+        for i in range(cols):
+            x0 = i * tw * (1 - overlap)
+            y0 = j * th * (1 - overlap)
+            src = np.array([[x0, y0], [x0 + tw, y0], [x0 + tw, y0 + th], [x0, y0 + th]], np.float64)
+            out_w, out_h = round(tw), round(th)
+            dst = np.array([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]], np.float64)
+            dst = dst + rng.uniform(-tilt, tilt, (4, 2)) * np.array([out_w, out_h])
+            hom = cv2.getPerspectiveTransform(src.astype(np.float32), dst.astype(np.float32))
+            img = cv2.warpPerspective(paper, hom, (out_w, out_h), borderValue=(70, 95, 120))
+            f = img.astype(np.float64) + rng.normal(0, noise, img.shape)
+            img = np.clip(f, 0, 255).astype(np.uint8)
+            if blur > 0:
+                img = cv2.GaussianBlur(img, (0, 0), blur)
+            shots.append(Shot(np.asarray(img, np.uint8), np.asarray(hom, np.float64)))
+    return shots
 
 
 def encode(img: Img, ext: str = ".png") -> bytes:
