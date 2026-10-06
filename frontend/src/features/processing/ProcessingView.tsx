@@ -26,13 +26,13 @@ export function ProcessingView({ projectId, onFinished }: { projectId: string; o
     <div className="mx-auto grid w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:grid-cols-[360px_1fr]">
       <section aria-labelledby="pipeline-title" className="flex flex-col gap-4">
         <div>
-          <p className="font-mono text-xs text-accent-dim">03 — Procesamiento</p>
-          <h1 id="pipeline-title" className="text-2xl font-semibold">
+          <p className="font-mono text-xs tracking-[0.16em] text-subtle uppercase">03 — Procesamiento</p>
+          <h1 id="pipeline-title" className="mt-2 font-serif text-4xl leading-none font-normal tracking-tight">
             Reconociendo el plano
           </h1>
         </div>
         <div className="h-1.5 w-full overflow-hidden bg-raised" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso del análisis">
-          <div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-brand transition-[width] duration-500" style={{ width: `${pct}%` }} />
         </div>
         <ol className="flex flex-col" aria-live="polite">
           {STAGES.map((s, i) => {
