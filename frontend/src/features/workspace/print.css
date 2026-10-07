@@ -1,0 +1,34 @@
+/* Hoja imprimible del cuadro de áreas: solo existe para la impresora. */
+.print-sheet {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  #root {
+    display: none !important;
+  }
+  .print-sheet {
+    display: block;
+    color: #16140f;
+    background: #fff;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 11pt;
+  }
+  .print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .print-sheet th,
+  .print-sheet td {
+    border-bottom: 0.5pt solid #999;
+    padding: 4pt 2pt;
+    text-align: left;
+  }
+  .print-sheet .num {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}

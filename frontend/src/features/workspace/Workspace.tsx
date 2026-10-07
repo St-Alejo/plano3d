@@ -14,6 +14,7 @@ import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
 import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
 import { buildActions } from './actions'
+import { AreaSchedulePanel } from './AreaSchedulePanel'
 import { CommandPalette } from './CommandPalette'
 import { EditorContextMenu } from './EditorContextMenu'
 import { GroupInspector } from './GroupInspector'
@@ -280,9 +281,32 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
               {viewMode !== '3d' && <section aria-label="Editor 2D" className="min-h-0 border-r border-line">{editor}</section>}
               {viewMode !== '2d' && <section aria-label="Vista 3D" className="min-h-0 border-r border-line">{viewer}</section>}
             </div>
-            <aside aria-label="Propiedades" className="min-h-0 overflow-y-auto bg-surface p-4">
-              {groupSize > 1 ? <GroupInspector /> : <PropertiesPanel onSolve={() => void solve()} solving={solving} />}
-            </aside>
+            <Tabs.Root defaultValue="props" className="flex min-h-0 flex-col bg-surface">
+              <Tabs.List aria-label="Inspector" className="grid shrink-0 grid-cols-2 border-b border-line">
+                {(
+                  [
+                    ['props', 'Propiedades'],
+                    ['areas', 'Áreas'],
+                  ] as const
+                ).map(([v, l]) => (
+                  <Tabs.Trigger
+                    key={v}
+                    value={v}
+                    className="h-9 text-xs text-muted data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
+                  >
+                    {l}
+                  </Tabs.Trigger>
+                ))}
+              </Tabs.List>
+              <Tabs.Content value="props" asChild>
+                <aside aria-label="Propiedades" className="min-h-0 flex-1 overflow-y-auto p-4">
+                  {groupSize > 1 ? <GroupInspector /> : <PropertiesPanel onSolve={() => void solve()} solving={solving} />}
+                </aside>
+              </Tabs.Content>
+              <Tabs.Content value="areas" className="min-h-0 flex-1 overflow-y-auto p-4">
+                <AreaSchedulePanel projectName={project.name} />
+              </Tabs.Content>
+            </Tabs.Root>
           </div>
           <StatusBar hint={hint} onHelp={() => setHelp(true)} />
         </>
@@ -301,8 +325,12 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
           </Tabs.List>
           <Tabs.Content value="2d" className="min-h-[60vh] flex-1">{editor}</Tabs.Content>
           <Tabs.Content value="3d" className="min-h-[60vh] flex-1">{viewer}</Tabs.Content>
-          <Tabs.Content value="props" className="flex-1 overflow-y-auto p-4">
+          <Tabs.Content value="props" className="flex flex-1 flex-col gap-8 overflow-y-auto p-4">
             <PropertiesPanel onSolve={() => void solve()} solving={solving} />
+            <div>
+              <h2 className="mb-3 font-serif text-2xl font-normal">Cuadro de áreas</h2>
+              <AreaSchedulePanel projectName={project.name} />
+            </div>
           </Tabs.Content>
         </Tabs.Root>
       )}
