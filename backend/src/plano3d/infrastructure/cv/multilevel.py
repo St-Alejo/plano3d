@@ -81,6 +81,12 @@ def _upscale(img: Img) -> tuple[Img, float]:
     return as_u8(cv2.resize(solid, None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST)), f
 
 
+def _scale_candidates(r: DetectionResult) -> list[float]:
+    """m/px (de la imagen rectificada de esa planta) según cada método disponible."""
+    keys = [k for k in ("mpp_walls", "mpp_doors") if k in r.metrics]
+    return [r.metrics[k] for k in keys] or [r.model.scale.meters_per_pixel]
+
+
 def _is_roof(level: Level) -> bool:
     """Azotea: casi todo el muro es perímetro (antepechos), apenas hay tabiques."""
     if not level.walls:
@@ -147,9 +153,14 @@ class MultiLevelDetector(FloorPlanDetector):
             return await self._inner.detect(request, progress)
         blocks = used
 
-        # escala común (m por px de lámina): la del nivel con más confianza
+        # escala común (m por px de lámina). Si alguna planta trae cotas, manda; si no, la
+        # mediana de todas las estimaciones (grosor de muros y puertas de cada planta): es
+        # una sola lámina, y un método engañado en una planta no arrastra al resto
         best = max(found, key=lambda t: t[1].model.scale.confidence)
-        m = best[1].model.scale.meters_per_pixel * best[3]
+        if best[1].model.scale.source in ("dimensions", "calibrated", "vector"):
+            m = best[1].model.scale.meters_per_pixel * best[3]
+        else:
+            m = float(np.median([v * s for _, r, _, s in found for v in _scale_candidates(r)]))
         x00, y00 = blocks[0][0], blocks[0][1]
         levels: list[Level] = []
         transforms: list[tuple[float, ...]] = []

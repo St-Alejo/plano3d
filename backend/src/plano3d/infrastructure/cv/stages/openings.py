@@ -581,7 +581,9 @@ class OpeningsStage(PipelineStage[CVContext]):
         if ctx.scale_hint is None and ctx.scale_confidence < DOOR_SCALE_CONFIDENCE:
             # sin cotas, el ancho de las puertas es mejor regla que el grosor de los muros
             mpp = scale_from_doors(ctx.segments, ctx.meters_per_pixel)
+            ctx.metrics["mpp_walls"] = ctx.meters_per_pixel
             if mpp is not None:
+                ctx.metrics["mpp_doors"] = mpp
                 ctx.meters_per_pixel, ctx.scale_confidence = mpp, DOOR_SCALE_CONFIDENCE
         return ctx
 

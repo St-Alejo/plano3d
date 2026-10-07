@@ -92,6 +92,8 @@ class ClassicCVDetector(FloorPlanDetector):
             "walls": float(sum(len(lv.walls) for lv in model.levels)),
             "rooms": float(sum(len(lv.rooms) for lv in model.levels)),
             "meters_per_pixel": model.scale.meters_per_pixel,
+            # estimaciones de escala por cada método (las combina quien junta varias plantas)
+            **{k: v for k, v in ctx.metrics.items() if k.startswith("mpp_")},
         }
         return DetectionResult(
             model=model,
