@@ -5,13 +5,15 @@
     "walls": 45.0,
     "rooms": 4.0,
     "meters_per_pixel": 0.011369163424124511,
+    "mpp_walls": 0.013636363636363637,
+    "mpp_doors": 0.011369163424124511,
     "fallback_classic": 1.0,
     "levels": 3.0
   },
   "scale": {
-    "mpp": 0.03410749027237354,
+    "mpp": 0.045000000000000005,
     "source": "estimated",
-    "error": -0.4543
+    "error": -0.28
   },
   "levels_det": 3,
   "levels_gt": 3,
@@ -502,7 +504,7 @@
       "wall_f1_ends": 0.125,
       "open_p": 0.0,
       "open_r": 1.0,
-      "open_det": 8,
+      "open_det": 3,
       "open_gt": 0,
       "rooms_det": 1,
       "rooms_gt": 0,
@@ -510,27 +512,6 @@
       "names_ok": 0,
       "rooms": [],
       "openings": [
-        {
-          "at": [
-            3.28,
-            -4.73
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            4.6,
-            -4.73
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            9.52,
-            6.39
-          ],
-          "kind": "window"
-        },
         {
           "at": [
             3.39,
@@ -551,25 +532,11 @@
             -3.44
           ],
           "kind": "window"
-        },
-        {
-          "at": [
-            0.05,
-            -3.31
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            0.05,
-            -1.56
-          ],
-          "kind": "window"
         }
       ]
     }
   ],
-  "when": "2026-10-07T09:39:57",
+  "when": "2026-10-07T09:56:23",
   "pass": {
     "scale": false,
     "levels": true,

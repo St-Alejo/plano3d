@@ -83,3 +83,18 @@ def test_nombres_de_niveles() -> None:
 
     assert level_names([lv(True), lv(True)]) == ["Planta baja", "Planta alta"]
     assert level_names([lv(True), lv(True), lv(False)]) == ["Planta baja", "Planta alta", "Azotea"]
+    assert level_names([lv(True), lv(False)]) == ["Planta baja", "Azotea"]
+
+
+def test_azotea_con_antepechos() -> None:
+    from plano3d.infrastructure.cv.multilevel import with_parapets
+
+    walls = (
+        Wall("a", Point2D(0, 0), Point2D(10, 0)),
+        Wall("b", Point2D(10, 0), Point2D(10, 8)),
+        Wall("c", Point2D(10, 8), Point2D(0, 8)),
+        Wall("d", Point2D(0, 8), Point2D(0, 0)),
+        Wall("e", Point2D(4, 3), Point2D(6, 3)),  # volumen de la escalera
+    )
+    heights = [w.height for w in with_parapets(Level("l", "Azotea", walls=walls)).walls]
+    assert heights == [1.1, 1.1, 1.1, 1.1, 2.6]

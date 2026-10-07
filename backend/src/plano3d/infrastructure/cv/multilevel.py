@@ -15,6 +15,7 @@ from dataclasses import replace
 import cv2
 import numpy as np
 import numpy.typing as npt
+from shapely.geometry import MultiPoint, Point
 
 from plano3d.application.ports import (
     DetectionRequest,
@@ -23,7 +24,7 @@ from plano3d.application.ports import (
     ImageQuality,
     ProgressPublisher,
 )
-from plano3d.domain import BuildingModel, Level, Scale, SourceImage
+from plano3d.domain import BuildingModel, Level, Scale, SourceImage, Wall
 from plano3d.infrastructure.cv.context import Img, as_u8
 from plano3d.infrastructure.cv.imageio import decode, encode_png
 from plano3d.infrastructure.cv.stages.layout import Box, plan_blocks, prepare_sheet
@@ -87,25 +88,64 @@ def _scale_candidates(r: DetectionResult) -> list[float]:
     return [r.metrics[k] for k in keys] or [r.model.scale.meters_per_pixel]
 
 
-def _is_roof(level: Level) -> bool:
-    """Azotea: casi todo el muro es perímetro (antepechos), apenas hay tabiques."""
+def _interior_ratio(level: Level) -> float:
+    """Largo de tabiques por metro de perímetro (0 = solo el contorno)."""
     if not level.walls:
-        return False
+        return 0.0
     xs = [p for w in level.walls for p in (w.start.x, w.end.x)]
     ys = [p for w in level.walls for p in (w.start.y, w.end.y)]
     perimeter = 2 * ((max(xs) - min(xs)) + (max(ys) - min(ys)))
     total = sum(w.length for w in level.walls)
-    return perimeter > 0 and (total - perimeter) / perimeter < ROOF_INTERIOR_RATIO
+    return max(0.0, (total - perimeter) / perimeter) if perimeter > 0 else 0.0
 
 
 def level_names(levels: list[Level]) -> list[str]:
     """Nombres por convención (izquierda→derecha = de abajo hacia arriba)."""
     n = len(levels)
-    roof = n >= 3 and _is_roof(levels[-1])
+    sparse = False
+    # azotea: la última planta, casi sin tabiques o con muy pocos ambientes frente a la
+    # anterior (antepechos y el volumen de la escalera)
+    few_rooms = (
+        n >= 2
+        and len(levels[-2].rooms) >= 3
+        and len(levels[-1].rooms) <= 0.3 * len(levels[-2].rooms)
+    )
+    if n >= 2:
+        last, prev = _interior_ratio(levels[-1]), _interior_ratio(levels[-2])
+        sparse = last < ROOF_INTERIOR_RATIO and last < 0.5 * prev
+    roof = n >= 2 and (sparse or few_rooms)
     floors = n - 1 if roof else n
     names = ["Planta baja", "Planta alta"] if floors == 2 else ["Planta baja"]
     names += [f"Piso {k + 1}" for k in range(len(names), floors)]
     return [*names[:floors], *(["Azotea"] if roof else [])]
+
+
+#: altura de los antepechos de una azotea
+PARAPET_M = 1.1
+
+
+def with_parapets(level: Level) -> Level:
+    """En la azotea, el muro del borde (casco convexo de los muros) es un antepecho bajo; lo
+    interior (volumen de la escalera, tanque) conserva su altura."""
+    if not level.walls:
+        return level
+    pts = [(p.x, p.y) for w in level.walls if w.length >= 1.0 for p in (w.start, w.end)]
+    if len(pts) < 3:
+        return level
+    edge = MultiPoint(pts).convex_hull.exterior
+
+    def on_edge(w: Wall) -> bool:
+        tol = w.thickness / 2 + 0.25
+        mid = Point((w.start.x + w.end.x) / 2, (w.start.y + w.end.y) / 2)
+        return (
+            all(edge.distance(Point(p.x, p.y)) <= tol + 0.5 for p in (w.start, w.end))
+            and edge.distance(mid) <= tol
+        )
+
+    walls = tuple(
+        replace(w, height=PARAPET_M, openings=()) if on_edge(w) else w for w in level.walls
+    )
+    return replace(level, walls=walls)
 
 
 class MultiLevelDetector(FloorPlanDetector):
@@ -178,7 +218,7 @@ class MultiLevelDetector(FloorPlanDetector):
         names = level_names(levels)
         stacked = tuple(
             replace(
-                lv,
+                with_parapets(lv) if names[k] == "Azotea" else lv,
                 id=f"lvl_{k}",
                 name=names[k],
                 elevation=round(k * FLOOR_TO_FLOOR_M, 3),

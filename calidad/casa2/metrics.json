@@ -5,6 +5,8 @@
     "walls": 27.0,
     "rooms": 6.0,
     "meters_per_pixel": 0.02328767123287671,
+    "mpp_walls": 0.0225,
+    "mpp_doors": 0.02328767123287671,
     "fallback_classic": 1.0
   },
   "scale": {
@@ -248,7 +250,7 @@
       ]
     }
   ],
-  "when": "2026-10-07T09:37:40",
+  "when": "2026-10-07T09:55:39",
   "pass": {
     "scale": true,
     "levels": true,

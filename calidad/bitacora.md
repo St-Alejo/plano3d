@@ -51,3 +51,11 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 - Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
 - Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (8/0) · ambientes 1/0 IoU 0.00 nombres 0/0
 - falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes
+
+### 2026-10-07 09:56 — Niveles nombrados por convención (Planta baja / Planta alta / Azotea: última planta con menos de la mitad de tabiques o muy pocos ambientes); azotea con antepechos de 1,1 m en el casco. Escala común por mediana de métodos: -28% (los métodos por grosor y puertas se sesgan con los muebles de esta lámina; el de la azotea daba 16,7 px/m ≈ verdad). Pendiente: muebles (autos, mesas) como muros en planta baja.
+
+## casa3  (raster-vector)  escala estimated error -28.0%  niveles 3/3
+- Planta baja: muros F1 0.42 (P 0.27 R 0.94, extremos 0.07, 45/9) · aberturas P 0.03 R 0.14 (31/7) · ambientes 4/3 IoU 0.25 nombres 0/3
+- Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
+- Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (3/0) · ambientes 1/0 IoU 0.00 nombres 0/0
+- falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes
