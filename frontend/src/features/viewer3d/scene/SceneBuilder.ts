@@ -25,6 +25,9 @@ export interface BuiltScene {
   furniture: THREE.Group
 }
 
+/** Ancho desde el cual una puerta corrediza se dibuja como vidrio. */
+const GLAZED_DOOR_M = 1.5
+
 export class SceneBuilder {
   private readonly root = new THREE.Group()
   private readonly walls = new THREE.Group()
@@ -149,8 +152,10 @@ export class SceneBuilder {
         if (w.bulge) continue
         for (const o of w.openings.filter((x) => x.kind === 'door' && x.operation !== 'none')) {
           const leaves = o.operation === 'sliding' ? slidingLeaves(w, o) : [doorLeaf(w, o)]
+          // una corrediza ancha es un paño de vidrio (puerta-ventana), no de madera
+          const material = o.operation === 'sliding' && o.width >= GLAZED_DOOR_M ? this.materials.glass() : this.materials.door()
           for (const leaf of leaves) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(...leaf.size), this.materials.door())
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(...leaf.size), material)
             mesh.position.set(leaf.center[0], lv.elevation + leaf.center[1], leaf.center[2])
             mesh.rotation.y = leaf.rotationY
             mesh.castShadow = true
