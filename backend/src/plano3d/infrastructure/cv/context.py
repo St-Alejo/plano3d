@@ -71,6 +71,8 @@ class CVContext:
     content_type: str
     #: esquinas del papel normalizadas a [0,1] (TL, TR, BR, BL), elegidas por el usuario
     corners: Sequence[tuple[float, float]] | None = None
+    #: (m/px, confianza) conocidos de antemano (ver ``DetectionRequest.scale_hint``)
+    scale_hint: tuple[float, float] | None = None
 
     original: Img | None = None
     rectified: Img | None = None

@@ -40,7 +40,10 @@ class ScaleStage(PipelineStage[CVContext]):
     title = "Estimación de escala"
 
     def run(self, ctx: CVContext) -> CVContext:
-        ctx.meters_per_pixel, ctx.scale_confidence = estimate_scale(ctx.segments)
+        if ctx.scale_hint is not None:
+            ctx.meters_per_pixel, ctx.scale_confidence = ctx.scale_hint
+        else:
+            ctx.meters_per_pixel, ctx.scale_confidence = estimate_scale(ctx.segments)
         return ctx
 
     def metrics(self, ctx: CVContext) -> dict[str, float]:

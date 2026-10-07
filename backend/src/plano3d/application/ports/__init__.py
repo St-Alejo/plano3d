@@ -39,6 +39,9 @@ class DetectionRequest:
     image_bytes: bytes
     content_type: str
     corners: Sequence[tuple[float, float]] | None = None
+    #: (m/px de la imagen rectificada, confianza) ya conocidos por otro detector, p. ej. de
+    #: las cotas leídas: el detector la usa en vez de estimar la suya
+    scale_hint: tuple[float, float] | None = None
 
 
 @dataclass

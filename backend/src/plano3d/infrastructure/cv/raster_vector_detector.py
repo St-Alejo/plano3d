@@ -363,7 +363,15 @@ class HybridPhotoDetector(FloorPlanDetector):
         rooms = sum(len(lv.rooms) for lv in first.model.levels)
         if rooms >= MIN_ROOMS_TO_TRUST:
             return first
-        second = await self._classic.detect(request, progress)
+        # la clásica trabaja sobre la misma imagen rectificada: si raster-vector leyó la
+        # escala de las cotas, se la pasa (umbrales en metros correctos: vanos, rejilla...)
+        hint = request
+        if first.model.scale.source == "dimensions":
+            hint = replace(
+                request,
+                scale_hint=(first.model.scale.meters_per_pixel, first.model.scale.confidence),
+            )
+        second = await self._classic.detect(hint, progress)
         rooms2 = sum(len(lv.rooms) for lv in second.model.levels)
         if rooms2 <= rooms:
             return first

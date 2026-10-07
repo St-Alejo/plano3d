@@ -74,6 +74,7 @@ class ClassicCVDetector(FloorPlanDetector):
             image_bytes=request.image_bytes,
             content_type=request.content_type,
             corners=request.corners,
+            scale_hint=request.scale_hint,
         )
         ctx = await pipeline.run(ctx, request.project_id, progress)
         model = ctx.require(ctx.model, "model")

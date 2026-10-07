@@ -7,3 +7,9 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
 - Planta 1: muros F1 0.96 (P 1.00 R 0.92, extremos 0.53, 7/8) · aberturas P 1.00 R 0.71 (5/7) · ambientes 1/3 IoU 0.33 nombres 0/3
 - falta: Planta 1: aberturas, Planta 1: ambientes, Planta 1: nombres
+
+### 2026-10-06 23:56 — Puertas entre extremo de tabique y muro transversal (con evidencia de arco/hoja/línea) y escala de cotas para la CV clásica
+
+## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
+- Planta 1: muros F1 1.00 (P 1.00 R 1.00, extremos 0.80, 7/8) · aberturas P 0.86 R 0.86 (7/7) · ambientes 3/3 IoU 0.95 nombres 0/3
+- falta: Planta 1: aberturas, Planta 1: nombres
