@@ -11,19 +11,20 @@ import type { BuildingModel, Point, Room, Wall } from '@/api/types'
 import { CommandError, CommandHistory, type Command } from '@/domain/commands'
 import { recomputeRooms } from '@/domain/rooms'
 
-export type Tool = 'select' | 'wall' | 'door' | 'window' | 'calibrate' | 'measure' | 'dimension'
+export type Tool = 'select' | 'wall' | 'door' | 'window' | 'calibrate' | 'measure' | 'dimension' | 'paint'
 
 export type Selection =
   | { kind: 'wall'; id: string }
   | { kind: 'opening'; id: string; wallId: string }
   | { kind: 'room'; id: string }
   | { kind: 'dimension'; id: string }
+  | { kind: 'furniture'; id: string }
   | null
 
 export type Selected = NonNullable<Selection>
 
 /** Capas del plano que se pueden ocultar o bloquear (bloqueada = visible pero no seleccionable). */
-export type LayerKey = 'image' | 'rooms' | 'walls' | 'openings' | 'dimensions'
+export type LayerKey = 'image' | 'rooms' | 'walls' | 'openings' | 'dimensions' | 'furniture'
 
 export type ViewMode = '2d' | 'split' | '3d'
 

@@ -11,7 +11,7 @@ const GROW_SECONDS = 1.4
 const easeOutCubic = (t: number) => 1 - (1 - t) ** 3
 
 export interface Pick {
-  kind: 'wall' | 'room'
+  kind: 'wall' | 'room' | 'furniture'
   id: string
 }
 
@@ -39,7 +39,7 @@ export function BuildingMesh({
   // useFrame anima a través de un ref: la escena memorizada no se muta durante el render
   const animated = useRef<THREE.Object3D[]>([])
   useEffect(() => {
-    animated.current = [scene.walls, scene.glass]
+    animated.current = [scene.walls, scene.glass, scene.furniture]
   }, [scene])
 
   // solo se anima la primera vez que aparece cada proyecto, no en cada edición
@@ -61,7 +61,7 @@ export function BuildingMesh({
     scene.walls.children.forEach((obj) => {
       if (!(obj instanceof THREE.Mesh)) return
       const part = (obj.name.split(':')[1] ?? 'solid') as 'solid' | 'sill' | 'lintel'
-      obj.material = obj.userData.wallId === highlightWallId ? materials.highlight() : materials.wall(part)
+      obj.material = obj.userData.wallId === highlightWallId ? materials.highlight() : materials.wall(part, obj.userData.material)
     })
   }, [scene, highlightWallId, materials])
 
@@ -77,8 +77,9 @@ export function BuildingMesh({
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     if (!onPick) return
     e.stopPropagation()
-    const data = e.object.userData as { kind?: string; wallId?: string; roomId?: string }
-    if (data.kind === 'wall' && data.wallId) onPick({ kind: 'wall', id: data.wallId })
+    const data = e.object.userData as { kind?: string; wallId?: string; roomId?: string; furnitureId?: string }
+    if (data.kind === 'furniture' && data.furnitureId) onPick({ kind: 'furniture', id: data.furnitureId })
+    else if (data.kind === 'wall' && data.wallId) onPick({ kind: 'wall', id: data.wallId })
     else if (data.kind === 'room' && data.roomId) onPick({ kind: 'room', id: data.roomId })
   }
 

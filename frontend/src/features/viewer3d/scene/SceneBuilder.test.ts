@@ -109,3 +109,53 @@ describe('SceneBuilder: elementos del modelo v2', () => {
     disposeScene(s)
   })
 })
+
+describe('mobiliario y acabados en la escena', () => {
+  const withFurniture = () => {
+    const m = sampleModel()
+    const lv = m.levels[0]!
+    return {
+      ...m,
+      levels: [
+        {
+          ...lv,
+          walls: lv.walls.map((w) => (w.id === 'w_top' ? { ...w, material: 'ladrillo' } : w)),
+          rooms: lv.rooms.map((r) => (r.id === 'r_a' ? { ...r, floor_material: 'porcelanato' } : r)),
+          furniture: [
+            { id: 'f1', catalog_id: 'cama_doble', position: { x: 3, y: 3 }, width: 1.4, depth: 1.95, height: 1, rotation: Math.PI / 2 },
+            { id: 'f2', catalog_id: 'pieza_futura', position: { x: 8, y: 5 }, width: 1, depth: 1, height: 0.5, rotation: 0 },
+          ],
+        },
+      ],
+    }
+  }
+
+  it('cada mueble es un grupo en su lugar, girado y seleccionable', () => {
+    const s = buildScene(withFurniture())
+    expect(s.furniture.children).toHaveLength(2)
+    const bed = s.furniture.children[0]!
+    expect(bed.position.x).toBe(3)
+    expect(bed.position.z).toBe(3)
+    expect(bed.rotation.y).toBeCloseTo(-Math.PI / 2)
+    expect(bed.children.every((c) => c.userData.furnitureId === 'f1')).toBe(true)
+    // pieza desconocida: su caja envolvente
+    const unknown = s.furniture.children[1]!
+    expect(unknown.children).toHaveLength(1)
+    s.root.updateMatrixWorld(true)
+    const box = new THREE.Box3().setFromObject(unknown)
+    expect(box.max.y).toBeCloseTo(0.5)
+    disposeScene(s)
+  })
+
+  it('usa el acabado de cada muro y el piso elegido del ambiente', () => {
+    const materials = new MaterialFactory()
+    const s = new SceneBuilder(withFurniture(), materials).withWalls().withFloors().build()
+    const brick = s.walls.children.find((c) => c.userData.wallId === 'w_top') as THREE.Mesh
+    const plain = s.walls.children.find((c) => c.userData.wallId === 'w_right') as THREE.Mesh
+    expect((brick.material as THREE.Material).name).toMatch(/^wall:ladrillo:/)
+    expect((plain.material as THREE.Material).name).toMatch(/^wall:plaster:/)
+    const floorA = s.floors.children.find((c) => c.userData.roomId === 'r_a') as THREE.Mesh
+    expect((floorA.material as THREE.Material).name).toBe('floor:porcelanato')
+    materials.dispose()
+  })
+})

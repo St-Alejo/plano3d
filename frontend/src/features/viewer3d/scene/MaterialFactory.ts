@@ -4,6 +4,8 @@
  * coherente con su tipo ("cocina" → cerámica, "dormitorio" → madera...).
  */
 import * as THREE from 'three'
+import type { Tone } from '@/domain/catalog'
+import { floorMaterial, wallMaterial, type Pattern } from '@/domain/materials'
 
 export type WallPart = 'solid' | 'sill' | 'lintel'
 
@@ -21,6 +23,62 @@ const FLOORS: { match: RegExp; spec: FloorSpec }[] = [
 ]
 const DEFAULT_FLOOR: FloorSpec = { color: '#bfae96', roughness: 0.6 }
 
+const TONES: Record<Tone, { color: string; roughness: number; metalness?: number; opacity?: number }> = {
+  wood: { color: '#9a7452', roughness: 0.6 },
+  soft: { color: '#e9e4d8', roughness: 0.95 },
+  fabric: { color: '#8a8f99', roughness: 0.95 },
+  white: { color: '#f4f4f0', roughness: 0.35 },
+  metal: { color: '#c9cdd1', roughness: 0.35, metalness: 0.6 },
+  dark: { color: '#3b3b3b', roughness: 0.6 },
+  glass: { color: '#cfeaf2', roughness: 0.05, opacity: 0.3 },
+  plant: { color: '#5e7d4a', roughness: 0.9 },
+}
+
+/**
+ * Textura procedural de piso (tablas o baldosas) de 1 m de lado. Las caras de piso usan
+ * coordenadas en metros como UV, así el patrón queda a escala real en cualquier ambiente.
+ * Sin canvas (pruebas en Node) se devuelve null y el piso queda de color liso.
+ */
+function patternTexture(pattern: Pattern, color: string): THREE.Texture | null {
+  if (!pattern || typeof document === 'undefined') return null
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 256
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, 256, 256)
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)'
+  ctx.lineWidth = 2
+  if (pattern === 'planks') {
+    // tablas de 0,2 m con juntas desfasadas
+    for (let row = 0; row < 5; row++) {
+      const y = row * 51.2
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(256, y)
+      const off = (row % 2) * 128
+      ctx.moveTo(off, y)
+      ctx.lineTo(off, y + 51.2)
+      ctx.stroke()
+    }
+  } else {
+    // baldosas de 0,5 m
+    const step = pattern === 'tiles' ? 128 : 64
+    for (let i = 0; i <= 256; i += step) {
+      ctx.beginPath()
+      ctx.moveTo(i, 0)
+      ctx.lineTo(i, 256)
+      ctx.moveTo(0, i)
+      ctx.lineTo(256, i)
+      ctx.stroke()
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.colorSpace = THREE.SRGBColorSpace
+  return tex
+}
+
 export class MaterialFactory {
   private readonly cache = new Map<string, THREE.Material>()
 
@@ -34,10 +92,41 @@ export class MaterialFactory {
     return m as M
   }
 
-  wall(part: WallPart = 'solid'): THREE.MeshStandardMaterial {
-    // dinteles y antepechos un tono más oscuro: se leen los huecos a la distancia
-    const color = part === 'solid' ? '#eef0e6' : '#e1e4d8'
-    return this.cached(`wall:${part}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.9 }))
+  /** Muro con su acabado (id del catálogo de materiales; desconocido = pañete). */
+  wall(part: WallPart = 'solid', materialId = 'plaster'): THREE.MeshStandardMaterial {
+    const spec = wallMaterial(materialId) ?? wallMaterial('plaster')!
+    return this.cached(`wall:${spec.id}:${part}`, () => {
+      const m = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness })
+      // dinteles y antepechos un tono más oscuro: se leen los huecos a la distancia
+      if (part !== 'solid') m.color.multiplyScalar(0.95)
+      return m
+    })
+  }
+
+  /** Piso del ambiente: el acabado elegido o, si no hay, uno según su nombre. */
+  floor(materialId: string | null | undefined, label: string): THREE.MeshStandardMaterial {
+    const spec = floorMaterial(materialId)
+    if (!spec) return this.floorFor(label)
+    return this.cached(`floor:${spec.id}`, () => {
+      const map = patternTexture(spec.pattern, spec.color)
+      return new THREE.MeshStandardMaterial({ color: map ? '#ffffff' : spec.color, map, roughness: spec.roughness })
+    })
+  }
+
+  /** Material de una parte de mueble según su tono. */
+  tone(tone: Tone): THREE.MeshStandardMaterial {
+    const t = TONES[tone]
+    return this.cached(
+      `tone:${tone}`,
+      () =>
+        new THREE.MeshStandardMaterial({
+          color: t.color,
+          roughness: t.roughness,
+          metalness: t.metalness ?? 0,
+          transparent: t.opacity !== undefined,
+          opacity: t.opacity ?? 1,
+        }),
+    )
   }
 
   floorFor(label: string): THREE.MeshStandardMaterial {
@@ -83,7 +172,10 @@ export class MaterialFactory {
   }
 
   dispose(): void {
-    this.cache.forEach((m) => m.dispose())
+    this.cache.forEach((m) => {
+      if (m instanceof THREE.MeshStandardMaterial) m.map?.dispose()
+      m.dispose()
+    })
     this.cache.clear()
   }
 }

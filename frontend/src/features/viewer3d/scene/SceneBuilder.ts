@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import type { BuildingModel, Level } from '@/api/types'
 import { curvedWallBoxes, doorLeaf, roomShapePoints, stairSteps, wallToBoxes } from '@/domain/geometry'
 import { pointAlong, wallDirection } from '@/domain/model'
+import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
 
 export const FLOOR_THICKNESS = 0.05
@@ -20,6 +21,8 @@ export interface BuiltScene {
   glass: THREE.Group
   /** columnas, escaleras y hojas de puerta (modelo v2) */
   elements: THREE.Group
+  /** muebles del catálogo (ADR-016) */
+  furniture: THREE.Group
 }
 
 export class SceneBuilder {
@@ -28,6 +31,7 @@ export class SceneBuilder {
   private readonly floors = new THREE.Group()
   private readonly glass = new THREE.Group()
   private readonly elements = new THREE.Group()
+  private readonly furniture = new THREE.Group()
 
   constructor(
     private readonly model: BuildingModel,
@@ -38,7 +42,8 @@ export class SceneBuilder {
     this.floors.name = 'floors'
     this.glass.name = 'glass'
     this.elements.name = 'elements'
-    this.root.add(this.floors, this.walls, this.glass, this.elements)
+    this.furniture.name = 'furniture'
+    this.root.add(this.floors, this.walls, this.glass, this.elements, this.furniture)
   }
 
   private levels(): Level[] {
@@ -51,13 +56,13 @@ export class SceneBuilder {
         const boxes = w.bulge ? curvedWallBoxes(w) : wallToBoxes(w)
         for (const [i, box] of boxes.entries()) {
           const geo = new THREE.BoxGeometry(...box.size)
-          const mesh = new THREE.Mesh(geo, this.materials.wall(box.part))
+          const mesh = new THREE.Mesh(geo, this.materials.wall(box.part, w.material))
           mesh.position.set(box.center[0], box.center[1] + lv.elevation, box.center[2])
           mesh.rotation.y = box.rotationY
           mesh.castShadow = true
           mesh.receiveShadow = true
           mesh.name = `${w.id}:${box.part}:${i}`
-          mesh.userData = { kind: 'wall', wallId: w.id, levelId: lv.id }
+          mesh.userData = { kind: 'wall', wallId: w.id, levelId: lv.id, material: w.material }
           this.walls.add(mesh)
         }
       }
@@ -70,7 +75,7 @@ export class SceneBuilder {
       for (const r of lv.rooms) {
         const shape = new THREE.Shape(roomShapePoints(r).map(([x, y]) => new THREE.Vector2(x, y)))
         const geo = new THREE.ExtrudeGeometry(shape, { depth: FLOOR_THICKNESS, bevelEnabled: false })
-        const mesh = new THREE.Mesh(geo, this.materials.floorFor(r.label))
+        const mesh = new THREE.Mesh(geo, this.materials.floor(r.floor_material, r.label))
         // la forma vive en XY: se acuesta sobre el piso y queda con su cara superior en y=0
         mesh.rotation.x = -Math.PI / 2
         mesh.position.y = lv.elevation - FLOOR_THICKNESS
@@ -157,6 +162,12 @@ export class SceneBuilder {
     return this
   }
 
+  withFurniture(): this {
+    const factory = new FurnitureFactory(this.materials)
+    for (const lv of this.levels()) for (const f of lv.furniture ?? []) this.furniture.add(factory.create(f, lv.elevation))
+    return this
+  }
+
   build(): BuiltScene {
     return {
       root: this.root,
@@ -164,6 +175,7 @@ export class SceneBuilder {
       floors: this.floors,
       glass: this.glass,
       elements: this.elements,
+      furniture: this.furniture,
     }
   }
 }
@@ -177,6 +189,7 @@ export function buildScene(model: BuildingModel, materials?: MaterialFactory): B
     .withColumns()
     .withStairs()
     .withDoors()
+    .withFurniture()
     .build()
 }
 
