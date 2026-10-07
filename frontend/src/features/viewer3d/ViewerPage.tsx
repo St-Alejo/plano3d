@@ -1,13 +1,14 @@
 /** Recorrido a pantalla completa: orbitar / caminar, antes-después, ambientes y exportación. */
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
-import { ArrowLeft, ChevronUp, Download, Footprints, Layers, Orbit } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Ruler } from 'lucide-react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point } from '@/api/types'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
+import { sunPosition } from '@/domain/sun'
 import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { Joystick } from './Joystick'
@@ -15,6 +16,10 @@ import { Viewer3D, type ViewMode } from './Viewer3D'
 import type { WalkInput } from './WalkControls'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
 import type { BuiltScene } from './scene/SceneBuilder'
+import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
+
+const SELECT = 'h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11'
+const today = () => new Date().toISOString().slice(0, 10)
 
 const isTouch = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
@@ -31,6 +36,21 @@ export function ViewerPage() {
   const [touch] = useState(isTouch)
   // en pantallas chicas el panel arranca plegado para no tapar el modelo
   const [panelOpen, setPanelOpen] = useState(() => window.matchMedia('(min-width: 640px)').matches)
+  // herramientas de análisis
+  const [preset, setPreset] = useState<{ name: CameraPreset; nonce: number } | null>(null)
+  const [display, setDisplay] = useState<DisplayMode>('material')
+  const [sunOn, setSunOn] = useState(false)
+  const [sunDate, setSunDate] = useState(today)
+  const [sunHour, setSunHour] = useState(10)
+  const [cutOn, setCutOn] = useState(false)
+  const [cut, setCut] = useState(1.2)
+  const [measuring, setMeasuring] = useState(false)
+  const [points, setPoints] = useState<[number, number, number][]>([])
+  const box = useRef<HTMLDivElement>(null)
+  const onScene = useCallback((s: BuiltScene) => {
+    scene.current = s
+  }, [])
+  const onPoint = useCallback((p: [number, number, number]) => setPoints((prev) => (prev.length >= 2 ? [p] : [...prev, p])), [])
 
   const rooms = useMemo(() => (project?.model ? tourWaypoints(project.model.levels.flatMap((l) => l.rooms)) : []), [project])
 
@@ -54,13 +74,36 @@ export function ViewerPage() {
     }
   }
 
+  const fileBase = project.name.replace(/[^\w-]+/g, '_') || 'plano'
+  const sun = (() => {
+    if (!sunOn) return null
+    const [y, m, d] = sunDate.split('-').map(Number)
+    return sunPosition({ year: y ?? 2026, month: m ?? 1, day: d ?? 1, hour: sunHour })
+  })()
+
+  const doObj = async () => {
+    if (!scene.current) return
+    setExporting(true)
+    try {
+      downloadBlob(await exportObj(scene.current.root), `${fileBase}.obj`)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const doPng = () => {
+    const canvas = box.current?.querySelector('canvas')
+    if (!canvas) return
+    canvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBase}.png`), 'image/png')
+  }
+
   const goTo = (p: Point) => {
     if (mode === 'walk') setWalkStart({ ...p })
     else setFlyTo({ ...p })
   }
 
   return (
-    <div className="relative flex-1 bg-canvas">
+    <div ref={box} className="relative flex-1 bg-canvas">
       <Viewer3D
         model={model}
         mode={mode}
@@ -70,9 +113,14 @@ export function ViewerPage() {
         walkStart={walkStart ?? rooms[0]?.at}
         walkInput={walkInput}
         touch={touch}
-        onScene={(s) => (scene.current = s)}
+        onScene={onScene}
         className="absolute inset-0"
         label={`Modelo 3D de ${project.name}`}
+        sun={sun}
+        section={cutOn ? cut : null}
+        preset={preset}
+        display={display}
+        measure={measuring ? { points, onPoint } : null}
       />
 
       {/* barra superior: compacta en el celular (solo íconos) */}
@@ -98,8 +146,18 @@ export function ViewerPage() {
             <Footprints className="size-4" aria-hidden /> Recorrer
           </ToggleGroup.Item>
         </ToggleGroup.Root>
+        <div className="pointer-events-auto flex gap-2">
+        {/* en el celular la barra no da para más botones: PNG y OBJ desde pantallas medianas */}
+        <div className="hidden gap-2 sm:flex">
+        <Button className="h-11" aria-label="Guardar imagen PNG" title="Guardar la vista actual como imagen" icon={<Camera className="size-4" aria-hidden />} onClick={doPng}>
+          <span className="hidden sm:inline">PNG</span>
+        </Button>
+        <Button className="h-11" loading={exporting} aria-label="Descargar modelo OBJ" title="Descargar el modelo 3D (.obj) para SketchUp, Revit u otros" icon={<Download className="size-4" aria-hidden />} onClick={() => void doObj()}>
+          <span className="hidden sm:inline">OBJ</span>
+        </Button>
+        </div>
         <Button
-          className="pointer-events-auto h-11"
+          className="h-11"
           loading={exporting}
           aria-label="Descargar modelo GLB"
           title="Descargar el modelo 3D (.glb) para Blender u otros visores"
@@ -108,6 +166,7 @@ export function ViewerPage() {
         >
           <span className="hidden sm:inline">GLB</span>
         </Button>
+        </div>
       </div>
 
       {/* panel inferior plegable: antes/después + ambientes (plegado por defecto en el celular) */}
@@ -126,7 +185,7 @@ export function ViewerPage() {
             <ChevronUp className={`size-4 transition-transform ${panelOpen ? '' : 'rotate-180'}`} aria-hidden />
           </button>
           {panelOpen && (
-            <div id="viewer-panel" className="flex flex-col gap-2 border-t border-line p-3">
+            <div id="viewer-panel" className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto border-t border-line p-3">
               <label id="overlay-label" className="flex justify-between text-xs text-muted">
                 <span>Plano original sobre el modelo</span>
                 <span className="font-mono">{Math.round(overlay * 100)}%</span>
@@ -148,6 +207,107 @@ export function ViewerPage() {
                   )
                 })}
               </nav>
+
+              <section aria-label="Vista" className="flex flex-col gap-2 border-t border-line pt-2">
+                <div className="grid grid-cols-4 gap-1" role="group" aria-label="Encuadre">
+                  {(Object.keys(PRESET_LABEL) as CameraPreset[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setMode('orbit')
+                        setPreset({ name: p, nonce: Date.now() })
+                      }}
+                      className="min-h-11 rounded-sm px-1 text-xs hover:bg-raised sm:min-h-8"
+                    >
+                      {PRESET_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+                <label className="flex items-center justify-between gap-2 text-xs">
+                  <span>Visualización</span>
+                  <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>
+                    {(Object.keys(DISPLAY_LABEL) as DisplayMode[]).map((d) => (
+                      <option key={d} value={d}>
+                        {DISPLAY_LABEL[d]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </section>
+
+              <section aria-label="Estudio solar" className="flex flex-col gap-2 border-t border-line pt-2">
+                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                  <span>Estudio solar (Bogotá)</span>
+                  <input type="checkbox" checked={sunOn} onChange={(e) => setSunOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                </label>
+                {sunOn && (
+                  <>
+                    <label className="flex items-center justify-between gap-2 text-xs">
+                      <span>Fecha</span>
+                      <input type="date" value={sunDate} onChange={(e) => e.target.value && setSunDate(e.target.value)} className={SELECT} />
+                    </label>
+                    <label id="sun-hour-label" className="flex justify-between text-xs text-muted">
+                      <span>Hora</span>
+                      <span className="font-mono">
+                        {String(Math.floor(sunHour)).padStart(2, '0')}:{String(Math.round((sunHour % 1) * 60)).padStart(2, '0')}
+                      </span>
+                    </label>
+                    <Slider.Root className="relative flex h-11 touch-none items-center" value={[sunHour]} min={5} max={19} step={0.25} onValueChange={([v]) => setSunHour(v ?? 12)} aria-labelledby="sun-hour-label">
+                      <Slider.Track className="relative h-1 grow bg-raised">
+                        <Slider.Range className="absolute h-full bg-accent" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Hora del día" />
+                    </Slider.Root>
+                    {sun && (
+                      <p className="font-mono text-[11px] text-subtle" aria-live="polite">
+                        {sun.altitude > 0 ? `altura ${sun.altitude.toFixed(0)}° · azimut ${sun.azimuth.toFixed(0)}°` : 'el sol está bajo el horizonte'}
+                      </p>
+                    )}
+                  </>
+                )}
+              </section>
+
+              <section aria-label="Corte de sección" className="flex flex-col gap-2 border-t border-line pt-2">
+                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                  <span>Corte horizontal</span>
+                  <input type="checkbox" checked={cutOn} onChange={(e) => setCutOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                </label>
+                {cutOn && (
+                  <>
+                    <label id="cut-label" className="flex justify-between text-xs text-muted">
+                      <span>Altura del corte</span>
+                      <span className="font-mono">{cut.toFixed(2)} m</span>
+                    </label>
+                    <Slider.Root className="relative flex h-11 touch-none items-center" value={[cut]} min={0.2} max={3} step={0.05} onValueChange={([v]) => setCut(v ?? 1.2)} aria-labelledby="cut-label">
+                      <Slider.Track className="relative h-1 grow bg-raised">
+                        <Slider.Range className="absolute h-full bg-accent" />
+                      </Slider.Track>
+                      <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Altura del corte" />
+                    </Slider.Root>
+                  </>
+                )}
+              </section>
+
+              <section aria-label="Medir en 3D" className="flex flex-col gap-2 border-t border-line pt-2">
+                <Button
+                  size="sm"
+                  variant={measuring ? 'primary' : 'secondary'}
+                  aria-pressed={measuring}
+                  icon={<Ruler className="size-4" aria-hidden />}
+                  onClick={() => {
+                    setMeasuring((m) => !m)
+                    setPoints([])
+                  }}
+                >
+                  Medir
+                </Button>
+                {measuring && (
+                  <p className="text-xs text-subtle">
+                    {points.length < 2 ? 'Haz clic en dos puntos del modelo.' : 'Un clic más empieza una medición nueva.'}
+                  </p>
+                )}
+              </section>
             </div>
           )}
         </div>

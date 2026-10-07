@@ -25,12 +25,15 @@ export function BuildingMesh({
   highlightWallId,
   onPick,
   onScene,
+  onPoint,
 }: {
   model: BuildingModel
   grow?: boolean
   highlightWallId?: string | null
   onPick?: (p: Pick) => void
   onScene?: (s: BuiltScene) => void
+  /** modo medir: recibe el punto de la superficie tocada, en lugar de seleccionar */
+  onPoint?: (p: [number, number, number]) => void
 }) {
   const materials = useMemo(() => new MaterialFactory(), [])
   const scene = useMemo(() => buildScene(model, materials), [model, materials])
@@ -75,6 +78,11 @@ export function BuildingMesh({
   })
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    if (onPoint) {
+      e.stopPropagation()
+      onPoint([e.point.x, e.point.y, e.point.z])
+      return
+    }
     if (!onPick) return
     e.stopPropagation()
     const data = e.object.userData as { kind?: string; wallId?: string; roomId?: string; furnitureId?: string }

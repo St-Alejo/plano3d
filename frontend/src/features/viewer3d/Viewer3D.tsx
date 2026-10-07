@@ -1,14 +1,16 @@
-import { OrbitControls, useTexture } from '@react-three/drei'
+import { Html, Line, OrbitControls, useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 import type { BuildingModel, Point } from '@/api/types'
 import { modelBounds } from '@/domain/model'
+import { sunDirection, type SunPosition } from '@/domain/sun'
 import { BuildingMesh, type Pick } from './BuildingMesh'
 import { prefersReducedMotion } from './motion'
 import { WalkControls, type WalkInput } from './WalkControls'
 import type { BuiltScene } from './scene/SceneBuilder'
+import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 export type ViewMode = 'orbit' | 'walk'
 
@@ -28,6 +30,15 @@ export interface Viewer3DProps {
   onScene?: (s: BuiltScene) => void
   className?: string
   label?: string
+  /** estudio solar: posición del sol (null = luz fija del visor) */
+  sun?: SunPosition | null
+  /** corte horizontal a esta altura en metros (null = sin corte) */
+  section?: number | null
+  /** encuadre pedido; `nonce` permite repetir el mismo encuadre */
+  preset?: { name: CameraPreset; nonce: number } | null
+  display?: DisplayMode
+  /** medir en 3D: puntos marcados y callback al tocar una superficie */
+  measure?: { points: [number, number, number][]; onPoint: (p: [number, number, number]) => void } | null
 }
 
 function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: string; opacity: number }) {
@@ -47,7 +58,7 @@ function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: strin
 }
 
 /** Encuadra la cámara al modelo y anima los "vuelos" a un ambiente. */
-function OrbitRig({ model, flyTo }: { model: BuildingModel; flyTo?: Point | null }) {
+function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: Point | null; preset?: { name: CameraPreset; nonce: number } | null }) {
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null)
   const { camera } = useThree()
   const bounds = useMemo(() => modelBounds(model), [model])
@@ -62,6 +73,18 @@ function OrbitRig({ model, flyTo }: { model: BuildingModel; flyTo?: Point | null
     controls.current?.target.set(center.x, 0, center.y)
     controls.current?.update()
   }, [bounds, camera, model.project_id])
+
+  useEffect(() => {
+    if (!preset) return
+    const p = cameraPreset(preset.name, bounds)
+    const pos = new THREE.Vector3(...p.position)
+    const look = new THREE.Vector3(...p.target)
+    if (prefersReducedMotion()) {
+      camera.position.copy(pos)
+      controls.current?.target.copy(look)
+      controls.current?.update()
+    } else target.current = { pos, look }
+  }, [preset, bounds, camera])
 
   useEffect(() => {
     if (!flyTo) return
@@ -96,8 +119,14 @@ function OrbitRig({ model, flyTo }: { model: BuildingModel; flyTo?: Point | null
   )
 }
 
-function Lights({ model, ground }: { model: BuildingModel; ground: string }) {
+function Lights({ model, ground, sun }: { model: BuildingModel; ground: string; sun?: SunPosition | null }) {
   const { center, size } = useMemo(() => modelBounds(model), [model])
+  // con estudio solar, la luz principal sale de la dirección real del sol
+  const dir = sun ? sunDirection(sun) : null
+  const day = !sun || sun.altitude > 0
+  const sunPos: [number, number, number] = dir
+    ? [center.x + dir[0] * size * 2.2, Math.max(0.5, dir[1] * size * 2.2), center.y + dir[2] * size * 2.2]
+    : [center.x + size * 0.35, size * 2.2, center.y + size * 0.25]
   const light = useRef<THREE.DirectionalLight>(null)
   useEffect(() => {
     const l = light.current
@@ -115,8 +144,8 @@ function Lights({ model, ground }: { model: BuildingModel; ground: string }) {
       <hemisphereLight args={['#eaf4ff', '#3a3f4a', 1.4]} />
       <directionalLight
         ref={light}
-        position={[center.x + size * 0.35, size * 2.2, center.y + size * 0.25]}
-        intensity={2.0}
+        position={sunPos}
+        intensity={day ? 2.0 : 0.05}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
@@ -126,6 +155,43 @@ function Lights({ model, ground }: { model: BuildingModel; ground: string }) {
         <meshStandardMaterial color={ground} roughness={1} />
       </mesh>
     </>
+  )
+}
+
+/** Corte de sección: plano horizontal que recorta todo lo que está por encima de `height`. */
+function SectionClip({ height }: { height: number | null }) {
+  const plane = useMemo(() => (height == null ? null : new THREE.Plane(new THREE.Vector3(0, -1, 0), height)), [height])
+  // el renderer se ajusta dentro del bucle de render de three (no durante el render de React)
+  useFrame(({ gl }) => {
+    const current = gl.clippingPlanes[0] ?? null
+    if (current !== plane) gl.clippingPlanes = plane ? [plane] : []
+  })
+  return null
+}
+
+/** Línea y distancia entre los puntos marcados con la herramienta medir. */
+function MeasureMarks({ points }: { points: [number, number, number][] }) {
+  if (points.length === 0) return null
+  const [a, b] = points
+  return (
+    <group>
+      {points.map((p, i) => (
+        <mesh key={i} position={p}>
+          <sphereGeometry args={[0.06, 16, 16]} />
+          <meshBasicMaterial color="#e2531b" depthTest={false} />
+        </mesh>
+      ))}
+      {a && b && (
+        <>
+          <Line points={[a, b]} color="#e2531b" lineWidth={2} depthTest={false} />
+          <Html position={[(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 0.15, (a[2] + b[2]) / 2]} center>
+            <span role="status" className="rounded-sm bg-canvas/90 px-1.5 py-0.5 font-mono text-xs whitespace-nowrap text-fg">
+              {distance3(a, b).toFixed(2)} m
+            </span>
+          </Html>
+        </>
+      )}
+    </group>
   )
 }
 
@@ -156,7 +222,24 @@ export function Viewer3D({
   onScene,
   className,
   label = 'Vista 3D del edificio',
+  sun,
+  section = null,
+  preset,
+  display = 'material',
+  measure,
 }: Viewer3DProps) {
+  const [built, setBuilt] = useState<BuiltScene | null>(null)
+  // estable: BuildingMesh libera la escena anterior cuando cambia este callback
+  const handleScene = useCallback(
+    (s: BuiltScene) => {
+      setBuilt(s)
+      onScene?.(s)
+    },
+    [onScene],
+  )
+  useEffect(() => {
+    if (built) applyDisplayMode(built.root, display)
+  }, [built, display])
   const fallbackInput = useRef<WalkInput>({ x: 0, y: 0 })
   const start = walkStart ?? modelBounds(model).center
   const sky = useThemeSky()
@@ -170,15 +253,24 @@ export function Viewer3D({
       >
         <color attach="background" args={[sky]} />
         <fog attach="fog" args={[sky, 30, 120]} />
-        <Lights model={model} ground={sky === '#070f22' ? '#132640' : '#c9cebf'} />
-        <BuildingMesh model={model} grow={grow} highlightWallId={highlightWallId} onPick={onPick} onScene={onScene} />
+        <Lights model={model} ground={sky === '#070f22' ? '#132640' : '#c9cebf'} sun={sun} />
+        <SectionClip height={section} />
+        <BuildingMesh
+          model={model}
+          grow={grow}
+          highlightWallId={highlightWallId}
+          onPick={onPick}
+          onScene={handleScene}
+          onPoint={measure?.onPoint}
+        />
+        {measure && <MeasureMarks points={measure.points} />}
         {overlayUrl && overlayOpacity > 0 && (
           <Suspense fallback={null}>
             <PlanOverlay model={model} url={overlayUrl} opacity={overlayOpacity} />
           </Suspense>
         )}
         {mode === 'orbit' ? (
-          <OrbitRig model={model} flyTo={flyTo} />
+          <OrbitRig model={model} flyTo={flyTo} preset={preset} />
         ) : (
           <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} />
         )}
