@@ -104,6 +104,8 @@ def is_color_render(img: Img) -> bool:
 
 #: probabilidad de muro por píxel (p. ej. la red aprendida); recibe el gris del plano
 WallProbability = Callable[[Img], npt.NDArray[np.float32]]
+#: grosor de muro (px) con que se entrenó la red; se le pasa la imagen a esa escala
+SEG_WALL_PX = 5.0
 
 
 class WallMaskStage(PipelineStage[CVContext]):
@@ -126,10 +128,17 @@ class WallMaskStage(PipelineStage[CVContext]):
             mask = filter_by_tone(mask, normalize_illumination(gray))
         if self._segmenter is not None and img is not None:
             # la red decide qué manchas son muros y cuáles muebles, autos o cotas
-            from plano3d.infrastructure.ml.seg_model import filter_components
+            from plano3d.infrastructure.ml.seg_model import filter_pixels
 
             gray = img if img.ndim == 2 else as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
-            mask = filter_components(mask, self._segmenter(gray))
+            # la red se entrenó con muros de ~5 px: se le muestra el plano a esa escala
+            # (un mueble de 1 px ampliado ×4 parecería un muro a la escala original)
+            f = float(np.clip(SEG_WALL_PX / t, 0.2, 1.0))
+            small = as_u8(cv2.resize(gray, None, fx=f, fy=f, interpolation=cv2.INTER_AREA))
+            prob = np.asarray(
+                cv2.resize(self._segmenter(small), (gray.shape[1], gray.shape[0])), np.float32
+            )
+            mask = filter_pixels(mask, prob, round(t / 2))
         ctx.wall_mask = mask
         ctx.wall_thickness_px = t
         return ctx

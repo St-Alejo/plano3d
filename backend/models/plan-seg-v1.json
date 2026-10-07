@@ -1,0 +1,66 @@
+{
+  "model": "plan-seg-v1.onnx",
+  "created": "2026-10-07T11:04:04",
+  "architecture": "WallUNet base 16 (~1,3 M parámetros)",
+  "input": "gris normalizado, tinta = 1 (1 - gris/255), alto y ancho múltiplos de 16",
+  "output": "logit de muro por píxel",
+  "data": {
+    "synthetic_v2": 3000,
+    "user_corrections_tiles": 0,
+    "validation": 200,
+    "tile": 256
+  },
+  "real_plans_used_for_training": false,
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 1.1608,
+      "val_iou": 0.7447
+    },
+    {
+      "epoch": 2,
+      "loss": 0.573,
+      "val_iou": 0.7917
+    },
+    {
+      "epoch": 3,
+      "loss": 0.2231,
+      "val_iou": 0.8368
+    },
+    {
+      "epoch": 4,
+      "loss": 0.1586,
+      "val_iou": 0.8629
+    },
+    {
+      "epoch": 5,
+      "loss": 0.1295,
+      "val_iou": 0.9068
+    },
+    {
+      "epoch": 6,
+      "loss": 0.1072,
+      "val_iou": 0.9072
+    },
+    {
+      "epoch": 7,
+      "loss": 0.0939,
+      "val_iou": 0.9176
+    },
+    {
+      "epoch": 8,
+      "loss": 0.0869,
+      "val_iou": 0.9173
+    }
+  ],
+  "evaluation": {
+    "real": {
+      "casa1": "cumple igual que sin red",
+      "casa2": "cumple; precisión de muros 0,93→0,94",
+      "casa3": "F1 muros 0,44/0,56/0,63 → 0,48/0,60/0,64 por planta; escala −28%→−38%"
+    },
+    "synthetic_basic": "difícil: recall de ventanas 0,17→0,67; resto igual",
+    "synthetic_complex": "escala 34%→28%, ambientes OK 17%→12%; empeora achurado foto, boceto y relleno foto",
+    "decision": "disponible pero apagada por defecto (PLANO3D_SEG_MODEL=1): no mejora en todos los estilos"
+  }
+}

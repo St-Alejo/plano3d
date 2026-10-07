@@ -59,3 +59,11 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 - Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
 - Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (3/0) · ambientes 1/0 IoU 0.00 nombres 0/0
 - falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes
+
+### 2026-10-07 11:12 — Red de muros v1 (U-Net 1,3M, 3000 sintéticos, val IoU 0,917) a escala canónica (muro≈5 px) y filtro por píxel: casa3 F1 muros 0,48/0,60/0,64 (antes 0,44/0,56/0,63); casa1/casa2 siguen cumpliendo; sintéticos mixtos (básica difícil ventanas 0,17→0,67; compleja peor en achurado/boceto/relleno foto). Se deja apagada por defecto; v2 con más estilos.
+
+## casa3  (raster-vector)  escala estimated error -28.0%  niveles 3/3
+- Planta baja: muros F1 0.42 (P 0.27 R 0.94, extremos 0.07, 45/9) · aberturas P 0.03 R 0.14 (31/7) · ambientes 4/3 IoU 0.25 nombres 0/3
+- Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
+- Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (3/0) · ambientes 1/0 IoU 0.00 nombres 0/0
+- falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes

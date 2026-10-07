@@ -83,3 +83,13 @@ def filter_components(mask: Img, prob: npt.NDArray[np.float32], keep_at: float =
     keep = (mean >= keep_at).astype(np.uint8) * 255
     keep[0] = 0
     return np.asarray(keep[labels], np.uint8)
+
+
+def filter_pixels(
+    mask: Img, prob: npt.NDArray[np.float32], reach_px: int, keep_at: float = 0.35
+) -> Img:
+    """Conserva de la máscara clásica solo lo que está a ``reach_px`` de un muro según la
+    red: corta los muebles pegados a un muro, que forman una sola mancha con él."""
+    k = max(3, 2 * reach_px + 1)
+    near = cv2.dilate((prob >= keep_at).astype(np.uint8), np.ones((k, k), np.uint8))
+    return np.asarray(np.where(near > 0, mask, 0), np.uint8)
