@@ -127,7 +127,8 @@
 
 /*
  * Landing: siempre en claro, independiente del tema de la app. Fondo casi blanco,
- * tinta grafito y un único acento verde. Una sola familia (Hanken Grotesk).
+ * tinta grafito y un único acento verde. Geist para todo el texto y Geist Mono
+ * solo para etiquetas pequeñas (antetítulos, pasos, leyendas).
  * `--l-signal` pasa AA sobre `--l-paper`; `--l-signal-ink` es para texto pequeño.
  */
 .landing {
@@ -143,19 +144,38 @@
   --l-deep: #17322a;
   background: var(--l-paper);
   color: var(--l-ink);
-  font-family: 'Hanken Grotesk', var(--font-sans);
-  font-feature-settings: 'ss01';
+  font-family: 'Geist', var(--font-sans);
+  font-feature-settings: 'ss01', 'ss03';
 }
 /* el desplazamiento suave lo hace Lenis; esto deja sitio a la cabecera fija si no está activo */
 html:has(.landing) {
   scroll-padding-top: 7rem;
 }
+/* titulares en peso medio y muy ajustados, como en los sitios de estudio */
 .landing h1,
-.landing h2,
+.landing h2 {
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
 .landing h3 {
   font-family: inherit;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+/* etiqueta técnica pequeña: mayúsculas en mono, con poco espaciado */
+.landing .label {
+  font-family: 'Geist Mono', var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+/* texto en contorno (marquesina) */
+.landing .text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.2px var(--l-ink);
 }
 .landing p {
   text-wrap: pretty;

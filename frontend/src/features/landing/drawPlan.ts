@@ -147,10 +147,10 @@ export function drawPlan(ctx: CanvasRenderingContext2D, model: BuildingModel, f:
         const c = polygonCentroid(r.polygon)
         const size = Math.max(9, f.scale * 0.2)
         ctx.fillStyle = s.ink
-        ctx.font = `600 ${size}px "Hanken Grotesk", sans-serif`
+        ctx.font = `500 ${size}px "Geist", sans-serif`
         ctx.fillText(r.label, X(c.x), Y(c.y) - size * 0.6)
         ctx.fillStyle = s.fine
-        ctx.font = `400 ${size * 0.85}px "Hanken Grotesk", sans-serif`
+        ctx.font = `400 ${size * 0.8}px "Geist Mono", monospace`
         ctx.fillText(`${polygonArea(r.polygon).toFixed(1)} m²`, X(c.x), Y(c.y) + size * 0.7)
       }
     }
@@ -200,7 +200,7 @@ function dimLine(
   }
   ctx.stroke()
   const size = Math.max(9, f.scale * 0.2)
-  ctx.font = `600 ${size}px "Hanken Grotesk", sans-serif`
+  ctx.font = `500 ${size * 0.9}px "Geist Mono", monospace`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'bottom'
   ctx.save()

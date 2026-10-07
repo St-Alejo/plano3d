@@ -37,7 +37,7 @@ export function Headline({ children }: { children?: ReactNode }) {
     <div>
       <motion.p
         {...enter(0.1)}
-        className="inline-flex items-center gap-2 rounded-full bg-(--l-signal-soft) px-3 py-1 text-sm font-medium text-(--l-signal-ink)"
+        className="label inline-flex items-center gap-2 rounded-full bg-(--l-signal-soft) px-3 py-1.5 text-(--l-signal-ink)"
       >
         <span className="relative flex size-2" aria-hidden>
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-(--l-signal) opacity-50" />
@@ -45,7 +45,7 @@ export function Headline({ children }: { children?: ReactNode }) {
         </span>
         Funciona con fotos, PDF y DXF
       </motion.p>
-      <h1 className="mt-5 text-[clamp(2.6rem,5vw,4.2rem)] leading-[1.02] font-semibold">
+      <h1 className="mt-6 text-[clamp(2.6rem,4.7vw,4.1rem)] leading-[0.98]">
         <SplitChars text="Toma una foto de tu plano y recórrelo en 3D." delay={0.15} />
       </h1>
       <motion.p {...enter(1.05)} className="mt-5 max-w-lg text-lg leading-relaxed text-(--l-graphite)">
@@ -109,8 +109,8 @@ function StaticHero({ plan, actions }: { plan: ReactNode; actions: ReactNode }) 
       <Stagger as="ol" className="grid gap-8 sm:grid-cols-5 lg:col-span-2">
         {FIGURES.map((f, i) => (
           <StaggerItem as="li" key={f.n} className="border-t border-(--l-hair-strong) pt-4">
-            <p className="text-sm text-(--l-graphite)">Paso {i + 1}</p>
-            <p className="mt-1 font-semibold">{f.title}</p>
+            <p className="label text-(--l-graphite)">Paso {i + 1}</p>
+            <p className="mt-2 text-lg font-medium tracking-tight">{f.title}</p>
             <p className="mt-1 text-sm leading-relaxed text-(--l-graphite)">{f.text}</p>
           </StaggerItem>
         ))}
@@ -157,10 +157,10 @@ function AnimatedHero({ model, plan, actions }: { model: BuildingModel; plan: Re
                     exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
                     transition={{ duration: 0.35, ease: EASE }}
                   >
-                    <p className="text-sm text-(--l-graphite) tabular-nums">
-                      Paso {figure + 1} de {FIGURES.length}
+                    <p className="label text-(--l-graphite) tabular-nums">
+                      Paso {figure + 1} / {FIGURES.length}
                     </p>
-                    <p className="mt-1 text-2xl font-semibold tracking-tight">{active.title}</p>
+                    <p className="mt-2 text-2xl font-medium tracking-[-0.03em]">{active.title}</p>
                     <p className="mt-2 max-w-md leading-relaxed text-(--l-graphite)">{active.text}</p>
                   </motion.div>
                 </AnimatePresence>
@@ -173,7 +173,7 @@ function AnimatedHero({ model, plan, actions }: { model: BuildingModel; plan: Re
               <Suspense fallback={plan}>
                 <HeroScene model={model} progress={scrollYProgress} />
               </Suspense>
-              <p className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-(--l-paper)/90 px-3 py-1 text-xs font-medium text-(--l-graphite) shadow-sm">
+              <p className="label pointer-events-none absolute bottom-3 left-3 rounded-full bg-(--l-paper)/90 px-3 py-1.5 text-(--l-graphite) shadow-sm">
                 {caption}
               </p>
             </Panel>

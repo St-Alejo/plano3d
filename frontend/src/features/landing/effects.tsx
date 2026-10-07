@@ -78,52 +78,74 @@ export function ScrollText({ text, className }: { text: string; className?: stri
   )
 }
 
+/** Separador en cruz fina, como las marcas de registro de un plano. */
+function Cross() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[0.42em] shrink-0 text-(--l-signal)" aria-hidden>
+      <path d="M12 0v24M0 12h24" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
 /**
- * Cinta de palabras que se desplaza sin fin. La velocidad del scroll la acelera
- * y su sentido la invierte, como en las marquesinas de estudio.
+ * Una fila de la marquesina. Avanza sola en su sentido (`dir`), la velocidad del
+ * scroll la acelera y su sentido la invierte; el contenido va duplicado para
+ * volver al inicio sin salto.
  */
-export function Marquee({ items, baseSpeed = 3 }: { items: string[]; baseSpeed?: number }) {
+function MarqueeRow({ items, dir, speed, boost, outline }: { items: string[]; dir: 1 | -1; speed: number; boost: MotionValue<number>; outline?: boolean }) {
   const reduce = useReducedMotion()
   const x = useMotionValue(0)
-  const { scrollY } = useScroll()
-  const velocity = useSpring(useVelocity(scrollY), { damping: 50, stiffness: 400 })
-  const boost = useTransform(velocity, [-1000, 0, 1000], [-4, 0, 4], { clamp: false })
-  const dir = useRef(1)
+  const sense = useRef<1 | -1>(1)
   const track = useRef<HTMLDivElement>(null)
 
   useAnimationFrame((_, delta) => {
     if (reduce || !track.current) return
     const b = boost.get()
-    if (b < 0) dir.current = -1
-    else if (b > 0) dir.current = 1
+    if (b < -0.05) sense.current = -1
+    else if (b > 0.05) sense.current = 1
     const half = track.current.scrollWidth / 2
-    let next = x.get() - dir.current * baseSpeed * (delta / 1000) * 20 * (1 + Math.abs(b))
-    // el contenido está duplicado: al recorrer media pista se vuelve al inicio sin salto
+    let next = x.get() - dir * sense.current * speed * (delta / 1000) * (1 + Math.abs(b))
     if (next <= -half) next += half
     if (next > 0) next -= half
     x.set(next)
   })
 
-  const row = (copy: number) =>
+  const copy = (k: number) =>
     items.map((it) => (
-      <span key={`${copy}-${it}`} className="flex shrink-0 items-center gap-10 pr-10">
-        <span>{it}</span>
-        <span className="text-[0.5em] font-light text-(--l-signal)" aria-hidden>
-          +
-        </span>
+      <span key={`${k}-${it}`} className="flex shrink-0 items-center gap-[0.35em] pr-[0.35em]">
+        <span className={outline ? 'text-outline' : undefined}>{it}</span>
+        <Cross />
       </span>
     ))
 
   return (
-    <div className="overflow-hidden border-y border-(--l-hair) py-8 select-none" aria-label={items.join(', ')} role="img">
+    <motion.div ref={track} className="flex w-max" style={{ x }}>
+      {copy(0)}
+      {copy(1)}
+    </motion.div>
+  )
+}
+
+/**
+ * Marquesina de dos filas en sentidos opuestos (una sólida y otra en contorno).
+ * Al hacer scroll se acelera y se inclina un poco según la velocidad.
+ */
+export function Marquee({ items, speed = 60 }: { items: string[]; speed?: number }) {
+  const { scrollY } = useScroll()
+  const velocity = useSpring(useVelocity(scrollY), { damping: 50, stiffness: 400 })
+  const boost = useTransform(velocity, [-1500, 0, 1500], [-5, 0, 5], { clamp: false })
+  const skewX = useTransform(velocity, [-2000, 0, 2000], [6, 0, -6])
+  const half = Math.ceil(items.length / 2)
+  const second = [...items.slice(half), ...items.slice(0, half)]
+  return (
+    <div className="overflow-hidden border-y border-(--l-hair) py-10 select-none" aria-label={items.join(', ')} role="img">
       <motion.div
-        ref={track}
-        className="flex w-max text-[clamp(2.75rem,7vw,6rem)] leading-none font-semibold tracking-[-0.04em] text-(--l-ink)"
-        style={{ x }}
         aria-hidden
+        className="grid gap-2 text-[clamp(3rem,8vw,7rem)] leading-[0.95] font-medium tracking-[-0.05em] text-(--l-ink) uppercase"
+        style={{ skewX }}
       >
-        {row(0)}
-        {row(1)}
+        <MarqueeRow items={items} dir={1} speed={speed} boost={boost} />
+        <MarqueeRow items={second} dir={-1} speed={speed} boost={boost} outline />
       </motion.div>
     </div>
   )

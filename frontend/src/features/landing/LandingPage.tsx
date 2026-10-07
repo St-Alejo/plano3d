@@ -50,7 +50,7 @@ function Masthead() {
           scrolled ? 'py-2' : 'py-4',
         )}
       >
-        <Link to="/" className="group flex min-h-11 items-center gap-2 text-lg font-semibold tracking-tight" aria-label="Plano 3D, inicio">
+        <Link to="/" className="group flex min-h-11 items-center gap-2 text-lg font-medium tracking-[-0.03em]" aria-label="Plano 3D, inicio">
           <span className="transition-transform duration-500 ease-out group-hover:rotate-[-8deg]">
             <Logo />
           </span>

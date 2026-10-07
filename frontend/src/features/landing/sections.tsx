@@ -22,7 +22,7 @@ export function SectionHead({ id, kicker, title, lead }: { id: string; kicker: s
   return (
     <Stagger className="grid gap-x-16 gap-y-4 md:grid-cols-[1fr_1fr] md:items-end" gap={0.12}>
       <StaggerItem>
-        <p className="flex items-center gap-2 text-sm font-semibold text-(--l-signal-ink)">
+        <p className="label flex items-center gap-2 text-(--l-signal-ink)">
           <motion.span
             aria-hidden
             className="h-px w-6 origin-left bg-(--l-signal)"
@@ -30,7 +30,7 @@ export function SectionHead({ id, kicker, title, lead }: { id: string; kicker: s
           />
           {kicker}
         </p>
-        <h2 id={id} className="mt-3 text-[clamp(2rem,4vw,3.25rem)] leading-[1.05] font-semibold">
+        <h2 id={id} className="mt-4 text-[clamp(2.2rem,4.4vw,3.6rem)] leading-[1]">
           {title}
         </h2>
       </StaggerItem>
@@ -43,7 +43,7 @@ export function SectionHead({ id, kicker, title, lead }: { id: string; kicker: s
   )
 }
 
-const tag = 'absolute top-3 rounded-full bg-(--l-paper)/90 px-3 py-1 text-xs font-medium text-(--l-graphite) shadow-sm'
+const tag = 'label absolute top-3 rounded-full bg-(--l-paper)/90 px-3 py-1.5 text-(--l-graphite) shadow-sm'
 
 /** Antes / después: el plano dibujado contra el modelo 3D, con un divisor arrastrable (y accesible). */
 export function BeforeAfter() {
@@ -146,10 +146,10 @@ export function Specs() {
             className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-(--l-signal) transition-transform duration-500 ease-out group-hover:scale-x-100"
             aria-hidden
           />
-          <p className="text-sm text-(--l-graphite) tabular-nums transition-colors duration-300 group-hover:text-(--l-signal-ink)">
+          <p className="label text-(--l-graphite) tabular-nums transition-colors duration-300 group-hover:text-(--l-signal-ink)">
             {String(i + 1).padStart(2, '0')}
           </p>
-          <h3 className="mt-2 text-xl font-semibold">{s.title}</h3>
+          <h3 className="mt-3 text-2xl">{s.title}</h3>
           <p className="mt-2 leading-relaxed text-(--l-graphite)">{s.text}</p>
         </StaggerItem>
       ))}
@@ -178,7 +178,7 @@ export function EditorDiagram() {
       }}
     >
       <circle cx={x} cy={y} r="13" fill="var(--l-signal)" />
-      <text x={x} y={y + 4.5} textAnchor="middle" fontFamily="Hanken Grotesk, sans-serif" fontWeight="600" fontSize="13" fill="#fff">
+      <text x={x} y={y + 4.5} textAnchor="middle" fontFamily="Geist Mono, monospace" fontWeight="500" fontSize="13" fill="#fff">
         {n}
       </text>
     </motion.g>
@@ -246,11 +246,11 @@ export function EditorDiagram() {
             key={c.n}
             className="group grid grid-cols-[1.75rem_1fr] gap-3 rounded-xl p-3 transition-colors duration-300 hover:bg-(--l-paper-2)"
           >
-            <span className="grid size-7 place-items-center rounded-full bg-(--l-signal-soft) text-sm font-semibold text-(--l-signal-ink) transition-colors duration-300 group-hover:bg-(--l-signal) group-hover:text-white">
+            <span className="grid size-7 place-items-center rounded-full label bg-(--l-signal-soft) text-(--l-signal-ink) transition-colors duration-300 group-hover:bg-(--l-signal) group-hover:text-white">
               {c.n}
             </span>
             <div>
-              <p className="font-semibold">{c.t}</p>
+              <p className="font-medium tracking-tight">{c.t}</p>
               <p className="mt-0.5 leading-relaxed text-(--l-graphite)">{c.d}</p>
             </div>
           </StaggerItem>
@@ -272,9 +272,9 @@ export function AreaSchedule() {
         <PlanCanvas model={model} className="size-full" label="Plano del apartamento con el área de cada ambiente" />
       </ClipReveal>
       <table className="w-full border-collapse text-[15px]">
-        <caption className="mb-4 text-left font-semibold">Cuadro de áreas del apartamento de ejemplo</caption>
+        <caption className="label mb-4 text-left text-(--l-graphite)">Cuadro de áreas del apartamento de ejemplo</caption>
         <thead>
-          <tr className="border-b border-(--l-hair-strong) text-left text-sm text-(--l-graphite)">
+          <tr className="label border-b border-(--l-hair-strong) text-left text-(--l-graphite)">
             <th scope="col" className="py-2 font-medium">
               Ambiente
             </th>
@@ -306,7 +306,7 @@ export function AreaSchedule() {
           ))}
         </Stagger>
         <tfoot>
-          <tr className="font-semibold">
+          <tr className="font-medium">
             <td className="pt-4">Área útil</td>
             <td className="pt-4 text-right tabular-nums">
               <CountUp value={total} decimals={2} />
@@ -343,7 +343,7 @@ export function DropCta() {
         transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
       />
       <div>
-        <h2 id="empezar" className="text-[clamp(2rem,4vw,3.25rem)] leading-[1.05] font-semibold">
+        <h2 id="empezar" className="text-[clamp(2.4rem,5vw,4rem)] leading-[0.98]">
           Tu plano, en 3D, hoy.
         </h2>
         <p className="mt-4 max-w-md text-lg leading-relaxed text-white/75">
@@ -373,7 +373,7 @@ export function DropCta() {
           <FileUp className="size-8 text-white/70" aria-hidden />
         </motion.span>
         <p className="text-lg font-medium">Arrastra aquí tu plano</p>
-        <p className="text-sm text-white/65">JPG, PNG, WEBP, PDF o DXF · hasta 25 MB</p>
+        <p className="label text-white/60">JPG · PNG · WEBP · PDF · DXF — hasta 25 MB</p>
         <button
           type="button"
           onClick={() => input.current?.click()}
@@ -399,7 +399,7 @@ export function Statement() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <ScrollText
           text={STATEMENT}
-          className="max-w-5xl text-[clamp(1.9rem,4.4vw,3.9rem)] leading-[1.12] font-semibold tracking-[-0.03em]"
+          className="max-w-5xl text-[clamp(2rem,4.6vw,4.1rem)] leading-[1.06] font-medium tracking-[-0.045em]"
         />
       </div>
       <div className="mt-20 md:mt-28">
@@ -429,9 +429,9 @@ export function Facts() {
             f.dark ? 'bg-(--l-deep) text-white' : 'bg-(--l-paper-2)',
           )}
         >
-          <p className={clsx('text-sm font-medium', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.label}</p>
+          <p className={clsx('label', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.label}</p>
           <div>
-            <Odometer value={f.value} suffix={f.suffix} className="text-[clamp(4rem,7vw,5.5rem)] font-semibold tracking-[-0.05em]" />
+            <Odometer value={f.value} suffix={f.suffix} className="text-[clamp(4rem,7vw,5.75rem)] font-medium tracking-[-0.06em]" />
             <p className={clsx('mt-3 leading-relaxed', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.text}</p>
           </div>
         </TiltIn>
@@ -443,11 +443,11 @@ export function Facts() {
 export function Footer() {
   return (
     <footer className="border-t border-(--l-hair)">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-sm text-(--l-graphite) sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <div className="label mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-(--l-graphite) sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>
-          <span className="font-semibold text-(--l-ink)">Plano 3D</span> · Proyecto final de Programación Orientada a Objetos
+          <span className="text-(--l-ink)">Plano 3D</span> · Proyecto final de Programación Orientada a Objetos
         </p>
-        <p>Bogotá, 2026</p>
+        <p>Bogotá — 2026</p>
       </div>
     </footer>
   )
