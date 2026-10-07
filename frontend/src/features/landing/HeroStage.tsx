@@ -3,14 +3,15 @@
  * actual, a la derecha el lienzo 3D. Sin WebGL o con movimiento reducido se
  * muestra el plano estático y los cinco pasos como lista.
  */
-import clsx from 'clsx'
-import { useMotionValueEvent, useScroll } from 'motion/react'
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { lazy, Suspense, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { BuildingModel } from '@/api/types'
 import { prefersReducedMotion } from '@/features/viewer3d/motion'
 import { PlanCanvas } from './PlanCanvas'
 import { sampleApartment } from './sampleApartment'
+import { EASE } from './ease'
+import { SplitWords, Stagger, StaggerItem } from './reveal'
 import { FIGURES, sceneAt } from './sequence'
 
 const HeroScene = lazy(() => import('./HeroScene'))
@@ -24,21 +25,59 @@ function webglAvailable(): boolean {
   }
 }
 
+const enter = (delay: number) => ({
+  initial: { opacity: 0, y: 18, filter: 'blur(6px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  transition: { duration: 0.8, ease: EASE, delay },
+})
+
 export function Headline({ children }: { children?: ReactNode }) {
   return (
     <div>
-      <p className="inline-flex items-center gap-2 rounded-full bg-(--l-signal-soft) px-3 py-1 text-sm font-medium text-(--l-signal-ink)">
+      <motion.p
+        {...enter(0.1)}
+        className="inline-flex items-center gap-2 rounded-full bg-(--l-signal-soft) px-3 py-1 text-sm font-medium text-(--l-signal-ink)"
+      >
+        <span className="relative flex size-2" aria-hidden>
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-(--l-signal) opacity-50" />
+          <span className="relative inline-flex size-2 rounded-full bg-(--l-signal)" />
+        </span>
         Funciona con fotos, PDF y DXF
-      </p>
+      </motion.p>
       <h1 className="mt-5 text-[clamp(2.6rem,5vw,4.2rem)] leading-[1.02] font-semibold">
-        Toma una foto de tu plano y recórrelo en 3D.
+        <SplitWords text="Toma una foto de tu plano y recórrelo en 3D." delay={0.2} />
       </h1>
-      <p className="mt-5 max-w-lg text-lg leading-relaxed text-(--l-graphite)">
+      <motion.p {...enter(0.65)} className="mt-5 max-w-lg text-lg leading-relaxed text-(--l-graphite)">
         Plano 3D reconoce muros, puertas, ventanas y medidas, arma el modelo en segundos y te deja corregirlo antes de
         caminar por dentro.
-      </p>
-      {children}
+      </motion.p>
+      {children && <motion.div {...enter(0.8)}>{children}</motion.div>}
     </div>
+  )
+}
+
+/** Panel que contiene el plano o el 3D: entra escalando suavemente desde 96 %. */
+function Panel({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96, y: 24 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 1.1, ease: EASE, delay: 0.35 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/** Segmento de progreso: se llena mientras el scroll recorre su tramo de la secuencia. */
+function StepBar({ progress, index, title, current }: { progress: MotionValue<number>; index: number; title: string; current: boolean }) {
+  const n = FIGURES.length
+  const fill = useTransform(progress, [index / n, (index + 1) / n], [0, 1], { clamp: true })
+  return (
+    <li aria-current={current ? 'step' : undefined} aria-label={`Paso ${index + 1}: ${title}`} className="h-1 flex-1 overflow-hidden rounded-full bg-(--l-hair)">
+      <motion.span className="block h-full origin-left rounded-full bg-(--l-signal)" style={{ scaleX: fill }} />
+    </li>
   )
 }
 
@@ -60,19 +99,21 @@ function StaticHero({ plan, actions }: { plan: ReactNode; actions: ReactNode }) 
       <div id="hero-title">
         <Headline>{actions}</Headline>
       </div>
-      <figure className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
-        {plan}
-        <figcaption className="sr-only">{caption}</figcaption>
-      </figure>
-      <ol className="grid gap-8 sm:grid-cols-5 lg:col-span-2">
+      <Panel className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
+        <figure className="size-full">
+          {plan}
+          <figcaption className="sr-only">{caption}</figcaption>
+        </figure>
+      </Panel>
+      <Stagger as="ol" className="grid gap-8 sm:grid-cols-5 lg:col-span-2">
         {FIGURES.map((f, i) => (
-          <li key={f.n} className="border-t border-(--l-hair-strong) pt-4">
+          <StaggerItem as="li" key={f.n} className="border-t border-(--l-hair-strong) pt-4">
             <p className="text-sm text-(--l-graphite)">Paso {i + 1}</p>
             <p className="mt-1 font-semibold">{f.title}</p>
             <p className="mt-1 text-sm leading-relaxed text-(--l-graphite)">{f.text}</p>
-          </li>
+          </StaggerItem>
         ))}
-      </ol>
+      </Stagger>
     </section>
   )
 }
@@ -103,31 +144,38 @@ function AnimatedHero({ model, plan, actions }: { model: BuildingModel; plan: Re
             <div aria-live="polite">
               <ol className="flex gap-1.5" aria-label="Pasos de la secuencia">
                 {FIGURES.map((f, i) => (
-                  <li
-                    key={f.n}
-                    aria-current={i === figure ? 'step' : undefined}
-                    aria-label={`Paso ${i + 1}: ${f.title}`}
-                    className={clsx('h-1 flex-1 rounded-full transition-colors', i <= figure ? 'bg-(--l-signal)' : 'bg-(--l-hair)')}
-                  />
+                  <StepBar key={f.n} progress={scrollYProgress} index={i} title={f.title} current={i === figure} />
                 ))}
               </ol>
-              <p className="mt-4 text-sm text-(--l-graphite)">
-                Paso {figure + 1} de {FIGURES.length}
-              </p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight">{active.title}</p>
-              <p className="mt-2 max-w-md leading-relaxed text-(--l-graphite)">{active.text}</p>
+              <div className="relative mt-4 min-h-[8.5rem]">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={figure}
+                    initial={{ opacity: 0, y: 14, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
+                    transition={{ duration: 0.35, ease: EASE }}
+                  >
+                    <p className="text-sm text-(--l-graphite) tabular-nums">
+                      Paso {figure + 1} de {FIGURES.length}
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold tracking-tight">{active.title}</p>
+                    <p className="mt-2 max-w-md leading-relaxed text-(--l-graphite)">{active.text}</p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </div>
           {/* lienzo 3D */}
           <div className="relative order-1 h-[56svh] shrink-0 px-4 pt-20 sm:px-6 lg:order-2 lg:h-auto lg:pt-20 lg:pb-10">
-            <div className="relative size-full overflow-hidden rounded-2xl bg-(--l-paper-2) ring-1 ring-(--l-hair)">
+            <Panel className="relative size-full overflow-hidden rounded-2xl bg-(--l-paper-2) shadow-[0_30px_60px_-30px_rgb(28_31_29/0.35)] ring-1 ring-(--l-hair)">
               <Suspense fallback={plan}>
                 <HeroScene model={model} progress={scrollYProgress} />
               </Suspense>
               <p className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-(--l-paper)/90 px-3 py-1 text-xs font-medium text-(--l-graphite) shadow-sm">
                 {caption}
               </p>
-            </div>
+            </Panel>
           </div>
         </div>
       </section>

@@ -3,29 +3,42 @@
  * color de acento es el verde de `--l-signal`.
  */
 import { ArrowRight, FileUp } from 'lucide-react'
-import { useMotionValue } from 'motion/react'
-import { lazy, Suspense, useId, useMemo, useRef, useState } from 'react'
+import { animate, motion, useInView, useMotionValue, useReducedMotion } from 'motion/react'
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import clsx from 'clsx'
 
 import { polygonArea } from '@/domain/model'
 import { ACCEPT } from '@/features/capture/validateFile'
 import { PlanCanvas } from './PlanCanvas'
+import { EASE } from './ease'
+import { CountUp, Reveal, Stagger, StaggerItem } from './reveal'
 import { sampleApartment } from './sampleApartment'
 
 const HeroScene = lazy(() => import('./HeroScene'))
 
 export function SectionHead({ id, kicker, title, lead }: { id: string; kicker: string; title: string; lead?: string }) {
   return (
-    <header className="grid gap-x-16 gap-y-4 md:grid-cols-[1fr_1fr] md:items-end">
-      <div>
-        <p className="text-sm font-semibold text-(--l-signal-ink)">{kicker}</p>
+    <Stagger className="grid gap-x-16 gap-y-4 md:grid-cols-[1fr_1fr] md:items-end" gap={0.12}>
+      <StaggerItem>
+        <p className="flex items-center gap-2 text-sm font-semibold text-(--l-signal-ink)">
+          <motion.span
+            aria-hidden
+            className="h-px w-6 origin-left bg-(--l-signal)"
+            variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 0.8, ease: EASE } } }}
+          />
+          {kicker}
+        </p>
         <h2 id={id} className="mt-3 text-[clamp(2rem,4vw,3.25rem)] leading-[1.05] font-semibold">
           {title}
         </h2>
-      </div>
-      {lead && <p className="max-w-md text-lg leading-relaxed text-(--l-graphite)">{lead}</p>}
-    </header>
+      </StaggerItem>
+      {lead && (
+        <StaggerItem>
+          <p className="max-w-md text-lg leading-relaxed text-(--l-graphite)">{lead}</p>
+        </StaggerItem>
+      )}
+    </Stagger>
   )
 }
 
@@ -40,6 +53,21 @@ export function BeforeAfter() {
   const box = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
   const id = useId()
+  const seen = useInView(box, { once: true, amount: 0.6 })
+  const reduce = useReducedMotion()
+
+  // al verlo por primera vez el divisor hace un vaivén corto para sugerir que se puede arrastrar
+  useEffect(() => {
+    if (!seen || reduce) return
+    const ctl = animate(50, [50, 28, 68, 50], {
+      duration: 2.2,
+      ease: EASE,
+      times: [0, 0.3, 0.7, 1],
+      delay: 0.3,
+      onUpdate: (v) => setSplit(Math.round(v)),
+    })
+    return () => ctl.stop()
+  }, [seen, reduce])
 
   const moveTo = (clientX: number) => {
     const r = box.current?.getBoundingClientRect()
@@ -48,7 +76,7 @@ export function BeforeAfter() {
   }
 
   return (
-    <div>
+    <Reveal>
       <div
         ref={box}
         className="relative aspect-[4/3] touch-none overflow-hidden rounded-2xl bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
@@ -69,14 +97,14 @@ export function BeforeAfter() {
           <PlanCanvas model={model} className="size-full" label="Plano del apartamento" />
         </div>
         <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow-[0_0_0_1px_var(--l-hair)]" style={{ left: `${split}%` }} aria-hidden>
-          <span className="absolute top-1/2 left-1/2 grid size-10 -translate-1/2 place-items-center rounded-full bg-white text-(--l-ink) shadow-md">
+          <span className="absolute top-1/2 left-1/2 grid size-10 -translate-1/2 place-items-center rounded-full bg-white text-(--l-ink) shadow-md ring-4 ring-white/40">
             <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M7 5 2 10l5 5M13 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
         </div>
-        <span className={clsx(tag, 'left-3')}>Plano</span>
-        <span className={clsx(tag, 'right-3')}>Modelo 3D</span>
+        <span className={clsx(tag, 'left-3 transition-opacity duration-300', split < 12 && 'opacity-0')}>Plano</span>
+        <span className={clsx(tag, 'right-3 transition-opacity duration-300', split > 88 && 'opacity-0')}>Modelo 3D</span>
       </div>
       <label htmlFor={id} className="mt-4 flex items-center gap-4 text-sm text-(--l-graphite)">
         <span className="shrink-0">Comparar</span>
@@ -91,7 +119,7 @@ export function BeforeAfter() {
           aria-valuetext={`${split} % plano, ${100 - split} % modelo`}
         />
       </label>
-    </div>
+    </Reveal>
   )
 }
 
@@ -106,15 +134,23 @@ const SPECS: { title: string; text: string }[] = [
 
 export function Specs() {
   return (
-    <ol className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+    <Stagger as="ol" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
       {SPECS.map((s, i) => (
-        <li key={s.title} className="border-t border-(--l-hair-strong) pt-5">
-          <p className="text-sm text-(--l-graphite) tabular-nums">{i + 1}</p>
+        <StaggerItem as="li" key={s.title} className="group relative pt-5">
+          {/* la línea superior se completa en verde al pasar el cursor */}
+          <span className="absolute inset-x-0 top-0 h-px bg-(--l-hair-strong)" aria-hidden />
+          <span
+            className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-(--l-signal) transition-transform duration-500 ease-out group-hover:scale-x-100"
+            aria-hidden
+          />
+          <p className="text-sm text-(--l-graphite) tabular-nums transition-colors duration-300 group-hover:text-(--l-signal-ink)">
+            {String(i + 1).padStart(2, '0')}
+          </p>
           <h3 className="mt-2 text-xl font-semibold">{s.title}</h3>
           <p className="mt-2 leading-relaxed text-(--l-graphite)">{s.text}</p>
-        </li>
+        </StaggerItem>
       ))}
-    </ol>
+    </Stagger>
   )
 }
 
@@ -130,17 +166,32 @@ const CALLOUTS = [
 /** Esquema simplificado del editor con sus seis zonas numeradas. */
 export function EditorDiagram() {
   const bubble = (n: number, x: number, y: number) => (
-    <g key={n}>
+    <motion.g
+      key={n}
+      style={{ transformOrigin: `${x}px ${y}px`, transformBox: 'view-box' }}
+      variants={{
+        hidden: { opacity: 0, scale: 0.4 },
+        show: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 380, damping: 22, delay: 0.4 + n * 0.08 } },
+      }}
+    >
       <circle cx={x} cy={y} r="13" fill="var(--l-signal)" />
       <text x={x} y={y + 4.5} textAnchor="middle" fontFamily="Hanken Grotesk, sans-serif" fontWeight="600" fontSize="13" fill="#fff">
         {n}
       </text>
-    </g>
+    </motion.g>
   )
   return (
     <div className="grid items-start gap-12 lg:grid-cols-[7fr_5fr]">
-      <div className="rounded-2xl bg-(--l-paper-2) p-4 sm:p-8">
-        <svg viewBox="0 0 640 420" className="w-full" role="img" aria-label="Esquema del editor con sus seis zonas numeradas">
+      <Reveal className="rounded-2xl bg-(--l-paper-2) p-4 sm:p-8">
+        <motion.svg
+          viewBox="0 0 640 420"
+          className="w-full"
+          role="img"
+          aria-label="Esquema del editor con sus seis zonas numeradas"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.4 }}
+        >
           <rect x="20" y="20" width="600" height="380" rx="14" fill="var(--l-paper)" stroke="var(--l-hair-strong)" />
           <g fill="none" stroke="var(--l-hair-strong)">
             <line x1="20" y1="62" x2="620" y2="62" />
@@ -183,19 +234,25 @@ export function EditorDiagram() {
           {bubble(4, 600, 158)}
           {bubble(5, 600, 286)}
           {bubble(6, 600, 41)}
-        </svg>
-      </div>
-      <ol className="grid content-start gap-5">
+        </motion.svg>
+      </Reveal>
+      <Stagger as="ol" className="grid content-start gap-2" gap={0.07}>
         {CALLOUTS.map((c) => (
-          <li key={c.n} className="grid grid-cols-[1.75rem_1fr] gap-3">
-            <span className="grid size-7 place-items-center rounded-full bg-(--l-signal-soft) text-sm font-semibold text-(--l-signal-ink)">{c.n}</span>
+          <StaggerItem
+            as="li"
+            key={c.n}
+            className="group grid grid-cols-[1.75rem_1fr] gap-3 rounded-xl p-3 transition-colors duration-300 hover:bg-(--l-paper-2)"
+          >
+            <span className="grid size-7 place-items-center rounded-full bg-(--l-signal-soft) text-sm font-semibold text-(--l-signal-ink) transition-colors duration-300 group-hover:bg-(--l-signal) group-hover:text-white">
+              {c.n}
+            </span>
             <div>
               <p className="font-semibold">{c.t}</p>
               <p className="mt-0.5 leading-relaxed text-(--l-graphite)">{c.d}</p>
             </div>
-          </li>
+          </StaggerItem>
         ))}
-      </ol>
+      </Stagger>
     </div>
   )
 }
@@ -205,11 +262,12 @@ export function AreaSchedule() {
   const model = useMemo(() => sampleApartment(), [])
   const rooms = model.levels.flatMap((lv) => lv.rooms).map((r) => ({ name: r.label, area: polygonArea(r.polygon) }))
   const total = rooms.reduce((s, r) => s + r.area, 0)
+  const maxArea = Math.max(...rooms.map((r) => r.area))
   return (
     <div className="grid items-center gap-12 lg:grid-cols-[6fr_5fr]">
-      <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
+      <Reveal className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
         <PlanCanvas model={model} className="size-full" label="Plano del apartamento con el área de cada ambiente" />
-      </div>
+      </Reveal>
       <table className="w-full border-collapse text-[15px]">
         <caption className="mb-4 text-left font-semibold">Cuadro de áreas del apartamento de ejemplo</caption>
         <thead>
@@ -225,19 +283,31 @@ export function AreaSchedule() {
             </th>
           </tr>
         </thead>
-        <tbody>
+        <Stagger as="tbody" gap={0.07}>
           {rooms.map((r) => (
-            <tr key={r.name} className="border-b border-(--l-hair)">
-              <td className="py-3.5">{r.name}</td>
+            <StaggerItem as="tr" key={r.name} className="border-b border-(--l-hair)">
+              <td className="py-3.5">
+                {r.name}
+                {/* barra proporcional al área: se dibuja de izquierda a derecha al entrar */}
+                <span className="mt-2 block h-1 overflow-hidden rounded-full bg-(--l-paper-2)" aria-hidden>
+                  <motion.span
+                    className="block h-full origin-left rounded-full bg-(--l-signal)"
+                    style={{ width: `${(r.area / maxArea) * 100}%` }}
+                    variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 1, ease: EASE, delay: 0.2 } } }}
+                  />
+                </span>
+              </td>
               <td className="py-3.5 text-right tabular-nums">{r.area.toFixed(2)}</td>
               <td className="py-3.5 text-right text-(--l-graphite) tabular-nums">{((r.area / total) * 100).toFixed(0)}</td>
-            </tr>
+            </StaggerItem>
           ))}
-        </tbody>
+        </Stagger>
         <tfoot>
           <tr className="font-semibold">
             <td className="pt-4">Área útil</td>
-            <td className="pt-4 text-right tabular-nums">{total.toFixed(2)}</td>
+            <td className="pt-4 text-right tabular-nums">
+              <CountUp value={total} decimals={2} />
+            </td>
             <td className="pt-4 text-right tabular-nums">100</td>
           </tr>
         </tfoot>
@@ -255,7 +325,20 @@ export function DropCta() {
     if (file) void navigate('/nuevo', { state: { file } })
   }
   return (
-    <div className="grid gap-10 rounded-3xl bg-(--l-deep) p-6 text-white sm:p-12 lg:grid-cols-[5fr_6fr] lg:items-center lg:p-16">
+    <motion.div
+      initial={{ opacity: 0, y: 40, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+      transition={{ duration: 0.9, ease: EASE }}
+      className="relative isolate grid gap-10 overflow-hidden rounded-3xl bg-(--l-deep) p-6 text-white sm:p-12 lg:grid-cols-[5fr_6fr] lg:items-center lg:p-16"
+    >
+      {/* luz suave que deriva lentamente detrás del contenido */}
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute -top-1/2 -left-1/4 -z-10 size-[42rem] rounded-full bg-[radial-gradient(closest-side,rgb(95_170_140/0.35),transparent)]"
+        animate={{ x: [0, 120, 0], y: [0, 60, 0] }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+      />
       <div>
         <h2 id="empezar" className="text-[clamp(2rem,4vw,3.25rem)] leading-[1.05] font-semibold">
           Tu plano, en 3D, hoy.
@@ -263,8 +346,8 @@ export function DropCta() {
         <p className="mt-4 max-w-md text-lg leading-relaxed text-white/75">
           Súbelo y en unos segundos tienes el modelo listo para revisar, corregir y recorrer.
         </p>
-        <Link to="/proyectos" className="mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-white/90 underline-offset-4 hover:underline">
-          Ver mis proyectos <ArrowRight className="size-4" aria-hidden />
+        <Link to="/proyectos" className="group mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-white/90 transition-colors hover:text-white">
+          Ver mis proyectos <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
         </Link>
       </div>
       <div
@@ -279,23 +362,25 @@ export function DropCta() {
           go(e.dataTransfer.files[0])
         }}
         className={clsx(
-          'grid place-items-center gap-4 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-colors',
-          over ? 'border-white bg-white/10' : 'border-white/30',
+          'grid place-items-center gap-4 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-[border-color,background-color,transform] duration-300',
+          over ? 'scale-[1.02] border-white bg-white/10' : 'border-white/30 hover:border-white/55 hover:bg-white/[0.04]',
         )}
       >
-        <FileUp className="size-8 text-white/70" aria-hidden />
+        <motion.span animate={over ? { y: -6 } : { y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
+          <FileUp className="size-8 text-white/70" aria-hidden />
+        </motion.span>
         <p className="text-lg font-medium">Arrastra aquí tu plano</p>
         <p className="text-sm text-white/65">JPG, PNG, WEBP, PDF o DXF · hasta 25 MB</p>
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="mt-2 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 font-medium text-(--l-deep) hover:bg-(--l-signal-soft)"
+          className="mt-2 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 font-medium text-(--l-deep) transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-(--l-signal-soft) active:translate-y-0"
         >
           Elegir archivo
         </button>
         <input ref={input} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => go(e.target.files?.[0])} />
       </div>
-    </div>
+    </motion.div>
   )
 }
 

@@ -29,5 +29,20 @@ globalThis.ResizeObserver ??= class {
   unobserve(): void {}
   disconnect(): void {}
 }
+// todo lo observado se da por visible al instante (las animaciones de entrada terminan en su estado final)
+globalThis.IntersectionObserver ??= class {
+  readonly root = null
+  readonly rootMargin = '0px'
+  readonly thresholds = [0]
+  constructor(private cb: IntersectionObserverCallback) {}
+  observe(target: Element): void {
+    this.cb([{ isIntersecting: true, intersectionRatio: 1, target } as IntersectionObserverEntry], this as unknown as IntersectionObserver)
+  }
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
 URL.createObjectURL ??= () => 'blob:mock'
 URL.revokeObjectURL ??= () => undefined

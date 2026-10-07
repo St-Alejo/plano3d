@@ -105,7 +105,8 @@ describe('LandingPage', () => {
     const total = sampleApartment()
       .levels.flatMap((l) => l.rooms)
       .reduce((s, r) => s + polygonArea(r.polygon), 0)
-    expect(within(table).getByText(total.toFixed(2))).toBeInTheDocument()
+    // el total visible cuenta hacia arriba; el valor final siempre está para lectores de pantalla
+    expect(within(table).getAllByText(total.toFixed(2)).length).toBeGreaterThan(0)
   })
 
   it('el archivo elegido en la landing llega a la captura con el nombre sugerido', async () => {
