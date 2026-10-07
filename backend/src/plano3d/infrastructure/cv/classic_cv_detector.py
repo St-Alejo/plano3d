@@ -10,6 +10,7 @@ from plano3d.application.ports import (
     FloorPlanDetector,
     ImageQuality,
     ProgressPublisher,
+    TextSpotter,
 )
 from plano3d.infrastructure.cv.context import CVContext
 from plano3d.infrastructure.cv.imageio import encode_png
@@ -18,6 +19,7 @@ from plano3d.infrastructure.cv.stages.ingest import IngestStage
 from plano3d.infrastructure.cv.stages.openings import OpeningsStage
 from plano3d.infrastructure.cv.stages.preprocess import PreprocessStage
 from plano3d.infrastructure.cv.stages.rectify import RectifyStage
+from plano3d.infrastructure.cv.stages.room_names import RoomNamesStage
 from plano3d.infrastructure.cv.stages.rooms import RoomsStage
 from plano3d.infrastructure.cv.stages.scale import ScaleStage
 from plano3d.infrastructure.cv.stages.topology import TopologyStage
@@ -27,7 +29,7 @@ from plano3d.infrastructure.cv.stages.walls import VectorizeStage, WallMaskStage
 PREVIEW_AFTER = {"topology", "rooms"}
 
 
-def default_stages() -> list[PipelineStage[CVContext]]:
+def default_stages(spotter: TextSpotter | None = None) -> list[PipelineStage[CVContext]]:
     return [
         IngestStage(),
         RectifyStage(),
@@ -38,6 +40,7 @@ def default_stages() -> list[PipelineStage[CVContext]]:
         OpeningsStage(),
         TopologyStage(),
         RoomsStage(),
+        RoomNamesStage(spotter),
         AssembleStage(),
     ]
 
@@ -60,6 +63,9 @@ class _PreviewTracker:
 class ClassicCVDetector(FloorPlanDetector):
     name = "classic-cv"
 
+    def __init__(self, spotter: TextSpotter | None = None) -> None:
+        self._spotter = spotter
+
     def supports(self, quality: ImageQuality) -> bool:
         # es la estrategia base: siempre disponible como respaldo
         return quality.width >= 200 and quality.height >= 200
@@ -67,7 +73,7 @@ class ClassicCVDetector(FloorPlanDetector):
     async def detect(
         self, request: DetectionRequest, progress: ProgressPublisher
     ) -> DetectionResult:
-        stages = default_stages()
+        stages = default_stages(self._spotter)
         pipeline = Pipeline(stages, preview=_PreviewTracker([s.key for s in stages]))
         ctx = CVContext(
             project_id=request.project_id,

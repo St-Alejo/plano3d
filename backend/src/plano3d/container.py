@@ -49,7 +49,7 @@ from plano3d.infrastructure.memory import (
 )
 from plano3d.infrastructure.ocr.claude import ClaudeTextReader, claude_available
 from plano3d.infrastructure.ocr.consensus import ConsensusReader
-from plano3d.infrastructure.ocr.rapid import RapidOcrReader
+from plano3d.infrastructure.ocr.rapid import RapidOcrReader, RapidOcrSpotter
 from plano3d.infrastructure.ocr.rapid import available as ocr_available
 from plano3d.infrastructure.vector.detectors import DxfDetector, VectorPdfDetector
 
@@ -134,9 +134,11 @@ def default_selector() -> DetectorSelector:
     # Orden de preferencia: primero la ruta exacta (archivos vectoriales), la CV clásica
     # queda siempre como respaldo para fotos e imágenes.
     reader = text_reader()
-    photo = HybridPhotoDetector(RasterVectorDetector(reader), ClassicCVDetector())
+    # la lectura de nombres de ambientes es local (sin costo); sin OCR quedan genéricos
+    classic = ClassicCVDetector(RapidOcrSpotter() if ocr_available() else None)
+    photo = HybridPhotoDetector(RasterVectorDetector(reader), classic)
     return DetectorSelector(
-        [DxfDetector(), VectorPdfDetector(), photo, ClassicCVDetector()], OpenCVImageInspector()
+        [DxfDetector(), VectorPdfDetector(), photo, classic], OpenCVImageInspector()
     )
 
 

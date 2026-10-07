@@ -6,12 +6,14 @@ from hypothesis import strategies as st
 
 from plano3d.domain import LabelKind, RoomType
 from plano3d.domain.plan_text import (
+    RoomName,
     classify_label,
     format_length,
     parse_area,
     parse_length,
     parse_level,
     parse_scale,
+    room_name_from_texts,
     room_type_from_name,
 )
 
@@ -135,3 +137,12 @@ def test_room_type(name: str, kind: RoomType) -> None:
 )
 def test_classify(text: str, kind: LabelKind) -> None:
     assert classify_label(text) is kind
+
+
+def test_nombre_de_ambiente_bilingue() -> None:
+    assert room_name_from_texts(["BANO", "BATHROOM"]) == RoomName("Baño", RoomType.BATHROOM)
+    assert room_name_from_texts(["DORMITORIO-BEDROOM"]).label == "Dormitorio"  # type: ignore[union-attr]
+    open_plan = room_name_from_texts(["COCINA", "KITCHEN", "O", "SALA", "LIVINGROOM"])
+    assert open_plan == RoomName("Cocina / Sala", RoomType.KITCHEN)
+    assert room_name_from_texts(["BEDROOM"]) == RoomName("Bedroom", RoomType.BEDROOM)
+    assert room_name_from_texts(["2.40", "S6", ".10"]) is None

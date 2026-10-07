@@ -189,3 +189,80 @@ def classify_label(text: str) -> LabelKind:
     if re.search(r"[A-Za-zÁÉÍÓÚÑáéíóúñ]{3,}", t) and parse_length(t) is None:
         return LabelKind.ROOM_NAME
     return LabelKind.OTHER
+
+
+# Los planos bilingües repiten cada nombre en inglés ("BAÑO / BATHROOM"): el inglés
+# confirma el tipo pero no se muestra si ya hay nombre en español.
+_ENGLISH_WORDS: tuple[tuple[RoomType, tuple[str, ...]], ...] = (
+    (RoomType.BATHROOM, ("BATHROOM", "BATH", "TOILET", "RESTROOM")),
+    (RoomType.KITCHEN, ("KITCHEN",)),
+    (RoomType.LAUNDRY, ("LAUNDRY",)),
+    (RoomType.BEDROOM, ("BEDROOM", "MASTER")),
+    (RoomType.LIVING, ("LIVING", "DINING", "FAMILY ROOM", "LOUNGE")),
+    (RoomType.STUDY, ("STUDY", "OFFICE", "LIBRARY")),
+    (RoomType.CIRCULATION, ("CORRIDOR", "HALLWAY", "ENTRANCE", "ACCESS", "LOBBY", "FOYER")),
+    (RoomType.PATIO, ("TERRACE", "BALCONY", "GARDEN", "PORCH", "DECK")),
+    (RoomType.STORAGE, ("STORAGE", "PANTRY", "WARDROBE")),
+    (RoomType.GARAGE, ("GARAGE", "CARPORT", "PARKING")),
+    (RoomType.STAIRS, ("STAIRS", "STAIRCASE")),
+)
+
+#: forma de mostrar las palabras que el OCR suele leer sin tilde ni eñe
+_DISPLAY = {
+    "BANO": "Baño",
+    "HABITACION": "Habitación",
+    "RECAMARA": "Recámara",
+    "LAVANDERIA": "Lavandería",
+    "CIRCULACION": "Circulación",
+    "VESTIBULO": "Vestíbulo",
+    "DEPOSITO": "Depósito",
+    "BALCON": "Balcón",
+    "JARDIN": "Jardín",
+    "CUARTO UTIL": "Cuarto útil",
+}
+
+
+def _match(
+    upper: str, table: tuple[tuple[RoomType, tuple[str, ...]], ...]
+) -> tuple[RoomType, str] | None:
+    best: tuple[int, RoomType, str] | None = None
+    for kind, words in table:
+        for w in words:
+            m = re.search(rf"\b{re.escape(w)}", upper)
+            if m and (best is None or m.start() < best[0]):
+                best = (m.start(), kind, w)
+    return (best[1], best[2]) if best else None
+
+
+@dataclass(frozen=True)
+class RoomName:
+    label: str
+    room_type: RoomType
+
+
+def room_name_from_texts(texts: list[str]) -> RoomName | None:
+    """Nombre de un ambiente a partir de los textos que caen dentro (en orden de lectura).
+
+    ``["BAÑO", "BATHROOM"]`` → Baño; ``["DORMITORIO-BEDROOM"]`` → Dormitorio;
+    ``["COCINA", "KITCHEN", "SALA", "LIVINGROOM"]`` → Cocina / Sala (espacio abierto).
+    Las cotas, ejes y letras sueltas se ignoran. Sin palabra conocida devuelve ``None``.
+    """
+    spanish: list[tuple[RoomType, str]] = []
+    english: list[tuple[RoomType, str]] = []
+    for text in texts:
+        upper = strip_accents(text).upper()
+        # "DORMITORIO-BEDROOM", "SALA/LIVING": cada parte puede ser un idioma
+        for part in re.split(r"\s*[-/|]\s*", upper):
+            # el OCR a veces pega palabras ("LIVINGROOM")
+            es = _match(part, _ROOM_WORDS)
+            if es and all(es[0] != k for k, _ in spanish):
+                spanish.append(es)
+                continue
+            en = _match(part, _ENGLISH_WORDS)
+            if en and not es and all(en[0] != k for k, _ in english):
+                english.append(en)
+    names = spanish or english
+    if not names:
+        return None
+    label = " / ".join(_DISPLAY.get(w, w.capitalize()) for _, w in names)
+    return RoomName(label, names[0][0])

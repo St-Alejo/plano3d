@@ -185,6 +185,29 @@ class TextReader(ABC):
 
 
 @dataclass(frozen=True)
+class SpottedText:
+    """Texto encontrado en la hoja: contenido, confianza y centro en píxeles de la imagen."""
+
+    text: str
+    confidence: float
+    x: float
+    y: float
+    height: float
+
+
+class TextSpotter(ABC):
+    """Strategy: encuentra Y lee los textos de una imagen completa (nombres de ambientes).
+
+    A diferencia de ``TextReader`` no recibe recortes: localiza los textos por sí mismo.
+    """
+
+    name: str
+
+    @abstractmethod
+    def spot(self, image: Image) -> builtins.list[SpottedText]: ...
+
+
+@dataclass(frozen=True)
 class ShotReport:
     """Calidad de una foto del plano y avisos para repetirla."""
 

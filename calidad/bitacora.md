@@ -19,3 +19,9 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
 - Planta 1: muros F1 1.00 (P 1.00 R 1.00, extremos 0.80, 7/8) · aberturas P 1.00 R 1.00 (7/7) · ambientes 3/3 IoU 0.95 nombres 0/3
 - falta: Planta 1: nombres
+
+### 2026-10-07 00:24 — Nombres de ambientes con OCR de hoja completa (RapidOCR det+rec, puerto TextSpotter) y RoomNamesStage; bilingüe (BAÑO/BATHROOM → Baño). Puertas corredizas marcadas operation=sliding y dibujadas como dos hojas en 3D. casa1 CUMPLE todo; revisión visual 2D/3D ok.
+
+## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
+- Planta 1: muros F1 1.00 (P 1.00 R 1.00, extremos 0.80, 7/8) · aberturas P 1.00 R 1.00 (7/7) · ambientes 3/3 IoU 0.95 nombres 3/3
+- **CUMPLE**

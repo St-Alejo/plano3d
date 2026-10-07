@@ -1,4 +1,4 @@
-"""RapidOCR (ONNX en CPU, Apache-2.0) en modo SOLO reconocimiento sobre recortes."""
+"""RapidOCR (ONNX en CPU, Apache-2.0): reconocimiento sobre recortes y lectura de la hoja."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import threading
 from collections.abc import Sequence
 from typing import Any
 
-from plano3d.application.ports import Image, ReadText, TextReader
+from plano3d.application.ports import Image, ReadText, SpottedText, TextReader, TextSpotter
 
 BATCH = 8
 MAX_RATIO = 20.0
@@ -45,6 +45,49 @@ class RapidOcrReader(TextReader):
                 continue
             for i, (text, conf) in zip(idx, res, strict=False):
                 out[i] = ReadText(str(text).strip(), float(conf))
+        return out
+
+
+#: el detector de texto pierde letras pequeñas en hojas grandes y es lento: se lee a este lado
+SPOT_MAX_SIDE = 1600
+MIN_SPOT_CONFIDENCE = 0.5
+
+
+class RapidOcrSpotter(TextSpotter):
+    """Detección + reconocimiento sobre la imagen entera (comparte el modelo del lector)."""
+
+    name = "rapidocr"
+
+    def __init__(self, reader: RapidOcrReader | None = None) -> None:
+        self._reader = reader or RapidOcrReader()
+
+    def spot(self, image: Image) -> list[SpottedText]:
+        import cv2
+
+        h, w = image.shape[:2]
+        f = min(1.0, SPOT_MAX_SIDE / max(h, w))
+        img = cv2.resize(image, None, fx=f, fy=f, interpolation=cv2.INTER_AREA) if f < 1 else image
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        try:
+            res, _ = self._reader._ocr()(img)
+        except Exception:
+            return []
+        out: list[SpottedText] = []
+        for box, text, conf in res or []:
+            if float(conf) < MIN_SPOT_CONFIDENCE or not str(text).strip():
+                continue
+            xs = [p[0] / f for p in box]
+            ys = [p[1] / f for p in box]
+            out.append(
+                SpottedText(
+                    str(text).strip(),
+                    float(conf),
+                    sum(xs) / len(xs),
+                    sum(ys) / len(ys),
+                    max(ys) - min(ys),
+                )
+            )
         return out
 
 

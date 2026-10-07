@@ -30,25 +30,25 @@
       "rooms_det": 3,
       "rooms_gt": 3,
       "room_iou": 0.955,
-      "names_ok": 0,
+      "names_ok": 3,
       "rooms": [
         {
           "truth": "baño",
           "iou": 0.954,
-          "label": "Espacio 1",
-          "name_ok": false
+          "label": "Baño",
+          "name_ok": true
         },
         {
           "truth": "dormitorio",
           "iou": 0.962,
-          "label": "Espacio 2",
-          "name_ok": false
+          "label": "Dormitorio",
+          "name_ok": true
         },
         {
           "truth": "cocina",
           "iou": 0.95,
-          "label": "Espacio 3",
-          "name_ok": false
+          "label": "Cocina / Sala",
+          "name_ok": true
         }
       ],
       "openings": [
@@ -104,13 +104,13 @@
       ]
     }
   ],
-  "when": "2026-10-07T00:11:09",
+  "when": "2026-10-07T00:24:15",
   "pass": {
     "scale": true,
     "levels": true,
     "Planta 1: muros": true,
     "Planta 1: aberturas": true,
     "Planta 1: ambientes": true,
-    "Planta 1: nombres": false
+    "Planta 1: nombres": true
   }
 }
