@@ -10,7 +10,8 @@ import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
 import { EASE } from './ease'
-import { AreaSchedule, BeforeAfter, DropCta, EditorDiagram, Footer, SectionHead, Specs } from './sections'
+import { AreaSchedule, BeforeAfter, DropCta, EditorDiagram, Facts, Footer, SectionHead, Specs, Statement } from './sections'
+import { useSmoothScroll } from './useSmoothScroll'
 
 function Logo() {
   return (
@@ -96,6 +97,7 @@ function HeroActions() {
 }
 
 export function LandingPage() {
+  useSmoothScroll()
   useEffect(() => {
     document.title = 'Plano 3D — fotografía tu plano y recórrelo en 3D'
     return () => {
@@ -114,6 +116,7 @@ export function LandingPage() {
       <Masthead />
       <main id="contenido">
         <HeroStage actions={<HeroActions />} />
+        <Statement />
 
         <div className="mx-auto grid max-w-6xl gap-28 px-4 py-24 sm:px-6 md:gap-36">
           <section aria-labelledby="antes-despues" className="grid gap-10">
@@ -134,6 +137,16 @@ export function LandingPage() {
               lead="No hace falta saber de CAD. Si el plano tiene cotas, las usa; si no, calibras con una medida que conozcas."
             />
             <Specs />
+          </section>
+
+          <section aria-labelledby="cifras" className="grid gap-10">
+            <SectionHead
+              id="cifras"
+              kicker="En cifras"
+              title="Lo que pasa entre la foto y el modelo."
+              lead="Cada plano recorre las mismas etapas, del archivo que subes al modelo que exportas."
+            />
+            <Facts />
           </section>
 
           <section aria-labelledby="editor" className="grid gap-10">

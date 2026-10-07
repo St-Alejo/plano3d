@@ -96,6 +96,20 @@ describe('LandingPage', () => {
     })
   })
 
+  it('presenta la declaración, la marquesina y las cifras con su valor final accesible', () => {
+    renderLanding()
+    expect(screen.getByText(/convierte el plano que ya tienes/)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Muros, Puertas, Ventanas/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /entre la foto y el modelo/ })).toBeInTheDocument()
+    // las cifras ruedan dígito a dígito; el valor completo queda en texto solo para lectores de pantalla
+    const facts = screen.getByRole('region', { name: /entre la foto y el modelo/ })
+    const readable = within(facts)
+      .getAllByText(/^\d+(MB|cm)?$/)
+      .filter((el) => el.classList.contains('sr-only'))
+      .map((el) => el.textContent)
+    expect(readable).toEqual(['10', '3', '25MB', '1cm'])
+  })
+
   it('el cuadro de áreas suma los ambientes', () => {
     renderLanding()
     const table = screen.getByRole('table', { name: /Cuadro de áreas/ })

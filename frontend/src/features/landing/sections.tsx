@@ -12,6 +12,7 @@ import { polygonArea } from '@/domain/model'
 import { ACCEPT } from '@/features/capture/validateFile'
 import { PlanCanvas } from './PlanCanvas'
 import { EASE } from './ease'
+import { ClipReveal, Marquee, Odometer, ScrollText, TiltIn } from './effects'
 import { CountUp, Reveal, Stagger, StaggerItem } from './reveal'
 import { sampleApartment } from './sampleApartment'
 
@@ -76,36 +77,38 @@ export function BeforeAfter() {
   }
 
   return (
-    <Reveal>
-      <div
-        ref={box}
-        className="relative aspect-[4/3] touch-none overflow-hidden rounded-2xl bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
-        onPointerDown={(e) => {
-          dragging.current = true
-          e.currentTarget.setPointerCapture(e.pointerId)
-          moveTo(e.clientX)
-        }}
-        onPointerMove={(e) => dragging.current && moveTo(e.clientX)}
-        onPointerUp={() => (dragging.current = false)}
-      >
-        <div className="absolute inset-0">
-          <Suspense fallback={null}>
-            <HeroScene model={model} progress={pose} />
-          </Suspense>
+    <div>
+      <ClipReveal className="rounded-2xl">
+        <div
+          ref={box}
+          className="relative aspect-[4/3] touch-none overflow-hidden rounded-2xl bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
+          onPointerDown={(e) => {
+            dragging.current = true
+            e.currentTarget.setPointerCapture(e.pointerId)
+            moveTo(e.clientX)
+          }}
+          onPointerMove={(e) => dragging.current && moveTo(e.clientX)}
+          onPointerUp={() => (dragging.current = false)}
+        >
+          <div className="absolute inset-0">
+            <Suspense fallback={null}>
+              <HeroScene model={model} progress={pose} />
+            </Suspense>
+          </div>
+          <div className="absolute inset-0 bg-(--l-paper-2)" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
+            <PlanCanvas model={model} className="size-full" label="Plano del apartamento" />
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow-[0_0_0_1px_var(--l-hair)]" style={{ left: `${split}%` }} aria-hidden>
+            <span className="absolute top-1/2 left-1/2 grid size-10 -translate-1/2 place-items-center rounded-full bg-white text-(--l-ink) shadow-md ring-4 ring-white/40">
+              <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M7 5 2 10l5 5M13 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+          <span className={clsx(tag, 'left-3 transition-opacity duration-300', split < 12 && 'opacity-0')}>Plano</span>
+          <span className={clsx(tag, 'right-3 transition-opacity duration-300', split > 88 && 'opacity-0')}>Modelo 3D</span>
         </div>
-        <div className="absolute inset-0 bg-(--l-paper-2)" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
-          <PlanCanvas model={model} className="size-full" label="Plano del apartamento" />
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow-[0_0_0_1px_var(--l-hair)]" style={{ left: `${split}%` }} aria-hidden>
-          <span className="absolute top-1/2 left-1/2 grid size-10 -translate-1/2 place-items-center rounded-full bg-white text-(--l-ink) shadow-md ring-4 ring-white/40">
-            <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M7 5 2 10l5 5M13 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        </div>
-        <span className={clsx(tag, 'left-3 transition-opacity duration-300', split < 12 && 'opacity-0')}>Plano</span>
-        <span className={clsx(tag, 'right-3 transition-opacity duration-300', split > 88 && 'opacity-0')}>Modelo 3D</span>
-      </div>
+      </ClipReveal>
       <label htmlFor={id} className="mt-4 flex items-center gap-4 text-sm text-(--l-graphite)">
         <span className="shrink-0">Comparar</span>
         <input
@@ -119,7 +122,7 @@ export function BeforeAfter() {
           aria-valuetext={`${split} % plano, ${100 - split} % modelo`}
         />
       </label>
-    </Reveal>
+    </div>
   )
 }
 
@@ -265,9 +268,9 @@ export function AreaSchedule() {
   const maxArea = Math.max(...rooms.map((r) => r.area))
   return (
     <div className="grid items-center gap-12 lg:grid-cols-[6fr_5fr]">
-      <Reveal className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
+      <ClipReveal className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
         <PlanCanvas model={model} className="size-full" label="Plano del apartamento con el área de cada ambiente" />
-      </Reveal>
+      </ClipReveal>
       <table className="w-full border-collapse text-[15px]">
         <caption className="mb-4 text-left font-semibold">Cuadro de áreas del apartamento de ejemplo</caption>
         <thead>
@@ -381,6 +384,59 @@ export function DropCta() {
         <input ref={input} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => go(e.target.files?.[0])} />
       </div>
     </motion.div>
+  )
+}
+
+const STATEMENT =
+  'Plano 3D convierte el plano que ya tienes en un modelo que puedes medir, corregir y recorrer, sin dibujar nada desde cero.'
+
+const MARQUEE = ['Muros', 'Puertas', 'Ventanas', 'Cotas', 'Ambientes', 'Escaleras', 'Columnas', 'GLB']
+
+/** Declaración grande que se ilumina palabra a palabra con el scroll, seguida de la marquesina. */
+export function Statement() {
+  return (
+    <section aria-label="Qué es Plano 3D" className="pt-24 md:pt-36">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <ScrollText
+          text={STATEMENT}
+          className="max-w-5xl text-[clamp(1.9rem,4.4vw,3.9rem)] leading-[1.12] font-semibold tracking-[-0.03em]"
+        />
+      </div>
+      <div className="mt-20 md:mt-28">
+        <Marquee items={MARQUEE} />
+      </div>
+    </section>
+  )
+}
+
+const FACTS: { value: number; suffix?: string; label: string; text: string; dark?: boolean }[] = [
+  { value: 10, label: 'etapas de análisis', text: 'Desde corregir la perspectiva de la foto hasta levantar cada muro.', dark: true },
+  { value: 3, label: 'tipos de archivo', text: 'Foto o imagen, PDF y DXF de AutoCAD.' },
+  { value: 25, suffix: 'MB', label: 'por archivo', text: 'Suficiente para un pliego escaneado a buena resolución.' },
+  { value: 1, suffix: 'cm', label: 'de rejilla de imán', text: 'Para ajustar muros con precisión en el editor.' },
+]
+
+/** Cifras en tarjetas que entran inclinadas y cuyos números ruedan como un odómetro. */
+export function Facts() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {FACTS.map((f, i) => (
+        <TiltIn
+          key={f.label}
+          index={i}
+          className={clsx(
+            'flex min-h-72 flex-col justify-between rounded-2xl p-6 transition-transform duration-500 ease-out hover:-translate-y-1',
+            f.dark ? 'bg-(--l-deep) text-white' : 'bg-(--l-paper-2)',
+          )}
+        >
+          <p className={clsx('text-sm font-medium', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.label}</p>
+          <div>
+            <Odometer value={f.value} suffix={f.suffix} className="text-[clamp(4rem,7vw,5.5rem)] font-semibold tracking-[-0.05em]" />
+            <p className={clsx('mt-3 leading-relaxed', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.text}</p>
+          </div>
+        </TiltIn>
+      ))}
+    </div>
   )
 }
 

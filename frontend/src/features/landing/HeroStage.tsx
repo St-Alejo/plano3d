@@ -11,7 +11,8 @@ import { prefersReducedMotion } from '@/features/viewer3d/motion'
 import { PlanCanvas } from './PlanCanvas'
 import { sampleApartment } from './sampleApartment'
 import { EASE } from './ease'
-import { SplitWords, Stagger, StaggerItem } from './reveal'
+import { SplitChars } from './effects'
+import { Stagger, StaggerItem } from './reveal'
 import { FIGURES, sceneAt } from './sequence'
 
 const HeroScene = lazy(() => import('./HeroScene'))
@@ -45,13 +46,13 @@ export function Headline({ children }: { children?: ReactNode }) {
         Funciona con fotos, PDF y DXF
       </motion.p>
       <h1 className="mt-5 text-[clamp(2.6rem,5vw,4.2rem)] leading-[1.02] font-semibold">
-        <SplitWords text="Toma una foto de tu plano y recórrelo en 3D." delay={0.2} />
+        <SplitChars text="Toma una foto de tu plano y recórrelo en 3D." delay={0.15} />
       </h1>
-      <motion.p {...enter(0.65)} className="mt-5 max-w-lg text-lg leading-relaxed text-(--l-graphite)">
+      <motion.p {...enter(1.05)} className="mt-5 max-w-lg text-lg leading-relaxed text-(--l-graphite)">
         Plano 3D reconoce muros, puertas, ventanas y medidas, arma el modelo en segundos y te deja corregirlo antes de
         caminar por dentro.
       </motion.p>
-      {children && <motion.div {...enter(0.8)}>{children}</motion.div>}
+      {children && <motion.div {...enter(1.2)}>{children}</motion.div>}
     </div>
   )
 }

@@ -69,29 +69,6 @@ export function StaggerItem({ children, className, as = 'div' }: { children: Rea
   )
 }
 
-/** Titular que entra palabra por palabra, cada una saliendo de su propia máscara. */
-export function SplitWords({ text, delay = 0, className }: { text: string; delay?: number; className?: string }) {
-  const words = text.split(' ')
-  return (
-    <span className={className}>
-      <span className="sr-only">{text}</span>
-      {words.map((w, i) => (
-        <span key={i} className="inline-block overflow-hidden pb-[0.08em] align-bottom" aria-hidden>
-          <motion.span
-            className="inline-block"
-            initial={{ y: '105%' }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.9, ease: EASE, delay: delay + i * 0.06 }}
-          >
-            {w}
-            {i < words.length - 1 ? ' ' : ''}
-          </motion.span>
-        </span>
-      ))}
-    </span>
-  )
-}
-
 /** Número que cuenta hasta su valor la primera vez que se ve. */
 export function CountUp({ value, decimals = 0, className }: { value: number; decimals?: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null)

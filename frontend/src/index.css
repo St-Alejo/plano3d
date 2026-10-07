@@ -146,15 +146,9 @@
   font-family: 'Hanken Grotesk', var(--font-sans);
   font-feature-settings: 'ss01';
 }
-/* desplazamiento suave a las secciones, dejando sitio a la cabecera fija */
+/* el desplazamiento suave lo hace Lenis; esto deja sitio a la cabecera fija si no está activo */
 html:has(.landing) {
-  scroll-behavior: smooth;
   scroll-padding-top: 7rem;
-}
-@media (prefers-reduced-motion: reduce) {
-  html:has(.landing) {
-    scroll-behavior: auto;
-  }
 }
 .landing h1,
 .landing h2,
