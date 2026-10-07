@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import cv2
 import numpy as np
+import numpy.typing as npt
 
 from plano3d.application.pipeline import PipelineStage
 from plano3d.infrastructure.cv.context import CVContext, Img, Segment, as_u8
@@ -99,9 +102,16 @@ def is_color_render(img: Img) -> bool:
     return float((hsv[..., 1] > 60).mean()) >= COLOR_RENDER_FRACTION
 
 
+#: probabilidad de muro por píxel (p. ej. la red aprendida); recibe el gris del plano
+WallProbability = Callable[[Img], npt.NDArray[np.float32]]
+
+
 class WallMaskStage(PipelineStage[CVContext]):
     key = "walls"
     title = "Detección de muros"
+
+    def __init__(self, segmenter: WallProbability | None = None) -> None:
+        self._segmenter = segmenter
 
     def run(self, ctx: CVContext) -> CVContext:
         ink = ctx.require(ctx.ink, "ink")
@@ -114,6 +124,12 @@ class WallMaskStage(PipelineStage[CVContext]):
             gray = as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
             # gris con la iluminación compensada: en una foto la sombra no cambia el "tono"
             mask = filter_by_tone(mask, normalize_illumination(gray))
+        if self._segmenter is not None and img is not None:
+            # la red decide qué manchas son muros y cuáles muebles, autos o cotas
+            from plano3d.infrastructure.ml.seg_model import filter_components
+
+            gray = img if img.ndim == 2 else as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+            mask = filter_components(mask, self._segmenter(gray))
         ctx.wall_mask = mask
         ctx.wall_thickness_px = t
         return ctx

@@ -15,3 +15,5 @@ frontend/test-results/
 frontend/node_modules/.tmp/
 *.db
 /docs
+# caché de datos sintéticos de entrenamiento (se regenera)
+backend/ml/data/

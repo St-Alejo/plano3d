@@ -1,0 +1,32 @@
+"""Segmentación aprendida: datos sintéticos y uso de la probabilidad en el pipeline."""
+
+import numpy as np
+from ml.synth import STYLES, random_plan, render
+
+from plano3d.infrastructure.ml.seg_model import WallSegmenter, filter_components
+
+
+def test_sintetico_marca_muros_y_no_muebles() -> None:
+    for k, style in enumerate(STYLES):
+        rng = np.random.default_rng(k)
+        gray, mask = render(random_plan(rng), style, rng)
+        assert gray.shape == mask.shape
+        assert 0.01 < (mask > 0).mean() < 0.4
+        # bajo la máscara hay mucha más tinta que fuera (los muros huecos solo tienen
+        # tinta en el borde, pero la etiqueta es el muro completo)
+        ink = gray < 100  # tinta oscura (los pisos de un render son gris medio)
+        assert ink[mask > 0].mean() > 3 * ink[mask == 0].mean()
+
+
+def test_filtro_conserva_solo_lo_que_la_red_ve_como_muro() -> None:
+    mask = np.zeros((100, 100), np.uint8)
+    mask[10:15, 10:90] = 255  # muro
+    mask[50:70, 40:60] = 255  # auto
+    prob = np.zeros((100, 100), np.float32)
+    prob[10:15, 10:90] = 0.9
+    out = filter_components(mask, prob)
+    assert out[12, 50] == 255 and out[60, 50] == 0
+
+
+def test_sin_modelo_no_hay_segmentador(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    assert not WallSegmenter(tmp_path / "no-existe.onnx").available

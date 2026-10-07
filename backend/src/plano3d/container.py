@@ -6,6 +6,7 @@ S3 por disco, es cambiar una línea de configuración, no el código de negocio.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 
 from plano3d.application.ports import (
@@ -41,6 +42,7 @@ from plano3d.infrastructure.cv.raster_vector_detector import (
     HybridPhotoDetector,
     RasterVectorDetector,
 )
+from plano3d.infrastructure.cv.stages.walls import WallProbability
 from plano3d.infrastructure.memory import (
     InMemoryFileStorage,
     InMemoryProgressBroker,
@@ -48,6 +50,7 @@ from plano3d.infrastructure.memory import (
     InProcessJobQueue,
     LocalFileStorage,
 )
+from plano3d.infrastructure.ml.seg_model import WallSegmenter
 from plano3d.infrastructure.ocr.claude import ClaudeTextReader, claude_available
 from plano3d.infrastructure.ocr.consensus import ConsensusReader
 from plano3d.infrastructure.ocr.rapid import RapidOcrReader, RapidOcrSpotter
@@ -136,12 +139,20 @@ def default_selector() -> DetectorSelector:
     # queda siempre como respaldo para fotos e imágenes.
     reader = text_reader()
     # la lectura de nombres de ambientes es local (sin costo); sin OCR quedan genéricos
-    classic = ClassicCVDetector(RapidOcrSpotter() if ocr_available() else None)
+    classic = ClassicCVDetector(RapidOcrSpotter() if ocr_available() else None, wall_segmenter())
     # una lámina con varias plantas se separa y cada planta pasa por el detector híbrido
     photo = MultiLevelDetector(HybridPhotoDetector(RasterVectorDetector(reader), classic))
     return DetectorSelector(
         [DxfDetector(), VectorPdfDetector(), photo, classic], OpenCVImageInspector()
     )
+
+
+def wall_segmenter() -> WallProbability | None:
+    """Red de muros (ONNX) si está publicada y activada con ``PLANO3D_SEG_MODEL=1``."""
+    if os.environ.get("PLANO3D_SEG_MODEL", "").lower() not in ("1", "true", "si", "sí"):
+        return None
+    seg = WallSegmenter()
+    return seg.probability if seg.available else None
 
 
 def text_reader() -> TextReader | None:

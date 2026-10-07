@@ -24,20 +24,26 @@ from plano3d.infrastructure.cv.stages.room_names import RoomNamesStage, TextSpot
 from plano3d.infrastructure.cv.stages.rooms import RoomsStage
 from plano3d.infrastructure.cv.stages.scale import ScaleStage
 from plano3d.infrastructure.cv.stages.topology import TopologyStage
-from plano3d.infrastructure.cv.stages.walls import VectorizeStage, WallMaskStage
+from plano3d.infrastructure.cv.stages.walls import (
+    VectorizeStage,
+    WallMaskStage,
+    WallProbability,
+)
 
 #: etapas tras las cuales ya hay algo que mostrar en el visor (revelado progresivo)
 PREVIEW_AFTER = {"topology", "rooms"}
 
 
-def default_stages(spotter: TextSpotter | None = None) -> list[PipelineStage[CVContext]]:
+def default_stages(
+    spotter: TextSpotter | None = None, segmenter: WallProbability | None = None
+) -> list[PipelineStage[CVContext]]:
     return [
         IngestStage(),
         SheetLayoutStage(),
         RectifyStage(),
         PreprocessStage(),
         TextSpotStage(spotter),
-        WallMaskStage(),
+        WallMaskStage(segmenter),
         VectorizeStage(),
         ScaleStage(),
         OpeningsStage(),
@@ -66,8 +72,11 @@ class _PreviewTracker:
 class ClassicCVDetector(FloorPlanDetector):
     name = "classic-cv"
 
-    def __init__(self, spotter: TextSpotter | None = None) -> None:
+    def __init__(
+        self, spotter: TextSpotter | None = None, segmenter: WallProbability | None = None
+    ) -> None:
         self._spotter = spotter
+        self._segmenter = segmenter
 
     def supports(self, quality: ImageQuality) -> bool:
         # es la estrategia base: siempre disponible como respaldo
@@ -76,7 +85,7 @@ class ClassicCVDetector(FloorPlanDetector):
     async def detect(
         self, request: DetectionRequest, progress: ProgressPublisher
     ) -> DetectionResult:
-        stages = default_stages(self._spotter)
+        stages = default_stages(self._spotter, self._segmenter)
         pipeline = Pipeline(stages, preview=_PreviewTracker([s.key for s in stages]))
         ctx = CVContext(
             project_id=request.project_id,
