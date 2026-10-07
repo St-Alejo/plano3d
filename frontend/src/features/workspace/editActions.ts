@@ -8,6 +8,7 @@ import type { Wall } from '@/api/types'
 import {
   cloneWalls,
   CompositeCommand,
+  DeleteDimension,
   DeleteOpening,
   DeleteWall,
   InsertWalls,
@@ -34,10 +35,10 @@ export function hasSelection(): boolean {
 }
 
 export function canDelete(): boolean {
-  return state().group.some((g) => g.kind === 'wall' || g.kind === 'opening')
+  return state().group.some((g) => g.kind !== 'room')
 }
 
-/** Elimina muros y aberturas seleccionados en un solo paso de deshacer. */
+/** Elimina muros, aberturas y cotas seleccionados en un solo paso de deshacer. */
 export function deleteSelection(): boolean {
   const s = state()
   const walls = new Set(s.group.filter((g) => g.kind === 'wall').map((g) => g.id))
@@ -46,6 +47,7 @@ export function deleteSelection(): boolean {
   for (const g of s.group)
     if (g.kind === 'opening' && !walls.has(g.wallId)) parts.push(new DeleteOpening(s.levelId, g.wallId, g.id))
   for (const id of walls) parts.push(new DeleteWall(s.levelId, id))
+  for (const g of s.group) if (g.kind === 'dimension') parts.push(new DeleteDimension(s.levelId, g.id))
   if (parts.length === 0) return false
   const n = parts.length
   const cmd = n === 1 ? parts[0]! : new CompositeCommand(`Eliminar ${n} elementos`, parts)

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { AddDimension } from '@/domain/commands'
 import { findWall } from '@/domain/model'
 import { selectLevel, useEditor } from '@/store/editorStore'
 import { sampleModel } from '@/test/fixtures'
@@ -85,6 +86,19 @@ describe('acciones sobre la selección', () => {
     ])
     expect(deleteSelection()).toBe(true)
     expect(useEditor.getState().undoLabel).toBe('Eliminar muro')
+  })
+
+  it('elimina también las cotas seleccionadas', () => {
+    const s = useEditor.getState()
+    const add = new AddDimension('lvl_0', { x: 0, y: 0 }, { x: 2, y: 0 })
+    s.dispatch(add)
+    s.selectMany([
+      { kind: 'dimension', id: add.dimension.id },
+      { kind: 'wall', id: 'w_mid' },
+    ])
+    expect(deleteSelection()).toBe(true)
+    expect(level().dimensions).toEqual([])
+    expect(wallIds()).not.toContain('w_mid')
   })
 
   it('mueve el grupo con las flechas', () => {

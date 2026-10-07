@@ -7,7 +7,7 @@ import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Stage, Tag, Text } from 'react-konva'
 import type { Point, Wall } from '@/api/types'
-import { AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetWallLength } from '@/domain/commands'
+import { AddDimension, AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetWallLength } from '@/domain/commands'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
@@ -202,8 +202,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     if (!stage || !level) return
     const p = pointerPx(stage)
     if (!p) return
-    if (tool === 'wall' || tool === 'calibrate') {
-      const s = tool === 'wall' ? snapWithGuides(p, { candidates, tol: screenTol, grid }) : { point: p, guides: [] }
+    if (tool === 'wall' || tool === 'calibrate' || tool === 'dimension') {
+      const s = tool !== 'calibrate' ? snapWithGuides(p, { candidates, tol: screenTol, grid }) : { point: p, guides: [] }
       setGuides(s.guides)
       setDraft({ a: s.point, b: s.point })
     } else if (tool === 'measure') {
@@ -234,7 +234,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       return
     }
     if (!draft) return
-    const s = tool === 'wall' ? snapWithGuides(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
+    const s = tool !== 'calibrate' ? snapWithGuides(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
     setGuides(s.guides)
     setDraft({ ...draft, b: s.point })
   }
@@ -267,6 +267,17 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       }
     } else if (tool === 'calibrate') {
       onCalibrate(toM(a), toM(b))
+    } else if (tool === 'dimension') {
+      try {
+        const ma = toM(a)
+        const mb = toM(b)
+        const near = (p: Point, q: Point) => Math.hypot(p.x - q.x, p.y - q.y) < 0.01
+        const touched = level.walls.filter((w) => [w.start, w.end].some((e) => near(e, ma) || near(e, mb))).map((w) => w.id)
+        const cmd = new AddDimension(level.id, ma, mb, touched)
+        if (dispatch(cmd)) select({ kind: 'dimension', id: cmd.dimension.id })
+      } catch {
+        /* cota demasiado corta: se ignora */
+      }
     }
   }
 
@@ -504,7 +515,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               points={[draft.a.x, draft.a.y, draft.b.x, draft.b.y]}
               stroke={C.draft}
               strokeWidth={tool === 'wall' ? (level?.walls[0]?.thickness ?? 0.15) / mpp : 2 / view.scale}
-              dash={tool === 'calibrate' ? [8 / view.scale, 5 / view.scale] : undefined}
+              dash={tool === 'wall' ? undefined : [8 / view.scale, 5 / view.scale]}
               lineCap="square"
               listening={false}
             />

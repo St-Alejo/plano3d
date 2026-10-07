@@ -5,6 +5,7 @@ import {
   DeleteOpening,
   DeleteWall,
   RelabelRoom,
+  DeleteDimension,
   SetDimensionValue,
   SetWallAngle,
   SetWallLength,
@@ -136,6 +137,14 @@ export function PropertiesPanel({ onSolve, solving = false }: SolveProps = {}) {
             Ajustar el plano a las cotas
           </Button>
         )}
+        <Button
+          variant="danger"
+          onClick={() => {
+            if (dispatch(new DeleteDimension(level.id, d.id))) select(null)
+          }}
+        >
+          Eliminar cota
+        </Button>
       </div>
     )
   }

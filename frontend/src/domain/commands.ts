@@ -536,3 +536,74 @@ export class InsertWalls implements Command {
     return replaceLevel(model, { ...lv, walls: lv.walls.filter((w) => !ids.has(w.id)) })
   }
 }
+
+/** Distancia mínima de una cota nueva (evita cotas de un clic). */
+export const MIN_DIMENSION = 0.05
+/** separación de la línea de cota respecto de lo que mide, en metros */
+export const DIMENSION_OFFSET = 0.35
+
+/**
+ * Cota dibujada por la persona: mide la distancia actual entre dos puntos. Su valor
+ * se puede corregir luego con la medida real (SetDimensionValue) y el ajuste a cotas
+ * mueve el plano para que cierre.
+ */
+export class AddDimension implements Command {
+  readonly label = 'Agregar cota'
+  readonly dimension: Dimension
+  constructor(
+    private readonly levelId: string,
+    a: Point,
+    b: Point,
+    /** muros que acota (informativo: el solver trabaja con los extremos) */
+    wallIds: string[] = [],
+  ) {
+    const len = Math.hypot(b.x - a.x, b.y - a.y)
+    if (!(len >= MIN_DIMENSION)) throw new CommandError('La cota es demasiado corta')
+    this.dimension = {
+      id: newId('dim'),
+      a,
+      b,
+      axis: 'aligned',
+      offset: DIMENSION_OFFSET,
+      value: len,
+      measured: len,
+      text: len.toFixed(2).replace('.', ','),
+      source: 'manual',
+      status: 'exact',
+      confidence: 1,
+      wall_ids: wallIds,
+    }
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, dimensions: [...(lv.dimensions ?? []), this.dimension] })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, dimensions: (lv.dimensions ?? []).filter((d) => d.id !== this.dimension.id) })
+  }
+}
+
+export class DeleteDimension implements Command {
+  readonly label = 'Eliminar cota'
+  private before: { dim: Dimension; index: number } | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly dimensionId: string,
+  ) {}
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const dims = lv.dimensions ?? []
+    const index = dims.findIndex((d) => d.id === this.dimensionId)
+    if (index < 0) throw new CommandError('La cota no existe')
+    this.before = { dim: dims[index]!, index }
+    return replaceLevel(model, { ...lv, dimensions: dims.filter((d) => d.id !== this.dimensionId) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    if (!this.before) return model
+    const lv = findLevel(model, this.levelId)
+    const dims = [...(lv.dimensions ?? [])]
+    dims.splice(this.before.index, 0, this.before.dim)
+    return replaceLevel(model, { ...lv, dimensions: dims })
+  }
+}
