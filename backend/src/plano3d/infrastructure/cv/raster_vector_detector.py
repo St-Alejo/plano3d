@@ -329,7 +329,12 @@ class RasterVectorDetector(FloorPlanDetector):
             "meters_per_pixel": model.scale.meters_per_pixel,
         }
         img = cv.require(cv.rectified, "rectified")
-        return DetectionResult(model=model, rectified_png=encode_png(img), metrics=metrics)
+        return DetectionResult(
+            model=model,
+            rectified_png=encode_png(img),
+            metrics=metrics,
+            image_transform=tuple(float(v) for v in cv.transform.ravel()),
+        )
 
 
 class HybridPhotoDetector(FloorPlanDetector):
@@ -374,4 +379,9 @@ class HybridPhotoDetector(FloorPlanDetector):
                 ),
             )
         metrics = {**second.metrics, "fallback_classic": 1.0}
-        return DetectionResult(model=model, rectified_png=second.rectified_png, metrics=metrics)
+        return DetectionResult(
+            model=model,
+            rectified_png=second.rectified_png,
+            metrics=metrics,
+            image_transform=second.image_transform,
+        )

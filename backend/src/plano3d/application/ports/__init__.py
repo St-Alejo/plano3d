@@ -46,6 +46,10 @@ class DetectionResult:
     model: BuildingModel
     rectified_png: bytes
     metrics: dict[str, float] = field(default_factory=dict)
+    #: homografía 3x3 (por filas) de píxeles de la imagen SUBIDA → píxeles de la rectificada.
+    #: Permite llevar el modelo (metros = px rectificados por escala) de vuelta a la imagen
+    #: original: evaluación contra verdad anotada y datos de entrenamiento alineados.
+    image_transform: tuple[float, ...] | None = None
 
 
 class ProgressPublisher(ABC):

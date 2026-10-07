@@ -1,0 +1,65 @@
+{
+  "case": "casa1",
+  "detector": "raster-vector",
+  "metrics": {
+    "walls": 7.0,
+    "rooms": 1.0,
+    "meters_per_pixel": 0.013849493487698986,
+    "fallback_classic": 1.0
+  },
+  "scale": {
+    "mpp": 0.009674100623921413,
+    "source": "dimensions",
+    "error": 0.0042
+  },
+  "levels_det": 1,
+  "levels_gt": 1,
+  "levels": [
+    {
+      "name": "Planta 1",
+      "walls_det": 7,
+      "walls_gt": 8,
+      "wall_p": 1.0,
+      "wall_r": 0.923,
+      "wall_f1": 0.96,
+      "wall_f1_ends": 0.533,
+      "open_p": 1.0,
+      "open_r": 0.714,
+      "open_det": 5,
+      "open_gt": 7,
+      "rooms_det": 1,
+      "rooms_gt": 3,
+      "room_iou": 0.325,
+      "names_ok": 0,
+      "rooms": [
+        {
+          "truth": "baño",
+          "iou": 0.238,
+          "label": "Espacio 1",
+          "name_ok": false
+        },
+        {
+          "truth": "dormitorio",
+          "iou": 0.737,
+          "label": "Espacio 1",
+          "name_ok": false
+        },
+        {
+          "truth": "cocina",
+          "iou": 0.0,
+          "label": "",
+          "name_ok": false
+        }
+      ]
+    }
+  ],
+  "when": "2026-10-06T23:43:53",
+  "pass": {
+    "scale": true,
+    "levels": true,
+    "Planta 1: muros": true,
+    "Planta 1: aberturas": false,
+    "Planta 1: ambientes": false,
+    "Planta 1: nombres": false
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Casa 1: planta técnica de un ambiente con baño, dormitorio y cocina-sala abierta. Medidas exactas tomadas de sus cotas (5,00 × 5,80 m construidos + terraza de acceso de 1,20 m). Muros: ejes en metros desde la esquina superior izquierda exterior.",
+  "image": "plano.jpg",
+  "px_per_m": 103.8,
+  "origin_px": [216, 163],
+  "has_dimensions": true,
+  "scale_tolerance": 0.02,
+  "levels": [
+    {
+      "name": "Planta 1",
+      "walls": [
+        { "a": [0.05, 0.10], "b": [2.55, 0.10], "t": 0.20, "openings": [] },
+        { "a": [2.55, 0.05], "b": [4.95, 0.05], "t": 0.10, "openings": [{ "kind": "door", "from": 0.75, "to": 1.65 }] },
+        { "a": [4.95, 0.05], "b": [4.95, 5.75], "t": 0.10, "openings": [{ "kind": "window", "from": 1.20, "to": 2.70 }] },
+        {
+          "a": [4.95, 5.75], "b": [0.05, 5.75], "t": 0.10,
+          "openings": [{ "kind": "door", "from": 0.15, "to": 2.05 }, { "kind": "window", "from": 3.05, "to": 4.25 }]
+        },
+        { "a": [0.05, 5.75], "b": [0.05, 0.10], "t": 0.10, "openings": [{ "kind": "window", "from": 4.60, "to": 5.20 }] },
+        { "a": [2.55, 0.10], "b": [2.55, 5.75], "t": 0.10, "openings": [{ "kind": "door", "from": 2.11, "to": 3.09 }] },
+        { "a": [0.05, 1.55], "b": [2.55, 1.55], "t": 0.10, "openings": [{ "kind": "door", "from": 1.66, "to": 2.44 }] },
+        { "a": [1.65, 1.55], "b": [1.65, 2.20], "t": 0.10, "openings": [] }
+      ],
+      "rooms": [
+        { "names": ["baño", "bano", "bathroom"], "polygon": [[0.10, 0.20], [2.50, 0.20], [2.50, 1.50], [0.10, 1.50]] },
+        {
+          "names": ["dormitorio", "bedroom", "alcoba", "habitación", "habitacion"],
+          "polygon": [[0.10, 1.60], [1.60, 1.60], [1.60, 2.20], [1.70, 2.20], [1.70, 1.60], [2.50, 1.60], [2.50, 5.70], [0.10, 5.70]]
+        },
+        {
+          "names": ["cocina", "sala", "kitchen", "living", "cocina / sala", "sala-cocina"],
+          "polygon": [[2.60, 0.10], [4.90, 0.10], [4.90, 5.70], [2.60, 5.70]]
+        }
+      ]
+    }
+  ]
+}

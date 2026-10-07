@@ -83,4 +83,9 @@ class ClassicCVDetector(FloorPlanDetector):
             "rooms": float(sum(len(lv.rooms) for lv in model.levels)),
             "meters_per_pixel": model.scale.meters_per_pixel,
         }
-        return DetectionResult(model=model, rectified_png=encode_png(rectified), metrics=metrics)
+        return DetectionResult(
+            model=model,
+            rectified_png=encode_png(rectified),
+            metrics=metrics,
+            image_transform=tuple(float(v) for v in ctx.transform.ravel()),
+        )
