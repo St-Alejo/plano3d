@@ -5,6 +5,7 @@ export const STAGES: { key: string; title: string }[] = [
   { key: 'layout', title: 'Análisis de la lámina' },
   { key: 'rectify', title: 'Corrección de perspectiva' },
   { key: 'preprocess', title: 'Limpieza y binarización' },
+  { key: 'texts', title: 'Lectura de textos' },
   { key: 'walls', title: 'Detección de muros' },
   { key: 'vectorize', title: 'Vectorización' },
   { key: 'scale', title: 'Estimación de escala' },
@@ -27,6 +28,7 @@ export const METRIC_LABELS: Record<string, (v: number) => string> = {
   room_count: (v) => `${v} ambientes`,
   discarded_fraction: (v) => (v ? `${Math.round(v * 100)} % descartado (fotos)` : 'lámina completa'),
   named_rooms: (v) => `${v} con nombre`,
+  text_count: (v) => `${v} textos`,
   mean_confidence: (v) => `confianza ${(v * 100).toFixed(0)}%`,
   total_area_m2: (v) => `${v.toFixed(1)} m²`,
 }
