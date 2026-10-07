@@ -117,7 +117,7 @@ export function PlanElements({ level, mpp, scale, selection, onSelect, interacti
               text={d.status === 'conflict' ? `${text} ⚠` : text}
               rotation={readable}
               fontSize={font}
-              fontFamily="IBM Plex Mono"
+              fontFamily="Geist Mono"
               fontStyle={sel ? 'bold' : 'normal'}
               fill={color}
               offsetX={(text.length * font * 0.6) / 2}

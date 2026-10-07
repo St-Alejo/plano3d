@@ -13,14 +13,14 @@ const STEPS = ['Elegir el plano', 'Revisar y nombrar', 'Convertir a 3D'] as cons
 /** Indicador de pasos de la captura, numerado como las figuras de la lámina. */
 function CaptureSteps({ current }: { current: number }) {
   return (
-    <ol aria-label="Pasos" className="mb-6 flex gap-2 font-mono text-xs">
+    <ol aria-label="Pasos" className="mb-8 flex gap-2 text-sm">
       {STEPS.map((label, i) => (
         <li
           key={label}
           aria-current={i === current ? 'step' : undefined}
-          className={`flex-1 border-t-2 pt-2 ${i < current ? 'border-accent-dim text-muted' : i === current ? 'border-brand text-fg' : 'border-line text-subtle'}`}
+          className={`flex-1 border-t-2 pt-2.5 transition-colors duration-300 ${i < current ? 'border-accent-dim text-muted' : i === current ? 'border-brand font-medium text-fg' : 'border-line-strong text-subtle'}`}
         >
-          <span className="mr-1.5">{String(i + 1).padStart(2, '0')}</span>
+          <span className="mr-1.5 font-mono text-xs">{String(i + 1).padStart(2, '0')}</span>
           <span className="hidden sm:inline">{label}</span>
         </li>
       ))}
@@ -114,9 +114,9 @@ export function NewPlanPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      <p className="font-mono text-xs tracking-[0.16em] text-subtle uppercase">02 — Captura</p>
-      <h1 className="mt-2 mb-6 font-serif text-5xl leading-none font-normal tracking-tight">Nuevo plano</h1>
+    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+      <p className="font-mono text-xs font-medium tracking-[0.04em] text-accent uppercase">Captura</p>
+      <h1 className="mt-3 mb-8 text-5xl leading-[0.95] tracking-[-0.045em]">Nuevo plano</h1>
       <CaptureSteps current={sending ? 2 : file ? 1 : 0} />
 
       <input
@@ -148,13 +148,15 @@ export function NewPlanPage() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className={`corner-ticks blueprint-grid flex flex-col items-center gap-6 border px-6 py-14 text-center transition ${
-            dragOver ? 'border-accent bg-accent/5' : 'border-line'
+          className={`blueprint-grid flex flex-col items-center gap-6 rounded-2xl border-2 border-dashed bg-surface/70 px-6 py-16 text-center transition-[border-color,background-color] duration-300 ${
+            dragOver ? 'border-accent bg-accent/5' : 'border-line-strong hover:border-accent-dim'
           }`}
         >
-          <ScanLine className="size-12 text-accent" aria-hidden />
+          <span className="grid size-16 place-items-center rounded-2xl bg-accent/10">
+            <ScanLine className="size-8 text-accent" aria-hidden />
+          </span>
           <div>
-            <h2 className="text-lg font-semibold">Fotografía el plano desde arriba</h2>
+            <h2 className="text-xl tracking-[-0.02em]">Fotografía el plano desde arriba</h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted">
               Que se vea la hoja completa, con buena luz y sin reflejos. La perspectiva se corrige sola.
             </p>
@@ -173,7 +175,7 @@ export function NewPlanPage() {
 
       {file && (
         <div className="flex flex-col gap-6">
-          <div className="corner-ticks border border-line bg-surface p-3">
+          <div className="rounded-2xl border border-line bg-surface p-3 shadow-xs">
             {preview && manual && <CornerEditor src={preview} corners={corners} onChange={setCorners} />}
             {preview && !manual && <img src={preview} alt="Vista previa del plano" className="mx-auto max-h-[60vh] object-contain" />}
             {!preview && (
@@ -207,9 +209,9 @@ export function NewPlanPage() {
               aria-valuenow={Math.round(progress * 100)}
               aria-valuemin={0}
               aria-valuemax={100}
-              className="h-1 w-full overflow-hidden bg-raised"
+              className="h-1 w-full overflow-hidden rounded-full bg-raised"
             >
-              <div className="h-full bg-accent transition-[width]" style={{ width: `${progress * 100}%` }} />
+              <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${progress * 100}%` }} />
             </div>
           )}
 
@@ -227,7 +229,7 @@ export function NewPlanPage() {
       )}
 
       {error && (
-        <p role="alert" className="mt-4 border-l-2 border-danger pl-3 text-sm text-danger">
+        <p role="alert" className="mt-4 rounded-lg bg-danger/8 px-3 py-2 text-sm text-danger">
           {error}
         </p>
       )}

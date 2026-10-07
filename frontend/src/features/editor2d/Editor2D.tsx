@@ -20,17 +20,17 @@ import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
 
 const LOW_CONFIDENCE = 0.6
 const C = {
-  wall: '#11294d',
-  wallSel: '#5fd4e8',
-  door: '#e8a23d',
-  window: '#3a8fa3',
-  roomOk: 'rgba(95,212,232,0.10)',
-  roomLow: 'rgba(232,162,61,0.20)',
-  roomSel: 'rgba(95,212,232,0.28)',
-  text: '#122036',
-  draft: '#e8a23d',
-  guide: '#e2531b',
-  hit: '#c0392b',
+  wall: '#1c1f1d',
+  wallSel: '#23845f',
+  door: '#c47a12',
+  window: '#3d7ea6',
+  roomOk: 'rgba(47,107,85,0.07)',
+  roomLow: 'rgba(196,122,18,0.16)',
+  roomSel: 'rgba(35,132,95,0.22)',
+  text: '#1c1f1d',
+  draft: '#23845f',
+  guide: '#d9480f',
+  hit: '#b3261e',
 }
 
 function useImage(url: string | undefined): HTMLImageElement | undefined {
@@ -403,7 +403,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   <Text
                     text={`${r.label}\n${roomArea(r).toFixed(1)} m²`}
                     fontSize={fontPx}
-                    fontFamily="IBM Plex Sans"
+                    fontFamily="Geist"
                     fill={C.text}
                     align="center"
                     padding={4 / view.scale}
@@ -449,8 +449,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       text={txt}
                       rotation={ang}
                       fontSize={11 / view.scale}
-                      fontFamily="IBM Plex Mono"
-                      fill="#2a6674"
+                      fontFamily="Geist Mono"
+                      fill="#2f6b55"
                       offsetX={(txt.length * 11 * 0.6) / view.scale / 2}
                       offsetY={11 / view.scale / 2}
                       listening={false}
@@ -558,7 +558,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   x={p.x}
                   y={p.y}
                   radius={8 / view.scale}
-                  fill="#070f22"
+                  fill="#ffffff"
                   stroke={C.wallSel}
                   strokeWidth={2.5 / view.scale}
                   draggable

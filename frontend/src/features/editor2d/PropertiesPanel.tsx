@@ -17,7 +17,6 @@ import {
 import { roomArea, wallDirection, wallLength } from '@/domain/model'
 import { modelQA, type QAIssue } from '@/domain/qa'
 import { GRID_STEPS, type Selection } from '@/store/editorStore'
-import { DIM_COLORS } from './PlanElements'
 import { FurnitureInspector, MaterialSelect } from './FurnitureInspector'
 import { FLOOR_MATERIALS, WALL_MATERIALS } from '@/domain/materials'
 import { Badge, Button, TextField } from '@/components/ui'
@@ -291,11 +290,11 @@ function DimensionsSummary({ dims, onSolve, solving, onSelect }: {
     <section aria-label="Cotas del plano" className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold">Cotas del plano</h3>
       <p className="font-mono text-xs">
-        <span style={{ color: DIM_COLORS.exact }}>{count('exact')} exactas</span>
+        <span className="text-ok">{count('exact')} exactas</span>
         {' · '}
-        <span style={{ color: DIM_COLORS.inferred }}>{count('inferred')} por verificar</span>
+        <span className="text-muted">{count('inferred')} por verificar</span>
         {' · '}
-        <span style={{ color: DIM_COLORS.conflict }}>{count('conflict')} en conflicto</span>
+        <span className="text-danger">{count('conflict')} en conflicto</span>
       </p>
       {conflicts.length > 0 && (
         <ul className="flex flex-col gap-1 text-xs">

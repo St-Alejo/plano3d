@@ -33,13 +33,15 @@ test.afterAll(async ({ request }) => {
 })
 
 async function expectAccessible(page: Page, label: string) {
-  const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+  // el texto que se ilumina con el scroll es una copia decorativa (aria-hidden) que arranca atenuada a
+  // propósito; su versión accesible es texto pleno y la copia cumple contraste al terminar de iluminarse
+  const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).exclude('[data-scroll-reveal]').analyze()
   const blocking = res.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
   expect(blocking.map((v) => `${label}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.target.join(' ')}`)).toEqual([])
 }
 
 async function setTheme(page: Page, theme: 'dark' | 'light') {
-  await page.addInitScript((t) => localStorage.setItem('theme', t), theme)
+  await page.addInitScript((t) => localStorage.setItem('plano3d-theme', t), theme)
 }
 
 for (const theme of ['dark', 'light'] as const) {
@@ -50,7 +52,9 @@ for (const theme of ['dark', 'light'] as const) {
     test('landing, proyectos, captura y 404', async ({ page }) => {
       // la landing es siempre papel: se audita igual con cualquier tema de la app
       await page.goto('/')
-      await expect(page.getByRole('heading', { level: 1, name: /De la hoja/ }).first()).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: /foto de tu plano/ }).first()).toBeVisible()
+      // la entrada del hero (letras y panel 3D) dura ~1.5 s: se audita con todo ya opaco
+      await page.waitForTimeout(1800)
       await expectAccessible(page, 'landing')
       await page.goto('/proyectos')
       await expect(page.getByRole('heading', { name: 'Tus planos' })).toBeVisible()

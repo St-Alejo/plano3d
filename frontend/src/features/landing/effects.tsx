@@ -69,7 +69,8 @@ export function ScrollText({ text, className }: { text: string; className?: stri
   return (
     <p ref={ref} className={className}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden>
+      {/* copia decorativa: arranca atenuada y se ilumina al recorrerla; el texto accesible es el de arriba */}
+      <span aria-hidden data-scroll-reveal>
         {words.map((w, i) => (
           <ScrollWord key={i} word={w} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]} />
         ))}

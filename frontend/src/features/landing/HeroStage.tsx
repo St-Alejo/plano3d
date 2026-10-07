@@ -173,7 +173,7 @@ function AnimatedHero({ model, plan, actions }: { model: BuildingModel; plan: Re
               <Suspense fallback={plan}>
                 <HeroScene model={model} progress={scrollYProgress} />
               </Suspense>
-              <p className="label pointer-events-none absolute bottom-3 left-3 rounded-full bg-(--l-paper)/90 px-3 py-1.5 text-(--l-graphite) shadow-sm">
+              <p className="label pointer-events-none absolute bottom-3 left-3 rounded-full bg-(--l-paper) px-3 py-1.5 text-(--l-ink) shadow-sm">
                 {caption}
               </p>
             </Panel>

@@ -195,9 +195,9 @@ function MeasureMarks({ points }: { points: [number, number, number][] }) {
   )
 }
 
-/** Color de fondo del visor coherente con el tema (oscuro: noche de plano; claro: papel). */
+/** Color de fondo del visor coherente con el tema (claro: papel; oscuro: carbón). */
 function useThemeSky(): string {
-  const read = () => (document.documentElement.dataset.theme === 'light' ? '#dfe3d6' : '#070f22')
+  const read = () => (document.documentElement.dataset.theme === 'light' ? '#e9e9e3' : '#151816')
   const [sky, setSky] = useState(read)
   useEffect(() => {
     const obs = new MutationObserver(() => setSky(read()))
@@ -253,7 +253,7 @@ export function Viewer3D({
       >
         <color attach="background" args={[sky]} />
         <fog attach="fog" args={[sky, 30, 120]} />
-        <Lights model={model} ground={sky === '#070f22' ? '#132640' : '#c9cebf'} sun={sun} />
+        <Lights model={model} ground={sky === '#151816' ? '#202421' : '#d5d6cd'} sun={sun} />
         <SectionClip height={section} />
         <BuildingMesh
           model={model}
