@@ -10,6 +10,7 @@ from plano3d.infrastructure.cv.stages.openings import (
     bridge_end_gaps,
     classify_gap,
     door_swing_evidence,
+    merge_openings,
     sliding_door_evidence,
     window_line_evidence,
 )
@@ -88,3 +89,12 @@ def test_ventana_corrediza_con_alfeizar_sigue_siendo_ventana() -> None:
     cv2.line(ink, (100, 201), (300, 201), 255, 1)
     assert sliding_door_evidence(ink, (100, 200), (300, 200), 14) == 0.0
     assert classify_gap(ink, (100, 200), (300, 200), 14)[0] == "window"
+
+
+def test_vano_entre_tramos_con_corrediza_queda_marcado() -> None:
+    ink = _canvas()
+    _hojas_desfasadas(ink)
+    walls = [Segment(20, 200, 100, 200, 14), Segment(300, 200, 380, 200, 14)]
+    (wall,) = merge_openings(walls, 14, MPP, ink)
+    (o,) = wall.openings
+    assert (o.kind, o.operation) == ("door", "sliding")

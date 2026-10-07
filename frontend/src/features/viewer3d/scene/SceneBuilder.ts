@@ -7,7 +7,7 @@
  */
 import * as THREE from 'three'
 import type { BuildingModel, Level } from '@/api/types'
-import { curvedWallBoxes, doorLeaf, roomShapePoints, stairSteps, wallToBoxes } from '@/domain/geometry'
+import { curvedWallBoxes, doorLeaf, roomShapePoints, slidingLeaves, stairSteps, wallToBoxes } from '@/domain/geometry'
 import { pointAlong, wallDirection } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
@@ -148,14 +148,16 @@ export class SceneBuilder {
       for (const w of lv.walls) {
         if (w.bulge) continue
         for (const o of w.openings.filter((x) => x.kind === 'door' && x.operation !== 'none')) {
-          const leaf = doorLeaf(w, o)
-          const mesh = new THREE.Mesh(new THREE.BoxGeometry(...leaf.size), this.materials.door())
-          mesh.position.set(leaf.center[0], lv.elevation + leaf.center[1], leaf.center[2])
-          mesh.rotation.y = leaf.rotationY
-          mesh.castShadow = true
-          mesh.name = `door:${o.id}`
-          mesh.userData = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
-          this.elements.add(mesh)
+          const leaves = o.operation === 'sliding' ? slidingLeaves(w, o) : [doorLeaf(w, o)]
+          for (const leaf of leaves) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(...leaf.size), this.materials.door())
+            mesh.position.set(leaf.center[0], lv.elevation + leaf.center[1], leaf.center[2])
+            mesh.rotation.y = leaf.rotationY
+            mesh.castShadow = true
+            mesh.name = `door:${o.id}`
+            mesh.userData = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
+            this.elements.add(mesh)
+          }
         }
       }
     }

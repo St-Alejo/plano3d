@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { door, rect, wall, windowOp } from '@/test/fixtures'
 import { obstaclesFromWalls, resolveCollision } from './collision'
 import {
+  type StepBox,
   boxVolume,
   curvedWallBoxes,
   doorLeaf,
+  slidingLeaves,
   roomShapePoints,
   stairSteps,
   tourWaypoints,
@@ -169,5 +171,16 @@ describe('modelo v2 en 3D', () => {
     expect(Math.sign(left.center[2])).toBe(-Math.sign(right.center[2]))
     expect(left.center[0]).toBeGreaterThan(1)
     expect(left.center[0]).toBeLessThan(1.9)
+  })
+})
+
+describe('slidingLeaves', () => {
+  it('pone dos hojas que cubren el vano, una a cada lado del eje', () => {
+    const w = { start: { x: 0, y: 0 }, end: { x: 4, y: 0 }, thickness: 0.12 }
+    const [a, b] = slidingLeaves(w, { offset: 1, width: 2, height: 2.1 }) as [StepBox, StepBox]
+    expect(a.center[0] - a.size[0] / 2).toBeCloseTo(1)
+    expect(b.center[0] + b.size[0] / 2).toBeCloseTo(3)
+    expect(Math.sign(a.center[2])).toBe(-Math.sign(b.center[2]))
+    expect(a.size[0] + b.size[0]).toBeGreaterThan(2) // se solapan en el centro
   })
 })

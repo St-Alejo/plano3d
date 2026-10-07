@@ -8,7 +8,7 @@ eso se mira cuánta tinta fina hay DENTRO de la banda del muro en el hueco.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import cv2
 import numpy as np
@@ -111,6 +111,14 @@ def sliding_door_evidence(
     return min(only_left, only_right)
 
 
+def _operation(
+    kind: str, ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
+) -> str | None:
+    if kind == "door" and sliding_door_evidence(ink, a, b, thickness) >= SLIDING_EVIDENCE:
+        return "sliding"
+    return None
+
+
 def classify_gap(
     ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
 ) -> tuple[str, float]:
@@ -179,16 +187,14 @@ def merge_openings(segments: list[Segment], t: float, mpp: float, ink: Img) -> l
                     cur.thickness * w_cur + nxt.thickness * (1 - w_cur),
                     min(cur.confidence, nxt.confidence),
                     cur.openings
-                    + [
-                        PxOpening(o.offset + (nxt.start - cur.start), o.width, o.kind, o.confidence)
-                        for o in nxt.openings
-                    ],
+                    + [replace(o, offset=o.offset + (nxt.start - cur.start)) for o in nxt.openings],
                 )
                 if gap > min_gap:
                     a = (ux * cur.end + nx * cur.offset, uy * cur.end + ny * cur.offset)
                     b = (ux * nxt.start + nx * cur.offset, uy * nxt.start + ny * cur.offset)
                     kind, conf = classify_gap(ink, a, b, merged.thickness)
-                    merged.openings.append(PxOpening(cur.end - cur.start, gap, kind, conf))
+                    op = _operation(kind, ink, a, b, merged.thickness)
+                    merged.openings.append(PxOpening(cur.end - cur.start, gap, kind, conf, op))
                 cur = merged
             else:
                 emit(cur)
@@ -332,6 +338,7 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
             a = (ex, ey)
             b = (ex + ux * free, ey + uy * free)
             kind, conf = classify_gap(ink, a, b, s.thickness)
+            sliding: str | None = None
             swing = max(
                 door_swing_evidence(thin, a, (ux, uy), free),
                 door_swing_evidence(thin, b, (-ux, -uy), free),
@@ -340,7 +347,7 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
             # cualquier línea del plano por casualidad
             if swing >= SWING_EVIDENCE and kind == "door" and free * mpp <= MAX_SWING_DOOR_M:
                 conf = max(conf, 0.85)
-            elif sliding_door_evidence(ink, a, b, s.thickness) >= SLIDING_EVIDENCE:
+            elif (sliding := _operation("door", ink, a, b, s.thickness)) is not None:
                 kind, conf = "door", max(conf, 0.8)
             elif window_line_evidence(thin, a, b, s.thickness) >= WINDOW_LINE_EVIDENCE:
                 kind, conf = "window", max(conf, 0.8)
@@ -348,14 +355,12 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
                 continue  # sin arco, hoja ni líneas de ventana: no se inventa la abertura
             nx, ny = ex + ux * along, ey + uy * along
             if end:
-                ops = [*s.openings, PxOpening(s.length, free, kind, conf)]
+                ops = [*s.openings, PxOpening(s.length, free, kind, conf, sliding)]
                 out[i] = Segment(s.x1, s.y1, nx, ny, s.thickness, ops, s.confidence)
             else:
                 shift = along
-                ops = [
-                    PxOpening(o.offset + shift, o.width, o.kind, o.confidence) for o in s.openings
-                ]
-                ops.insert(0, PxOpening(along - free, free, kind, conf))
+                ops = [replace(o, offset=o.offset + shift) for o in s.openings]
+                ops.insert(0, PxOpening(along - free, free, kind, conf, sliding))
                 out[i] = Segment(nx, ny, s.x2, s.y2, s.thickness, ops, s.confidence)
             s = out[i]
     return out

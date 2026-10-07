@@ -190,3 +190,23 @@ export function doorLeaf(w: Pick<Wall, 'start' | 'end' | 'thickness'>, o: Openin
     rotationY: -a,
   }
 }
+
+/**
+ * Puerta corrediza: dos hojas cerradas que se solapan un poco en el centro, cada una a
+ * un lado del eje del muro (como se dibujan en planta).
+ */
+export function slidingLeaves(w: Pick<Wall, 'start' | 'end' | 'thickness'>, o: OpeningLike): StepBox[] {
+  const dir = wallDirection(w)
+  const n = { x: -dir.y, y: dir.x }
+  const leaf = o.width * 0.55
+  const depth = w.thickness / 4
+  const rotationY = -Math.atan2(dir.y, dir.x)
+  return [
+    { at: o.offset + leaf / 2, side: -1 },
+    { at: o.offset + o.width - leaf / 2, side: 1 },
+  ].map(({ at, side }) => ({
+    center: [w.start.x + dir.x * at + n.x * depth * side, o.height / 2, w.start.y + dir.y * at + n.y * depth * side],
+    size: [leaf, o.height, 0.03],
+    rotationY,
+  }))
+}

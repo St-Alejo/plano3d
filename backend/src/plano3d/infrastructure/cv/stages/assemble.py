@@ -12,6 +12,7 @@ from plano3d.domain import (
     Level,
     Opening,
     OpeningKind,
+    OpeningOperation,
     Point2D,
     Room,
     Scale,
@@ -20,6 +21,7 @@ from plano3d.domain import (
     new_id,
 )
 from plano3d.domain.errors import DomainError
+from plano3d.domain.plan_text import room_type_from_name
 from plano3d.infrastructure.cv.context import CVContext, PxRoom, Segment
 
 log = logging.getLogger(__name__)
@@ -43,6 +45,7 @@ def _wall(s: Segment, mpp: float) -> Wall | None:
                 height=DOOR_HEIGHT if is_door else WINDOW_HEIGHT,
                 sill=0.0 if is_door else WINDOW_SILL,
                 confidence=round(op.confidence, 3),
+                operation=OpeningOperation(op.operation) if op.operation else None,
             )
         )
     try:
@@ -76,6 +79,7 @@ def _room(r: PxRoom, mpp: float) -> Room | None:
             label=r.label,
             polygon=tuple(Point2D(float(x), float(y)) for x, y in coords),
             confidence=round(r.confidence, 3),
+            room_type=room_type_from_name(r.label),
         )
     except DomainError as exc:
         log.warning("Habitación descartada: %s", exc)

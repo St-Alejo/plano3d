@@ -25,6 +25,7 @@ class PxOpening:
     width: float
     kind: str  # "door" | "window"
     confidence: float
+    operation: str | None = None  # "sliding" cuando se reconocen hojas corredizas
 
 
 @dataclass

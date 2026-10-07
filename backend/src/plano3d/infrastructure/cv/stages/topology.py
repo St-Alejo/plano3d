@@ -7,8 +7,10 @@ las esquinas no se solapan ni dejan huecos.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from plano3d.application.pipeline import PipelineStage
-from plano3d.infrastructure.cv.context import CVContext, PxOpening, Segment
+from plano3d.infrastructure.cv.context import CVContext, Segment
 
 MIN_ANGLE_DEG = 20.0
 SNAP_FACTOR = 1.25
@@ -60,10 +62,7 @@ def snap_endpoints(segments: list[Segment], wall_thickness: float) -> list[Segme
                 ux, uy = s.direction
                 shift = (nx_ - s.x1) * ux + (ny_ - s.y1) * uy
                 s.x1, s.y1 = nx_, ny_
-                s.openings = [
-                    PxOpening(op.offset - shift, op.width, op.kind, op.confidence)
-                    for op in s.openings
-                ]
+                s.openings = [replace(op, offset=op.offset - shift) for op in s.openings]
             else:
                 s.x2, s.y2 = nx_, ny_
     return [_clamp_openings(s) for s in segs if s.length >= 1.5 * wall_thickness or s.openings]
@@ -75,7 +74,7 @@ def _clamp_openings(s: Segment) -> Segment:
         start = max(0.0, op.offset)
         end = min(s.length, op.offset + op.width)
         if end - start > 1.0:
-            kept.append(PxOpening(start, end - start, op.kind, op.confidence))
+            kept.append(replace(op, offset=start, width=end - start))
     s.openings = kept
     return s
 
