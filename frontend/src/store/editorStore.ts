@@ -78,7 +78,12 @@ interface EditorState {
   setViewMode: (mode: ViewMode) => void
   setPointer: (cursor: Point | null, zoom?: number) => void
   setBrush: (brush: Partial<{ wall: string; floor: string }>) => void
-  markSaved: (revision?: number) => void
+  /**
+   * Marca como guardada la posición `head` del historial (por defecto la actual). Al
+   * guardar en segundo plano hay que pasar la posición que se envió: lo editado mientras
+   * viajaba la petición sigue pendiente.
+   */
+  markSaved: (revision?: number, head?: Command | null) => void
   setGridStep: (step: number) => void
   toggleDimensions: () => void
   clearError: () => void
@@ -201,7 +206,8 @@ export const useEditor = create<EditorState>()((set, get) => {
     setViewMode: (viewMode) => set({ viewMode }),
     setPointer: (cursor, zoom) => set(zoom === undefined ? { cursor } : { cursor, zoom }),
     setBrush: (brush) => set({ brush: { ...get().brush, ...brush } }),
-    markSaved: (revision) => set({ savedHead: get().head, ...(revision !== undefined ? { revision } : {}) }),
+    markSaved: (revision, head) =>
+      set({ savedHead: head === undefined ? get().head : head, ...(revision !== undefined ? { revision } : {}) }),
     setGridStep: (gridStep) => set({ gridStep }),
     toggleDimensions: () => set({ showDimensions: !get().showDimensions }),
     clearError: () => set({ error: null }),

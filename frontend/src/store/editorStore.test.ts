@@ -130,3 +130,23 @@ describe('ambientes derivados en el store', () => {
     expect(useEditor.getState()).toMatchObject({ gridStep: 0.1, showDimensions: false })
   })
 })
+
+describe('guardado en segundo plano', () => {
+  beforeEach(() => useEditor.getState().reset())
+
+  it('lo editado mientras se guardaba queda pendiente', () => {
+    const st = useEditor.getState()
+    st.load('prj_1', sampleModel())
+    st.dispatch(new RelabelRoom(L, 'r_b', 'Cocina'))
+    const sent = useEditor.getState().head
+    // llega otra edición antes de que responda el servidor
+    st.dispatch(new RelabelRoom(L, 'r_b', 'Baño'))
+    useEditor.getState().markSaved(7, sent)
+    const s = useEditor.getState()
+    expect(s.revision).toBe(7)
+    expect(selectIsDirty(s)).toBe(true)
+    // deshacer hasta lo enviado deja el editor limpio
+    s.undo()
+    expect(selectIsDirty(useEditor.getState())).toBe(false)
+  })
+})

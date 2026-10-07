@@ -80,9 +80,11 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
       if (!m || (!force && !selectIsDirty(st))) return true
       setSaving(true)
       setSaveError(null)
+      // la posición del historial que se envía: lo que se edite mientras viaja sigue sin guardar
+      const sent = st.head
       try {
         const saved = await api.saveModel(project.id, m, force ? '*' : st.revision, st.undoLabel ?? 'Corrección manual')
-        markSaved(saved.revision)
+        markSaved(saved.revision, sent)
         setConflict(null)
         return true
       } catch (e) {
