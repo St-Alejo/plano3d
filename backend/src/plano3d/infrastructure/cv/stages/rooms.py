@@ -20,7 +20,15 @@ MIN_ROOM_M2 = 1.0
 MIN_ROOM_WIDTH_M = 0.6
 
 
-def closed_wall_mask(shape: tuple[int, int], segments: list[Segment], raw: Img | None) -> Img:
+#: un vano vacío al menos así de ancho comunica dos espacios (vestíbulo→sala): no los divide
+PASSAGE_MIN_M = 1.2
+#: confianza de escala desde la cual se miden pasos (por puertas: 0,5; por cotas: más)
+RELIABLE_SCALE = 0.5
+
+
+def closed_wall_mask(
+    shape: tuple[int, int], segments: list[Segment], raw: Img | None, mpp: float = 0.0
+) -> Img:
     mask = np.zeros(shape, np.uint8)
     for s in segments:
         draw_segment(mask, s, extend=True)
@@ -30,7 +38,7 @@ def closed_wall_mask(shape: tuple[int, int], segments: list[Segment], raw: Img |
     for s in segments:
         dx, dy = s.direction
         for o in s.openings:
-            if o.operation != "none":
+            if o.operation != "none" or o.width * mpp < PASSAGE_MIN_M:
                 continue
             a0, a1 = o.offset + s.thickness / 2, o.offset + o.width - s.thickness / 2
             span = Segment(
@@ -77,7 +85,12 @@ class RoomsStage(PipelineStage[CVContext]):
 
     def run(self, ctx: CVContext) -> CVContext:
         img = ctx.require(ctx.rectified, "rectified")
-        walls = closed_wall_mask(img.shape[:2], ctx.segments, ctx.wall_mask)
+        # medir un "paso" exige una escala confiable (cotas o puertas): con la estimada por
+        # grosor de muro una puerta de 0,9 m puede parecer de 1,4 m y unir dos ambientes
+        reliable = ctx.scale_confidence >= RELIABLE_SCALE
+        walls = closed_wall_mask(
+            img.shape[:2], ctx.segments, ctx.wall_mask, ctx.meters_per_pixel if reliable else 0.0
+        )
         min_px = MIN_ROOM_M2 / (ctx.meters_per_pixel**2)
         found = find_rooms(
             walls,

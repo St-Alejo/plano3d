@@ -37,3 +37,9 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa2  (raster-vector)  escala estimated error -10.0%  niveles 1/1
 - Planta 1: muros F1 0.90 (P 0.81 R 1.00, extremos 0.46, 32/20) · aberturas P 0.39 R 0.46 (26/22) · ambientes 6/6 IoU 0.93 nombres 6/6
 - falta: Planta 1: muros, Planta 1: aberturas
+
+### 2026-10-07 09:20 — casa2 CUMPLE: tono de muros en renders a color, vano < 0,55 m = ventana, vano vacío: ventana si da al exterior (relleno desde el borde) o vano de puerta interior, pasos solo con escala confiable, evidencia de puerta anulada sobre texturas, ventanal solo con parantes equiespaciados (corrediza de vidrio), escala por ancho de puertas (≥3 concordantes), islas dentro de ambientes ya no tumban todos, nombres con calificativo. Verdad corregida: ventanitas dobles de baños, vano vestíbulo, ventana 479-502. Suite compleja vs base: escala 46%→34%, ambientes OK 0%→17%; caídas pendientes en multi_unit cad/relleno escaneo.
+
+## casa2  (raster-vector)  escala estimated error -6.9%  niveles 1/1
+- Planta 1: muros F1 0.96 (P 0.93 R 0.99, extremos 0.51, 27/20) · aberturas P 0.92 R 0.92 (25/25) · ambientes 6/6 IoU 0.93 nombres 6/6
+- **CUMPLE**

@@ -20,6 +20,7 @@ from plano3d.domain import (
     Wall,
     new_id,
 )
+from plano3d.domain.building import MAX_ROOM_OVERLAP_RATIO
 from plano3d.domain.errors import DomainError
 from plano3d.domain.plan_text import room_type_from_name
 from plano3d.infrastructure.cv.context import CVContext, PxRoom, Segment
@@ -86,10 +87,26 @@ def _room(r: PxRoom, mpp: float) -> Room | None:
         return None
 
 
+def _without_overlaps(rooms: list[Room]) -> list[Room]:
+    """Quita los ambientes que se solapan con otro mayor (una isla cerrada dentro de un
+    ambiente: bloque de escalera, mueble macizo). Antes un solo solape tumbaba todos."""
+    kept: list[Room] = []
+    for r in sorted(rooms, key=lambda r: -r.as_shapely().area):
+        a = r.as_shapely()
+        if all(
+            a.intersection(k.as_shapely()).area <= MAX_ROOM_OVERLAP_RATIO * a.area for k in kept
+        ):
+            kept.append(r)
+        else:
+            log.info("Ambiente %s descartado: está dentro de otro", r.label)
+    order = {r.id: i for i, r in enumerate(rooms)}
+    return sorted(kept, key=lambda r: order[r.id])
+
+
 def build_model(ctx: CVContext) -> BuildingModel:
     mpp = ctx.meters_per_pixel
     walls = [w for s in ctx.segments if (w := _wall(s, mpp)) is not None]
-    rooms = [r for pr in ctx.rooms if (r := _room(pr, mpp)) is not None]
+    rooms = _without_overlaps([r for pr in ctx.rooms if (r := _room(pr, mpp)) is not None])
     img = ctx.rectified
     try:
         level = Level(id="lvl_0", name="Planta baja", walls=tuple(walls), rooms=tuple(rooms))

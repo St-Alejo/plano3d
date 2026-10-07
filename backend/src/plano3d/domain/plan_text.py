@@ -147,7 +147,7 @@ def parse_scale(text: str) -> int | None:
 _ROOM_WORDS: tuple[tuple[RoomType, tuple[str, ...]], ...] = (
     (RoomType.BATHROOM, ("BANO", "WC", "SANITARIO", "AASS", "SERVICIO SANITARIO")),
     (RoomType.KITCHEN, ("COCINA", "COCINETA", "KITCHENETTE")),
-    (RoomType.LAUNDRY, ("ROPAS", "LAVANDERIA", "ZONA DE ROPAS")),
+    (RoomType.LAUNDRY, ("ROPAS", "LAVANDERIA", "ZONA DE ROPAS", "LAVADO")),
     (RoomType.BEDROOM, ("ALCOBA", "HABITACION", "DORMITORIO", "CUARTO", "RECAMARA")),
     (RoomType.LIVING, ("SALA", "COMEDOR", "ESTAR", "LIVING")),
     (RoomType.STUDY, ("ESTUDIO", "OFICINA", "BIBLIOTECA")),
@@ -157,7 +157,7 @@ _ROOM_WORDS: tuple[tuple[RoomType, tuple[str, ...]], ...] = (
     ),
     (RoomType.PATIO, ("PATIO", "TERRAZA", "BALCON", "JARDIN", "ANTEJARDIN")),
     (RoomType.STORAGE, ("DEPOSITO", "CLOSET", "ALACENA", "BODEGA", "VESTIER", "CUARTO UTIL")),
-    (RoomType.GARAGE, ("GARAJE", "PARQUEADERO", "COCHERA")),
+    (RoomType.GARAGE, ("GARAJE", "PARQUEADERO", "COCHERA", "ESTACIONAMIENTO")),
     (RoomType.STAIRS, ("ESCALERA", "PUNTO FIJO")),
 )
 
@@ -197,7 +197,7 @@ _ENGLISH_WORDS: tuple[tuple[RoomType, tuple[str, ...]], ...] = (
     (RoomType.BATHROOM, ("BATHROOM", "BATH", "TOILET", "RESTROOM")),
     (RoomType.KITCHEN, ("KITCHEN",)),
     (RoomType.LAUNDRY, ("LAUNDRY",)),
-    (RoomType.BEDROOM, ("BEDROOM", "MASTER")),
+    (RoomType.BEDROOM, ("BEDROOM",)),
     (RoomType.LIVING, ("LIVING", "DINING", "FAMILY ROOM", "LOUNGE")),
     (RoomType.STUDY, ("STUDY", "OFFICE", "LIBRARY")),
     (RoomType.CIRCULATION, ("CORRIDOR", "HALLWAY", "ENTRANCE", "ACCESS", "LOBBY", "FOYER")),
@@ -247,22 +247,39 @@ def room_name_from_texts(texts: list[str]) -> RoomName | None:
     ``["COCINA", "KITCHEN", "SALA", "LIVINGROOM"]`` → Cocina / Sala (espacio abierto).
     Las cotas, ejes y letras sueltas se ignoran. Sin palabra conocida devuelve ``None``.
     """
-    spanish: list[tuple[RoomType, str]] = []
-    english: list[tuple[RoomType, str]] = []
+    spanish: list[tuple[RoomType, str, str]] = []
+    english: list[tuple[RoomType, str, str]] = []
     for text in texts:
         upper = strip_accents(text).upper()
         # "DORMITORIO-BEDROOM", "SALA/LIVING": cada parte puede ser un idioma
         for part in re.split(r"\s*[-/|]\s*", upper):
             # el OCR a veces pega palabras ("LIVINGROOM")
             es = _match(part, _ROOM_WORDS)
-            if es and all(es[0] != k for k, _ in spanish):
-                spanish.append(es)
+            # "LIVING" vale en ambos idiomas: si ya hay un nombre de ese tipo, es la traducción
+            bilingual = es is not None and _match(es[1], _ENGLISH_WORDS) is not None
+            if es and bilingual and any(es[0] == k for k, _, _ in spanish):
+                continue
+            if es and all(es[1] != w for _, w, _ in spanish):
+                spanish.append((*es, _qualifier(part, es[1])))
                 continue
             en = _match(part, _ENGLISH_WORDS)
-            if en and not es and all(en[0] != k for k, _ in english):
-                english.append(en)
+            if en and not es and all(en[1] != w for _, w, _ in english):
+                english.append((*en, ""))
     names = spanish or english
     if not names:
         return None
-    label = " / ".join(_DISPLAY.get(w, w.capitalize()) for _, w in names)
+    label = " / ".join(
+        (_DISPLAY.get(w, w.capitalize()) + (f" {q}" if q else "")) for _, w, q in names
+    )
     return RoomName(label, names[0][0])
+
+
+def _qualifier(part: str, word: str) -> str:
+    """Lo que sigue al nombre: "RECAMARA 3" → "3", "BANO MASTER" → "master"."""
+    rest = part[part.find(word) + len(word) :].split()
+    keep = [
+        t.lower()
+        for t in rest[:2]
+        if re.fullmatch(r"[A-Z0-9]{1,10}", t) and _match(t, _ENGLISH_WORDS) is None
+    ]
+    return " ".join(keep)

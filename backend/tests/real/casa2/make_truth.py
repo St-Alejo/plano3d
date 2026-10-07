@@ -34,9 +34,16 @@ WALLS: list[tuple[Pt, Pt, float, list[tuple[str, float, float]]]] = [
     ((401, 583), (491, 583), 6, []),  # frente de clósets / vestíbulo
     ((404.5, 583), (404.5, 641), 7, [("door", 586, 626)]),  # puerta recámara 3
     ((487.5, 583), (487.5, 721), 7, [("door", 586, 626)]),  # puerta recámara 2
-    ((73, 641.5), (404.5, 641.5), 7, [("door", 104, 145)]),  # cocina/recámara 3 al norte
+    # cocina/recámara 3 al norte; vano de 1,9 m sin hoja del vestíbulo al comedor
+    ((73, 641.5), (487.5, 641.5), 7, [("door", 104, 145), ("door", 408, 484)]),
     ((487.5, 641), (673.5, 641), 7, []),  # recámara 2 / baño
-    ((673.5, 641), (673.5, 953), 8, [("window", 655, 704), ("window", 732, 782)]),
+    # fachada este: dos ventanitas por baño separadas por un montante macizo
+    (
+        (673.5, 641),
+        (673.5, 953),
+        8,
+        [("window", 655, 671), ("window", 688, 704), ("window", 732, 749), ("window", 765, 782)],
+    ),
     ((487.5, 718), (673.5, 718), 6, [("door", 491, 525)]),  # baño / baño master
     ((528.5, 718), (528.5, 795.5), 7, []),
     ((446, 795.5), (673.5, 795.5), 7, [("door", 450, 491), ("door", 597, 628)]),
@@ -54,7 +61,7 @@ WALLS: list[tuple[Pt, Pt, float, list[tuple[str, float, float]]]] = [
         (446, 949.5),
         (673.5, 949.5),
         7,
-        [("window", 455, 502), ("window", 525, 562), ("window", 607, 642)],
+        [("window", 479, 502), ("window", 525, 562), ("window", 607, 642)],
     ),
     ((601, 838), (601, 949.5), 6, []),  # tabique del vestidor
 ]

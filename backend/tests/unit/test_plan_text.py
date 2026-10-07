@@ -146,3 +146,7 @@ def test_nombre_de_ambiente_bilingue() -> None:
     assert open_plan == RoomName("Cocina / Sala", RoomType.KITCHEN)
     assert room_name_from_texts(["BEDROOM"]) == RoomName("Bedroom", RoomType.BEDROOM)
     assert room_name_from_texts(["2.40", "S6", ".10"]) is None
+    assert room_name_from_texts(["BAÑO MASTER"]) == RoomName("Baño master", RoomType.BATHROOM)
+    assert room_name_from_texts(["RECAMARA 3"]).label == "Recámara 3"  # type: ignore[union-attr]
+    social = room_name_from_texts(["COMEDOR", "COCINA", "SALA"])
+    assert social is not None and social.label == "Comedor / Cocina / Sala"

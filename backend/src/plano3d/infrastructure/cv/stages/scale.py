@@ -51,3 +51,40 @@ class ScaleStage(PipelineStage[CVContext]):
             "meters_per_pixel": round(ctx.meters_per_pixel, 5),
             "scale_confidence": ctx.scale_confidence,
         }
+
+
+#: ancho típico de una puerta batiente (interiores 0,80-0,90; exteriores 0,90-1,00)
+TYPICAL_DOOR_M = 0.85
+#: la escala por grosor de muro tiene esta confianza; por puertas, algo más
+DOOR_SCALE_CONFIDENCE = 0.5
+
+
+#: puertas concordantes mínimas para confiar en la escala por puertas
+MIN_DOORS_FOR_SCALE = 3
+
+
+def scale_from_doors(segments: list[Segment], prior_mpp: float = 0.0) -> float | None:
+    """m/px a partir de las puertas con hoja reconocida, o None si no hay evidencia firme.
+
+    Las puertas tienen un ancho mucho más estable que el grosor de los muros (que varía
+    entre 0,10 y 0,30 m y se engorda al dibujar). Se exigen al menos dos puertas de ancho
+    parecido; las que se alejan más del 25 % de la mediana (vanos dobles, corredizas) no
+    cuentan. Si contradice por más del doble a la estimación previa (``prior_mpp``),
+    probablemente las "puertas" son otra cosa y se descarta.
+    """
+    widths = [
+        o.width for s in segments for o in s.openings if o.kind == "door" and o.operation is None
+    ]
+    if len(widths) < MIN_DOORS_FOR_SCALE:
+        return None
+    med = float(np.median(widths))
+    close = [w for w in widths if abs(w - med) <= 0.25 * med]
+    if len(close) < MIN_DOORS_FOR_SCALE:
+        return None
+    mpp = TYPICAL_DOOR_M / float(np.median(close))
+    if prior_mpp > 0 and not 0.5 <= mpp / prior_mpp <= 2.0:
+        return None
+    xs = [x for s in segments for x in (s.x1, s.x2)]
+    ys = [y for s in segments for y in (s.y1, s.y2)]
+    extent_m = max(max(xs) - min(xs), max(ys) - min(ys)) * mpp
+    return mpp if MIN_BUILDING_M <= extent_m <= MAX_BUILDING_M else None

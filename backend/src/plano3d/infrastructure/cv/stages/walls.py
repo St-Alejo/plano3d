@@ -7,6 +7,7 @@ import numpy as np
 
 from plano3d.application.pipeline import PipelineStage
 from plano3d.infrastructure.cv.context import CVContext, Img, Segment, as_u8
+from plano3d.infrastructure.cv.stages.preprocess import normalize_illumination
 
 MIN_WALL_PX = 3.0
 
@@ -53,6 +54,49 @@ def extract_wall_mask(ink: Img, thickness: float) -> Img:
     return as_u8(keep[labels])
 
 
+#: cuánto más claro que el tono dominante de los muros puede ser una mancha gruesa
+TONE_MARGIN = 40
+#: solo se filtra si los muros son realmente oscuros (renders, CAD con muros negros)
+MAX_REFERENCE_TONE = 60
+
+
+def filter_by_tone(mask: Img, gray: Img) -> Img:
+    """Quita manchas gruesas cuyo gris no es el de los muros del plano.
+
+    En renders los muros son negros y los muebles grises oscuros (sofás, autos): ambos
+    pasan la apertura por grosor. El tono de referencia es la mediana (ponderada por área)
+    de los tonos de cada mancha; si no es oscuro (bocetos a lápiz, rellenos grises) no se
+    filtra nada.
+    """
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    if n <= 2:
+        return mask
+    flat = labels.ravel()
+    order = np.argsort(flat, kind="stable")
+    bounds = np.searchsorted(flat[order], np.arange(n + 1))
+    values = gray.ravel()[order]
+    tones = np.array([np.median(values[bounds[i] : bounds[i + 1]]) if i else 255 for i in range(n)])
+    areas = stats[:, cv2.CC_STAT_AREA].astype(np.float64)
+    idx = np.argsort(tones[1:]) + 1
+    cum = np.cumsum(areas[idx])
+    ref = tones[idx[np.searchsorted(cum, cum[-1] / 2)]]
+    if ref > MAX_REFERENCE_TONE:
+        return mask  # muros grises (lápiz, relleno claro): el tono no separa muros de muebles
+    keep = (tones <= ref + TONE_MARGIN).astype(np.uint8) * 255
+    keep[0] = 0
+    return as_u8(keep[labels])
+
+
+#: fracción de píxeles saturados a partir de la cual la imagen es un render a color
+COLOR_RENDER_FRACTION = 0.1
+
+
+def is_color_render(img: Img) -> bool:
+    """Planos coloreados (pisos, césped, muebles grises sobre muros negros)."""
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    return float((hsv[..., 1] > 60).mean()) >= COLOR_RENDER_FRACTION
+
+
 class WallMaskStage(PipelineStage[CVContext]):
     key = "walls"
     title = "Detección de muros"
@@ -62,7 +106,13 @@ class WallMaskStage(PipelineStage[CVContext]):
         t = estimate_stroke_thickness(ink)
         if t < MIN_WALL_PX:
             raise ValueError("No se encontraron trazos de muro en la imagen")
-        ctx.wall_mask = extract_wall_mask(ink, t)
+        mask = extract_wall_mask(ink, t)
+        img = ctx.rectified
+        if img is not None and img.ndim == 3 and is_color_render(img):
+            gray = as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+            # gris con la iluminación compensada: en una foto la sombra no cambia el "tono"
+            mask = filter_by_tone(mask, normalize_illumination(gray))
+        ctx.wall_mask = mask
         ctx.wall_thickness_px = t
         return ctx
 
