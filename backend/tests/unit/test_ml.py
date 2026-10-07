@@ -12,10 +12,9 @@ def test_sintetico_marca_muros_y_no_muebles() -> None:
         gray, mask = render(random_plan(rng), style, rng)
         assert gray.shape == mask.shape
         assert 0.01 < (mask > 0).mean() < 0.4
-        # bajo la máscara hay mucha más tinta que fuera (los muros huecos solo tienen
-        # tinta en el borde, pero la etiqueta es el muro completo)
-        ink = gray < 100  # tinta oscura (los pisos de un render son gris medio)
-        assert ink[mask > 0].mean() > 3 * ink[mask == 0].mean()
+        # bajo la máscara el plano es claramente más oscuro que fuera (los muros huecos solo
+        # tienen tinta en el borde y los estilos de baja resolución la dejan gris)
+        assert gray[mask > 0].mean() < gray[mask == 0].mean() - 15
 
 
 def test_filtro_conserva_solo_lo_que_la_red_ve_como_muro() -> None:

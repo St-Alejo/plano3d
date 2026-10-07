@@ -31,7 +31,7 @@ Img = npt.NDArray[np.uint8]
 Rng = np.random.Generator
 
 ROOM_WORDS = ["SALA", "COCINA", "BAÑO", "ALCOBA", "ESTUDIO", "COMEDOR", "HALL", "PATIO", "ROPAS"]
-STYLES = ("tecnico", "cad_oscuro", "render", "baja_resolucion")
+STYLES = ("tecnico", "cad_oscuro", "render", "baja_resolucion", "boceto", "ampliado")
 
 
 @dataclass
@@ -333,7 +333,9 @@ def _annotations(c: Canvas, plan: Plan, ink: tuple[int, int, int], rng: Rng, col
 
 def render(plan: Plan, style: str, rng: Rng) -> tuple[Img, Img]:
     """Imagen (gris, como la ve la red) y máscara de muros de un plano."""
-    ppm = rng.uniform(18, 70)
+    # "ampliado": lámina de baja resolución (muros de doble línea de 1 px) que el pipeline
+    # cierra y agranda 3-4 veces antes de detectar, como las plantas de una lámina CAD
+    ppm = rng.uniform(10, 18) if style == "ampliado" else rng.uniform(18, 70)
     margin = 2.0
     size = (round((plan.height + 2 * margin) * ppm), round((plan.width + 2 * margin) * ppm))
     if style == "cad_oscuro":
@@ -351,7 +353,12 @@ def render(plan: Plan, style: str, rng: Rng) -> tuple[Img, Img]:
         inside = np.zeros(size, np.uint8)
         cv2.rectangle(inside, c.px((0, 0)), c.px((plan.width, plan.height)), 255, -1)
         c.img[inside == 0] = outside[inside == 0]
-    fill = "macizo" if style == "render" else str(rng.choice(["macizo", "hueco", "achurado"]))
+    if style == "render":
+        fill = "macizo"
+    elif style == "ampliado":
+        fill = "hueco"
+    else:
+        fill = str(rng.choice(["macizo", "hueco", "achurado"], p=[0.3, 0.3, 0.4]))
     _furniture(c, plan, ink, rng, (150, 150, 150) if style == "render" else None)
     _draw_walls(c, plan, ink, fill, rng)
     _annotations(c, plan, ink, rng, colors=style == "cad_oscuro")
@@ -359,13 +366,51 @@ def render(plan: Plan, style: str, rng: Rng) -> tuple[Img, Img]:
     if style == "cad_oscuro":
         out = normalize_dark_sheet(out)
     gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
+    mask = c.mask
     if style == "baja_resolucion":
         f = rng.uniform(0.25, 0.45)
         small = cv2.resize(gray, None, fx=f, fy=f, interpolation=cv2.INTER_AREA)
         gray = cv2.resize(small, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_NEAREST)
+    if style == "boceto":
+        gray, mask = _sketch(gray, mask, ppm, rng)
+    if style == "ampliado":
+        k = int(rng.integers(3, 5))
+        gray = cv2.morphologyEx(gray, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        gray = cv2.resize(gray, None, fx=k, fy=k, interpolation=cv2.INTER_NEAREST)
+        mask = cv2.resize(mask, None, fx=k, fy=k, interpolation=cv2.INTER_NEAREST)
+    elif rng.random() < 0.3:
+        gray = _photo(gray, rng)
     noise = rng.normal(0, rng.uniform(0, 6), gray.shape)
     gray = np.clip(gray.astype(np.float32) + noise, 0, 255).astype(np.uint8)
-    return gray, c.mask
+    return gray, mask
+
+
+def _sketch(gray: Img, mask: Img, ppm: float, rng: Rng) -> tuple[Img, Img]:
+    """Trazo a mano: desplazamiento suave (mismo para imagen y máscara) y líneas blandas."""
+    h, w = gray.shape
+    amp = ppm * rng.uniform(0.02, 0.06)
+    small = rng.normal(0, 1, (max(2, h // 60), max(2, w // 60), 2)).astype(np.float32)
+    field = cv2.resize(small, (w, h), interpolation=cv2.INTER_CUBIC) * amp
+    xs, ys = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
+    mx, my = xs + field[..., 0], ys + field[..., 1]
+    gray = cv2.remap(gray, mx, my, cv2.INTER_LINEAR, borderValue=255)
+    mask = cv2.remap(mask, mx, my, cv2.INTER_NEAREST, borderValue=0)
+    return cv2.GaussianBlur(gray, (0, 0), rng.uniform(0.4, 1.0)), mask
+
+
+def _photo(gray: Img, rng: Rng) -> Img:
+    """Foto del papel: luz desigual, leve desenfoque y compresión JPEG."""
+    h, w = gray.shape
+    gy, gx = np.mgrid[0:h, 0:w].astype(np.float32)
+    light = (
+        1
+        - rng.uniform(0.1, 0.35)
+        * ((gx / w) * rng.uniform(-1, 1) + (gy / h) * rng.uniform(-1, 1)) ** 2
+    )
+    out = np.clip(gray.astype(np.float32) * light, 0, 255).astype(np.uint8)
+    out = cv2.GaussianBlur(out, (0, 0), rng.uniform(0.3, 1.2))
+    ok, buf = cv2.imencode(".jpg", out, [cv2.IMWRITE_JPEG_QUALITY, int(rng.integers(40, 85))])
+    return cv2.imdecode(buf, cv2.IMREAD_GRAYSCALE) if ok else out
 
 
 def sample(seed: int, tile: int = 256) -> tuple[Img, Img]:
