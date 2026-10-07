@@ -63,7 +63,7 @@ def test_full_flow_photo_to_model(client: TestClient) -> None:
             if ev["stage"] == "done":
                 break
     stages = [e["stage"] for e in events if e["status"] == "completed"]
-    assert stages[:3] == ["ingest", "rectify", "preprocess"]
+    assert stages[:4] == ["ingest", "layout", "rectify", "preprocess"]
     assert events[-1]["status"] == "completed"
     assert any(e.get("preview") for e in events), "falta el modelo parcial (revelado progresivo)"
 

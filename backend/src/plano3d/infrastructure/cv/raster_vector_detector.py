@@ -37,6 +37,7 @@ from plano3d.infrastructure.cv.dimensions import (
 )
 from plano3d.infrastructure.cv.imageio import encode_png
 from plano3d.infrastructure.cv.stages.ingest import IngestStage
+from plano3d.infrastructure.cv.stages.layout import SheetLayoutStage
 from plano3d.infrastructure.cv.stages.preprocess import PreprocessStage
 from plano3d.infrastructure.cv.stages.rectify import RectifyStage
 from plano3d.infrastructure.cv.vectorize import Vectorized, vectorize
@@ -264,6 +265,7 @@ class SolveStage(PipelineStage[RasterContext]):
 def raster_stages(reader: TextReader | None) -> list[PipelineStage[RasterContext]]:
     return [
         _ClassicStage(IngestStage()),
+        _ClassicStage(SheetLayoutStage()),
         _ClassicStage(RectifyStage()),
         _ClassicStage(PreprocessStage()),
         VectorizeStage(),

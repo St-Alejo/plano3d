@@ -2,6 +2,7 @@ import type { BuildingModel, ProgressEvent } from '@/api/types'
 
 export const STAGES: { key: string; title: string }[] = [
   { key: 'ingest', title: 'Lectura de la imagen' },
+  { key: 'layout', title: 'Análisis de la lámina' },
   { key: 'rectify', title: 'Corrección de perspectiva' },
   { key: 'preprocess', title: 'Limpieza y binarización' },
   { key: 'walls', title: 'Detección de muros' },
@@ -10,6 +11,7 @@ export const STAGES: { key: string; title: string }[] = [
   { key: 'openings', title: 'Puertas y ventanas' },
   { key: 'topology', title: 'Topología de muros' },
   { key: 'rooms', title: 'Segmentación de ambientes' },
+  { key: 'room_names', title: 'Nombres de ambientes' },
   { key: 'assemble', title: 'Ensamblado del modelo' },
 ]
 
@@ -23,6 +25,8 @@ export const METRIC_LABELS: Record<string, (v: number) => string> = {
   windows: (v) => `${v} ventanas`,
   wall_length_m: (v) => `${v.toFixed(1)} m de muro`,
   room_count: (v) => `${v} ambientes`,
+  discarded_fraction: (v) => (v ? `${Math.round(v * 100)} % descartado (fotos)` : 'lámina completa'),
+  named_rooms: (v) => `${v} con nombre`,
   mean_confidence: (v) => `confianza ${(v * 100).toFixed(0)}%`,
   total_area_m2: (v) => `${v.toFixed(1)} m²`,
 }

@@ -1,0 +1,232 @@
+{
+  "case": "casa2",
+  "detector": "raster-vector",
+  "metrics": {
+    "walls": 27.0,
+    "rooms": 4.0,
+    "meters_per_pixel": 0.0225,
+    "fallback_classic": 1.0
+  },
+  "scale": {
+    "mpp": 0.0225,
+    "source": "estimated",
+    "error": -0.1
+  },
+  "levels_det": 1,
+  "levels_gt": 1,
+  "levels": [
+    {
+      "name": "Planta 1",
+      "walls_det": 27,
+      "walls_gt": 20,
+      "wall_p": 0.848,
+      "wall_r": 0.922,
+      "wall_f1": 0.883,
+      "wall_f1_ends": 0.34,
+      "open_p": 0.286,
+      "open_r": 0.273,
+      "open_det": 21,
+      "open_gt": 22,
+      "rooms_det": 4,
+      "rooms_gt": 6,
+      "room_iou": 0.503,
+      "names_ok": 3,
+      "rooms": [
+        {
+          "truth": "recamara 3",
+          "iou": 0.843,
+          "label": "Recámara",
+          "name_ok": true
+        },
+        {
+          "truth": "recamara 2",
+          "iou": 0.934,
+          "label": "Recámara",
+          "name_ok": true
+        },
+        {
+          "truth": "baño",
+          "iou": 0.0,
+          "label": "",
+          "name_ok": false
+        },
+        {
+          "truth": "baño master",
+          "iou": 0.944,
+          "label": "Baño",
+          "name_ok": true
+        },
+        {
+          "truth": "recamara master",
+          "iou": 0.265,
+          "label": "Espacio 4",
+          "name_ok": false
+        },
+        {
+          "truth": "sala",
+          "iou": 0.031,
+          "label": "Recámara",
+          "name_ok": false
+        }
+      ],
+      "openings": [
+        {
+          "at": [
+            6.61,
+            0.1
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            12.26,
+            0.1
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.34,
+            4.47
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            9.43,
+            4.47
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            10.96,
+            6.36
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.77,
+            8.3
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            13.6,
+            8.32
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            10.55,
+            12.15
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            12.08,
+            12.15
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            14.05,
+            12.15
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            0.85,
+            14.38
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            15.09,
+            7.36
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            14.06,
+            0.99
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            13.29,
+            8.9
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            10.45,
+            3.56
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.69,
+            10.58
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.75,
+            0.99
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.75,
+            2.23
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.75,
+            3.45
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.81,
+            10.34
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.81,
+            13.34
+          ],
+          "kind": "door"
+        }
+      ]
+    }
+  ],
+  "when": "2026-10-07T08:03:57",
+  "pass": {
+    "scale": true,
+    "levels": true,
+    "Planta 1: muros": false,
+    "Planta 1: aberturas": false,
+    "Planta 1: ambientes": false,
+    "Planta 1: nombres": false
+  }
+}

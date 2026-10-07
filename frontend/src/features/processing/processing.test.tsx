@@ -61,7 +61,7 @@ describe('ProcessingView', () => {
       emit(ev('walls', 'completed', { elapsed_ms: 1500, metrics: { wall_thickness_px: 13 } }))
       emit(ev('topology', 'completed', { preview: sampleModel() }))
     })
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '30')
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25')
     expect(screen.getByText('120 ms')).toBeInTheDocument()
     expect(screen.getByText('1.5 s')).toBeInTheDocument()
     expect(screen.getByText('grosor 13 px')).toBeInTheDocument()

@@ -16,6 +16,7 @@ from plano3d.infrastructure.cv.context import CVContext
 from plano3d.infrastructure.cv.imageio import encode_png
 from plano3d.infrastructure.cv.stages.assemble import AssembleStage, build_model
 from plano3d.infrastructure.cv.stages.ingest import IngestStage
+from plano3d.infrastructure.cv.stages.layout import SheetLayoutStage
 from plano3d.infrastructure.cv.stages.openings import OpeningsStage
 from plano3d.infrastructure.cv.stages.preprocess import PreprocessStage
 from plano3d.infrastructure.cv.stages.rectify import RectifyStage
@@ -32,6 +33,7 @@ PREVIEW_AFTER = {"topology", "rooms"}
 def default_stages(spotter: TextSpotter | None = None) -> list[PipelineStage[CVContext]]:
     return [
         IngestStage(),
+        SheetLayoutStage(),
         RectifyStage(),
         PreprocessStage(),
         WallMaskStage(),
