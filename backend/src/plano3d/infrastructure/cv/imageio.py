@@ -15,6 +15,8 @@ from plano3d.infrastructure.cv.context import Img, as_u8
 
 MAX_SIDE = 2400
 PDF_DPI = 200
+#: lado mayor del render de un PDF: un pliego A0 a 200 ppp pasaría de 60 Mpx (cientos de MB)
+PDF_MAX_SIDE = 6000
 
 
 class ImageDecodeError(ValueError):
@@ -47,13 +49,23 @@ def decode_scaled(data: bytes, content_type: str, max_side: int = MAX_SIDE) -> t
     return img, nw / w
 
 
+def pdf_render_scale(width_pt: float, height_pt: float) -> float:
+    """Escala de render (px por punto): 200 ppp, salvo que el lado mayor pase de PDF_MAX_SIDE."""
+    return min(PDF_DPI / 72, PDF_MAX_SIDE / max(width_pt, height_pt))
+
+
 def _decode_pdf(data: bytes) -> Img:
     import pypdfium2 as pdfium
 
     try:
         pdf = pdfium.PdfDocument(data)
         page = pdf[0]
-        pil = page.render(scale=PDF_DPI / 72).to_pil()
+        width_pt, height_pt = page.get_size()
+        if min(width_pt, height_pt) <= 0:
+            raise ImageDecodeError("La página del PDF no tiene tamaño")
+        pil = page.render(scale=pdf_render_scale(width_pt, height_pt)).to_pil()
+    except ImageDecodeError:
+        raise
     except Exception as exc:
         raise ImageDecodeError(f"No se pudo leer el PDF: {exc}") from exc
     return as_u8(cv2.cvtColor(np.asarray(pil.convert("RGB")), cv2.COLOR_RGB2BGR))
