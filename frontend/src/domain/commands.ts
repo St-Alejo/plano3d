@@ -5,7 +5,8 @@
  * entidad que toca (no del modelo completo), así el historial es liviano y
  * deshacer una edición no pisa otras ediciones posteriores de otras entidades.
  */
-import type { BuildingModel, Dimension, Level, Opening, OpeningKind, Point, Room, Wall } from '@/api/types'
+import type { BuildingModel, Dimension, Furniture, Level, Opening, OpeningKind, Point, Room, Wall } from '@/api/types'
+import { catalogItem } from './catalog'
 import {
   DOOR,
   MIN_WALL_LENGTH,
@@ -605,5 +606,150 @@ export class DeleteDimension implements Command {
     const dims = [...(lv.dimensions ?? [])]
     dims.splice(this.before.index, 0, this.before.dim)
     return replaceLevel(model, { ...lv, dimensions: dims })
+  }
+}
+
+// ----------------------------------------------------------------------------- mobiliario y acabados (ADR-016)
+
+type FurniturePatch = Partial<Pick<Furniture, 'position' | 'rotation' | 'width' | 'depth' | 'height'>>
+
+function furnitureOf(level: Level): Furniture[] {
+  return level.furniture ?? []
+}
+
+/** Coloca una pieza del catálogo con sus medidas de catálogo. */
+export class AddFurniture implements Command {
+  readonly label: string
+  readonly furniture: Furniture
+  constructor(
+    private readonly levelId: string,
+    catalogId: string,
+    position: Point,
+    rotation = 0,
+  ) {
+    const item = catalogItem(catalogId)
+    if (!item) throw new CommandError(`No existe la pieza "${catalogId}" en el catálogo`)
+    this.label = `Agregar ${item.name.toLowerCase()}`
+    this.furniture = {
+      id: newId('f'),
+      catalog_id: item.id,
+      position,
+      rotation,
+      width: item.width,
+      depth: item.depth,
+      height: item.height,
+    }
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, furniture: [...furnitureOf(lv), this.furniture] })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, furniture: furnitureOf(lv).filter((f) => f.id !== this.furniture.id) })
+  }
+}
+
+/** Mover, girar o redimensionar un mueble. */
+export class UpdateFurniture implements Command {
+  private before: Furniture | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly furnitureId: string,
+    private readonly patch: FurniturePatch,
+    readonly label = 'Mover mueble',
+  ) {
+    const dims = [patch.width, patch.depth, patch.height].filter((v) => v !== undefined)
+    if (dims.some((v) => !(v! > 0) || !Number.isFinite(v))) throw new CommandError('Las medidas del mueble deben ser positivas')
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const current = furnitureOf(lv).find((f) => f.id === this.furnitureId)
+    if (!current) throw new CommandError('El mueble no existe')
+    this.before = current
+    const next = { ...current, ...this.patch }
+    return replaceLevel(model, { ...lv, furniture: furnitureOf(lv).map((f) => (f.id === current.id ? next : f)) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const before = this.before
+    if (!before) return model
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, furniture: furnitureOf(lv).map((f) => (f.id === before.id ? before : f)) })
+  }
+}
+
+export class DeleteFurniture implements Command {
+  readonly label = 'Eliminar mueble'
+  private before: { f: Furniture; index: number } | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly furnitureId: string,
+  ) {}
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const list = furnitureOf(lv)
+    const index = list.findIndex((f) => f.id === this.furnitureId)
+    if (index < 0) throw new CommandError('El mueble no existe')
+    this.before = { f: list[index]!, index }
+    return replaceLevel(model, { ...lv, furniture: list.filter((f) => f.id !== this.furnitureId) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    if (!this.before) return model
+    const lv = findLevel(model, this.levelId)
+    const list = [...furnitureOf(lv)]
+    list.splice(this.before.index, 0, this.before.f)
+    return replaceLevel(model, { ...lv, furniture: list })
+  }
+}
+
+/** Acabado de uno o varios muros (pincel de materiales). */
+export class SetWallMaterial implements Command {
+  readonly label: string
+  private before = new Map<string, string>()
+  constructor(
+    private readonly levelId: string,
+    private readonly wallIds: string[],
+    private readonly material: string,
+  ) {
+    if (wallIds.length === 0) throw new CommandError('No hay muros para pintar')
+    this.label = wallIds.length === 1 ? 'Cambiar acabado del muro' : `Cambiar acabado de ${wallIds.length} muros`
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const ids = new Set(this.wallIds)
+    for (const id of ids) findWall(lv, id)
+    this.before = new Map(lv.walls.filter((w) => ids.has(w.id)).map((w) => [w.id, w.material]))
+    return replaceLevel(model, { ...lv, walls: lv.walls.map((w) => (ids.has(w.id) ? { ...w, material: this.material } : w)) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, {
+      ...lv,
+      walls: lv.walls.map((w) => (this.before.has(w.id) ? { ...w, material: this.before.get(w.id)! } : w)),
+    })
+  }
+}
+
+/** Acabado de piso de un ambiente (null = el de su tipo). */
+export class SetFloorMaterial implements Command {
+  readonly label = 'Cambiar piso del ambiente'
+  private before: string | null | undefined
+  constructor(
+    private readonly levelId: string,
+    private readonly roomId: string,
+    private readonly material: string | null,
+  ) {}
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const room = lv.rooms.find((r) => r.id === this.roomId)
+    if (!room) throw new CommandError('El ambiente no existe')
+    this.before = room.floor_material
+    return replaceLevel(model, upsertRoom(lv, { ...room, floor_material: this.material }))
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const room = lv.rooms.find((r) => r.id === this.roomId)
+    if (!room) return model
+    return replaceLevel(model, upsertRoom(lv, { ...room, floor_material: this.before ?? null }))
   }
 }
