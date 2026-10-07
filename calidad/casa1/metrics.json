@@ -23,8 +23,8 @@
       "wall_r": 1.0,
       "wall_f1": 1.0,
       "wall_f1_ends": 0.8,
-      "open_p": 0.857,
-      "open_r": 0.857,
+      "open_p": 1.0,
+      "open_r": 1.0,
       "open_det": 7,
       "open_gt": 7,
       "rooms_det": 3,
@@ -50,15 +50,66 @@
           "label": "Espacio 3",
           "name_ok": false
         }
+      ],
+      "openings": [
+        {
+          "at": [
+            3.77,
+            0.11
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            2.12,
+            1.57
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.32,
+            5.76
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.91,
+            5.76
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.96,
+            2.02
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.56,
+            2.72
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            0.07,
+            0.88
+          ],
+          "kind": "window"
+        }
       ]
     }
   ],
-  "when": "2026-10-06T23:56:29",
+  "when": "2026-10-07T00:11:09",
   "pass": {
     "scale": true,
     "levels": true,
     "Planta 1: muros": true,
-    "Planta 1: aberturas": false,
+    "Planta 1: aberturas": true,
     "Planta 1: ambientes": true,
     "Planta 1: nombres": false
   }

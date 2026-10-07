@@ -66,6 +66,51 @@ def _group_collinear(segments: list[Segment], t: float) -> list[tuple[float, lis
     return lines
 
 
+SLIDING_EVIDENCE = 0.6
+
+
+def _row_coverage(
+    ink: Img,
+    a: tuple[float, float],
+    u: tuple[float, float],
+    n: tuple[float, float],
+    off: float,
+    t0: float,
+    t1: float,
+) -> float:
+    """Fracción de puntos con tinta sobre la recta paralela al muro desplazada ``off``."""
+    steps = max(6, int(t1 - t0) // 2)
+    hits = 0
+    for s in range(steps + 1):
+        f = t0 + (t1 - t0) * s / steps
+        hits += _ink_near(ink, a[0] + u[0] * f + n[0] * off, a[1] + u[1] * f + n[1] * off, 0)
+    return hits / (steps + 1)
+
+
+def sliding_door_evidence(
+    ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
+) -> float:
+    """Firma de una puerta corrediza: dos hojas desfasadas en el espesor del muro.
+
+    Cada hoja ocupa ~la mitad del vano a una profundidad distinta, así que hay una línea
+    que cubre solo la mitad izquierda y otra que cubre solo la derecha. Una ventana (también
+    la corrediza) tiene alféizar: alguna línea cruza el vano entero, y entonces no cuenta.
+    """
+    length = math.dist(a, b)
+    if length < 1:
+        return 0.0
+    u = ((b[0] - a[0]) / length, (b[1] - a[1]) / length)
+    n = (-u[1], u[0])
+    rows = range(-round(thickness * 0.6), round(thickness * 0.6) + 1)
+    left = [_row_coverage(ink, a, u, n, r, length * 0.08, length * 0.42) for r in rows]
+    right = [_row_coverage(ink, a, u, n, r, length * 0.58, length * 0.92) for r in rows]
+    if max(min(lv, rv) for lv, rv in zip(left, right, strict=True)) >= 0.5:
+        return 0.0  # una línea cruza todo el vano: alféizar de ventana
+    only_left = max(lv - rv for lv, rv in zip(left, right, strict=True))
+    only_right = max(rv - lv for lv, rv in zip(left, right, strict=True))
+    return min(only_left, only_right)
+
+
 def classify_gap(
     ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
 ) -> tuple[str, float]:
@@ -94,6 +139,8 @@ def classify_gap(
     if area == 0:
         return "door", 0.4
     ratio = float(((ink > 0) & (band > 0)).sum()) / area
+    if sliding_door_evidence(ink, a, b, thickness) >= SLIDING_EVIDENCE:
+        return "door", 0.8
     if ratio >= WINDOW_INK_RATIO:
         return "window", min(0.9, 0.5 + ratio)
     return "door", min(0.9, 0.9 - ratio * 2)
@@ -293,6 +340,8 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
             # cualquier línea del plano por casualidad
             if swing >= SWING_EVIDENCE and kind == "door" and free * mpp <= MAX_SWING_DOOR_M:
                 conf = max(conf, 0.85)
+            elif sliding_door_evidence(ink, a, b, s.thickness) >= SLIDING_EVIDENCE:
+                kind, conf = "door", max(conf, 0.8)
             elif window_line_evidence(thin, a, b, s.thickness) >= WINDOW_LINE_EVIDENCE:
                 kind, conf = "window", max(conf, 0.8)
             else:

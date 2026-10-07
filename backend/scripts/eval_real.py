@@ -187,6 +187,10 @@ def score_level(det: dict[str, Any], gt: dict[str, Any]) -> dict[str, Any]:
         "room_iou": round(float(np.mean([r["iou"] for r in room_rows])) if room_rows else 0.0, 3),
         "names_ok": sum(r["name_ok"] for r in room_rows),
         "rooms": room_rows,
+        "openings": [
+            {"at": [round(c[0], 2), round(c[1], 2)], "kind": k}
+            for c, k in opening_centers(det["walls"])
+        ],
     }
 
 

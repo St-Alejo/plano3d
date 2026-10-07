@@ -13,3 +13,9 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
 - Planta 1: muros F1 1.00 (P 1.00 R 1.00, extremos 0.80, 7/8) · aberturas P 0.86 R 0.86 (7/7) · ambientes 3/3 IoU 0.95 nombres 0/3
 - falta: Planta 1: aberturas, Planta 1: nombres
+
+### 2026-10-07 00:11 — Puerta corrediza (dos hojas desfasadas en el espesor, sin alféizar) se clasifica como puerta también en bridge_end_gaps; reporte lista cada abertura detectada.
+
+## casa1  (raster-vector)  escala dimensions error +0.4%  niveles 1/1
+- Planta 1: muros F1 1.00 (P 1.00 R 1.00, extremos 0.80, 7/8) · aberturas P 1.00 R 1.00 (7/7) · ambientes 3/3 IoU 0.95 nombres 0/3
+- falta: Planta 1: nombres

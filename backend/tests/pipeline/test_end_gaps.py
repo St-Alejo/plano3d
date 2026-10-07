@@ -8,7 +8,9 @@ import numpy as np
 from plano3d.infrastructure.cv.context import Segment
 from plano3d.infrastructure.cv.stages.openings import (
     bridge_end_gaps,
+    classify_gap,
     door_swing_evidence,
+    sliding_door_evidence,
     window_line_evidence,
 )
 
@@ -64,3 +66,25 @@ def test_arco_de_puerta_tiene_evidencia_alta() -> None:
     cv2.ellipse(ink, (100, 100), (80, 80), 0, 0, 90, 255, 1)
     assert door_swing_evidence(ink, (100, 100), (1.0, 0.0), 80) >= 0.8
     assert door_swing_evidence(_canvas(), (100, 100), (1.0, 0.0), 80) == 0.0
+
+
+def _hojas_desfasadas(ink: np.ndarray) -> None:
+    # dos hojas de corrediza, cada una en media luz y a distinta profundidad del muro
+    cv2.rectangle(ink, (100, 194), (205, 197), 255, 1)
+    cv2.rectangle(ink, (195, 203), (300, 206), 255, 1)
+
+
+def test_puerta_corrediza_por_hojas_desfasadas() -> None:
+    ink = _canvas()
+    _hojas_desfasadas(ink)
+    assert sliding_door_evidence(ink, (100, 200), (300, 200), 14) >= 0.9
+    assert classify_gap(ink, (100, 200), (300, 200), 14)[0] == "door"
+
+
+def test_ventana_corrediza_con_alfeizar_sigue_siendo_ventana() -> None:
+    ink = _canvas()
+    _hojas_desfasadas(ink)
+    cv2.line(ink, (100, 199), (300, 199), 255, 1)  # alféizar de jamba a jamba
+    cv2.line(ink, (100, 201), (300, 201), 255, 1)
+    assert sliding_door_evidence(ink, (100, 200), (300, 200), 14) == 0.0
+    assert classify_gap(ink, (100, 200), (300, 200), 14)[0] == "window"
