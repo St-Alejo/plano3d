@@ -7,6 +7,7 @@ Mismas reglas que ``building``: metros, inmutables, invariantes en el constructo
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, replace
 from enum import StrEnum
 
@@ -125,6 +126,42 @@ class Column:
             width=self.width * factor,
             depth=self.depth * factor,
         )
+
+
+#: catálogo: identificador en minúsculas, dígitos, "_" o "-" (p. ej. "cama_doble")
+_CATALOG_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,47}$")
+#: material: mismo formato que el catálogo (p. ej. "madera_roble")
+MATERIAL_ID = _CATALOG_ID
+
+
+@dataclass(frozen=True, slots=True)
+class Furniture:
+    """Mueble del catálogo colocado en el plano (ADR-016).
+
+    ``position`` es el centro de su huella; ``rotation`` en radianes; ``width`` x ``depth``
+    es la huella y ``height`` la altura, en metros. La geometría la arma el cliente a partir
+    de ``catalog_id``: el servidor solo guarda dónde está y qué tamaño tiene.
+    """
+
+    id: str
+    catalog_id: str
+    position: Point2D
+    width: float
+    depth: float
+    height: float
+    rotation: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not _CATALOG_ID.match(self.catalog_id):
+            raise InvalidGeometryError(f"Mueble {self.id}: catálogo inválido ({self.catalog_id!r})")
+        if min(self.width, self.depth, self.height) <= 0:
+            raise InvalidGeometryError(f"El mueble {self.id} necesita medidas positivas")
+        if not math.isfinite(self.rotation):
+            raise InvalidGeometryError(f"El mueble {self.id} tiene una rotación inválida")
+
+    def scaled(self, factor: float) -> Furniture:
+        """Al recalibrar la escala se mueve con el plano, pero conserva su tamaño real."""
+        return replace(self, position=self.position.scaled(factor))
 
 
 @dataclass(frozen=True, slots=True)

@@ -24,6 +24,7 @@ from plano3d.domain import (
     Column,
     Dimension,
     DimensionAxis,
+    Furniture,
     LabelKind,
     Level,
     Measure,
@@ -107,6 +108,9 @@ class RoomDTO(_DTO):
     room_type: RoomType | None = None
     holes: list[list[PointDTO]] | None = None
     declared_area: float | None = Field(default=None, description="área escrita en el plano")
+    floor_material: str | None = Field(
+        default=None, description="acabado de piso (null = según el tipo)"
+    )
 
 
 class ColumnDTO(_DTO):
@@ -117,6 +121,18 @@ class ColumnDTO(_DTO):
     round: bool = False
     rotation: float = 0.0
     confidence: float = 1.0
+
+
+class FurnitureDTO(_DTO):
+    """Mueble del catálogo (ADR-016): el cliente arma la geometría desde ``catalog_id``."""
+
+    id: str
+    catalog_id: str
+    position: PointDTO = Field(description="centro de la huella, m")
+    width: float
+    depth: float
+    height: float
+    rotation: float = Field(default=0.0, description="radianes")
 
 
 class StairDTO(_DTO):
@@ -167,6 +183,7 @@ class LevelDTO(_DTO):
     stairs: list[StairDTO] | None = None
     dimensions: list[DimensionDTO] | None = None
     labels: list[TextLabelDTO] | None = None
+    furniture: list[FurnitureDTO] | None = None
 
 
 class ScaleDTO(_DTO):
@@ -355,6 +372,7 @@ def _room_to_dto(r: Room) -> RoomDTO:
         room_type=r.room_type,
         holes=[[_p(p) for p in h] for h in r.holes],
         declared_area=r.declared_area,
+        floor_material=r.floor_material,
     )
 
 
@@ -411,6 +429,18 @@ def _level_to_dto(lv: Level) -> LevelDTO:
             for s in lv.stairs
         ],
         dimensions=[_dimension_to_dto(d) for d in lv.dimensions],
+        furniture=[
+            FurnitureDTO(
+                id=f.id,
+                catalog_id=f.catalog_id,
+                position=_p(f.position),
+                width=f.width,
+                depth=f.depth,
+                height=f.height,
+                rotation=f.rotation,
+            )
+            for f in lv.furniture
+        ],
         labels=[
             TextLabelDTO(
                 id=t.id,
@@ -493,6 +523,7 @@ def _room_from_dto(r: RoomDTO) -> Room:
         room_type=r.room_type or RoomType.OTHER,
         holes=tuple(tuple(_pt(p) for p in h) for h in (r.holes or [])),
         declared_area=r.declared_area,
+        floor_material=r.floor_material,
     )
 
 
@@ -547,6 +578,18 @@ def _level_from_dto(lv: LevelDTO) -> Level:
             for s in (lv.stairs or [])
         ),
         dimensions=tuple(_dimension_from_dto(d) for d in (lv.dimensions or [])),
+        furniture=tuple(
+            Furniture(
+                id=f.id,
+                catalog_id=f.catalog_id,
+                position=_pt(f.position),
+                width=f.width,
+                depth=f.depth,
+                height=f.height,
+                rotation=f.rotation,
+            )
+            for f in (lv.furniture or [])
+        ),
         labels=tuple(
             TextLabel(
                 id=t.id,

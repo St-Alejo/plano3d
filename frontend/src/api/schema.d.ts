@@ -492,6 +492,30 @@ export interface components {
              */
             wall_ids: string[];
         };
+        /**
+         * FurnitureDTO
+         * @description Mueble del catálogo (ADR-016): el cliente arma la geometría desde ``catalog_id``.
+         */
+        FurnitureDTO: {
+            /** Catalog Id */
+            catalog_id: string;
+            /** Depth */
+            depth: number;
+            /** Height */
+            height: number;
+            /** Id */
+            id: string;
+            /** @description centro de la huella, m */
+            position: components["schemas"]["PointDTO"];
+            /**
+             * Rotation
+             * @description radianes
+             * @default 0
+             */
+            rotation: number;
+            /** Width */
+            width: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -513,6 +537,8 @@ export interface components {
              * @default 0
              */
             elevation: number;
+            /** Furniture */
+            furniture?: components["schemas"]["FurnitureDTO"][] | null;
             /**
              * Height
              * @description entrepiso en m (null = 2,6)
@@ -760,6 +786,11 @@ export interface components {
              * @description área escrita en el plano
              */
             declared_area?: number | null;
+            /**
+             * Floor Material
+             * @description acabado de piso (null = según el tipo)
+             */
+            floor_material?: string | null;
             /** Holes */
             holes?: components["schemas"]["PointDTO"][][] | null;
             /** Id */

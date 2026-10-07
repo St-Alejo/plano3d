@@ -452,6 +452,51 @@
         "title": "DimensionDTO",
         "type": "object"
       },
+      "FurnitureDTO": {
+        "description": "Mueble del catálogo (ADR-016): el cliente arma la geometría desde ``catalog_id``.",
+        "properties": {
+          "catalog_id": {
+            "title": "Catalog Id",
+            "type": "string"
+          },
+          "depth": {
+            "title": "Depth",
+            "type": "number"
+          },
+          "height": {
+            "title": "Height",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/PointDTO",
+            "description": "centro de la huella, m"
+          },
+          "rotation": {
+            "default": 0.0,
+            "description": "radianes",
+            "title": "Rotation",
+            "type": "number"
+          },
+          "width": {
+            "title": "Width",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "catalog_id",
+          "position",
+          "width",
+          "depth",
+          "height"
+        ],
+        "title": "FurnitureDTO",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -511,6 +556,20 @@
             "default": 0.0,
             "title": "Elevation",
             "type": "number"
+          },
+          "furniture": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FurnitureDTO"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Furniture"
           },
           "height": {
             "anyOf": [
@@ -1100,6 +1159,18 @@
             ],
             "description": "área escrita en el plano",
             "title": "Declared Area"
+          },
+          "floor_material": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "acabado de piso (null = según el tipo)",
+            "title": "Floor Material"
           },
           "holes": {
             "anyOf": [

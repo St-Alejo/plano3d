@@ -24,8 +24,10 @@ from typing import Literal
 from shapely.geometry import Polygon
 
 from plano3d.domain.elements import (
+    MATERIAL_ID,
     Column,
     Dimension,
+    Furniture,
     Measure,
     OpeningOperation,
     RoomType,
@@ -203,6 +205,8 @@ class Room:
     holes: tuple[tuple[Point2D, ...], ...] = ()
     #: área escrita en el plano ("A= 12,50 m²"), para validar el polígono
     declared_area: float | None = None
+    #: acabado de piso elegido en el editor (None = según el tipo de ambiente)
+    floor_material: str | None = None
 
     def __post_init__(self) -> None:
         if len(self.polygon) < 3 or any(len(h) < 3 for h in self.holes):
@@ -210,6 +214,8 @@ class Room:
         _check_confidence(self.confidence)
         if self.declared_area is not None and self.declared_area <= 0:
             raise InvalidGeometryError(f"El área declarada de {self.id} debe ser positiva")
+        if self.floor_material is not None and not MATERIAL_ID.match(self.floor_material):
+            raise InvalidGeometryError(f"Material de piso inválido en {self.id}")
         shape = self.as_shapely()
         if not shape.is_valid or shape.area <= EPS:
             raise InvalidGeometryError(f"El polígono de la habitación {self.id} no es válido")
@@ -258,6 +264,7 @@ class Level:
     stairs: tuple[Stair, ...] = ()
     dimensions: tuple[Dimension, ...] = ()
     labels: tuple[TextLabel, ...] = ()
+    furniture: tuple[Furniture, ...] = ()
 
     def __post_init__(self) -> None:
         if self.height <= 0:
@@ -267,6 +274,7 @@ class Level:
         _check_unique_ids("columna", [c.id for c in self.columns])
         _check_unique_ids("escalera", [s.id for s in self.stairs])
         _check_unique_ids("cota", [d.id for d in self.dimensions])
+        _check_unique_ids("mueble", [f.id for f in self.furniture])
         shapes = [(r.id, r.as_shapely()) for r in self.rooms]
         for i, (id_a, a) in enumerate(shapes):
             for id_b, b in shapes[i + 1 :]:
@@ -327,6 +335,7 @@ class Level:
             stairs=tuple(s.scaled(factor) for s in self.stairs),
             dimensions=tuple(d.scaled(factor) for d in self.dimensions),
             labels=tuple(t.scaled(factor) for t in self.labels),
+            furniture=tuple(f.scaled(factor) for f in self.furniture),
         )
 
 
