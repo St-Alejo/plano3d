@@ -20,7 +20,7 @@ from plano3d.infrastructure.cv.stages.layout import SheetLayoutStage
 from plano3d.infrastructure.cv.stages.openings import OpeningsStage
 from plano3d.infrastructure.cv.stages.preprocess import PreprocessStage
 from plano3d.infrastructure.cv.stages.rectify import RectifyStage
-from plano3d.infrastructure.cv.stages.room_names import RoomNamesStage
+from plano3d.infrastructure.cv.stages.room_names import RoomNamesStage, TextSpotStage
 from plano3d.infrastructure.cv.stages.rooms import RoomsStage
 from plano3d.infrastructure.cv.stages.scale import ScaleStage
 from plano3d.infrastructure.cv.stages.topology import TopologyStage
@@ -36,13 +36,14 @@ def default_stages(spotter: TextSpotter | None = None) -> list[PipelineStage[CVC
         SheetLayoutStage(),
         RectifyStage(),
         PreprocessStage(),
+        TextSpotStage(spotter),
         WallMaskStage(),
         VectorizeStage(),
         ScaleStage(),
         OpeningsStage(),
         TopologyStage(),
         RoomsStage(),
-        RoomNamesStage(spotter),
+        RoomNamesStage(),
         AssembleStage(),
     ]
 

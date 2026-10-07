@@ -31,3 +31,9 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa2  (raster-vector)  escala estimated error -10.0%  niveles 1/1
 - Planta 1: muros F1 0.88 (P 0.85 R 0.92, extremos 0.34, 27/20) · aberturas P 0.29 R 0.27 (21/22) · ambientes 4/6 IoU 0.50 nombres 3/6
 - falta: Planta 1: muros, Planta 1: aberturas, Planta 1: ambientes, Planta 1: nombres
+
+### 2026-10-07 08:23 — Reglas de render: tramos cortos alineados/en T, ventana en vano de fachada sin trazos, paso interior ancho sin hoja (no divide), ventanal por parantes, ancho mínimo de ambiente 0,6 m, OCR temprano para excluir letras de la evidencia, bisagra sobre muro transversal solo por arco. Ambientes 6/6 IoU 0.93 nombres 6/6. Sintéticos difícil: ventanas R 0.22→0.17 (pendiente revisar).
+
+## casa2  (raster-vector)  escala estimated error -10.0%  niveles 1/1
+- Planta 1: muros F1 0.90 (P 0.81 R 1.00, extremos 0.46, 32/20) · aberturas P 0.39 R 0.46 (26/22) · ambientes 6/6 IoU 0.93 nombres 6/6
+- falta: Planta 1: muros, Planta 1: aberturas

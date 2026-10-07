@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import numpy.typing as npt
 
+from plano3d.application.ports import SpottedText
 from plano3d.domain import BuildingModel
 
 Img = npt.NDArray[np.uint8]
@@ -89,6 +90,8 @@ class CVContext:
     meters_per_pixel: float = 0.0
     scale_confidence: float = 0.0
     rooms: list[PxRoom] = field(default_factory=list)
+    #: textos leídos en ``rectified`` (nombres, cotas, rótulos); vacío sin OCR
+    texts: list[SpottedText] = field(default_factory=list)
     model: BuildingModel | None = None
     metrics: dict[str, float] = field(default_factory=dict)
 

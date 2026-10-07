@@ -8,13 +8,15 @@ eso se mira cuánta tinta fina hay DENTRO de la banda del muro en el hueco.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 import cv2
 import numpy as np
 
 from plano3d.application.pipeline import PipelineStage
-from plano3d.infrastructure.cv.context import CVContext, Img, PxOpening, Segment
+from plano3d.infrastructure.cv.context import CVContext, Img, PxOpening, Segment, as_u8
+from plano3d.infrastructure.cv.stages.room_names import text_mask
 
 MIN_OPENING_M = 0.45
 MAX_OPENING_M = 2.6
@@ -119,6 +121,22 @@ def _operation(
     return None
 
 
+#: un vano de puerta sin hoja ni arco y al menos así de ancho es un paso (vestíbulo→sala)
+PASSAGE_MIN_M = 1.2
+
+
+def _has_swing(ink: Img, a: tuple[float, float], b: tuple[float, float]) -> bool:
+    width = math.dist(a, b)
+    if width < 1:
+        return False
+    u = ((b[0] - a[0]) / width, (b[1] - a[1]) / width)
+    swing = max(
+        door_swing_evidence(ink, a, u, width),
+        door_swing_evidence(ink, b, (-u[0], -u[1]), width),
+    )
+    return swing >= SWING_EVIDENCE
+
+
 def classify_gap(
     ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
 ) -> tuple[str, float]:
@@ -154,10 +172,59 @@ def classify_gap(
     return "door", min(0.9, 0.9 - ratio * 2)
 
 
+Pt = tuple[float, float]
+
+
+def envelope_test(segments: list[Segment], t: float) -> Callable[[Pt, Pt], bool]:
+    """Devuelve una prueba: ¿el vano a-b separa el exterior del interior del edificio?
+
+    El exterior se aproxima por lo que queda fuera del casco convexo de los muros.
+    """
+    pts = np.array([p for w in segments for p in ((w.x1, w.y1), (w.x2, w.y2))], np.float32)
+    hull = cv2.convexHull(pts) if len(pts) >= 3 else None
+
+    def test(a: Pt, b: Pt) -> bool:
+        if hull is None:
+            return False
+        mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        n = math.hypot(dx, dy) or 1.0
+        px, py = -dy / n * 2 * t, dx / n * 2 * t
+        side1 = cv2.pointPolygonTest(hull, (mx + px, my + py), False) >= 0
+        side2 = cv2.pointPolygonTest(hull, (mx - px, my - py), False) >= 0
+        return side1 != side2
+
+    return test
+
+
+def thin_ink(ink: Img, segments: list[Segment]) -> Img:
+    """Tinta sin los muros: la evidencia de puertas y ventanas (arcos, hojas, líneas) es fina,
+    y muestreada junto a un muro caería dentro de él."""
+    walls = np.zeros_like(ink)
+    for w in segments:
+        # rectángulo exacto del muro (sin puntas redondeadas): la hoja de una puerta suele ir
+        # pegada a la cara del muro y no debe quedar tapada
+        dx, dy = w.direction
+        # +1,5 px: el borde dibujado (sombra, antialias) suele exceder el grosor estimado
+        h = w.thickness / 2 + 1.5
+        quad = np.array(
+            [
+                (w.x1 - dy * h, w.y1 + dx * h),
+                (w.x2 - dy * h, w.y2 + dx * h),
+                (w.x2 + dy * h, w.y2 - dx * h),
+                (w.x1 + dy * h, w.y1 - dx * h),
+            ]
+        )
+        cv2.fillPoly(walls, [np.round(quad).astype(np.int32)], 255)
+    return np.asarray(cv2.bitwise_and(ink, cv2.bitwise_not(walls)), np.uint8)
+
+
 def merge_openings(segments: list[Segment], t: float, mpp: float, ink: Img) -> list[Segment]:
     min_gap = MIN_OPENING_M / mpp
     max_gap = MAX_OPENING_M / mpp
     result: list[Segment] = []
+    on_envelope = envelope_test(segments, t)
+    thin = thin_ink(ink, segments)
     for ang, group in _group_collinear(segments, t):
         ux, uy = math.cos(math.radians(ang)), math.sin(math.radians(ang))
         nx, ny = -uy, ux
@@ -177,7 +244,18 @@ def merge_openings(segments: list[Segment], t: float, mpp: float, ink: Img) -> l
         for nxt in pieces[1:]:
             gap = nxt.start - cur.end
             similar = 0.5 < nxt.thickness / cur.thickness < 2.0
-            if gap <= min_gap or (similar and gap <= max_gap):
+            a = (ux * cur.end + nx * cur.offset, uy * cur.end + ny * cur.offset)
+            b = (ux * nxt.start + nx * cur.offset, uy * nxt.start + ny * cur.offset)
+            # un ventanal (vidrio de piso a techo) pasa de 2,6 m, pero lo cruza una línea fina
+            glazed = (
+                similar
+                and max_gap < gap <= GLAZED_FACTOR * max_gap
+                and (
+                    window_line_evidence(ink, a, b, cur.thickness) >= WINDOW_LINE_EVIDENCE
+                    or mullion_count(ink, a, b, cur.thickness) >= MIN_MULLIONS
+                )
+            )
+            if gap <= min_gap or (similar and gap <= max_gap) or glazed:
                 total = (cur.end - cur.start) + (nxt.end - nxt.start)
                 w_cur = (cur.end - cur.start) / total if total else 0.5
                 merged = _Piece(
@@ -190,10 +268,14 @@ def merge_openings(segments: list[Segment], t: float, mpp: float, ink: Img) -> l
                     + [replace(o, offset=o.offset + (nxt.start - cur.start)) for o in nxt.openings],
                 )
                 if gap > min_gap:
-                    a = (ux * cur.end + nx * cur.offset, uy * cur.end + ny * cur.offset)
-                    b = (ux * nxt.start + nx * cur.offset, uy * nxt.start + ny * cur.offset)
                     kind, conf = classify_gap(ink, a, b, merged.thickness)
                     op = _operation(kind, ink, a, b, merged.thickness)
+                    if op is None and kind == "door" and not _has_swing(thin, a, b):
+                        if on_envelope(a, b):
+                            # en la fachada, un vano sin hoja es ventana (renders sin trazos)
+                            kind, conf = "window", 0.5
+                        elif gap * mpp >= PASSAGE_MIN_M:
+                            op = "none"  # paso entre dos espacios interiores
                     merged.openings.append(PxOpening(cur.end - cur.start, gap, kind, conf, op))
                 cur = merged
             else:
@@ -212,7 +294,11 @@ def _ink_near(ink: Img, x: float, y: float, r: int = 2) -> bool:
 
 
 def door_swing_evidence(
-    ink: Img, hinge: tuple[float, float], u: tuple[float, float], width: float
+    ink: Img,
+    hinge: tuple[float, float],
+    u: tuple[float, float],
+    width: float,
+    use_leaf: bool = True,
 ) -> float:
     """Cobertura (0..1) del arco de giro o de la hoja de una puerta con bisagra en ``hinge``.
 
@@ -225,22 +311,67 @@ def door_swing_evidence(
         n = (-u[1] * side, u[0] * side)
         arc = 0
         steps = 24
-        for k in range(1, steps):
+        # se ignoran los extremos del arco: junto a las jambas cae tinta ajena (muros, hojas
+        # de otras puertas) que no prueba nada
+        lo, hi = 4, steps - 3
+        for k in range(lo, hi + 1):
             a = math.pi / 2 * k / steps
             px = hinge[0] + width * (u[0] * math.cos(a) + n[0] * math.sin(a))
             py = hinge[1] + width * (u[1] * math.cos(a) + n[1] * math.sin(a))
             arc += _ink_near(ink, px, py)
         leaf = 0
+        # la hoja va pegada a la jamba, que puede quedar unos px más allá del extremo
+        # detectado del muro: se busca en una franja de hasta ~6 px dentro del vano
         for k in range(2, 12):
             f = width * k / 12
-            leaf += _ink_near(ink, hinge[0] + n[0] * f, hinge[1] + n[1] * f, 1)
-        best = max(best, arc / (steps - 1), leaf / 10)
+            leaf += any(
+                _ink_near(ink, hinge[0] + u[0] * d + n[0] * f, hinge[1] + u[1] * d + n[1] * f, 1)
+                for d in (1, 3.5, 6)
+            )
+        best = max(best, arc / (hi - lo + 1), leaf / 10 if use_leaf else 0.0)
     return best
 
 
 SWING_EVIDENCE = 0.4
+GLAZED_FACTOR = 2.5
 MAX_SWING_DOOR_M = 1.25
 WINDOW_LINE_EVIDENCE = 0.8
+
+
+MIN_MULLIONS = 2
+
+
+def mullion_count(
+    ink: Img, a: tuple[float, float], b: tuple[float, float], thickness: float
+) -> int:
+    """Parantes de un ventanal: manchas cortas de tinta sobre el eje del muro dentro del vano.
+
+    Muchos renders dibujan el vidrio con un gris claro que no llega a ser tinta, pero los
+    parantes (y marcos) sí; dos o más, separados, delatan un paño de vidrio.
+    """
+    length = math.dist(a, b)
+    if length < 1:
+        return 0
+    ux, uy = (b[0] - a[0]) / length, (b[1] - a[1]) / length
+    margin = thickness  # las jambas no cuentan
+    runs, inside, run = 0, False, 0
+    for k in range(int(margin), int(length - margin)):
+        hit = _ink_near(ink, a[0] + ux * k, a[1] + uy * k, 0)
+        if hit and not inside:
+            inside, run = True, 0
+        if inside:
+            run += 1
+        if not hit and inside:
+            inside = False
+            c = k - run / 2
+            cx, cy = a[0] + ux * c, a[1] + uy * c
+            # un parante es corto a lo largo y no se sale del grosor del muro (un mueble sí)
+            across = sum(
+                _ink_near(ink, cx - uy * d, cy + ux * d, 0)
+                for d in (-1.5 * thickness, 1.5 * thickness)
+            )
+            runs += run <= 2 * thickness and across == 0
+    return runs
 
 
 def window_line_evidence(
@@ -282,30 +413,16 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
     la punta de un tabique hasta un muro transversal (típica de baños y closets) quedaba
     abierta y unía dos ambientes. Aquí se prolonga el muro hasta el otro y el tramo nuevo
     es la abertura, pero solo si la tinta lo respalda: arco u hoja de puerta, o líneas
-    finas de ventana/corrediza en la banda. Sin evidencia no se inventa nada (una esquina
-    normal también tiene un muro "más adelante").
+    finas de ventana/corrediza en la banda, o que el vano esté en la fachada (un lado fuera
+    del edificio). Sin evidencia no se inventa nada (una esquina normal también tiene un
+    muro "más adelante").
     """
     min_gap = MIN_OPENING_M / mpp
     max_gap = MAX_OPENING_M / mpp
     out = list(segments)
-    # la evidencia (arcos, hojas, líneas de ventana) es tinta FINA: se excluyen los muros,
-    # si no la "hoja" muestreada junto a un muro transversal cae dentro de él
-    walls = np.zeros_like(ink)
-    for w in out:
-        # rectángulo exacto del muro (sin puntas redondeadas): la hoja de una puerta suele ir
-        # pegada a la cara del muro y no debe quedar tapada
-        dx, dy = w.direction
-        h = w.thickness / 2
-        quad = np.array(
-            [
-                (w.x1 - dy * h, w.y1 + dx * h),
-                (w.x2 - dy * h, w.y2 + dx * h),
-                (w.x2 + dy * h, w.y2 - dx * h),
-                (w.x1 + dy * h, w.y1 - dx * h),
-            ]
-        )
-        cv2.fillPoly(walls, [np.round(quad).astype(np.int32)], 255)
-    thin: Img = np.asarray(cv2.bitwise_and(ink, cv2.bitwise_not(walls)), np.uint8)
+    thin = thin_ink(ink, out)
+    on_envelope = envelope_test(out, t)
+
     for i, s in enumerate(out):
         for end in (0, 1):
             ex, ey = (s.x2, s.y2) if end else (s.x1, s.y1)
@@ -341,16 +458,23 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
             sliding: str | None = None
             swing = max(
                 door_swing_evidence(thin, a, (ux, uy), free),
-                door_swing_evidence(thin, b, (-ux, -uy), free),
+                # bisagra sobre la cara del muro transversal: la hoja abierta quedaría a lo
+                # largo de esa cara y se confunde con su borde; ahí solo cuenta el arco
+                door_swing_evidence(thin, b, (-ux, -uy), free, use_leaf=False),
             )
             # una puerta batiente de una hoja no pasa de ~1,25 m; un arco más grande cruza
             # cualquier línea del plano por casualidad
-            if swing >= SWING_EVIDENCE and kind == "door" and free * mpp <= MAX_SWING_DOOR_M:
-                conf = max(conf, 0.85)
+            if swing >= SWING_EVIDENCE and free * mpp <= MAX_SWING_DOOR_M:
+                # el arco manda: su propia tinta en la banda no la vuelve ventana
+                kind, conf = "door", max(conf, 0.85)
             elif (sliding := _operation("door", ink, a, b, s.thickness)) is not None:
                 kind, conf = "door", max(conf, 0.8)
             elif window_line_evidence(thin, a, b, s.thickness) >= WINDOW_LINE_EVIDENCE:
                 kind, conf = "window", max(conf, 0.8)
+            elif on_envelope(a, b):
+                # la fachada no tiene agujeros: un vano sin trazos en ella es una ventana
+                # (los renders las dibujan como un hueco con relleno claro)
+                kind, conf = "window", 0.5
             else:
                 continue  # sin arco, hoja ni líneas de ventana: no se inventa la abertura
             nx, ny = ex + ux * along, ey + uy * along
@@ -372,6 +496,9 @@ class OpeningsStage(PipelineStage[CVContext]):
 
     def run(self, ctx: CVContext) -> CVContext:
         ink = ctx.require(ctx.ink, "ink")
+        if ctx.texts:
+            # las letras no son evidencia de arcos, hojas ni vidrios
+            ink = as_u8(cv2.bitwise_and(ink, cv2.bitwise_not(text_mask(ink.shape, ctx.texts))))
         segs = merge_openings(ctx.segments, ctx.wall_thickness_px, ctx.meters_per_pixel, ink)
         ctx.segments = bridge_end_gaps(segs, ctx.wall_thickness_px, ctx.meters_per_pixel, ink)
         return ctx

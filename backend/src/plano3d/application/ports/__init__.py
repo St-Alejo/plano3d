@@ -193,6 +193,7 @@ class SpottedText:
     x: float
     y: float
     height: float
+    width: float = 0.0
 
 
 class TextSpotter(ABC):

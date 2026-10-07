@@ -33,10 +33,16 @@ def estimate_stroke_thickness(ink: Img) -> float:
     return float(np.median(near)) if near.size else float(mode)
 
 
-def extract_wall_mask(ink: Img, thickness: float) -> Img:
+def thick_strokes(ink: Img, thickness: float) -> Img:
     """Apertura morfológica: sobreviven solo los trazos al menos tan gruesos como ~60% del muro."""
     k = max(2, round(thickness * 0.6))
-    walls = cv2.morphologyEx(ink, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (k, k)))
+    return as_u8(
+        cv2.morphologyEx(ink, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (k, k)))
+    )
+
+
+def extract_wall_mask(ink: Img, thickness: float) -> Img:
+    walls = thick_strokes(ink, thickness)
     # descarta manchas compactas (letras en negrita, logos): un muro es alargado
     n, labels, stats, _ = cv2.connectedComponentsWithStats(walls, connectivity=8)
     keep = np.zeros(n, np.uint8)
@@ -115,13 +121,72 @@ def _diagonal_segments(mask: Img, axis_mask: Img, t: float) -> list[Segment]:
     return out
 
 
-def vectorize(mask: Img, t: float) -> list[Segment]:
+#: hasta dónde (en grosores de muro) un tramo corto alineado con otro sigue siendo su muro
+SHORT_PIECE_REACH = 12.0
+
+
+def _short_pieces(thick: Img, axis_mask: Img, segments: list[Segment], t: float) -> list[Segment]:
+    """Tramos rectos más cortos que 3 grosores: jambas junto a una puerta, montantes entre
+    ventanas. Solo se aceptan si tocan un muro ya hallado o siguen su eje (un mueble suelto
+    queda fuera)."""
+    grow = cv2.dilate(axis_mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
+    residual = cv2.bitwise_and(thick, cv2.bitwise_not(grow))
+    n, _, stats, _ = cv2.connectedComponentsWithStats(residual, connectivity=8)
+    out: list[Segment] = []
+    for i in range(1, n):
+        x, y, w, h, area = stats[i]
+        horizontal = w >= h
+        long_side, short_side = (w, h) if horizontal else (h, w)
+        if not (1.2 * t <= long_side < 3.5 * t and 0.5 * t <= short_side <= 1.6 * t):
+            continue
+        if area < 0.6 * w * h:
+            continue  # no es un rectángulo macizo
+        cx, cy = x + w / 2, y + h / 2
+        piece = (
+            Segment(x, cy, x + w, cy, area / w)
+            if horizontal
+            else Segment(cx, y, cx, y + h, area / h)
+        )
+        if any(_attached(piece, s, t) for s in segments):
+            out.append(piece)
+    return out
+
+
+def _attached(p: Segment, s: Segment, t: float) -> bool:
+    ph = abs(p.y2 - p.y1) < abs(p.x2 - p.x1)
+    sh = abs(s.y2 - s.y1) < abs(s.x2 - s.x1)
+    if abs(s.angle % 90) > 3 and abs(s.angle % 90) < 87:
+        return False
+    if ph == sh:
+        # mismo eje: el tramo corto sigue la línea del muro, con un vano razonable
+        if ph:
+            off, a0, a1, b0, b1 = abs(p.y1 - s.y1), p.x1, p.x2, min(s.x1, s.x2), max(s.x1, s.x2)
+        else:
+            off, a0, a1, b0, b1 = abs(p.x1 - s.x1), p.y1, p.y2, min(s.y1, s.y2), max(s.y1, s.y2)
+        gap = max(b0 - a1, a0 - b1)
+        return off <= t / 2 and gap <= SHORT_PIECE_REACH * t
+    # perpendicular: un extremo del tramo corto toca la cara del muro (jamba en T)
+    if ph:
+        wx, y0, y1 = s.x1, min(s.y1, s.y2), max(s.y1, s.y2)
+        near_end = min(abs(p.x1 - wx), abs(p.x2 - wx)) <= s.thickness / 2 + t / 2
+        return near_end and y0 - t <= p.y1 <= y1 + t
+    wy, x0, x1 = s.y1, min(s.x1, s.x2), max(s.x1, s.x2)
+    near_end = min(abs(p.y1 - wy), abs(p.y2 - wy)) <= s.thickness / 2 + t / 2
+    return near_end and x0 - t <= p.x1 <= x1 + t
+
+
+def vectorize(mask: Img, t: float, thick: Img | None = None) -> list[Segment]:
+    """Muros rectos de la máscara; ``thick`` (tinta gruesa sin filtrar por largo) permite
+    rescatar los tramos cortos que la máscara de muros descartó."""
     horiz = _axis_segments(mask, t, horizontal=True)
     vert = _axis_segments(mask, t, horizontal=False)
     axis_mask = np.zeros_like(mask)
     for s in horiz + vert:
         draw_segment(axis_mask, s, extend=True)
-    return horiz + vert + _diagonal_segments(mask, axis_mask, t)
+    short = _short_pieces(mask if thick is None else thick, axis_mask, horiz + vert, t)
+    for s in short:
+        draw_segment(axis_mask, s, extend=True)
+    return horiz + vert + short + _diagonal_segments(mask, axis_mask, t)
 
 
 def segment_polygon(s: Segment, extend: bool) -> np.ndarray:
@@ -142,9 +207,9 @@ def segment_polygon(s: Segment, extend: bool) -> np.ndarray:
     )
 
 
-def draw_segment(mask: Img, s: Segment, extend: bool = True) -> None:
+def draw_segment(mask: Img, s: Segment, extend: bool = True, value: int = 255) -> None:
     pts = np.round(segment_polygon(s, extend)).astype(np.int32)
-    cv2.fillPoly(mask, [pts], 255)
+    cv2.fillPoly(mask, [pts], value)
 
 
 class VectorizeStage(PipelineStage[CVContext]):
@@ -153,7 +218,8 @@ class VectorizeStage(PipelineStage[CVContext]):
 
     def run(self, ctx: CVContext) -> CVContext:
         mask = ctx.require(ctx.wall_mask, "wall_mask")
-        ctx.segments = vectorize(mask, ctx.wall_thickness_px)
+        thick = thick_strokes(ctx.require(ctx.ink, "ink"), ctx.wall_thickness_px)
+        ctx.segments = vectorize(mask, ctx.wall_thickness_px, thick)
         if not ctx.segments:
             raise ValueError("No se pudo vectorizar ningún muro")
         return ctx

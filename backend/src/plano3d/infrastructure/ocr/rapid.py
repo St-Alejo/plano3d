@@ -86,6 +86,7 @@ class RapidOcrSpotter(TextSpotter):
                     sum(xs) / len(xs),
                     sum(ys) / len(ys),
                     max(ys) - min(ys),
+                    max(xs) - min(xs),
                 )
             )
         return out
