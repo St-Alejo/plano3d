@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -30,3 +31,26 @@ class Settings(BaseSettings):
     s3_access_key: str = "plano3d"
     s3_secret_key: str = "plano3d-secret"
     s3_region: str = "us-east-1"
+
+
+#: variables que el SDK de Anthropic y el tope de gasto leen del entorno
+_LOCAL_KEYS = ("ANTHROPIC_API_KEY", "PLANO3D_CLAUDE_BUDGET_USD", "PLANO3D_CLAUDE")
+
+
+def load_local_env(path: Path | None = None) -> None:
+    """Copia al entorno las credenciales de ``backend/.env`` (ignorado por git).
+
+    Pydantic solo lee de ese archivo los campos ``PLANO3D_*`` de ``Settings``; el SDK de
+    Anthropic busca su clave en el entorno del proceso. Nunca pisa variables ya definidas
+    ni registra los valores.
+    """
+    env = path or Path(__file__).resolve().parents[2] / ".env"
+    try:
+        lines = env.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        key, sep, value = line.partition("=")
+        key = key.strip()
+        if sep and key in _LOCAL_KEYS and not line.lstrip().startswith("#"):
+            os.environ.setdefault(key, value.strip().strip('"').strip("'"))

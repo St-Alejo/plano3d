@@ -32,7 +32,7 @@ from plano3d.application.use_cases.projects import (
     SuggestCorners,
     UpdateBuildingModel,
 )
-from plano3d.config import Settings
+from plano3d.config import Settings, load_local_env
 from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
@@ -146,6 +146,7 @@ def default_selector() -> DetectorSelector:
 
 def text_reader() -> TextReader | None:
     """OCR local; con credenciales de Anthropic, en consenso con Claude visión."""
+    load_local_env()
     local = RapidOcrReader() if ocr_available() else None
     if claude_available():
         claude = ClaudeTextReader()

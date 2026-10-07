@@ -4,13 +4,13 @@
   "metrics": {
     "walls": 7.0,
     "rooms": 3.0,
-    "meters_per_pixel": 0.009674100623921413,
+    "meters_per_pixel": 0.009629911494447262,
     "fallback_classic": 1.0
   },
   "scale": {
-    "mpp": 0.009674100623921413,
+    "mpp": 0.009629911494447262,
     "source": "dimensions",
-    "error": 0.0042
+    "error": -0.0004
   },
   "levels_det": 1,
   "levels_gt": 1,
@@ -104,7 +104,7 @@
       ]
     }
   ],
-  "when": "2026-10-07T09:55:30",
+  "when": "2026-10-07T10:09:53",
   "pass": {
     "scale": true,
     "levels": true,
