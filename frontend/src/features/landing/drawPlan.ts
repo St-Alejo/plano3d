@@ -21,10 +21,10 @@ export interface PlanStyle {
 }
 
 export const INK_STYLE: PlanStyle = {
-  paper: '#f2eee4',
-  ink: '#16140f',
-  fine: 'rgba(22,20,15,0.55)',
-  accent: '#a8380b',
+  paper: '#f0efe9',
+  ink: '#1c1f1d',
+  fine: 'rgba(28,31,29,0.55)',
+  accent: '#2f6b55',
   labels: true,
   dimensions: true,
 }
@@ -147,10 +147,10 @@ export function drawPlan(ctx: CanvasRenderingContext2D, model: BuildingModel, f:
         const c = polygonCentroid(r.polygon)
         const size = Math.max(9, f.scale * 0.2)
         ctx.fillStyle = s.ink
-        ctx.font = `500 ${size}px "IBM Plex Mono", monospace`
-        ctx.fillText(r.label.toUpperCase(), X(c.x), Y(c.y) - size * 0.6)
+        ctx.font = `600 ${size}px "Hanken Grotesk", sans-serif`
+        ctx.fillText(r.label, X(c.x), Y(c.y) - size * 0.6)
         ctx.fillStyle = s.fine
-        ctx.font = `400 ${size * 0.85}px "IBM Plex Mono", monospace`
+        ctx.font = `400 ${size * 0.85}px "Hanken Grotesk", sans-serif`
         ctx.fillText(`${polygonArea(r.polygon).toFixed(1)} m²`, X(c.x), Y(c.y) + size * 0.7)
       }
     }
@@ -200,7 +200,7 @@ function dimLine(
   }
   ctx.stroke()
   const size = Math.max(9, f.scale * 0.2)
-  ctx.font = `500 ${size}px "IBM Plex Mono", monospace`
+  ctx.font = `600 ${size}px "Hanken Grotesk", sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'bottom'
   ctx.save()

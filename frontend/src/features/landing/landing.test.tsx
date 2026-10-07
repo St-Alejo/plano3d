@@ -80,17 +80,20 @@ function renderLanding() {
 describe('LandingPage', () => {
   it('presenta el producto y lleva a la app', () => {
     renderLanding()
-    expect(screen.getAllByRole('heading', { level: 1, name: /De la hoja/ }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('heading', { level: 1, name: /foto de tu plano/ }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('link', { name: /Convertir un plano/ })[0]).toHaveAttribute('href', '/nuevo')
     expect(screen.getByRole('link', { name: /Abrir la app/ })).toHaveAttribute('href', '/proyectos')
     expect(screen.getByRole('link', { name: /Ver mis proyectos/ })).toHaveAttribute('href', '/proyectos')
-    for (const name of [/misma hoja/, /Qué entra/, /lo corriges tú/, /Cada ambiente/, /Tu plano, en 3D/])
+    for (const name of [/sin dibujar nada/, /Qué le das/, /lo corriges tú/, /Cada ambiente/, /Tu plano, en 3D/])
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
   })
 
-  it('sin WebGL muestra las cinco figuras como lista', () => {
+  it('sin WebGL muestra los cinco pasos como lista', () => {
     renderLanding()
-    for (const f of FIGURES) expect(screen.getByText(`Fig. ${f.n}`)).toBeInTheDocument()
+    FIGURES.forEach((f, i) => {
+      expect(screen.getByText(`Paso ${i + 1}`)).toBeInTheDocument()
+      expect(screen.getByText(f.title)).toBeInTheDocument()
+    })
   })
 
   it('el cuadro de áreas suma los ambientes', () => {

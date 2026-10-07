@@ -17,8 +17,8 @@ import { buildScene, disposeScene, type BuiltScene } from '@/features/viewer3d/s
 import { drawPlan, INK_STYLE, type PlanFrame } from './drawPlan'
 import { sceneAt } from './sequence'
 
-const PAPER = '#f2eee4'
-const SIGNAL = '#e2531b'
+const PAPER = '#f0efe9'
+const SIGNAL = '#2f6b55'
 const MARGIN = 1.7
 
 function usePaperTexture(model: BuildingModel) {
@@ -136,11 +136,11 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
     <>
       <color attach="background" args={[PAPER]} />
       <ambientLight intensity={0.9} />
-      <hemisphereLight args={['#fffaf0', '#b9b0a0', 0.9]} />
+      <hemisphereLight args={['#ffffff', '#b8bcb6', 0.9]} />
       <directionalLight
         position={[paper.center.x - 6, 11, paper.center.z - 4]}
         intensity={2.3}
-        color="#fff3e2"
+        color="#fffaf2"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
@@ -152,7 +152,7 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
       {/* mesa de trabajo: recibe la sombra de la hoja y de la maqueta */}
       <mesh rotation-x={-Math.PI / 2} position={[paper.center.x, -0.02, paper.center.z]} receiveShadow>
         <planeGeometry args={[80, 80]} />
-        <meshStandardMaterial color="#e6dfd0" roughness={1} />
+        <meshStandardMaterial color="#e4e4dd" roughness={1} />
       </mesh>
       <group ref={sheet} position={[paper.center.x, 0, paper.center.z]}>
         <mesh rotation-x={-Math.PI / 2} receiveShadow castShadow>

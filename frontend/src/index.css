@@ -36,7 +36,7 @@
   --radius-md: 5px;
 }
 
-/* Tema claro: "papel" — la misma lámina de la landing (papel crema + tinta). */
+/* Tema claro: "papel" (papel crema + tinta). */
 [data-theme='light'] {
   --color-canvas: #f2eee4;
   --color-surface: #f8f5ee;
@@ -126,69 +126,43 @@
 }
 
 /*
- * Landing "Lámina A-01": siempre en papel, independiente del tema de la app.
- * Tinta sobre papel crema, retícula milimétrica, un solo acento (naranja lápiz).
- * `--l-signal` solo para gráficos y texto grande; el texto pequeño usa `--l-signal-ink` (AA).
+ * Landing: siempre en claro, independiente del tema de la app. Fondo casi blanco,
+ * tinta grafito y un único acento verde. Una sola familia (Hanken Grotesk).
+ * `--l-signal` pasa AA sobre `--l-paper`; `--l-signal-ink` es para texto pequeño.
  */
-.lamina {
-  --l-paper: #f2eee4;
-  --l-paper-2: #e9e3d5;
-  --l-ink: #16140f;
-  --l-graphite: #55524a;
-  --l-hair: rgb(22 20 15 / 0.16);
-  --l-hair-strong: rgb(22 20 15 / 0.42);
-  --l-signal: #e2531b;
-  --l-signal-ink: #a3360a;
+.landing {
+  --l-paper: #fafaf7;
+  --l-paper-2: #f0efe9;
+  --l-ink: #1c1f1d;
+  --l-graphite: #5a615d;
+  --l-hair: rgb(28 31 29 / 0.12);
+  --l-hair-strong: rgb(28 31 29 / 0.26);
+  --l-signal: #2f6b55;
+  --l-signal-ink: #24543f;
+  --l-signal-soft: #e2ede6;
+  --l-deep: #17322a;
   background: var(--l-paper);
   color: var(--l-ink);
-  font-family: var(--font-sans);
+  font-family: 'Hanken Grotesk', var(--font-sans);
+  font-feature-settings: 'ss01';
 }
-.lamina ::selection {
-  background: var(--l-signal);
-  color: var(--l-paper);
+.landing h1,
+.landing h2,
+.landing h3 {
+  font-family: inherit;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
-.lamina :focus-visible {
-  outline: 2px solid var(--l-signal-ink);
+.landing p {
+  text-wrap: pretty;
+}
+.landing ::selection {
+  background: var(--l-signal-soft);
+  color: var(--l-ink);
+}
+.landing :focus-visible {
+  outline: 2px solid var(--l-signal);
   outline-offset: 3px;
-}
-.lamina .mm-grid {
-  background-image:
-    linear-gradient(rgb(22 20 15 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(22 20 15 / 0.07) 1px, transparent 1px),
-    linear-gradient(rgb(22 20 15 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(22 20 15 / 0.035) 1px, transparent 1px);
-  background-size:
-    60px 60px,
-    60px 60px,
-    12px 12px,
-    12px 12px;
-}
-.lamina .serif {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-}
-/* cota horizontal: línea fina con marcas oblicuas en los extremos */
-.lamina .dim-h {
-  position: relative;
-  height: 1px;
-  background: var(--l-signal);
-}
-.lamina .dim-h::before,
-.lamina .dim-h::after {
-  content: '';
-  position: absolute;
-  top: -5px;
-  width: 1px;
-  height: 11px;
-  background: var(--l-signal);
-  transform: rotate(45deg);
-}
-.lamina .dim-h::before {
-  left: 0;
-}
-.lamina .dim-h::after {
-  right: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

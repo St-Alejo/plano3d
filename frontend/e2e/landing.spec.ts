@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url'
 
 const PHOTO = fileURLToPath(new URL('./fixtures/plano-foto.jpg', import.meta.url))
 
-test('la secuencia del hero avanza figura por figura con el scroll', async ({ page }) => {
+test('la secuencia del hero avanza paso a paso con el scroll', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto('/')
   const stage = page.getByRole('region', { name: /Del plano al modelo 3D/ })
   await expect(stage).toBeVisible()
-  const steps = page.getByRole('list', { name: 'Figuras de la secuencia' }).getByRole('listitem')
+  const steps = page.getByRole('list', { name: 'Pasos de la secuencia' }).getByRole('listitem')
   await expect(steps.nth(0)).toHaveAttribute('aria-current', 'step')
 
   const box = await stage.evaluate((el: HTMLElement) => ({ top: el.offsetTop, h: el.offsetHeight }))
@@ -40,9 +40,9 @@ test('los enlaces principales llevan a la app', async ({ page }) => {
 
 test.describe('movimiento reducido', () => {
   test.use({ reducedMotion: 'reduce' })
-  test('muestra la lámina estática con las cinco figuras', async ({ page }) => {
+  test('muestra el plano estático con los cinco pasos', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('region', { name: /Del plano al modelo 3D/ })).toHaveCount(0)
-    for (const n of ['01', '02', '03', '04', '05']) await expect(page.getByText(`Fig. ${n}`, { exact: true })).toBeVisible()
+    for (const n of [1, 2, 3, 4, 5]) await expect(page.getByText(`Paso ${n}`, { exact: true })).toBeVisible()
   })
 })
