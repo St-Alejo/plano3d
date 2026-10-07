@@ -9,6 +9,7 @@ const LAYERS: { key: LayerKey; label: string; lockable: boolean }[] = [
   { key: 'walls', label: 'Muros', lockable: true },
   { key: 'openings', label: 'Puertas y ventanas', lockable: true },
   { key: 'dimensions', label: 'Cotas y elementos', lockable: true },
+  { key: 'furniture', label: 'Mobiliario', lockable: true },
 ]
 
 export function LayersPanel() {
@@ -22,6 +23,7 @@ export function LayersPanel() {
         walls: level.walls.length,
         openings: level.walls.reduce((n, w) => n + w.openings.length, 0),
         dimensions: (level.dimensions?.length ?? 0) + (level.columns?.length ?? 0) + (level.stairs?.length ?? 0),
+        furniture: level.furniture?.length ?? 0,
       }
     : {}
 

@@ -1,4 +1,4 @@
-import { AppWindow, DoorOpen, MousePointer2, MoveHorizontal, PenLine, Ruler, Scaling } from 'lucide-react'
+import { AppWindow, DoorOpen, MousePointer2, MoveHorizontal, PaintRoller, PenLine, Ruler, Scaling } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Tool } from '@/store/editorStore'
 
@@ -9,5 +9,6 @@ export const TOOLS: { id: Tool; label: string; key: string; icon: ReactNode; hin
   { id: 'window', label: 'Agregar ventana', key: 'N', icon: <AppWindow className="size-5" aria-hidden />, hint: 'Haz clic sobre un muro para agregar una ventana.', touchHint: 'Toca un muro para agregar una ventana.' },
   { id: 'measure', label: 'Medir', key: 'M', icon: <Ruler className="size-5" aria-hidden />, hint: 'Clic en puntos sucesivos: 2 puntos miden una distancia; 3 o más, un área. Esc para empezar de nuevo.', touchHint: 'Toca puntos sucesivos: 2 puntos miden una distancia; 3 o más, un área.' },
   { id: 'dimension', label: 'Acotar', key: 'A', icon: <MoveHorizontal className="size-5" aria-hidden />, hint: 'Arrastra entre dos puntos para dejar una cota fija. Luego puedes escribir la medida real y ajustar el plano.', touchHint: 'Desliza entre dos puntos para dejar una cota fija.' },
+  { id: 'paint', label: 'Pintar acabados', key: 'P', icon: <PaintRoller className="size-5" aria-hidden />, hint: 'Clic en un muro para aplicar su acabado o en un ambiente para cambiar su piso (elige los acabados en el panel Materiales).', touchHint: 'Toca un muro o un ambiente para aplicar el acabado elegido.' },
   { id: 'calibrate', label: 'Calibrar escala', key: 'C', icon: <Scaling className="size-5" aria-hidden />, hint: 'Traza una línea sobre una medida conocida (p. ej. una cota) e ingresa los metros reales.', touchHint: 'Desliza el dedo sobre una medida conocida (p. ej. una cota) e ingresa los metros reales.' },
 ]

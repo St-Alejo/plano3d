@@ -9,10 +9,9 @@ export const SORT_LABEL: Record<ProjectSort, string> = {
   area: 'Mayor superficie',
 }
 
-/** Sin tildes ni mayúsculas: "Alcoba" encuentra "alcóba" y viceversa. */
-export function normalize(s: string): string {
-  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
-}
+import { normalize } from '@/lib/text'
+
+export { normalize }
 
 export function listProjects(items: ProjectSummary[], query: string, sort: ProjectSort): ProjectSummary[] {
   const q = normalize(query)

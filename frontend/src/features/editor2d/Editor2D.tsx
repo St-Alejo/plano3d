@@ -5,15 +5,17 @@
  */
 import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Circle, Group, Image as KImage, Label, Layer, Line, Stage, Tag, Text } from 'react-konva'
+import { Circle, Group, Image as KImage, Label, Layer, Line, Rect, Stage, Tag, Text } from 'react-konva'
 import type { Point, Wall } from '@/api/types'
-import { AddDimension, AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetWallLength } from '@/domain/commands'
+import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, UpdateFurniture } from '@/domain/commands'
+import { catalogItem, FURNITURE_DRAG, scaledParts } from '@/domain/catalog'
+import { wallsHitBy } from '@/domain/furniture'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { PlanElements } from './PlanElements'
-import { contentBounds, parseLength, wallsInBox } from './selectionMath'
+import { contentBounds, parseLength, pointInPolygon, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
 
 const LOW_CONFIDENCE = 0.6
@@ -28,6 +30,7 @@ const C = {
   text: '#122036',
   draft: '#e8a23d',
   guide: '#e2531b',
+  hit: '#c0392b',
 }
 
 function useImage(url: string | undefined): HTMLImageElement | undefined {
@@ -73,6 +76,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const hidden = useEditor((s) => s.hiddenLayers)
   const locked = useEditor((s) => s.lockedLayers)
   const setPointer = useEditor((s) => s.setPointer)
+  const brush = useEditor((s) => s.brush)
+  const stageRef = useRef<Konva.Stage>(null)
   const dispatch = useEditor((s) => s.dispatch)
   const gridStep = useEditor((s) => s.gridStep)
   const showDimensions = useEditor((s) => s.showDimensions)
@@ -209,6 +214,14 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     } else if (tool === 'measure') {
       // actualización funcional: dos clics muy seguidos no pierden un punto
       setMeasure((prev) => [...prev, snapPoint(p, { anchor: prev.at(-1), candidates, tol: screenTol, grid })])
+    } else if (tool === 'paint') {
+      const at = toM(p)
+      const hit = nearestWall(level, at, screenTol * mpp)
+      if (hit) dispatch(new SetWallMaterial(level.id, [hit.wall.id], brush.wall))
+      else {
+        const room = level.rooms.find((r) => pointInPolygon(at, r.polygon))
+        if (room) dispatch(new SetFloorMaterial(level.id, room.id, brush.floor))
+      }
     } else if (tool === 'door' || tool === 'window') {
       const hit = nearestWall(level, toM(p), screenTol * mpp)
       if (hit) {
@@ -326,8 +339,35 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const fontPx = 13 / view.scale
 
   return (
-    <div ref={container} className="relative size-full overflow-hidden bg-paper" style={{ cursor }} data-testid="editor2d">
+    <div
+      ref={container}
+      className="relative size-full overflow-hidden bg-paper"
+      style={{ cursor }}
+      data-testid="editor2d"
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes(FURNITURE_DRAG)) e.preventDefault()
+      }}
+      onDrop={(e) => {
+        const id = e.dataTransfer.getData(FURNITURE_DRAG)
+        const stage = stageRef.current
+        if (!id || !stage || !level) return
+        e.preventDefault()
+        stage.setPointersPositions(e.nativeEvent)
+        const p = stage.getRelativePointerPosition()
+        if (!p) return
+        try {
+          const cmd = new AddFurniture(level.id, id, toM(p))
+          if (dispatch(cmd)) {
+            useEditor.getState().setTool('select')
+            select({ kind: 'furniture', id: cmd.furniture.id })
+          }
+        } catch {
+          /* pieza desconocida: se ignora */
+        }
+      }}
+    >
       <Stage
+        ref={stageRef}
         width={size.width}
         height={size.height}
         scaleX={view.scale}
@@ -440,6 +480,61 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               </Group>
             )
           })}
+
+          {!hidden.has('furniture') &&
+            (level?.furniture ?? []).map((f) => {
+              const item = catalogItem(f.catalog_id)
+              const parts = item ? scaledParts(item, f.width, f.depth, f.height) : []
+              const sel = inGroup('furniture', f.id)
+              const hits = level ? wallsHitBy(f, level.walls).length > 0 : false
+              const c = toPx(f.position)
+              const k = 1 / mpp
+              const stroke = sel ? C.wallSel : hits ? C.hit : C.text
+              return (
+                <Group
+                  key={f.id}
+                  x={c.x}
+                  y={c.y}
+                  rotation={((f.rotation ?? 0) * 180) / Math.PI}
+                  draggable={tool === 'select' && sel && group.length === 1 && !locked.has('furniture')}
+                  listening={!locked.has('furniture')}
+                  onClick={pick({ kind: 'furniture', id: f.id })}
+                  onTap={pick({ kind: 'furniture', id: f.id })}
+                  onContextMenu={pickForMenu({ kind: 'furniture', id: f.id })}
+                  onDragEnd={(e) => {
+                    const raw = toM({ x: e.target.x(), y: e.target.y() })
+                    const to = gridStep > 0 ? { x: Math.round(raw.x / gridStep) * gridStep, y: Math.round(raw.y / gridStep) * gridStep } : raw
+                    if (!dispatch(new UpdateFurniture(level!.id, f.id, { position: to }))) e.target.position(c)
+                  }}
+                >
+                  <Rect
+                    x={(-f.width / 2) * k}
+                    y={(-f.depth / 2) * k}
+                    width={f.width * k}
+                    height={f.depth * k}
+                    fill="rgba(238,240,230,0.85)"
+                    stroke={stroke}
+                    strokeWidth={(sel ? 2.5 : 1.2) / view.scale}
+                  />
+                  {parts.map((pt, i) =>
+                    pt.shape === 'cyl' ? (
+                      <Circle key={i} x={pt.x * k} y={pt.z * k} radius={(pt.w / 2) * k} stroke={stroke} strokeWidth={0.8 / view.scale} listening={false} />
+                    ) : (
+                      <Rect
+                        key={i}
+                        x={(pt.x - pt.w / 2) * k}
+                        y={(pt.z - pt.d / 2) * k}
+                        width={pt.w * k}
+                        height={pt.d * k}
+                        stroke={stroke}
+                        strokeWidth={0.8 / view.scale}
+                        listening={false}
+                      />
+                    ),
+                  )}
+                </Group>
+              )
+            })}
 
           {level && showDimensions && !hidden.has('dimensions') && (
             <PlanElements

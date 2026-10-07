@@ -6,6 +6,7 @@
  * Coordenadas locales: x a lo ancho (centrado), z a lo profundo (centrado; el frente
  * en +z), y hacia arriba desde el piso.
  */
+import { normalize } from '@/lib/text'
 
 export type Tone = 'wood' | 'soft' | 'fabric' | 'white' | 'metal' | 'dark' | 'glass' | 'plant'
 
@@ -214,6 +215,15 @@ export const CATALOG: CatalogItem[] = [
     parts: [cyl(0, 0, 0.32, 0, 0.35, 'dark'), cyl(0, 0, 0.4, 0.35, 0.75, 'plant')],
   },
 ]
+
+/** Búsqueda en el catálogo por nombre o categoría, sin tildes. */
+export function searchCatalog(query: string): CatalogItem[] {
+  const q = normalize(query)
+  return q ? CATALOG.filter((c) => normalize(`${c.category} ${c.name}`).includes(q)) : CATALOG
+}
+
+/** tipo MIME del arrastre de una pieza del catálogo hacia el plano */
+export const FURNITURE_DRAG = 'application/x-plano3d-furniture'
 
 export function catalogItem(id: string): CatalogItem | undefined {
   return CATALOG.find((c) => c.id === id)

@@ -54,6 +54,8 @@ interface EditorState {
   cursor: Point | null
   /** zoom del editor 2D relativo al encuadre (1 = plano completo) */
   zoom: number
+  /** acabados que aplica el pincel (herramienta "Pintar") */
+  brush: { wall: string; floor: string }
   error: string | null
   gridStep: number
   showDimensions: boolean
@@ -75,6 +77,7 @@ interface EditorState {
   toggleLayer: (layer: LayerKey, which: 'hidden' | 'locked') => void
   setViewMode: (mode: ViewMode) => void
   setPointer: (cursor: Point | null, zoom?: number) => void
+  setBrush: (brush: Partial<{ wall: string; floor: string }>) => void
   markSaved: (revision?: number) => void
   setGridStep: (step: number) => void
   toggleDimensions: () => void
@@ -150,6 +153,7 @@ export const useEditor = create<EditorState>()((set, get) => {
     viewMode: 'split',
     cursor: null,
     zoom: 1,
+    brush: { wall: 'ladrillo', floor: 'madera_roble' },
     ...flags(),
 
     load: (projectId, model, revision = 0) => {
@@ -196,6 +200,7 @@ export const useEditor = create<EditorState>()((set, get) => {
         : set({ lockedLayers: toggled(get().lockedLayers, layer) }),
     setViewMode: (viewMode) => set({ viewMode }),
     setPointer: (cursor, zoom) => set(zoom === undefined ? { cursor } : { cursor, zoom }),
+    setBrush: (brush) => set({ brush: { ...get().brush, ...brush } }),
     markSaved: (revision) => set({ savedHead: get().head, ...(revision !== undefined ? { revision } : {}) }),
     setGridStep: (gridStep) => set({ gridStep }),
     toggleDimensions: () => set({ showDimensions: !get().showDimensions }),

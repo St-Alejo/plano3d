@@ -60,3 +60,14 @@ export function contentBounds(model: BuildingModel | null): Bounds | null {
   if (!model || model.levels.every((l) => l.walls.length === 0 && l.rooms.length === 0)) return null
   return modelBounds(model)
 }
+
+/** ¿El punto cae dentro del polígono? (par/impar de cruces) */
+export function pointInPolygon(p: Point, poly: Point[]): boolean {
+  let inside = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!
+    const b = poly[j]!
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside
+  }
+  return inside
+}

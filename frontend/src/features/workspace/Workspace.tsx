@@ -15,6 +15,7 @@ import { TOOLS } from '@/features/editor2d/tools'
 import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
 import { buildActions } from './actions'
 import { AreaSchedulePanel } from './AreaSchedulePanel'
+import { CatalogPanel } from './CatalogPanel'
 import { CommandPalette } from './CommandPalette'
 import { EditorContextMenu } from './EditorContextMenu'
 import { GroupInspector } from './GroupInspector'
@@ -275,6 +276,9 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
             {layersOpen && (
               <aside aria-label="Capas y objetos" className="min-h-0 overflow-y-auto border-r border-line bg-surface p-3">
                 <LayersPanel />
+                <div className="mt-6">
+                  <CatalogPanel />
+                </div>
               </aside>
             )}
             <div className={`grid min-h-0 ${viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -331,6 +335,7 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
               <h2 className="mb-3 font-serif text-2xl font-normal">Cuadro de áreas</h2>
               <AreaSchedulePanel projectName={project.name} />
             </div>
+            <CatalogPanel />
           </Tabs.Content>
         </Tabs.Root>
       )}

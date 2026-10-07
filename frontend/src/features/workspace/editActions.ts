@@ -5,14 +5,18 @@
  * funciones, así cada acción tiene una sola implementación.
  */
 import type { Wall } from '@/api/types'
+import { modelBounds } from '@/domain/model'
 import {
+  AddFurniture,
   cloneWalls,
   CompositeCommand,
   DeleteDimension,
+  DeleteFurniture,
   DeleteOpening,
   DeleteWall,
   InsertWalls,
   TranslateWalls,
+  UpdateFurniture,
   type Command,
 } from '@/domain/commands'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
@@ -48,6 +52,7 @@ export function deleteSelection(): boolean {
     if (g.kind === 'opening' && !walls.has(g.wallId)) parts.push(new DeleteOpening(s.levelId, g.wallId, g.id))
   for (const id of walls) parts.push(new DeleteWall(s.levelId, id))
   for (const g of s.group) if (g.kind === 'dimension') parts.push(new DeleteDimension(s.levelId, g.id))
+  for (const g of s.group) if (g.kind === 'furniture') parts.push(new DeleteFurniture(s.levelId, g.id))
   if (parts.length === 0) return false
   const n = parts.length
   const cmd = n === 1 ? parts[0]! : new CompositeCommand(`Eliminar ${n} elementos`, parts)
@@ -56,12 +61,48 @@ export function deleteSelection(): boolean {
   return ok
 }
 
-/** Mueve los muros seleccionados (flechas: 5 cm, con Shift 25 cm). */
-export function nudgeSelection(dx: number, dy: number): boolean {
-  const ids = selectedWalls().map((w) => w.id)
-  if (ids.length === 0) return false
+/** Muebles seleccionados en el nivel actual. */
+function selectedFurniture() {
   const s = state()
-  return s.dispatch(new TranslateWalls(s.levelId, ids, dx, dy))
+  const ids = new Set(s.group.filter((g) => g.kind === 'furniture').map((g) => g.id))
+  return (selectLevel(s)?.furniture ?? []).filter((f) => ids.has(f.id))
+}
+
+/** Mueve muros y muebles seleccionados (flechas: 5 cm, con Shift 25 cm) en un solo paso. */
+export function nudgeSelection(dx: number, dy: number): boolean {
+  const s = state()
+  const ids = selectedWalls().map((w) => w.id)
+  const parts: Command[] = []
+  if (ids.length > 0) parts.push(new TranslateWalls(s.levelId, ids, dx, dy))
+  for (const f of selectedFurniture())
+    parts.push(new UpdateFurniture(s.levelId, f.id, { position: { x: f.position.x + dx, y: f.position.y + dy } }))
+  if (parts.length === 0) return false
+  return s.dispatch(parts.length === 1 ? parts[0]! : new CompositeCommand('Mover selección', parts))
+}
+
+/** Agrega una pieza del catálogo en el centro del plano y la deja seleccionada. */
+export function addFurnitureAtCenter(catalogId: string): boolean {
+  const s = state()
+  if (!s.model) return false
+  const cmd = new AddFurniture(s.levelId, catalogId, modelBounds(s.model).center)
+  const ok = s.dispatch(cmd)
+  if (ok) {
+    s.setTool('select')
+    s.select({ kind: 'furniture', id: cmd.furniture.id })
+  }
+  return ok
+}
+
+export function canRotate(): boolean {
+  return selectedFurniture().length > 0
+}
+
+/** Gira 90° los muebles seleccionados, cada uno sobre su centro. */
+export function rotateSelection(): boolean {
+  const s = state()
+  const parts = selectedFurniture().map((f) => new UpdateFurniture(s.levelId, f.id, { rotation: (f.rotation ?? 0) + Math.PI / 2 }, 'Girar mueble'))
+  if (parts.length === 0) return false
+  return s.dispatch(parts.length === 1 ? parts[0]! : new CompositeCommand(`Girar ${parts.length} muebles`, parts))
 }
 
 export function canCopy(): boolean {

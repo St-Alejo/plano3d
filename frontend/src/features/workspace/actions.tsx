@@ -12,11 +12,13 @@ import {
   canCopy,
   canDelete,
   canPaste,
+  canRotate,
   copySelection,
   deleteSelection,
   duplicateSelection,
   nudgeSelection,
   paste,
+  rotateSelection,
   selectAllWalls,
 } from './editActions'
 
@@ -127,11 +129,12 @@ export function buildActions(ctx: ActionContext): EditorAction[] {
         label: 'Mover selección',
         group: 'Edición',
         match: (e) => e.key.toLowerCase() === key && !mod(e) && !e.altKey,
-        enabled: () => st().group.some((g) => g.kind === 'wall'),
+        enabled: () => st().group.some((g) => g.kind === 'wall' || g.kind === 'furniture'),
         run: nudge(dx, dy),
         hidden: true,
       }),
     ),
+    { id: 'edit.rotate', label: 'Girar mueble 90°', group: 'Edición', keys: 'R', match: combo('r'), enabled: canRotate, run: () => void rotateSelection() },
     { id: 'select.all', label: 'Seleccionar todos los muros', group: 'Selección', keys: 'Ctrl+A', match: combo('mod+a'), run: () => void selectAllWalls() },
     {
       id: 'select.none',
@@ -184,4 +187,4 @@ export function filterActions(actions: EditorAction[], query: string): EditorAct
 }
 
 /** acciones que tienen sentido sobre lo seleccionado (menú contextual) */
-export const CONTEXT_ACTIONS = ['edit.copy', 'edit.paste', 'edit.duplicate', 'edit.delete', 'select.all', 'select.none']
+export const CONTEXT_ACTIONS = ['edit.copy', 'edit.paste', 'edit.duplicate', 'edit.rotate', 'edit.delete', 'select.all', 'select.none']
