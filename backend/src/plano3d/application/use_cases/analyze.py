@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
@@ -18,7 +19,7 @@ from plano3d.application.ports import (
 )
 from plano3d.application.use_cases.errors import NoDetectorAvailableError, ProjectNotFoundError
 from plano3d.application.use_cases.projects import DETECTION_SUMMARY
-from plano3d.domain import ModelRevision, SourceImage
+from plano3d.domain import ModelRevision, Project, SourceImage
 
 log = logging.getLogger(__name__)
 
@@ -131,17 +132,27 @@ class AnalyzeFloorPlan:
                     message=f"Detector: {detector.name}",
                 )
             )
+        except asyncio.CancelledError:
+            # CancelledError no es Exception: sin esto el proyecto quedaba "procesando" para
+            # siempre (worker reiniciado, tiempo agotado). Se marca fallido y se propaga.
+            log.warning("Análisis de %s interrumpido", project_id)
+            message = "El análisis se interrumpió; vuelve a intentarlo"
+            await asyncio.shield(self._fail(project, message))
+            raise
         except Exception as exc:
             log.exception("Falló el análisis de %s", project_id)
-            project.fail(str(exc))
-            await self._repo.save(project)
-            await self._progress.publish(
-                ProgressEventDTO(
-                    project_id=project_id,
-                    stage="done",
-                    status="failed",
-                    index=0,
-                    total=0,
-                    message=str(exc),
-                )
+            await self._fail(project, str(exc))
+
+    async def _fail(self, project: Project, message: str) -> None:
+        project.fail(message)
+        await self._repo.save(project)
+        await self._progress.publish(
+            ProgressEventDTO(
+                project_id=project.id,
+                stage="done",
+                status="failed",
+                index=0,
+                total=0,
+                message=message,
             )
+        )

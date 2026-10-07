@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from plano3d.application.dto import ProgressEventDTO
@@ -174,6 +176,30 @@ async def test_analyze_failure_marks_project_failed(repo, storage, queue, broker
     project = await repo.get(pid)
     assert project is not None and project.status is ProjectStatus.FAILED
     assert project.error == "detector roto"
+    assert (await broker.history(pid))[-1].status == "failed"
+
+
+class HangingDetector(FakeDetector):
+    """Simula un análisis largo que se cancela a mitad (worker reiniciado, tiempo agotado)."""
+
+    async def detect(
+        self, request: DetectionRequest, progress: ProgressPublisher
+    ) -> DetectionResult:
+        await asyncio.sleep(3600)
+        raise AssertionError("no debería terminar")
+
+
+async def test_analyze_cancelled_marks_project_failed(repo, storage, queue, broker) -> None:  # type: ignore[no-untyped-def]
+    pid = await _create(repo, storage, queue)
+    selector = DetectorSelector([HangingDetector()], FakeInspector())
+    task = asyncio.create_task(AnalyzeFloorPlan(repo, storage, selector, broker).execute(pid))
+    await asyncio.sleep(0.05)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    project = await repo.get(pid)
+    assert project is not None and project.status is ProjectStatus.FAILED
+    assert project.error is not None and "interrumpió" in project.error
     assert (await broker.history(pid))[-1].status == "failed"
 
 
