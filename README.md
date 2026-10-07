@@ -50,6 +50,12 @@ se corrige el número y **Ajustar el plano a las cotas** mueve los muros. Claude
 opcional: se activa con `ANTHROPIC_API_KEY` (o `ant auth login`); sin credenciales se usa
 solo el OCR local. Medición: `python scripts/eval.py --suite complex --detector raster`.
 
+**Fidelidad con planos reales y machine learning:** el proceso completo es el banco de 3
+casas reales con verdad anotada, láminas con varias plantas → niveles, render a color,
+red de muros entrenada con sintéticos y Claude con tope de gasto. Sus resultados y cómo
+continuar están en [`calidad/README.md`](calidad/README.md); cada iteración, en
+[`calidad/bitacora.md`](calidad/bitacora.md).
+
 ## Cómo se usa
 
 1. **Nuevo plano → Tomar foto** (o subir). La hoja se detecta y la perspectiva se corrige sola;
