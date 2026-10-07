@@ -77,6 +77,18 @@ describe('editorStore', () => {
     expect(useEditor.getState().selection).toBeNull()
   })
 
+  it('setLevel cambia de planta solo si existe y limpia la selección', () => {
+    const m = sampleModel()
+    const model = { ...m, levels: [...m.levels, { ...m.levels[0]!, id: 'lvl_1', name: 'Planta alta', elevation: 2.8 }] }
+    useEditor.getState().load('p', model)
+    useEditor.getState().select({ kind: 'wall', id: 'w1' })
+    useEditor.getState().setLevel('lvl_1')
+    expect(useEditor.getState().levelId).toBe('lvl_1')
+    expect(useEditor.getState().selection).toBeNull()
+    useEditor.getState().setLevel('no-existe')
+    expect(useEditor.getState().levelId).toBe('lvl_1')
+  })
+
   it('sin modelo, las acciones no hacen nada', () => {
     const st = useEditor.getState()
     expect(st.dispatch(new UpdateWall(L, 'w', { height: 3 }))).toBe(false)

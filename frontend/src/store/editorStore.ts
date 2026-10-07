@@ -69,6 +69,8 @@ interface EditorState {
   undo: () => void
   redo: () => void
   setTool: (tool: Tool) => void
+  /** cambia la planta que se edita (láminas con varios niveles) */
+  setLevel: (levelId: string) => void
   select: (sel: Selection) => void
   /** Shift+clic: agrega o quita del grupo */
   toggleSelect: (sel: Selected) => void
@@ -191,6 +193,10 @@ export const useEditor = create<EditorState>()((set, get) => {
     },
 
     setTool: (tool) => (tool === 'select' ? set({ tool }) : set({ tool, selection: null, group: [] })),
+    setLevel: (levelId) => {
+      const { model } = get()
+      if (model?.levels.some((l) => l.id === levelId)) set({ levelId, selection: null, group: [] })
+    },
     select: (selection) => set({ selection, group: selection ? [selection] : [] }),
     toggleSelect: (sel) => {
       const { group } = get()

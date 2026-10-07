@@ -17,6 +17,8 @@ export function LayersPanel() {
   const hidden = useEditor((s) => s.hiddenLayers)
   const locked = useEditor((s) => s.lockedLayers)
   const toggle = useEditor((s) => s.toggleLayer)
+  const levels = useEditor((s) => s.model?.levels ?? [])
+  const setLevel = useEditor((s) => s.setLevel)
   const count: Partial<Record<LayerKey, number>> = level
     ? {
         rooms: level.rooms.length,
@@ -29,6 +31,22 @@ export function LayersPanel() {
 
   return (
     <section aria-label="Capas" className="flex flex-col gap-1">
+      {levels.length > 1 && (
+        <label className="mb-2 flex flex-col gap-1 text-sm">
+          <span className="font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Nivel</span>
+          <select
+            value={level?.id ?? ''}
+            onChange={(e) => setLevel(e.target.value)}
+            className="rounded-sm border border-line bg-surface px-2 py-1"
+          >
+            {levels.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <h2 className="mb-1 font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Capas</h2>
       <ul className="flex flex-col">
         {LAYERS.map((l) => {
