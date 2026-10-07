@@ -43,3 +43,11 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 ## casa2  (raster-vector)  escala estimated error -6.9%  niveles 1/1
 - Planta 1: muros F1 0.96 (P 0.93 R 0.99, extremos 0.51, 27/20) · aberturas P 0.92 R 0.92 (25/25) · ambientes 6/6 IoU 0.93 nombres 6/6
 - **CUMPLE**
+
+### 2026-10-07 09:39 — casa3 primera pasada: lámina CAD oscura normalizada por capas de color (blanco/azul → tinta; rojo/verde fuera), marco eliminado, 3 plantas separadas y alineadas por solape de trazos, apiladas como niveles (0/2,8/5,6 m). Ampliación ×4 con cierre previo de las líneas dobles de muro; tope de grosor de muro (4 % del lado). Verdad parcial anotada (16 px/m).
+
+## casa3  (raster-vector)  escala estimated error -45.4%  niveles 3/3
+- Planta baja: muros F1 0.42 (P 0.27 R 0.94, extremos 0.07, 45/9) · aberturas P 0.03 R 0.14 (31/7) · ambientes 4/3 IoU 0.25 nombres 0/3
+- Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
+- Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (8/0) · ambientes 1/0 IoU 0.00 nombres 0/0
+- falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes

@@ -127,6 +127,9 @@ class Column:
             depth=self.depth * factor,
         )
 
+    def translated(self, dx: float, dy: float) -> Column:
+        return replace(self, center=self.center.translated(dx, dy))
+
 
 #: catálogo: identificador en minúsculas, dígitos, "_" o "-" (p. ej. "cama_doble")
 _CATALOG_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,47}$")
@@ -162,6 +165,9 @@ class Furniture:
     def scaled(self, factor: float) -> Furniture:
         """Al recalibrar la escala se mueve con el plano, pero conserva su tamaño real."""
         return replace(self, position=self.position.scaled(factor))
+
+    def translated(self, dx: float, dy: float) -> Furniture:
+        return replace(self, position=self.position.translated(dx, dy))
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +214,9 @@ class Stair:
             end=self.end.scaled(factor),
             width=self.width * factor,
         )
+
+    def translated(self, dx: float, dy: float) -> Stair:
+        return replace(self, start=self.start.translated(dx, dy), end=self.end.translated(dx, dy))
 
 
 class DimensionAxis(StrEnum):
@@ -263,6 +272,9 @@ class Dimension:
             self, a=self.a.scaled(factor), b=self.b.scaled(factor), offset=self.offset * factor
         )
 
+    def translated(self, dx: float, dy: float) -> Dimension:
+        return replace(self, a=self.a.translated(dx, dy), b=self.b.translated(dx, dy))
+
 
 class LabelKind(StrEnum):
     ROOM_NAME = "room_name"
@@ -291,3 +303,6 @@ class TextLabel:
 
     def scaled(self, factor: float) -> TextLabel:
         return replace(self, position=self.position.scaled(factor))
+
+    def translated(self, dx: float, dy: float) -> TextLabel:
+        return replace(self, position=self.position.translated(dx, dy))

@@ -193,6 +193,10 @@ class Wall:
             openings=tuple(o.scaled(factor) for o in self.openings),
         )
 
+    def translated(self, dx: float, dy: float) -> Wall:
+        """Las aberturas se miden desde el inicio del muro: se mueven con él."""
+        return replace(self, start=self.start.translated(dx, dy), end=self.end.translated(dx, dy))
+
 
 @dataclass(frozen=True, slots=True)
 class Room:
@@ -248,6 +252,13 @@ class Room:
             self,
             polygon=tuple(p.scaled(factor) for p in self.polygon),
             holes=tuple(tuple(p.scaled(factor) for p in h) for h in self.holes),
+        )
+
+    def translated(self, dx: float, dy: float) -> Room:
+        return replace(
+            self,
+            polygon=tuple(p.translated(dx, dy) for p in self.polygon),
+            holes=tuple(tuple(p.translated(dx, dy) for p in h) for h in self.holes),
         )
 
 
@@ -336,6 +347,19 @@ class Level:
             dimensions=tuple(d.scaled(factor) for d in self.dimensions),
             labels=tuple(t.scaled(factor) for t in self.labels),
             furniture=tuple(f.scaled(factor) for f in self.furniture),
+        )
+
+    def translated(self, dx: float, dy: float) -> Level:
+        """Mueve toda la planta en el plano (para alinear niveles dibujados por separado)."""
+        return replace(
+            self,
+            walls=tuple(w.translated(dx, dy) for w in self.walls),
+            rooms=tuple(r.translated(dx, dy) for r in self.rooms),
+            columns=tuple(c.translated(dx, dy) for c in self.columns),
+            stairs=tuple(s.translated(dx, dy) for s in self.stairs),
+            dimensions=tuple(d.translated(dx, dy) for d in self.dimensions),
+            labels=tuple(t.translated(dx, dy) for t in self.labels),
+            furniture=tuple(f.translated(dx, dy) for f in self.furniture),
         )
 
 

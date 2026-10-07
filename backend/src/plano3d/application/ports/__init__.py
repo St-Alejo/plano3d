@@ -53,6 +53,9 @@ class DetectionResult:
     #: Permite llevar el modelo (metros = px rectificados por escala) de vuelta a la imagen
     #: original: evaluación contra verdad anotada y datos de entrenamiento alineados.
     image_transform: tuple[float, ...] | None = None
+    #: una homografía por nivel cuando la lámina trae varias plantas dibujadas lado a lado:
+    #: lleva cada planta de la imagen subida al marco común (alineado) del modelo
+    level_transforms: tuple[tuple[float, ...], ...] | None = None
 
 
 class ProgressPublisher(ABC):

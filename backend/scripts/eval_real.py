@@ -209,7 +209,9 @@ def overlay(img: np.ndarray, truth: dict[str, Any], dets: list[dict[str, Any]], 
         for w in lv["walls"]:
             cv2.line(out, px(w["a"]), px(w["b"]), (60, 200, 60), 6)
         ox, oy = truth["origin_px"]
-    for det in dets:
+    for k, det in enumerate(dets):
+        levels = truth["levels"]
+        ox, oy = levels[k].get("origin_px", truth["origin_px"]) if k < len(levels) else (ox, oy)
         for r in det["rooms"]:
             cv2.polylines(
                 out, [np.array([px(p) for p in r["polygon"]], np.int32)], True, (200, 60, 200), 2
@@ -255,7 +257,19 @@ async def evaluate(case: str) -> dict[str, Any]:
     true_mpp = truth_mpp_in_rectified(h, origin, truth["px_per_m"])
     scale_err = model.scale.meters_per_pixel / true_mpp - 1.0
 
-    dets = [detected_level(model, k, frame) for k in range(len(model.levels))]
+    frames = [frame] * len(model.levels)
+    if result.level_transforms:
+        # cada planta de la lámina tiene su propia transformación al marco común
+        frames = [
+            Frame(
+                np.linalg.inv(np.array(t, np.float64).reshape(3, 3)),
+                model.scale.meters_per_pixel,
+                tuple(gt.get("origin_px", origin)),
+                truth["px_per_m"],
+            )
+            for t, gt in zip(result.level_transforms, truth["levels"] + [{}] * 9, strict=False)
+        ]
+    dets = [detected_level(model, k, frames[k]) for k in range(len(model.levels))]
     levels = []
     for k, gt in enumerate(truth["levels"]):
         if k < len(dets):

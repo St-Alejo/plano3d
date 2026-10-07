@@ -22,7 +22,9 @@ def estimate_stroke_thickness(ink: Img) -> float:
     dt = cv2.distanceTransform(ink, cv2.DIST_L2, 5)
     ridge = (dt >= cv2.dilate(dt, np.ones((3, 3), np.uint8))) & (dt >= MIN_WALL_PX / 2)
     values = (dt[ridge] * 2.0).astype(np.float64)
-    values = values[values < max(ink.shape) / 8]
+    # un muro no pasa de ~4 % del lado mayor (0,6 m en 15 m); lo más grueso son manchas
+    # macizas (achurados cerrados, rellenos de escalera) que no deben fijar el grosor
+    values = values[values < max(ink.shape) / 25]
     if values.size == 0:
         return 0.0
     bins = np.arange(np.floor(MIN_WALL_PX), values.max() + 2)

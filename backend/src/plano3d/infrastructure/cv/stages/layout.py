@@ -112,6 +112,92 @@ def drawing_box(img: Img) -> Box | None:
     return best.box if best.area >= 0.25 * h * w else None
 
 
+#: brillo mediano por debajo del cual la lámina es "CAD de fondo oscuro"
+DARK_SHEET_V = 100
+#: una línea que cruza casi toda la hoja es el marco o la división del cajetín
+FRAME_SPAN = 0.85
+
+
+def is_dark_sheet(img: Img) -> bool:
+    if img.ndim == 2:
+        return float(np.median(img)) < DARK_SHEET_V
+    return float(np.median(cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[..., 2])) < DARK_SHEET_V
+
+
+def normalize_dark_sheet(img: Img) -> Img:
+    """CAD de fondo oscuro → papel blanco con tinta negra.
+
+    Por convención de capas, los trazos neutros claros son muros, muebles y textos, y los
+    azules suelen ser puertas y ventanas: ambos pasan a tinta. Rojo, verde, amarillo y
+    magenta son ejes, cotas, vegetación y rótulos de ejes: se descartan.
+    """
+    if img.ndim == 2:
+        out = np.full(img.shape, 255, np.uint8)
+        out[img > 110] = 0
+        return as_u8(cv2.cvtColor(out, cv2.COLOR_GRAY2BGR))
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    neutral = (v > 110) & (s < 70)
+    blue = (h >= 90) & (h <= 130) & (s > 100) & (v > 100)
+    out = np.full(img.shape, 255, np.uint8)
+    out[neutral | blue] = 0
+    return as_u8(out)
+
+
+def remove_frame(img: Img) -> Img:
+    """Borra las líneas que cruzan casi toda la hoja (marco, división del cajetín)."""
+    gray = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ink = (gray < 128).astype(np.uint8) * 255
+    h, w = ink.shape
+    lines = np.zeros_like(ink)
+    for size in ((max(3, int(FRAME_SPAN * w)), 1), (1, max(3, int(FRAME_SPAN * h)))):
+        k = cv2.getStructuringElement(cv2.MORPH_RECT, size)
+        lines = as_u8(cv2.bitwise_or(lines, cv2.morphologyEx(ink, cv2.MORPH_OPEN, k)))
+    out = img.copy()
+    out[cv2.dilate(lines, np.ones((3, 3), np.uint8)) > 0] = 255
+    return as_u8(out)
+
+
+def prepare_sheet(img: Img) -> Img:
+    """Lámina lista para separar dibujos: papel claro y sin marco."""
+    if img.ndim == 2:
+        img = as_u8(cv2.cvtColor(img, cv2.COLOR_GRAY2BGR))
+    if is_dark_sheet(img):
+        img = normalize_dark_sheet(img)
+    return remove_frame(img)
+
+
+def _ink_bbox(img: Img, box: Box) -> Box:
+    x0, y0, x1, y1 = box
+    gray = img[y0:y1, x0:x1]
+    if gray.ndim == 3:
+        gray = as_u8(cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY))
+    ys, xs = np.nonzero(gray < 128)
+    if not len(xs):
+        return box
+    return (x0 + int(xs.min()), y0 + int(ys.min()), x0 + int(xs.max()) + 1, y0 + int(ys.max()) + 1)
+
+
+def plan_blocks(sheet: Img) -> list[Box]:
+    """Recuadros (ajustados a la tinta) de cada planta dibujada en la lámina, en orden de
+    lectura. Se descartan fotos, el cajetín (muy angosto) y bloques mucho menores que la
+    planta principal (leyendas, sellos)."""
+    drawings = [b for b in analyze_sheet(sheet) if b.kind == "drawing"]
+    if not drawings:
+        return []
+    boxes = [_ink_bbox(sheet, b.box) for b in drawings]
+
+    def aspect(b: Box) -> float:
+        return (b[2] - b[0]) / max(1, b[3] - b[1])
+
+    def area(b: Box) -> int:
+        return (b[2] - b[0]) * (b[3] - b[1])
+
+    biggest = max(area(b) for b in boxes)
+    plans = [b for b in boxes if area(b) >= 0.3 * biggest and 0.3 <= aspect(b) <= 3.3]
+    return sorted(plans, key=lambda b: (round(b[1] / max(1, sheet.shape[0] / 4)), b[0]))
+
+
 class SheetLayoutStage(PipelineStage[CVContext]):
     key = "layout"
     title = "Análisis de la lámina"
@@ -121,6 +207,9 @@ class SheetLayoutStage(PipelineStage[CVContext]):
 
     def run(self, ctx: CVContext) -> CVContext:
         img = ctx.require(ctx.original, "original")
+        if is_dark_sheet(img):
+            # CAD de fondo oscuro: el resto del pipeline espera tinta oscura sobre papel
+            img = ctx.original = remove_frame(normalize_dark_sheet(img))
         box = drawing_box(img)
         self._cropped = 0.0
         if box is not None:

@@ -36,6 +36,7 @@ from plano3d.config import Settings
 from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
+from plano3d.infrastructure.cv.multilevel import MultiLevelDetector
 from plano3d.infrastructure.cv.raster_vector_detector import (
     HybridPhotoDetector,
     RasterVectorDetector,
@@ -136,7 +137,8 @@ def default_selector() -> DetectorSelector:
     reader = text_reader()
     # la lectura de nombres de ambientes es local (sin costo); sin OCR quedan genéricos
     classic = ClassicCVDetector(RapidOcrSpotter() if ocr_available() else None)
-    photo = HybridPhotoDetector(RasterVectorDetector(reader), classic)
+    # una lámina con varias plantas se separa y cada planta pasa por el detector híbrido
+    photo = MultiLevelDetector(HybridPhotoDetector(RasterVectorDetector(reader), classic))
     return DetectorSelector(
         [DxfDetector(), VectorPdfDetector(), photo, classic], OpenCVImageInspector()
     )

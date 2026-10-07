@@ -1,0 +1,589 @@
+{
+  "case": "casa3",
+  "detector": "raster-vector",
+  "metrics": {
+    "walls": 45.0,
+    "rooms": 4.0,
+    "meters_per_pixel": 0.011369163424124511,
+    "fallback_classic": 1.0,
+    "levels": 3.0
+  },
+  "scale": {
+    "mpp": 0.03410749027237354,
+    "source": "estimated",
+    "error": -0.4543
+  },
+  "levels_det": 3,
+  "levels_gt": 3,
+  "levels": [
+    {
+      "name": "Planta baja",
+      "walls_det": 45,
+      "walls_gt": 9,
+      "wall_p": 0.269,
+      "wall_r": 0.936,
+      "wall_f1": 0.418,
+      "wall_f1_ends": 0.074,
+      "open_p": 0.032,
+      "open_r": 0.143,
+      "open_det": 31,
+      "open_gt": 7,
+      "rooms_det": 4,
+      "rooms_gt": 3,
+      "room_iou": 0.25,
+      "names_ok": 0,
+      "rooms": [
+        {
+          "truth": "cocina",
+          "iou": 0.286,
+          "label": "Espacio 2",
+          "name_ok": false
+        },
+        {
+          "truth": "baño",
+          "iou": 0.019,
+          "label": "Espacio 3",
+          "name_ok": false
+        },
+        {
+          "truth": "sala",
+          "iou": 0.445,
+          "label": "Espacio 3",
+          "name_ok": false
+        }
+      ],
+      "openings": [
+        {
+          "at": [
+            2.89,
+            0.04
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            5.04,
+            0.04
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            5.8,
+            0.91
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.77,
+            2.81
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            2.36,
+            6.83
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.89,
+            6.83
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            8.3,
+            6.83
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.89,
+            8.75
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.57,
+            8.75
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            7.58,
+            9.72
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            1.96,
+            10.26
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            2.54,
+            10.85
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.5,
+            10.85
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.46,
+            11.97
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.02,
+            11.97
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            2.82,
+            12.53
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.17,
+            12.53
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.02,
+            14.19
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.05,
+            15.21
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            9.08,
+            15.21
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.01,
+            15.37
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            8.83,
+            0.96
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            8.83,
+            6.18
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            8.83,
+            11.13
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            8.3,
+            10.15
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.87,
+            10.8
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.52,
+            2.95
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.52,
+            7.61
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.78,
+            2.06
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.22,
+            1.84
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.1,
+            14.36
+          ],
+          "kind": "window"
+        }
+      ]
+    },
+    {
+      "name": "Planta alta",
+      "walls_det": 35,
+      "walls_gt": 20,
+      "wall_p": 0.513,
+      "wall_r": 0.569,
+      "wall_f1": 0.54,
+      "wall_f1_ends": 0.145,
+      "open_p": 0.08,
+      "open_r": 0.182,
+      "open_det": 25,
+      "open_gt": 11,
+      "rooms_det": 7,
+      "rooms_gt": 4,
+      "room_iou": 0.733,
+      "names_ok": 0,
+      "rooms": [
+        {
+          "truth": "recamara",
+          "iou": 0.911,
+          "label": "Espacio 2",
+          "name_ok": false
+        },
+        {
+          "truth": "estar",
+          "iou": 0.566,
+          "label": "Espacio 4",
+          "name_ok": false
+        },
+        {
+          "truth": "recamara",
+          "iou": 0.625,
+          "label": "Espacio 7",
+          "name_ok": false
+        },
+        {
+          "truth": "baño",
+          "iou": 0.831,
+          "label": "Espacio 1",
+          "name_ok": false
+        }
+      ],
+      "openings": [
+        {
+          "at": [
+            1.33,
+            -4.75
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.11,
+            -4.75
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            5.86,
+            -4.75
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            7.77,
+            -4.75
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.58,
+            0.04
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.15,
+            3.59
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.44,
+            6.03
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            0.23,
+            6.74
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.42,
+            6.74
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.73,
+            6.74
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.23,
+            8.09
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            7.42,
+            12.17
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.15,
+            13.92
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.74,
+            13.92
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            8.33,
+            8.5
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            8.33,
+            10.98
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            8.03,
+            8.49
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.73,
+            7.35
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.66,
+            4.1
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.66,
+            8.05
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.62,
+            2.67
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.12,
+            -3.93
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.05,
+            -2.85
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.05,
+            -1.18
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.05,
+            -0.31
+          ],
+          "kind": "window"
+        }
+      ]
+    },
+    {
+      "name": "Azotea",
+      "walls_det": 22,
+      "walls_gt": 10,
+      "wall_p": 0.488,
+      "wall_r": 0.744,
+      "wall_f1": 0.589,
+      "wall_f1_ends": 0.125,
+      "open_p": 0.0,
+      "open_r": 1.0,
+      "open_det": 8,
+      "open_gt": 0,
+      "rooms_det": 1,
+      "rooms_gt": 0,
+      "room_iou": 0.0,
+      "names_ok": 0,
+      "rooms": [],
+      "openings": [
+        {
+          "at": [
+            3.28,
+            -4.73
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.6,
+            -4.73
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            9.52,
+            6.39
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.39,
+            -4.11
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.39,
+            -1.84
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.02,
+            -3.44
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.05,
+            -3.31
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.05,
+            -1.56
+          ],
+          "kind": "window"
+        }
+      ]
+    }
+  ],
+  "when": "2026-10-07T09:39:57",
+  "pass": {
+    "scale": false,
+    "levels": true,
+    "Planta baja: muros": false,
+    "Planta baja: aberturas": false,
+    "Planta baja: ambientes": false,
+    "Planta baja: nombres": false,
+    "Planta alta: muros": false,
+    "Planta alta: aberturas": false,
+    "Planta alta: ambientes": false,
+    "Planta alta: nombres": false,
+    "Azotea: muros": false,
+    "Azotea: aberturas": false,
+    "Azotea: ambientes": false,
+    "Azotea: nombres": true
+  }
+}
