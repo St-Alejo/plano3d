@@ -252,7 +252,7 @@ def bridge_end_gaps(segments: list[Segment], t: float, mpp: float, ink: Img) -> 
             ]
         )
         cv2.fillPoly(walls, [np.round(quad).astype(np.int32)], 255)
-    thin = cv2.bitwise_and(ink, cv2.bitwise_not(walls))
+    thin: Img = np.asarray(cv2.bitwise_and(ink, cv2.bitwise_not(walls)), np.uint8)
     for i, s in enumerate(out):
         for end in (0, 1):
             ex, ey = (s.x2, s.y2) if end else (s.x1, s.y1)
