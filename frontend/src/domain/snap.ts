@@ -54,6 +54,53 @@ export function snapPoint(
   return g
 }
 
+/** Línea guía de alineación: del extremo existente al punto que quedó alineado con él. */
+export interface Guide {
+  from: Point
+  to: Point
+}
+
+/**
+ * Como `snapPoint`, pero además alinea con los extremos existentes (guías inteligentes):
+ * si el punto queda casi en la misma vertical u horizontal que otra esquina, se alinea
+ * exactamente y se devuelve la guía para dibujarla. La alineación tiene prioridad sobre
+ * la rejilla, y nunca rompe un eje ya fijado respecto del ancla.
+ */
+export function snapWithGuides(
+  p: Point,
+  opts: { anchor?: Point; candidates: Point[]; tol: number; degTol?: number; grid?: number },
+): { point: Point; guides: Guide[] } {
+  const s = snapToPoints(p, opts.candidates, opts.tol)
+  if (s.snapped) return { point: s.point, guides: [] }
+  const axis = opts.anchor ? snapToAxis(opts.anchor, p, opts.degTol) : p
+  const lockX = !!opts.anchor && axis.x === opts.anchor.x
+  const lockY = !!opts.anchor && axis.y === opts.anchor.y
+  const others = opts.candidates.filter((c) => !opts.anchor || distance(c, opts.anchor) > 1e-9)
+  const nearest = (key: 'x' | 'y') => {
+    let best: Point | null = null
+    let bestD = opts.tol
+    for (const c of others) {
+      const d = Math.abs(c[key] - axis[key])
+      if (d <= bestD) {
+        best = c
+        bestD = d
+      }
+    }
+    return best
+  }
+  const ax = lockX ? null : nearest('x')
+  const ay = lockY ? null : nearest('y')
+  const g = opts.grid ? snapToGrid(axis, opts.grid) : axis
+  const point = {
+    x: ax ? ax.x : lockX ? axis.x : g.x,
+    y: ay ? ay.y : lockY ? axis.y : g.y,
+  }
+  const guides: Guide[] = []
+  if (ax) guides.push({ from: ax, to: point })
+  if (ay) guides.push({ from: ay, to: point })
+  return { point, guides }
+}
+
 /** Muro más cercano a un punto (para colocar puertas/ventanas con un clic). */
 export function nearestWall(level: Level, p: Point, tol: number): { wall: Wall; offset: number } | null {
   let best: { wall: Wall; offset: number; d: number } | null = null

@@ -10,7 +10,7 @@ import type { Point, Wall } from '@/api/types'
 import { AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetWallLength } from '@/domain/commands'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
-import { nearestWall, snapPoint, wallEndpoints } from '@/domain/snap'
+import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { PlanElements } from './PlanElements'
 import { contentBounds, parseLength, wallsInBox } from './selectionMath'
@@ -27,6 +27,7 @@ const C = {
   roomSel: 'rgba(95,212,232,0.28)',
   text: '#122036',
   draft: '#e8a23d',
+  guide: '#e2531b',
 }
 
 function useImage(url: string | undefined): HTMLImageElement | undefined {
@@ -109,6 +110,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const [draft, setDraft] = useState<{ a: Point; b: Point } | null>(null)
   // selección por caja (Shift + arrastrar sobre el fondo)
   const [box, setBox] = useState<{ a: Point; b: Point } | null>(null)
+  // guías de alineación con otras esquinas mientras se dibuja o se arrastra
+  const [guides, setGuides] = useState<Guide[]>([])
   // largo tecleado para el último muro dibujado (estilo SketchUp: "3,5" + Enter)
   const [typed, setTyped] = useState<{ wallId: string; text: string } | null>(null)
   const [measure, setMeasure] = useState<Point[]>([])
@@ -200,8 +203,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const p = pointerPx(stage)
     if (!p) return
     if (tool === 'wall' || tool === 'calibrate') {
-      const a = tool === 'wall' ? snapPoint(p, { candidates, tol: screenTol, grid }) : p
-      setDraft({ a, b: a })
+      const s = tool === 'wall' ? snapWithGuides(p, { candidates, tol: screenTol, grid }) : { point: p, guides: [] }
+      setGuides(s.guides)
+      setDraft({ a: s.point, b: s.point })
     } else if (tool === 'measure') {
       // actualización funcional: dos clics muy seguidos no pierden un punto
       setMeasure((prev) => [...prev, snapPoint(p, { anchor: prev.at(-1), candidates, tol: screenTol, grid })])
@@ -230,8 +234,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       return
     }
     if (!draft) return
-    const b = tool === 'wall' ? snapPoint(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : p
-    setDraft({ ...draft, b })
+    const s = tool === 'wall' ? snapWithGuides(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
+    setGuides(s.guides)
+    setDraft({ ...draft, b: s.point })
   }
 
   const onUp = () => {
@@ -246,6 +251,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     if (!draft || !level) return
     const { a, b } = draft
     setDraft(null)
+    setGuides([])
     const lenPx = Math.hypot(b.x - a.x, b.y - a.y)
     if (lenPx < 4 / view.scale) return
     if (tool === 'wall') {
@@ -286,7 +292,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const own = toPx(w[end])
     const anchor = toPx(end === 'start' ? w.end : w.start)
     const others = candidates.filter((c) => Math.hypot(c.x - own.x, c.y - own.y) > 1e-6)
-    return snapPoint(p, { anchor, candidates: others, tol: screenTol, grid })
+    const s = snapWithGuides(p, { anchor, candidates: others, tol: screenTol, grid })
+    setGuides(s.guides)
+    return s.point
   }
 
   // arrastrar un extremo mueve la ESQUINA (todos los muros que llegan ahí); con Alt se despega solo este muro
@@ -295,6 +303,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const p = dragSnap(w, end, { x: e.target.x(), y: e.target.y() })
     e.target.position(p)
     const to = toM(p)
+    setGuides([])
     const ok = e.evt.altKey ? dispatch(new MoveWallEndpoint(level.id, w.id, end, to)) : dispatch(new MoveJoint(level.id, w[end], to))
     if (!ok) e.target.position(toPx(w[end])) // edición rechazada: el tirador vuelve a su lugar
   }
@@ -468,6 +477,16 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               ))}
             </Group>
           )}
+          {guides.map((g, i) => (
+            <Line
+              key={i}
+              points={[g.from.x, g.from.y, g.to.x, g.to.y]}
+              stroke={C.guide}
+              strokeWidth={1 / view.scale}
+              dash={[4 / view.scale, 4 / view.scale]}
+              listening={false}
+            />
+          ))}
           {box && (
             <Line
               points={[box.a.x, box.a.y, box.b.x, box.a.y, box.b.x, box.b.y, box.a.x, box.b.y]}
