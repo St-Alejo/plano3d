@@ -35,7 +35,7 @@ dependencies = [
 ocr = ["onnxruntime>=1.18", "pyclipper>=1.3", "PyYAML>=6", "six>=1.16", "tqdm>=4"]
 # Solo para entrenar la red de muros (backend/ml); producción usa onnxruntime.
 # Instalar la rueda CPU: pip install torch --index-url https://download.pytorch.org/whl/cpu
-train = ["torch>=2.2"]
+train = ["torch>=2.2", "onnx>=1.16"]
 dev = [
   "pytest>=8.3",
   "pytest-asyncio>=0.24",

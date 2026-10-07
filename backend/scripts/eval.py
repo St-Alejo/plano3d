@@ -65,6 +65,7 @@ from tests.synth.metrics import (
 from tests.synth.plan_generator import polygon_iou
 
 from plano3d.application.dto import BuildingModelDTO, model_from_dto
+from plano3d.container import wall_segmenter
 from plano3d.domain.quality import correction_stats
 from plano3d.infrastructure.cv.classic_cv_detector import default_stages
 from plano3d.infrastructure.cv.context import CVContext
@@ -92,7 +93,7 @@ class Row:
 def run(data: bytes, ctype: str) -> tuple[CVContext, float]:
     ctx = CVContext("eval", data, ctype)
     t0 = time.perf_counter()
-    for stage in default_stages():
+    for stage in default_stages(None, _SEGMENTER):
         ctx = stage.run(ctx)
     return ctx, (time.perf_counter() - t0) * 1000
 
@@ -271,6 +272,8 @@ def _gt(
 
 
 DETECTOR = "classic"
+#: red de muros si PLANO3D_SEG_MODEL=1 (para comparar con y sin ella)
+_SEGMENTER = wall_segmenter()
 _READER = None
 
 

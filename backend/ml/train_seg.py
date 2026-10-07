@@ -77,6 +77,20 @@ def iou(logits: torch.Tensor, target: torch.Tensor) -> float:
     return float((p & t).sum() / max(1, int((p | t).sum())))
 
 
+def export(model: nn.Module, out: Path) -> None:
+    model.eval()
+    torch.onnx.export(
+        model,
+        (torch.zeros(1, 1, 256, 256),),
+        str(out),
+        input_names=["ink"],
+        output_names=["wall_logit"],
+        dynamic_axes={"ink": {2: "h", 3: "w"}, "wall_logit": {2: "h", 3: "w"}},
+        opset_version=17,
+        dynamo=False,  # exportador clásico: no necesita onnxscript
+    )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", type=int, default=3000)
@@ -87,8 +101,15 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=2e-3)
     ap.add_argument("--out", default="models/plan-seg-v1.onnx")
     ap.add_argument("--real-dir", default=None, help="correcciones exportadas por usuarios")
+    ap.add_argument("--export-only", action="store_true", help="reexporta los pesos .pt")
     args = ap.parse_args()
     torch.manual_seed(0)
+    if args.export_only:
+        model = WallUNet()
+        model.load_state_dict(torch.load(Path(args.out).with_suffix(".pt")))
+        export(model, Path(args.out))
+        print("exportado", args.out)
+        return
 
     t0 = time.time()
     x, y = dataset(args.samples, 0, args.tile)
@@ -140,16 +161,9 @@ def main() -> None:
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    model.eval()
-    torch.onnx.export(
-        model,
-        torch.zeros(1, 1, 256, 256),
-        str(out),
-        input_names=["ink"],
-        output_names=["wall_logit"],
-        dynamic_axes={"ink": {2: "h", 3: "w"}, "wall_logit": {2: "h", 3: "w"}},
-        opset_version=17,
-    )
+    # los pesos primero: si la exportación falla no se pierde el entrenamiento
+    torch.save(model.state_dict(), out.with_suffix(".pt"))
+    export(model, out)
     card = {
         "model": out.name,
         "created": datetime.now().isoformat(timespec="seconds"),
