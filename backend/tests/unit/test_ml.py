@@ -30,3 +30,16 @@ def test_filtro_conserva_solo_lo_que_la_red_ve_como_muro() -> None:
 
 def test_sin_modelo_no_hay_segmentador(tmp_path) -> None:  # type: ignore[no-untyped-def]
     assert not WallSegmenter(tmp_path / "no-existe.onnx").available
+
+
+def test_exportar_correcciones_rasteriza_muros_sin_vanos() -> None:
+    from scripts.export_dataset import wall_mask
+
+    from plano3d.domain import Level, Opening, OpeningKind, Point2D, Wall
+
+    door = Opening("o", OpeningKind.DOOR, offset=1.0, width=1.0, height=2.1)
+    wall = Wall("w", Point2D(0.5, 1.0), Point2D(4.5, 1.0), thickness=0.2, openings=(door,))
+    mask = wall_mask(Level("l", "N", walls=(wall,)), 0.01, (300, 600))
+    assert mask[100, 100] == 255  # muro
+    assert mask[100, 200] == 0  # el vano de la puerta
+    assert mask[200, 100] == 0

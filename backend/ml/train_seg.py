@@ -38,6 +38,27 @@ def dataset(n: int, offset: int, tile: int) -> tuple[np.ndarray, np.ndarray]:
     return x, y
 
 
+def corrections(folder: Path, tile: int, per_image: int = 24) -> tuple[np.ndarray, np.ndarray]:
+    """Recortes de los planos corregidos por usuarios (``scripts/export_dataset.py``)."""
+    import cv2
+
+    rng = np.random.default_rng(0)
+    xs, ys = [], []
+    for mask_path in sorted(folder.glob("*_muros.png")):
+        img = cv2.imread(str(mask_path).replace("_muros.png", ".png"), cv2.IMREAD_GRAYSCALE)
+        mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+        if img is None or mask is None or min(img.shape) < tile:
+            continue
+        for _ in range(per_image):
+            y = int(rng.integers(0, img.shape[0] - tile + 1))
+            x = int(rng.integers(0, img.shape[1] - tile + 1))
+            xs.append(img[y : y + tile, x : x + tile])
+            ys.append(mask[y : y + tile, x : x + tile])
+    if not xs:
+        return np.zeros((0, tile, tile), np.uint8), np.zeros((0, tile, tile), np.uint8)
+    return np.stack(xs), np.stack(ys)
+
+
 def to_tensor(x: np.ndarray, y: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
     xt = torch.from_numpy(x).float().div(255.0).unsqueeze(1)
     yt = torch.from_numpy((y > 0).astype(np.float32)).unsqueeze(1)
@@ -65,12 +86,19 @@ def main() -> None:
     ap.add_argument("--tile", type=int, default=256)
     ap.add_argument("--lr", type=float, default=2e-3)
     ap.add_argument("--out", default="models/plan-seg-v1.onnx")
+    ap.add_argument("--real-dir", default=None, help="correcciones exportadas por usuarios")
     args = ap.parse_args()
     torch.manual_seed(0)
 
     t0 = time.time()
     x, y = dataset(args.samples, 0, args.tile)
     xv, yv = dataset(args.val, 1_000_000, args.tile)  # semillas que no se entrenan
+    real = 0
+    if args.real_dir:
+        xr, yr = corrections(Path(args.real_dir), args.tile)
+        real = len(xr)
+        if real:
+            x, y = np.concatenate([x, xr]), np.concatenate([y, yr])
     print(f"datos: {len(x)} + {len(xv)} en {time.time() - t0:.0f} s", flush=True)
     xt, yt = to_tensor(x, y)
     xvt, yvt = to_tensor(xv, yv)
@@ -128,7 +156,12 @@ def main() -> None:
         "architecture": "WallUNet base 16 (~1,3 M parámetros)",
         "input": "gris normalizado, tinta = 1 (1 - gris/255), alto y ancho múltiplos de 16",
         "output": "logit de muro por píxel",
-        "data": {"synthetic_v2": args.samples, "validation": args.val, "tile": args.tile},
+        "data": {
+            "synthetic_v2": args.samples,
+            "user_corrections_tiles": real,
+            "validation": args.val,
+            "tile": args.tile,
+        },
         "real_plans_used_for_training": False,
         "history": history,
     }
