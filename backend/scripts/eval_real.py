@@ -69,22 +69,48 @@ class Frame:
     mpp: float
     origin: Pt
     px_per_m: float
+    #: fotos con perspectiva: píxeles de la imagen original → metros de la verdad
+    px_to_m: np.ndarray | None = None
 
     def to_truth(self, p: Pt) -> Pt:
         x, y, w = self.h_inv @ np.array([p[0] / self.mpp, p[1] / self.mpp, 1.0])
+        if self.px_to_m is not None:
+            u, v, s = self.px_to_m @ np.array([x / w, y / w, 1.0])
+            return (u / s, v / s)
         return ((x / w - self.origin[0]) / self.px_per_m, (y / w - self.origin[1]) / self.px_per_m)
 
 
-def truth_mpp_in_rectified(h: np.ndarray, origin: Pt, px_per_m: float) -> float:
-    """Metros reales por píxel rectificado (promedio en x e y alrededor del origen)."""
+def truth_homography(truth: dict[str, Any]) -> np.ndarray | None:
+    """``homography`` (opcional): metros de la verdad → píxeles de la imagen original. La
+    usan las fotos tomadas con el celular, donde una escala y un origen no bastan."""
+    h = truth.get("homography")
+    return None if h is None else np.array(h, np.float64).reshape(3, 3)
+
+
+def truth_to_px(truth: dict[str, Any], p: Pt, origin: Pt | None = None) -> Pt:
+    h = truth_homography(truth)
+    if h is not None:
+        u, v, s = h @ np.array([p[0], p[1], 1.0])
+        return (u / s, v / s)
+    ox, oy = origin or truth["origin_px"]
+    return (ox + p[0] * truth["px_per_m"], oy + p[1] * truth["px_per_m"])
+
+
+def truth_mpp_in_rectified(h: np.ndarray, truth: dict[str, Any]) -> float:
+    """Metros reales por píxel rectificado (promedio en x e y alrededor de un punto de la
+    planta: el origen, o el centro de los muros si la verdad trae homografía)."""
 
     def warp(p: Pt) -> np.ndarray:
-        v = h @ np.array([p[0], p[1], 1.0])
+        v = h @ np.array([*truth_to_px(truth, p), 1.0])
         return v[:2] / v[2]
 
-    o = warp(origin)
-    lx = float(np.linalg.norm(warp((origin[0] + px_per_m, origin[1])) - o))
-    ly = float(np.linalg.norm(warp((origin[0], origin[1] + px_per_m)) - o))
+    ref = (0.0, 0.0)
+    if truth_homography(truth) is not None:
+        pts = [p for w in truth["levels"][0]["walls"] for p in (w["a"], w["b"])]
+        ref = (float(np.mean([p[0] for p in pts])), float(np.mean([p[1] for p in pts])))
+    o = warp(ref)
+    lx = float(np.linalg.norm(warp((ref[0] + 1.0, ref[1])) - o))
+    ly = float(np.linalg.norm(warp((ref[0], ref[1] + 1.0)) - o))
     return 2.0 / (lx + ly)
 
 
@@ -196,11 +222,11 @@ def score_level(det: dict[str, Any], gt: dict[str, Any]) -> dict[str, Any]:
 
 def overlay(img: np.ndarray, truth: dict[str, Any], dets: list[dict[str, Any]], path: Path) -> None:
     out = img.copy()
-    ppm = truth["px_per_m"]
     ox, oy = truth["origin_px"]
 
     def px(p: Pt) -> tuple[int, int]:
-        return (round(ox + p[0] * ppm), round(oy + p[1] * ppm))
+        x, y = truth_to_px(truth, p, (ox, oy))
+        return (round(x), round(y))
 
     for lv in truth["levels"]:
         lo = lv.get("origin_px")
@@ -252,9 +278,13 @@ async def evaluate(case: str) -> dict[str, Any]:
     model = result.model
     h = np.array(result.image_transform or np.eye(3).ravel(), np.float64).reshape(3, 3)
     origin = tuple(truth["origin_px"])
-    frame = Frame(np.linalg.inv(h), model.scale.meters_per_pixel, origin, truth["px_per_m"])
+    hm = truth_homography(truth)
+    px_to_m = None if hm is None else np.linalg.inv(hm)
+    frame = Frame(
+        np.linalg.inv(h), model.scale.meters_per_pixel, origin, truth["px_per_m"], px_to_m
+    )
 
-    true_mpp = truth_mpp_in_rectified(h, origin, truth["px_per_m"])
+    true_mpp = truth_mpp_in_rectified(h, truth)
     scale_err = model.scale.meters_per_pixel / true_mpp - 1.0
 
     frames = [frame] * len(model.levels)
