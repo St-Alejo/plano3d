@@ -264,6 +264,57 @@ export class DeleteOpening extends WallEdit {
   }
 }
 
+/**
+ * Mueve una puerta o ventana a lo largo de su muro o a OTRO muro, con sus medidas.
+ * Es un solo paso de historial: deshacer la devuelve a su muro y posición originales.
+ */
+export class MoveOpening implements Command {
+  readonly label = 'Mover abertura'
+  private before: Wall[] = []
+  constructor(
+    private readonly levelId: string,
+    private readonly openingId: string,
+    private readonly toWallId: string,
+    private readonly offset: number,
+  ) {}
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const from = lv.walls.find((w) => w.openings.some((o) => o.id === this.openingId))
+    if (!from) throw new CommandError('La abertura no existe')
+    const opening = from.openings.find((o) => o.id === this.openingId)!
+    const moved = { ...opening, offset: this.offset }
+    if (from.id === this.toWallId) {
+      this.before = [from]
+      const next = checked({ ...from, openings: from.openings.map((o) => (o.id === opening.id ? moved : o)) })
+      return replaceLevel(model, upsertWall(lv, next))
+    }
+    const to = findWall(lv, this.toWallId)
+    this.before = [from, to]
+    const height = Math.min(moved.height, to.height - moved.sill)
+    const nextTo = checked({ ...to, openings: [...to.openings, { ...moved, height }] })
+    const nextFrom = { ...from, openings: from.openings.filter((o) => o.id !== opening.id) }
+    return replaceLevel(model, upsertWall(upsertWall(lv, nextFrom), nextTo))
+  }
+  undo(model: BuildingModel): BuildingModel {
+    let lv = findLevel(model, this.levelId)
+    for (const w of this.before) lv = upsertWall(lv, w)
+    return replaceLevel(model, lv)
+  }
+}
+
+/** Copia de una abertura en el mismo muro (al lado, si cabe) o en la posición indicada. */
+export class DuplicateOpening extends WallEdit {
+  readonly label = 'Duplicar abertura'
+  readonly opening: Opening
+  constructor(levelId: string, wallId: string, source: Opening, offset: number) {
+    super(levelId, wallId)
+    this.opening = { ...source, id: newId('op'), offset }
+  }
+  protected transform(w: Wall): Wall {
+    return { ...w, openings: [...w.openings, this.opening] }
+  }
+}
+
 export class AddWall implements Command {
   readonly label = 'Agregar muro'
   readonly wall: Wall

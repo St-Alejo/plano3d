@@ -11,6 +11,7 @@ import { useEditor, type ViewMode } from '@/store/editorStore'
 import {
   canCopy,
   canDelete,
+  canDuplicate,
   canPaste,
   canRotate,
   copySelection,
@@ -115,7 +116,7 @@ export function buildActions(ctx: ActionContext): EditorAction[] {
     },
     { id: 'edit.copy', label: 'Copiar muros', group: 'Edición', keys: 'Ctrl+C', match: combo('mod+c'), enabled: canCopy, run: () => void copySelection() },
     { id: 'edit.paste', label: 'Pegar', group: 'Edición', keys: 'Ctrl+V', match: combo('mod+v'), enabled: canPaste, run: () => void paste() },
-    { id: 'edit.duplicate', label: 'Duplicar', group: 'Edición', keys: 'Ctrl+D', match: combo('mod+d'), enabled: canCopy, run: () => void duplicateSelection() },
+    { id: 'edit.duplicate', label: 'Duplicar', group: 'Edición', keys: 'Ctrl+D', match: combo('mod+d'), enabled: canDuplicate, run: () => void duplicateSelection() },
     {
       id: 'edit.delete',
       label: 'Eliminar selección',
@@ -131,12 +132,12 @@ export function buildActions(ctx: ActionContext): EditorAction[] {
         label: 'Mover selección',
         group: 'Edición',
         match: (e) => e.key.toLowerCase() === key && !mod(e) && !e.altKey,
-        enabled: () => st().group.some((g) => g.kind === 'wall' || g.kind === 'furniture'),
+        enabled: () => st().group.some((g) => g.kind === 'wall' || g.kind === 'furniture' || g.kind === 'opening'),
         run: nudge(dx, dy),
         hidden: true,
       }),
     ),
-    { id: 'edit.rotate', label: 'Girar mueble 90°', group: 'Edición', keys: 'R', match: combo('r'), enabled: canRotate, run: () => void rotateSelection() },
+    { id: 'edit.rotate', label: 'Girar mueble o puerta', group: 'Edición', keys: 'R', match: combo('r'), enabled: canRotate, run: () => void rotateSelection() },
     { id: 'select.all', label: 'Seleccionar todos los muros', group: 'Selección', keys: 'Ctrl+A', match: combo('mod+a'), run: () => void selectAllWalls() },
     {
       id: 'select.none',

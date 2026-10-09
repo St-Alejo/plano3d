@@ -89,6 +89,8 @@ interface EditorState {
   setGridStep: (step: number) => void
   toggleDimensions: () => void
   clearError: () => void
+  /** aviso al usuario que no viene de un comando (p. ej. "no cabe") */
+  setError: (message: string) => void
   reset: () => void
 }
 
@@ -217,6 +219,7 @@ export const useEditor = create<EditorState>()((set, get) => {
     setGridStep: (gridStep) => set({ gridStep }),
     toggleDimensions: () => set({ showDimensions: !get().showDimensions }),
     clearError: () => set({ error: null }),
+    setError: (message) => set({ error: message }),
     reset: () => {
       history.clear()
       roomMemory.clear()

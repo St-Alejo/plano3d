@@ -6,12 +6,13 @@
 import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Rect, Stage, Tag, Text } from 'react-konva'
-import type { Point, Wall } from '@/api/types'
-import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, UpdateFurniture } from '@/domain/commands'
+import type { Opening, Point, Wall } from '@/api/types'
+import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveOpening, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, UpdateFurniture } from '@/domain/commands'
 import { catalogItem, FURNITURE_DRAG, scaledParts } from '@/domain/catalog'
 import { wallsHitBy } from '@/domain/furniture'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
+import { placeOpening, type Placement } from '@/domain/openings'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { PlanElements } from './PlanElements'
@@ -120,6 +121,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   // largo tecleado para el último muro dibujado (estilo SketchUp: "3,5" + Enter)
   const [typed, setTyped] = useState<{ wallId: string; text: string } | null>(null)
   const [measure, setMeasure] = useState<Point[]>([])
+  /** puerta o ventana en arrastre: dónde quedaría (muro destino) y si cabe */
+  const [ghost, setGhost] = useState<(Placement & { wall: Wall; opening: Opening }) | null>(null)
   const grid = gridStep > 0 ? gridStep / mpp : 0 // paso de rejilla en px de imagen
   // al cambiar de herramienta se descarta la medición en curso
   const [measureTool, setMeasureTool] = useState(tool)
@@ -332,6 +335,30 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     if (!ok) e.target.position(toPx(w[end])) // edición rechazada: el tirador vuelve a su lugar
   }
 
+  // arrastrar una puerta/ventana la corre por su muro o la pasa al muro más cercano al puntero
+  const dragOpening = (o: Opening) => (e: Konva.KonvaEventObject<DragEvent>) => {
+    e.target.position({ x: 0, y: 0 }) // la línea original no se mueve: se dibuja un fantasma
+    const stage = e.target.getStage()
+    const p = stage?.getRelativePointerPosition()
+    if (!level || !p) return
+    const at = toM(p)
+    const hit = nearestWall(level, at, Math.max(screenTol * mpp * 3, 0.4))
+    if (!hit) return
+    const step = gridStep > 0 ? Math.max(gridStep, 0.05) : 0.05
+    setGhost({ ...placeOpening(hit.wall, o.width, hit.offset, o.id, step), wall: hit.wall, opening: o })
+  }
+  const dropOpening = (e: Konva.KonvaEventObject<DragEvent>) => {
+    e.target.position({ x: 0, y: 0 })
+    const g = ghost
+    setGhost(null)
+    if (!level || !g) return
+    if (!g.ok) {
+      useEditor.getState().setError('Ahí no cabe: se sale del muro o pisa otra abertura')
+      return
+    }
+    if (dispatch(new MoveOpening(level.id, g.opening.id, g.wall.id, g.offset))) select({ kind: 'opening', id: g.opening.id, wallId: g.wall.id })
+  }
+
   const cursor = tool === 'select' ? 'default' : 'crosshair'
   const measureM = measure.map(toM)
   const measureLen = measureM.slice(1).reduce((s, p, i) => s + Math.hypot(p.x - measureM[i]!.x, p.y - measureM[i]!.y), 0)
@@ -471,6 +498,17 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       strokeWidth={(w.thickness / mpp) * 1.25}
                       hitStrokeWidth={Math.max(w.thickness / mpp, 14 / view.scale)}
                       listening={!locked.has('openings')}
+                      opacity={ghost?.opening.id === o.id ? 0.35 : 1}
+                      draggable={tool === 'select' && !locked.has('openings')}
+                      onDragStart={() => select({ kind: 'opening', id: o.id, wallId: w.id })}
+                      onDragMove={dragOpening(o)}
+                      onDragEnd={dropOpening}
+                      onMouseEnter={(ev) => {
+                        if (tool === 'select') ev.target.getStage()!.container().style.cursor = 'grab'
+                      }}
+                      onMouseLeave={(ev) => {
+                        ev.target.getStage()!.container().style.cursor = ''
+                      }}
                       onClick={pick({ kind: 'opening', id: o.id, wallId: w.id })}
                       onTap={pick({ kind: 'opening', id: o.id, wallId: w.id })}
                       onContextMenu={pickForMenu({ kind: 'opening', id: o.id, wallId: w.id })}
@@ -583,6 +621,32 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               ))}
             </Group>
           )}
+          {ghost && (() => {
+            const d = wallDirection(ghost.wall)
+            const at = (off: number) => toPx({ x: ghost.wall.start.x + d.x * off, y: ghost.wall.start.y + d.y * off })
+            const a = at(ghost.offset)
+            const b = at(ghost.offset + ghost.opening.width)
+            const color = ghost.ok ? C.wallSel : C.hit
+            const n = { x: -d.y, y: d.x }
+            const off = ghost.wall.thickness / mpp / 2 + 16 / view.scale
+            const label = (p: Point, q: Point, v: number, key: string) => {
+              const m = { x: (p.x + q.x) / 2 + n.x * off, y: (p.y + q.y) / 2 + n.y * off }
+              const txt = v.toFixed(2)
+              return (
+                <Label key={key} x={m.x} y={m.y} offsetX={(txt.length * 11 * 0.62) / view.scale / 2 + 4 / view.scale} offsetY={9 / view.scale}>
+                  <Tag fill={color} cornerRadius={3 / view.scale} />
+                  <Text text={txt} fontSize={11 / view.scale} fontFamily="Geist Mono" fill="#ffffff" padding={3 / view.scale} />
+                </Label>
+              )
+            }
+            return (
+              <Group listening={false}>
+                <Line points={[a.x, a.y, b.x, b.y]} stroke={color} strokeWidth={(ghost.wall.thickness / mpp) * 1.6} opacity={0.85} />
+                {ghost.before > 0.005 && label(toPx(ghost.wall.start), a, ghost.before, 'antes')}
+                {ghost.after > 0.005 && label(b, toPx(ghost.wall.end), ghost.after, 'despues')}
+              </Group>
+            )
+          })()}
           {guides.map((g, i) => (
             <Line
               key={i}

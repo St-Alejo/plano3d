@@ -4,8 +4,9 @@
  * los atajos, la paleta de comandos y el menú contextual llaman a estas mismas
  * funciones, así cada acción tiene una sola implementación.
  */
-import type { Wall } from '@/api/types'
-import { modelBounds } from '@/domain/model'
+import type { Opening, Wall } from '@/api/types'
+import { modelBounds, wallDirection } from '@/domain/model'
+import { findOpening, placeOpening } from '@/domain/openings'
 import {
   AddFurniture,
   cloneWalls,
@@ -14,7 +15,10 @@ import {
   DeleteFurniture,
   DeleteOpening,
   DeleteWall,
+  DuplicateOpening,
   InsertWalls,
+  MoveOpening,
+  UpdateOpening,
   TranslateWalls,
   UpdateFurniture,
   type Command,
@@ -68,7 +72,22 @@ function selectedFurniture() {
   return (selectLevel(s)?.furniture ?? []).filter((f) => ids.has(f.id))
 }
 
-/** Mueve muros y muebles seleccionados (flechas: 5 cm, con Shift 25 cm) en un solo paso. */
+/** Aberturas seleccionadas con su muro (las de muros que también están seleccionados no cuentan). */
+function selectedOpenings(): { wall: Wall; opening: Opening }[] {
+  const s = state()
+  const lv = selectLevel(s)
+  if (!lv) return []
+  return s.group.flatMap((g) => {
+    if (g.kind !== 'opening') return []
+    const hit = findOpening(lv.walls, g.id)
+    return hit ? [hit] : []
+  })
+}
+
+/**
+ * Mueve muros y muebles seleccionados (flechas: 5 cm, con Shift 25 cm) en un solo paso.
+ * Las puertas y ventanas se corren a lo largo de su muro, en el sentido de la flecha.
+ */
 export function nudgeSelection(dx: number, dy: number): boolean {
   const s = state()
   const ids = selectedWalls().map((w) => w.id)
@@ -76,6 +95,15 @@ export function nudgeSelection(dx: number, dy: number): boolean {
   if (ids.length > 0) parts.push(new TranslateWalls(s.levelId, ids, dx, dy))
   for (const f of selectedFurniture())
     parts.push(new UpdateFurniture(s.levelId, f.id, { position: { x: f.position.x + dx, y: f.position.y + dy } }))
+  for (const { wall, opening } of selectedOpenings()) {
+    if (ids.includes(wall.id)) continue
+    const d = wallDirection(wall)
+    const along = dx * d.x + dy * d.y
+    if (Math.abs(along) < 1e-9) continue
+    const center = opening.offset + opening.width / 2 + Math.sign(along) * Math.hypot(dx, dy)
+    const p = placeOpening(wall, opening.width, center, opening.id, 0)
+    if (p.ok && Math.abs(p.offset - opening.offset) > 1e-9) parts.push(new MoveOpening(s.levelId, opening.id, wall.id, p.offset))
+  }
   if (parts.length === 0) return false
   return s.dispatch(parts.length === 1 ? parts[0]! : new CompositeCommand('Mover selección', parts))
 }
@@ -93,20 +121,36 @@ export function addFurnitureAtCenter(catalogId: string): boolean {
   return ok
 }
 
+const selectedDoors = () => selectedOpenings().filter((x) => x.opening.kind === 'door')
+
 export function canRotate(): boolean {
-  return selectedFurniture().length > 0
+  return selectedFurniture().length > 0 || selectedDoors().length > 0
 }
 
-/** Gira 90° los muebles seleccionados, cada uno sobre su centro. */
+/**
+ * Gira 90° los muebles seleccionados, cada uno sobre su centro. Las puertas recorren
+ * las cuatro formas de abrir: cambia el lado de apertura y, cada dos, la bisagra.
+ */
 export function rotateSelection(): boolean {
   const s = state()
-  const parts = selectedFurniture().map((f) => new UpdateFurniture(s.levelId, f.id, { rotation: (f.rotation ?? 0) + Math.PI / 2 }, 'Girar mueble'))
+  const parts: Command[] = selectedFurniture().map(
+    (f) => new UpdateFurniture(s.levelId, f.id, { rotation: (f.rotation ?? 0) + Math.PI / 2 }, 'Girar mueble'),
+  )
+  for (const { wall, opening } of selectedDoors()) {
+    const left = opening.opens_left ?? true
+    const hinge = opening.hinge_at_end ?? false
+    parts.push(new UpdateOpening(s.levelId, wall.id, opening.id, left ? { opens_left: false } : { opens_left: true, hinge_at_end: !hinge }))
+  }
   if (parts.length === 0) return false
-  return s.dispatch(parts.length === 1 ? parts[0]! : new CompositeCommand(`Girar ${parts.length} muebles`, parts))
+  return s.dispatch(parts.length === 1 ? parts[0]! : new CompositeCommand(`Girar ${parts.length} elementos`, parts))
 }
 
 export function canCopy(): boolean {
   return selectedWalls().length > 0
+}
+
+export function canDuplicate(): boolean {
+  return selectedWalls().length > 0 || selectedOpenings().length === 1
 }
 
 export function copySelection(): number {
@@ -137,9 +181,26 @@ export function paste(): boolean {
   return ok
 }
 
+/** Duplica los muros seleccionados o, si es una sola abertura, la copia al lado en su muro. */
 export function duplicateSelection(): boolean {
   const walls = selectedWalls()
-  return insert(walls, walls.length === 1 ? 'Duplicar muro' : `Duplicar ${walls.length} muros`)
+  if (walls.length > 0) return insert(walls, walls.length === 1 ? 'Duplicar muro' : `Duplicar ${walls.length} muros`)
+  const [only] = selectedOpenings()
+  if (!only) return false
+  const { wall, opening } = only
+  const gap = 0.3
+  // primero a la derecha, si no cabe a la izquierda
+  for (const center of [opening.offset + opening.width * 1.5 + gap, opening.offset - opening.width / 2 - gap]) {
+    const p = placeOpening(wall, opening.width, center, undefined, 0)
+    if (!p.ok) continue
+    const s = state()
+    const cmd = new DuplicateOpening(s.levelId, wall.id, opening, p.offset)
+    const ok = s.dispatch(cmd)
+    if (ok) s.select({ kind: 'opening', id: cmd.opening.id, wallId: wall.id })
+    return ok
+  }
+  state().setError('No cabe otra abertura igual en este muro')
+  return false
 }
 
 export function selectAllWalls(): number {

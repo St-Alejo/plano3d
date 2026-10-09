@@ -1,9 +1,10 @@
-import { AlertTriangle, Info, OctagonAlert, Trash2 } from 'lucide-react'
+import { AlertTriangle, AlignCenterHorizontal, FlipHorizontal2, Info, OctagonAlert, Trash2 } from 'lucide-react'
 import type { Dimension, MeasureStatus, Opening, Room } from '@/api/types'
 import { useState } from 'react'
 import {
   DeleteOpening,
   DeleteWall,
+  MoveOpening,
   RelabelRoom,
   DeleteDimension,
   SetDimensionValue,
@@ -15,6 +16,7 @@ import {
   UpdateWall,
 } from '@/domain/commands'
 import { roomArea, wallDirection, wallLength } from '@/domain/model'
+import { centeredOffset, placeOpening } from '@/domain/openings'
 import { modelQA, type QAIssue } from '@/domain/qa'
 import { GRID_STEPS, type Selection } from '@/store/editorStore'
 import { FurnitureInspector, MaterialSelect } from './FurnitureInspector'
@@ -247,6 +249,63 @@ export function PropertiesPanel({ onSolve, solving = false }: SolveProps = {}) {
         <NumberField key={`${selection.id}-Ancho-${o.width}`} label="Ancho" suffix="m" min={0.3} step={0.05} value={o.width} onCommit={(v) => upd({ width: v })} />
         <NumberField key={`${selection.id}-Alto-${o.height}`} label="Alto" suffix="m" min={0.3} step={0.05} value={o.height} onCommit={(v) => upd({ height: v })} />
         {o.kind === 'window' && <NumberField key={`${selection.id}-Antepecho-${o.sill}`} label="Antepecho" suffix="m" min={0} step={0.05} value={o.sill} onCommit={(v) => upd({ sill: v })} />}
+        <NumberField
+          key={`${selection.id}-pos-${o.offset}`}
+          label="Distancia desde el inicio del muro"
+          suffix="m"
+          min={0}
+          step={0.05}
+          value={o.offset}
+          onCommit={(v) => dispatch(new MoveOpening(level.id, o.id, w.id, v))}
+        />
+        <label className="flex flex-col gap-1 text-xs text-muted">
+          Muro de la abertura
+          <select
+            className="h-9 rounded-md border border-line bg-surface px-2 text-sm text-fg"
+            value={w.id}
+            onChange={(e) => {
+              const to = level.walls.find((x) => x.id === e.target.value)
+              if (!to) return
+              const p = placeOpening(to, o.width, wallLength(to) / 2, o.id, 0.05)
+              if (!p.ok) {
+                useEditor.getState().setError('La abertura no cabe en ese muro')
+                return
+              }
+              if (dispatch(new MoveOpening(level.id, o.id, to.id, p.offset))) select({ kind: 'opening', id: o.id, wallId: to.id })
+            }}
+          >
+            {level.walls.map((x, i) => (
+              <option key={x.id} value={x.id}>
+                Muro {i + 1} · {wallLength(x).toFixed(2)} m{x.id === w.id ? ' (actual)' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<AlignCenterHorizontal className="size-4" aria-hidden />}
+            onClick={() => dispatch(new MoveOpening(level.id, o.id, w.id, centeredOffset(w, o.width)))}
+          >
+            Centrar
+          </Button>
+          {o.kind === 'door' && (
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<FlipHorizontal2 className="size-4" aria-hidden />}
+              title="Cambia hacia dónde abre la puerta (también con R)"
+              onClick={() => {
+                const left = o.opens_left ?? true
+                upd(left ? { opens_left: false } : { opens_left: true, hinge_at_end: !(o.hinge_at_end ?? false) })
+              }}
+            >
+              Invertir giro
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-subtle">Arrastra la abertura en el plano para moverla a lo largo del muro o a otro muro.</p>
         <Button variant="danger" icon={<Trash2 className="size-4" aria-hidden />} onClick={() => dispatch(new DeleteOpening(level.id, w.id, o.id)) && select(null)}>
           Eliminar abertura
         </Button>
