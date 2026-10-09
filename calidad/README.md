@@ -73,7 +73,7 @@ correcciones están documentadas en la bitácora.
 |---|---|---|---|
 | **casa1** | Planta técnica con cotas | 1 de 3 ambientes, sin nombres, puertas mal ubicadas | ✅ **CUMPLE**: muros 1,00 · aberturas P/R 1,00 · ambientes 3/3, IoU 0,95 · nombres 3/3 · escala 0,0 % |
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
-| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). No cumple umbrales: muros F1 0,42 / 0,54 / 0,59 por planta (0,48 / 0,60 / 0,64 con la red), ambientes de la planta alta IoU 0,74, escala −28 %. Con la red v2: muros 0,68 / 0,72 / 0,73 |
+| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,73 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
 
 **Por qué casa3 no cumple todavía (causa medida):**
 - A esa resolución, autos, mesas y sofás están dibujados con la misma línea blanca que los muros.
