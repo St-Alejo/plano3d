@@ -79,6 +79,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/blank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Blank Project
+         * @description Plano desde cero: sin foto, listo para dibujar en el editor o con el chat.
+         */
+        post: operations["create_blank_project_api_projects_blank_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}": {
         parameters: {
             query?: never;
@@ -274,6 +294,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BlankProjectDTO */
+        BlankProjectDTO: {
+            /**
+             * Name
+             * @default Plano nuevo
+             */
+            name: string;
+        };
         /** Body_check_capture_api_capture_check_post */
         Body_check_capture_api_capture_check_post: {
             /**
@@ -683,6 +711,12 @@ export interface components {
             created_at: string;
             /** Error */
             error?: string | null;
+            /**
+             * Has Source
+             * @description tiene foto o archivo original (no si se dibujó desde cero)
+             * @default true
+             */
+            has_source: boolean;
             /** Id */
             id: string;
             model?: components["schemas"]["BuildingModelDTO"] | null;
@@ -722,6 +756,12 @@ export interface components {
             created_at: string;
             /** Error */
             error?: string | null;
+            /**
+             * Has Source
+             * @description tiene foto o archivo original (no si se dibujó desde cero)
+             * @default true
+             */
+            has_source: boolean;
             /** Id */
             id: string;
             /** Name */
@@ -1119,6 +1159,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectCreatedDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_blank_project_api_projects_blank_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlankProjectDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
                 };
             };
             /** @description Validation Error */

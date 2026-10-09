@@ -4,8 +4,8 @@ import { sampleProject } from '@/test/fixtures'
 import { listProjects, normalize, totalArea } from './listing'
 
 const p = (id: string, name: string, updated_at: string, total_area: number | null): ProjectSummary => {
-  const { created_at, status, error, room_count } = sampleProject()
-  return { id, name, updated_at, total_area, created_at, status, error, room_count }
+  const { created_at, status, error, room_count, has_source } = sampleProject()
+  return { id, name, updated_at, total_area, created_at, status, error, room_count, has_source }
 }
 
 const items = [

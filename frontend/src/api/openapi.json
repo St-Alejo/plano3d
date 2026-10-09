@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "BlankProjectDTO": {
+        "properties": {
+          "name": {
+            "default": "Plano nuevo",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "BlankProjectDTO",
+        "type": "object"
+      },
       "Body_check_capture_api_capture_check_post": {
         "properties": {
           "file": {
@@ -923,6 +936,12 @@
             ],
             "title": "Error"
           },
+          "has_source": {
+            "default": true,
+            "description": "tiene foto o archivo original (no si se dibujó desde cero)",
+            "title": "Has Source",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -1009,6 +1028,12 @@
               }
             ],
             "title": "Error"
+          },
+          "has_source": {
+            "default": true,
+            "description": "tiene foto o archivo original (no si se dibujó desde cero)",
+            "title": "Has Source",
+            "type": "boolean"
           },
           "id": {
             "title": "Id",
@@ -1797,6 +1822,48 @@
           }
         },
         "summary": "Create Project",
+        "tags": [
+          "proyectos"
+        ]
+      }
+    },
+    "/api/projects/blank": {
+      "post": {
+        "description": "Plano desde cero: sin foto, listo para dibujar en el editor o con el chat.",
+        "operationId": "create_blank_project_api_projects_blank_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlankProjectDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Blank Project",
         "tags": [
           "proyectos"
         ]

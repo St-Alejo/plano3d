@@ -101,6 +101,9 @@ export const api = {
     return request<{ id: string; status: string }>('/projects', { method: 'POST', body: form })
   },
 
+  /** Plano desde cero: sin foto, listo para dibujar. */
+  createBlankProject: (name: string) => request<Project>('/projects/blank', { method: 'POST', ...json({ name }) }),
+
   /**
    * Guarda con bloqueo optimista: `revision` es la versión sobre la que se editó.
    * Si otra persona guardó antes responde 409 (ApiError.status === 409).

@@ -155,7 +155,8 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
 
   if (!model) return <Spinner label="Preparando el editor" />
 
-  const imageUrl = api.imageUrl(project.id, 'rectified', project.updated_at)
+  // los planos dibujados desde cero no tienen foto de fondo
+  const imageUrl = project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)
   const t = TOOLS.find((x) => x.id === tool)
   const hint = coarse ? t?.touchHint : t?.hint
 

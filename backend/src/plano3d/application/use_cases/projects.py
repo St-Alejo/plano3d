@@ -123,6 +123,26 @@ class CreateProject:
         return project
 
 
+#: resumen de la primera revisión de un plano dibujado desde cero
+BLANK_SUMMARY = "Plano en blanco"
+
+
+class CreateBlankProject:
+    """Proyecto sin foto: se dibuja desde cero en el editor (o con el chat)."""
+
+    def __init__(self, repo: ProjectRepository) -> None:
+        self._repo = repo
+
+    async def execute(self, name: str) -> Project:
+        project = Project.create_blank(name)
+        assert project.model is not None
+        await self._repo.add(project)
+        await self._repo.add_revision(
+            ModelRevision(project.id, project.revision, project.model, BLANK_SUMMARY)
+        )
+        return project
+
+
 def _check_upload(data: bytes, content_type: str) -> str:
     ext = ALLOWED_TYPES.get(content_type)
     if ext is None:
@@ -193,7 +213,8 @@ class DeleteProject:
 
     async def execute(self, project_id: str) -> None:
         project = await _load(self._repo, project_id)
-        await self._storage.delete(project.original_image_key)
+        if project.has_source:
+            await self._storage.delete(project.original_image_key)
         if project.model and project.model.source_image:
             await self._storage.delete(project.model.source_image.key)
         await self._repo.delete(project_id)
@@ -295,6 +316,8 @@ class ReanalyzeProject:
         self, project_id: str, corners: Sequence[tuple[float, float]] | None = None
     ) -> Project:
         project = await _load(self._repo, project_id)
+        if not project.has_source:
+            raise DomainError("Este plano se dibujó desde cero: no hay foto que analizar")
         if project.status in (ProjectStatus.PENDING, ProjectStatus.PROCESSING):
             raise InvalidStateTransitionError("El proyecto ya se está analizando")
         if corners is not None:

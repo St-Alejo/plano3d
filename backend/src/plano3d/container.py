@@ -20,6 +20,7 @@ from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSele
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
     CheckCapture,
+    CreateBlankProject,
     CreateProject,
     DeleteProject,
     GetCorrectionStats,
@@ -70,6 +71,10 @@ class Container:
     @property
     def create_project(self) -> CreateProject:
         return CreateProject(self.repo, self.storage, self.queue, OpenCVStitcher())
+
+    @property
+    def create_blank_project(self) -> CreateBlankProject:
+        return CreateBlankProject(self.repo)
 
     @property
     def check_capture(self) -> CheckCapture:

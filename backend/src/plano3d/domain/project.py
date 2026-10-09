@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from plano3d.domain.building import BuildingModel, new_id
+from plano3d.domain.building import BuildingModel, Level, Scale, new_id
 from plano3d.domain.errors import ConcurrencyError, DomainError, InvalidStateTransitionError
 
 
@@ -23,6 +23,10 @@ _ALLOWED: dict[ProjectStatus, set[ProjectStatus]] = {
     ProjectStatus.READY: {ProjectStatus.PROCESSING},
     ProjectStatus.FAILED: {ProjectStatus.PROCESSING},
 }
+
+
+#: escala de los planos en blanco (1 cm por píxel del lienzo)
+BLANK_METERS_PER_PIXEL = 0.01
 
 
 def _now() -> datetime:
@@ -62,6 +66,27 @@ class Project:
             original_image_key=original_image_key,
             corners=corners,
         )
+
+    @classmethod
+    def create_blank(cls, name: str, project_id: str | None = None) -> Project:
+        """Plano dibujado desde cero: sin foto que analizar, listo para editar.
+
+        El editor trabaja en metros: la "imagen" es virtual a 1 cm por píxel.
+        """
+        project = cls.create(name, "", project_id=project_id)
+        project.status = ProjectStatus.READY
+        project.model = BuildingModel(
+            project_id=project.id,
+            scale=Scale(BLANK_METERS_PER_PIXEL, "vector", 1.0),
+            levels=(Level(id="lvl_0", name="Planta 1"),),
+        )
+        project.revision = 1
+        return project
+
+    @property
+    def has_source(self) -> bool:
+        """¿Tiene foto/archivo original? Los planos dibujados desde cero no."""
+        return bool(self.original_image_key)
 
     def _transition(self, target: ProjectStatus) -> None:
         if target not in _ALLOWED[self.status]:

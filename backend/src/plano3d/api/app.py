@@ -29,6 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from plano3d.application.dto import (
+    BlankProjectDTO,
     BuildingModelDTO,
     CalibrateScaleDTO,
     CaptureCheckDTO,
@@ -164,6 +165,17 @@ async def create_project(
         more,
     )
     return ProjectCreatedDTO(id=project.id, status=project.status)
+
+
+@router.post(
+    "/projects/blank",
+    response_model=ProjectDTO,
+    status_code=status.HTTP_201_CREATED,
+    tags=["proyectos"],
+)
+async def create_blank_project(body: BlankProjectDTO, c: ContainerDep) -> ProjectDTO:
+    """Plano desde cero: sin foto, listo para dibujar en el editor o con el chat."""
+    return project_to_dto(await c.create_blank_project.execute(body.name))
 
 
 def _etag(revision: int) -> str:
@@ -319,6 +331,8 @@ async def get_image(
     project = await c.get_project.execute(project_id)
     if kind == "rectified" and project.model and project.model.source_image:
         key, media = project.model.source_image.key, "image/png"
+    elif not project.has_source:
+        raise HTTPException(404, "Este plano se dibujó desde cero: no tiene imagen")
     else:
         key = project.original_image_key
         ext = key.rsplit(".", 1)[-1]

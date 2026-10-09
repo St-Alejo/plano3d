@@ -217,6 +217,9 @@ class ProjectSummaryDTO(_DTO):
     updated_at: datetime
     total_area: float | None = None
     room_count: int = 0
+    has_source: bool = Field(
+        True, description="tiene foto o archivo original (no si se dibujó desde cero)"
+    )
 
 
 class ProjectDTO(ProjectSummaryDTO):
@@ -271,6 +274,10 @@ class CaptureCheckDTO(_DTO):
     height: int
     paper_found: bool
     warnings: list[str] = []
+
+
+class BlankProjectDTO(_DTO):
+    name: str = Field("Plano nuevo", min_length=1, max_length=120)
 
 
 class ProjectCreatedDTO(_DTO):
@@ -636,6 +643,7 @@ def project_to_summary(p: Project) -> ProjectSummaryDTO:
         updated_at=p.updated_at,
         total_area=p.model.total_area if p.model else None,
         room_count=sum(len(lv.rooms) for lv in p.model.levels) if p.model else 0,
+        has_source=p.has_source,
     )
 
 

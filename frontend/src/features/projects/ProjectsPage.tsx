@@ -16,7 +16,7 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
     <li className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-xs transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-line-strong hover:shadow-[0_18px_40px_-20px_rgb(28_31_29/0.35)]">
       <Link to={`/p/${p.id}`} className="flex flex-1 flex-col focus-visible:outline-offset-4">
         <div className="relative m-2 mb-0 aspect-[4/3] overflow-hidden rounded-xl bg-paper">
-          {p.status === 'ready' ? (
+          {p.status === 'ready' && p.has_source !== false ? (
             <img
               src={api.imageUrl(p.id, 'rectified', p.updated_at)}
               alt=""

@@ -7,11 +7,12 @@ import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Rect, Stage, Tag, Text } from 'react-konva'
 import type { Opening, Point, Wall } from '@/api/types'
-import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveOpening, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, translateItem, UpdateFurniture } from '@/domain/commands'
+import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveOpening, RelabelRoom, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, translateItem, UpdateFurniture } from '@/domain/commands'
 import { catalogItem, FURNITURE_DRAG, scaledParts } from '@/domain/catalog'
 import { wallsHitBy } from '@/domain/furniture'
 import { wallAxis } from '@/domain/geometry'
 import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } from '@/domain/model'
+import { DrawRoom, rectFrom } from '@/domain/drawing'
 import { placeOpening, type Placement } from '@/domain/openings'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
@@ -121,6 +122,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   // largo tecleado para el último muro dibujado (estilo SketchUp: "3,5" + Enter)
   const [typed, setTyped] = useState<{ wallId: string; text: string } | null>(null)
   const [measure, setMeasure] = useState<Point[]>([])
+  /** ambiente recién dibujado: se ofrece escribir su nombre */
+  const [naming, setNaming] = useState<{ roomId: string; text: string } | null>(null)
   /** puerta o ventana en arrastre: dónde quedaría (muro destino) y si cabe */
   const [ghost, setGhost] = useState<(Placement & { wall: Wall; opening: Opening }) | null>(null)
   const grid = gridStep > 0 ? gridStep / mpp : 0 // paso de rejilla en px de imagen
@@ -210,7 +213,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     if (!stage || !level) return
     const p = pointerPx(stage)
     if (!p) return
-    if (tool === 'wall' || tool === 'calibrate' || tool === 'dimension') {
+    if (tool === 'wall' || tool === 'room' || tool === 'calibrate' || tool === 'dimension') {
       const s = tool !== 'calibrate' ? snapWithGuides(p, { candidates, tol: screenTol, grid }) : { point: p, guides: [] }
       setGuides(s.guides)
       setDraft({ a: s.point, b: s.point })
@@ -250,7 +253,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       return
     }
     if (!draft) return
-    const s = tool !== 'calibrate' ? snapWithGuides(p, { anchor: draft.a, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
+    // el ambiente es un rectángulo: sin imán a 0°/90° respecto de la primera esquina
+    const anchor = tool === 'room' ? undefined : draft.a
+    const s = tool !== 'calibrate' ? snapWithGuides(p, { anchor, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
     setGuides(s.guides)
     setDraft({ ...draft, b: s.point })
   }
@@ -270,7 +275,19 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     setGuides([])
     const lenPx = Math.hypot(b.x - a.x, b.y - a.y)
     if (lenPx < 4 / view.scale) return
-    if (tool === 'wall') {
+    if (tool === 'room') {
+      const template = level.walls[0]
+      try {
+        const name = `Ambiente ${level.rooms.length + 1}`
+        const cmd = new DrawRoom(level.id, level, rectFrom(toM(a), toM(b)), name, { thickness: template?.thickness, height: template?.height })
+        if (dispatch(cmd)) {
+          select({ kind: 'room', id: cmd.room.id })
+          setNaming({ roomId: cmd.room.id, text: '' })
+        }
+      } catch (err) {
+        useEditor.getState().setError(err instanceof Error ? err.message : 'No se pudo dibujar el ambiente')
+      }
+    } else if (tool === 'wall') {
       const template = level.walls[0]
       try {
         const cmd = new AddWall(level.id, toM(a), toM(b), { thickness: template?.thickness, height: template?.height })
@@ -674,7 +691,21 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               listening={false}
             />
           )}
-          {draft && (
+          {draft && tool === 'room' && (() => {
+            const r = rectFrom(toM(draft.a), toM(draft.b))
+            const a = toPx({ x: r.x, y: r.y })
+            const txt = `${r.w.toFixed(2)} × ${r.h.toFixed(2)} m`
+            return (
+              <Group listening={false}>
+                <Rect x={a.x} y={a.y} width={r.w / mpp} height={r.h / mpp} stroke={C.draft} strokeWidth={(level?.walls[0]?.thickness ?? 0.15) / mpp} fill="rgba(35,132,95,0.08)" />
+                <Label x={a.x + r.w / mpp / 2} y={a.y + r.h / mpp / 2} offsetX={(txt.length * 12 * 0.6) / view.scale / 2 + 4 / view.scale} offsetY={10 / view.scale}>
+                  <Tag fill={C.draft} cornerRadius={3 / view.scale} />
+                  <Text text={txt} fontSize={12 / view.scale} fontFamily="Geist Mono" fill="#ffffff" padding={4 / view.scale} />
+                </Label>
+              </Group>
+            )
+          })()}
+          {draft && tool !== 'room' && (
             <Line
               points={[draft.a.x, draft.a.y, draft.b.x, draft.b.y]}
               stroke={C.draft}
@@ -686,6 +717,29 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
           )}
         </Layer>
       </Stage>
+      {naming && (
+        <form
+          className="absolute top-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-md border border-ink/20 bg-paper/95 px-3 py-2 font-mono text-xs text-ink shadow-sm"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (naming.text.trim() && level) dispatch(new RelabelRoom(level.id, naming.roomId, naming.text))
+            setNaming(null)
+          }}
+        >
+          <label htmlFor="room-name">Nombre del ambiente:</label>
+          <input
+            id="room-name"
+            autoFocus
+            value={naming.text}
+            placeholder="p. ej. Sala"
+            maxLength={60}
+            className="w-40 rounded border border-ink/20 bg-white px-2 py-1 font-sans text-sm"
+            onChange={(e) => setNaming({ ...naming, text: e.target.value })}
+            onKeyDown={(e) => e.key === 'Escape' && setNaming(null)}
+            onBlur={(e) => e.currentTarget.form?.requestSubmit()}
+          />
+        </form>
+      )}
       {typed && (
         <div role="status" aria-live="polite" className="absolute top-2 left-1/2 -translate-x-1/2 rounded-md border border-ink/20 bg-paper/95 px-3 py-2 font-mono text-xs text-ink shadow-sm">
           {typed.text ? (

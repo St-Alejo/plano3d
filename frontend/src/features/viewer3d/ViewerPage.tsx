@@ -107,7 +107,7 @@ export function ViewerPage() {
       <Viewer3D
         model={model}
         mode={mode}
-        overlayUrl={api.imageUrl(project.id, 'rectified', project.updated_at)}
+        overlayUrl={project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)}
         overlayOpacity={overlay}
         flyTo={flyTo}
         walkStart={walkStart ?? rooms[0]?.at}

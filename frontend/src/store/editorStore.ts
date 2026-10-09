@@ -11,7 +11,7 @@ import type { BuildingModel, Point, Room, Wall } from '@/api/types'
 import { CommandError, CommandHistory, type Command } from '@/domain/commands'
 import { recomputeRooms } from '@/domain/rooms'
 
-export type Tool = 'select' | 'wall' | 'door' | 'window' | 'calibrate' | 'measure' | 'dimension' | 'paint'
+export type Tool = 'select' | 'room' | 'wall' | 'door' | 'window' | 'calibrate' | 'measure' | 'dimension' | 'paint'
 
 export type Selection =
   | { kind: 'wall'; id: string }
