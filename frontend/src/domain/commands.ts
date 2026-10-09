@@ -5,7 +5,7 @@
  * entidad que toca (no del modelo completo), así el historial es liviano y
  * deshacer una edición no pisa otras ediciones posteriores de otras entidades.
  */
-import type { BuildingModel, Dimension, Furniture, Level, Opening, OpeningKind, Point, Room, Wall } from '@/api/types'
+import type { BuildingModel, Column, Dimension, Furniture, Level, Opening, OpeningKind, Point, Room, Stair, Wall } from '@/api/types'
 import { catalogItem } from './catalog'
 import {
   DOOR,
@@ -658,6 +658,88 @@ export class DeleteDimension implements Command {
     dims.splice(this.before.index, 0, this.before.dim)
     return replaceLevel(model, { ...lv, dimensions: dims })
   }
+}
+
+// ----------------------------------------------------------------------------- columnas y escaleras
+
+interface LevelItems {
+  columns: Column
+  stairs: Stair
+}
+type ItemKey = keyof LevelItems
+
+const ITEM_NAME: Record<ItemKey, string> = { columns: 'columna', stairs: 'escalera' }
+
+function itemsOf<K extends ItemKey>(lv: Level, key: K): LevelItems[K][] {
+  return (lv[key] ?? []) as LevelItems[K][]
+}
+
+/** Mover o cambiar medidas de una columna o escalera (una edición = un paso de deshacer). */
+export class UpdateLevelItem<K extends ItemKey> implements Command {
+  readonly label: string
+  private before: LevelItems[K] | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly key: K,
+    private readonly id: string,
+    private readonly patch: Partial<Omit<LevelItems[K], 'id'>>,
+    label?: string,
+  ) {
+    this.label = label ?? `Editar ${ITEM_NAME[key]}`
+    const sizes = Object.entries(patch).filter(([k]) => ['width', 'depth', 'riser'].includes(k))
+    if (sizes.some(([, v]) => !((v as number) > 0) || !Number.isFinite(v as number))) throw new CommandError('Las medidas deben ser positivas')
+    if ('steps' in patch && !(Number.isInteger(patch.steps) && (patch.steps as number) >= 1)) throw new CommandError('La escalera necesita al menos un escalón')
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const list = itemsOf(lv, this.key)
+    const current = list.find((x) => x.id === this.id)
+    if (!current) throw new CommandError(`La ${ITEM_NAME[this.key]} no existe`)
+    this.before = current
+    const next = { ...current, ...this.patch }
+    return replaceLevel(model, { ...lv, [this.key]: list.map((x) => (x.id === this.id ? next : x)) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    const before = this.before
+    if (!before) return model
+    const lv = findLevel(model, this.levelId)
+    return replaceLevel(model, { ...lv, [this.key]: itemsOf(lv, this.key).map((x) => (x.id === before.id ? before : x)) })
+  }
+}
+
+export class DeleteLevelItem<K extends ItemKey> implements Command {
+  readonly label: string
+  private before: { item: LevelItems[K]; index: number } | null = null
+  constructor(
+    private readonly levelId: string,
+    private readonly key: K,
+    private readonly id: string,
+  ) {
+    this.label = `Eliminar ${ITEM_NAME[key]}`
+  }
+  execute(model: BuildingModel): BuildingModel {
+    const lv = findLevel(model, this.levelId)
+    const list = itemsOf(lv, this.key)
+    const index = list.findIndex((x) => x.id === this.id)
+    if (index < 0) throw new CommandError(`La ${ITEM_NAME[this.key]} no existe`)
+    this.before = { item: list[index]!, index }
+    return replaceLevel(model, { ...lv, [this.key]: list.filter((x) => x.id !== this.id) })
+  }
+  undo(model: BuildingModel): BuildingModel {
+    if (!this.before) return model
+    const lv = findLevel(model, this.levelId)
+    const list = [...itemsOf(lv, this.key)]
+    list.splice(this.before.index, 0, this.before.item)
+    return replaceLevel(model, { ...lv, [this.key]: list })
+  }
+}
+
+/** Desplaza una columna o una escalera completa. */
+export function translateItem(levelId: string, item: { kind: 'column'; value: Column } | { kind: 'stair'; value: Stair }, dx: number, dy: number): Command {
+  const mv = (p: Point) => ({ x: p.x + dx, y: p.y + dy })
+  return item.kind === 'column'
+    ? new UpdateLevelItem(levelId, 'columns', item.value.id, { center: mv(item.value.center) }, 'Mover columna')
+    : new UpdateLevelItem(levelId, 'stairs', item.value.id, { start: mv(item.value.start), end: mv(item.value.end) }, 'Mover escalera')
 }
 
 // ----------------------------------------------------------------------------- mobiliario y acabados (ADR-016)

@@ -5,10 +5,16 @@
  * su estado: exacta (verde), inferida (gris) o en conflicto (rojo). Un clic la
  * selecciona para corregir su valor en el panel.
  */
+import type Konva from 'konva'
 import { Circle, Group, Line, Rect, Text } from 'react-konva'
-import type { Dimension, Level, MeasureStatus, Point } from '@/api/types'
+import type { Column, Dimension, Level, MeasureStatus, Point, Stair } from '@/api/types'
 import { stairSteps } from '@/domain/geometry'
-import type { Selection } from '@/store/editorStore'
+import type { Selected, Selection } from '@/store/editorStore'
+
+const SEL = '#23845f'
+
+/** Columna o escalera arrastrada: cuánto se movió, en metros. */
+export type ItemMove = { kind: 'column'; value: Column } | { kind: 'stair'; value: Stair }
 
 export const DIM_COLORS: Record<MeasureStatus, string> = {
   exact: '#2e7d4f',
@@ -23,6 +29,12 @@ interface Props {
   selection: Selection
   onSelect: (sel: Selection) => void
   interactive: boolean
+  /** columnas y escaleras: seleccionables y arrastrables (capa de muros sin bloquear) */
+  editable?: boolean
+  showDimensions?: boolean
+  isSelected?: (kind: Selected['kind'], id: string) => boolean
+  onPick?: (sel: Selected, e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void
+  onMoveItem?: (item: ItemMove, dx: number, dy: number) => void
 }
 
 /** Extremos de la línea de cota: proyectados según su eje y desplazados por `offset`. */
@@ -40,55 +52,89 @@ export function dimensionLine(d: Dimension): { a: Point; b: Point } {
   return { a, b }
 }
 
-export function PlanElements({ level, mpp, scale, selection, onSelect, interactive }: Props) {
+export function PlanElements({
+  level,
+  mpp,
+  scale,
+  selection,
+  onSelect,
+  interactive,
+  editable = false,
+  showDimensions = true,
+  isSelected = () => false,
+  onPick,
+  onMoveItem,
+}: Props) {
   const px = (p: Point) => ({ x: p.x / mpp, y: p.y / mpp })
   const font = 11 / scale
+  // el grupo se arrastra desde (0,0): al soltar, su posición es el desplazamiento en px de imagen
+  const dragProps = (item: ItemMove, sel: Selected) => ({
+    draggable: editable,
+    listening: editable,
+    onClick: (e: Konva.KonvaEventObject<MouseEvent>) => onPick?.(sel, e),
+    onTap: (e: Konva.KonvaEventObject<TouchEvent>) => onPick?.(sel, e),
+    onDragStart: () => onSelect(sel),
+    onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
+      const dx = e.target.x() * mpp
+      const dy = e.target.y() * mpp
+      e.target.position({ x: 0, y: 0 })
+      if (Math.hypot(dx, dy) > 1e-4) onMoveItem?.(item, dx, dy)
+    },
+  })
   return (
     <Group>
       {(level.columns ?? []).map((c) => {
         const p = px(c.center)
-        return c.round ? (
-          <Circle key={c.id} x={p.x} y={p.y} radius={c.width / mpp / 2} fill="#3b3b3b" listening={false} />
-        ) : (
-          <Rect
-            key={c.id}
-            x={p.x}
-            y={p.y}
-            width={c.width / mpp}
-            height={c.depth / mpp}
-            offsetX={c.width / mpp / 2}
-            offsetY={c.depth / mpp / 2}
-            rotation={((c.rotation ?? 0) * 180) / Math.PI}
-            fill="#3b3b3b"
-            listening={false}
-          />
+        const sel = isSelected('column', c.id)
+        const look = { fill: sel ? SEL : '#3b3b3b', stroke: sel ? SEL : undefined, strokeWidth: sel ? 3 / scale : 0, hitStrokeWidth: 10 / scale }
+        return (
+          <Group key={c.id} {...dragProps({ kind: 'column', value: c }, { kind: 'column', id: c.id })}>
+            {c.round ? (
+              <Circle x={p.x} y={p.y} radius={c.width / mpp / 2} {...look} />
+            ) : (
+              <Rect
+                x={p.x}
+                y={p.y}
+                width={c.width / mpp}
+                height={c.depth / mpp}
+                offsetX={c.width / mpp / 2}
+                offsetY={c.depth / mpp / 2}
+                rotation={((c.rotation ?? 0) * 180) / Math.PI}
+                {...look}
+              />
+            )}
+          </Group>
         )
       })}
 
-      {(level.stairs ?? []).map((s) =>
-        stairSteps(s).map((st, i) => {
-          const len = st.size[0] / mpp
-          const w = st.size[2] / mpp
-          return (
-            <Rect
-              key={`${s.id}-${i}`}
-              x={st.center[0] / mpp}
-              y={st.center[2] / mpp}
-              width={len}
-              height={w}
-              offsetX={len / 2}
-              offsetY={w / 2}
-              rotation={(-st.rotationY * 180) / Math.PI}
-              stroke="#8a6d4b"
-              strokeWidth={1 / scale}
-              fill="rgba(169,140,106,0.18)"
-              listening={false}
-            />
-          )
-        }),
-      )}
+      {(level.stairs ?? []).map((s) => {
+        const sel = isSelected('stair', s.id)
+        return (
+          <Group key={s.id} {...dragProps({ kind: 'stair', value: s }, { kind: 'stair', id: s.id })}>
+            {stairSteps(s).map((st, i) => {
+              const len = st.size[0] / mpp
+              const w = st.size[2] / mpp
+              return (
+                <Rect
+                  key={i}
+                  x={st.center[0] / mpp}
+                  y={st.center[2] / mpp}
+                  width={len}
+                  height={w}
+                  offsetX={len / 2}
+                  offsetY={w / 2}
+                  rotation={(-st.rotationY * 180) / Math.PI}
+                  stroke={sel ? SEL : '#8a6d4b'}
+                  strokeWidth={(sel ? 2 : 1) / scale}
+                  fill={sel ? 'rgba(35,132,95,0.18)' : 'rgba(169,140,106,0.18)'}
+                />
+              )
+            })}
+          </Group>
+        )
+      })}
 
-      {(level.dimensions ?? []).map((d) => {
+      {showDimensions && (level.dimensions ?? []).map((d) => {
         const { a, b } = dimensionLine(d)
         const pa = px(a)
         const pb = px(b)

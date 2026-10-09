@@ -19,6 +19,8 @@ export type Selection =
   | { kind: 'room'; id: string }
   | { kind: 'dimension'; id: string }
   | { kind: 'furniture'; id: string }
+  | { kind: 'column'; id: string }
+  | { kind: 'stair'; id: string }
   | null
 
 export type Selected = NonNullable<Selection>

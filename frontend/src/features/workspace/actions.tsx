@@ -132,7 +132,7 @@ export function buildActions(ctx: ActionContext): EditorAction[] {
         label: 'Mover selección',
         group: 'Edición',
         match: (e) => e.key.toLowerCase() === key && !mod(e) && !e.altKey,
-        enabled: () => st().group.some((g) => g.kind === 'wall' || g.kind === 'furniture' || g.kind === 'opening'),
+        enabled: () => st().group.some((g) => g.kind !== 'room' && g.kind !== 'dimension'),
         run: nudge(dx, dy),
         hidden: true,
       }),

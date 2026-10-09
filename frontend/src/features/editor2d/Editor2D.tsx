@@ -7,7 +7,7 @@ import type Konva from 'konva'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Circle, Group, Image as KImage, Label, Layer, Line, Rect, Stage, Tag, Text } from 'react-konva'
 import type { Opening, Point, Wall } from '@/api/types'
-import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveOpening, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, UpdateFurniture } from '@/domain/commands'
+import { AddDimension, AddFurniture, AddOpening, AddWall, MoveJoint, MoveOpening, MoveWallEndpoint, SetFloorMaterial, SetWallLength, SetWallMaterial, translateItem, UpdateFurniture } from '@/domain/commands'
 import { catalogItem, FURNITURE_DRAG, scaledParts } from '@/domain/catalog'
 import { wallsHitBy } from '@/domain/furniture'
 import { wallAxis } from '@/domain/geometry'
@@ -574,7 +574,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               )
             })}
 
-          {level && showDimensions && !hidden.has('dimensions') && (
+          {level && (
             <PlanElements
               level={level}
               mpp={mpp}
@@ -582,6 +582,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               selection={selection}
               onSelect={select}
               interactive={tool === 'select' && !locked.has('dimensions')}
+              showDimensions={showDimensions && !hidden.has('dimensions')}
+              editable={tool === 'select' && !lockedWalls}
+              isSelected={inGroup}
+              onPick={(sel, e) => pick(sel)(e)}
+              onMoveItem={(item, dx, dy) => dispatch(translateItem(level.id, item, dx, dy))}
             />
           )}
 

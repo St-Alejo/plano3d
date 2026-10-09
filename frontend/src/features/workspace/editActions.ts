@@ -13,6 +13,7 @@ import {
   CompositeCommand,
   DeleteDimension,
   DeleteFurniture,
+  DeleteLevelItem,
   DeleteOpening,
   DeleteWall,
   DuplicateOpening,
@@ -20,6 +21,7 @@ import {
   MoveOpening,
   UpdateOpening,
   TranslateWalls,
+  translateItem,
   UpdateFurniture,
   type Command,
 } from '@/domain/commands'
@@ -57,6 +59,8 @@ export function deleteSelection(): boolean {
   for (const id of walls) parts.push(new DeleteWall(s.levelId, id))
   for (const g of s.group) if (g.kind === 'dimension') parts.push(new DeleteDimension(s.levelId, g.id))
   for (const g of s.group) if (g.kind === 'furniture') parts.push(new DeleteFurniture(s.levelId, g.id))
+  for (const g of s.group) if (g.kind === 'column') parts.push(new DeleteLevelItem(s.levelId, 'columns', g.id))
+  for (const g of s.group) if (g.kind === 'stair') parts.push(new DeleteLevelItem(s.levelId, 'stairs', g.id))
   if (parts.length === 0) return false
   const n = parts.length
   const cmd = n === 1 ? parts[0]! : new CompositeCommand(`Eliminar ${n} elementos`, parts)
@@ -95,6 +99,13 @@ export function nudgeSelection(dx: number, dy: number): boolean {
   if (ids.length > 0) parts.push(new TranslateWalls(s.levelId, ids, dx, dy))
   for (const f of selectedFurniture())
     parts.push(new UpdateFurniture(s.levelId, f.id, { position: { x: f.position.x + dx, y: f.position.y + dy } }))
+  const lv = selectLevel(s)
+  for (const g of s.group) {
+    const column = g.kind === 'column' ? lv?.columns?.find((c) => c.id === g.id) : undefined
+    const stair = g.kind === 'stair' ? lv?.stairs?.find((x) => x.id === g.id) : undefined
+    if (column) parts.push(translateItem(s.levelId, { kind: 'column', value: column }, dx, dy))
+    if (stair) parts.push(translateItem(s.levelId, { kind: 'stair', value: stair }, dx, dy))
+  }
   for (const { wall, opening } of selectedOpenings()) {
     if (ids.includes(wall.id)) continue
     const d = wallDirection(wall)

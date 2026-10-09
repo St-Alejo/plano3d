@@ -20,6 +20,7 @@ import { centeredOffset, placeOpening } from '@/domain/openings'
 import { modelQA, type QAIssue } from '@/domain/qa'
 import { GRID_STEPS, type Selection } from '@/store/editorStore'
 import { FurnitureInspector, MaterialSelect } from './FurnitureInspector'
+import { ColumnInspector, StairInspector } from './ItemInspector'
 import { FLOOR_MATERIALS, WALL_MATERIALS } from '@/domain/materials'
 import { Badge, Button, TextField } from '@/components/ui'
 import { selectLevel, useEditor } from '@/store/editorStore'
@@ -110,6 +111,16 @@ export function PropertiesPanel({ onSolve, solving = false }: SolveProps = {}) {
   if (selection.kind === 'furniture') {
     const f = (level.furniture ?? []).find((x) => x.id === selection.id)
     return f ? <FurnitureInspector key={f.id} furniture={f} /> : null
+  }
+
+  if (selection.kind === 'column') {
+    const c = (level.columns ?? []).find((x) => x.id === selection.id)
+    return c ? <ColumnInspector key={c.id} levelId={level.id} column={c} /> : null
+  }
+
+  if (selection.kind === 'stair') {
+    const st = (level.stairs ?? []).find((x) => x.id === selection.id)
+    return st ? <StairInspector key={st.id} levelId={level.id} stair={st} /> : null
   }
 
   if (selection.kind === 'dimension') {
