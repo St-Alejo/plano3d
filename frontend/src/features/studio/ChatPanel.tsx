@@ -125,7 +125,7 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
       <header className="flex items-center gap-2 border-b border-line px-3 py-2">
         <MessageSquare className="size-4 text-brand" aria-hidden />
         <h2 className="flex-1 text-sm font-medium">Dibujar escribiendo</h2>
-        <button type="button" aria-label="Cerrar chat" className="rounded p-1 text-muted hover:bg-raised hover:text-fg" onClick={() => setOpen(false)}>
+        <button type="button" aria-label="Cerrar chat" className="inline-flex items-center justify-center rounded p-1 pointer-coarse:size-11 text-muted hover:bg-raised hover:text-fg" onClick={() => setOpen(false)}>
           <X className="size-4" aria-hidden />
         </button>
       </header>
@@ -135,7 +135,7 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
             Escribe lo que quieres dibujar o cambiar. Todo se deshace con Ctrl+Z.
             <div className="mt-2 flex flex-wrap gap-1.5">
               {EXAMPLES.slice(0, 6).map((e) => (
-                <button key={e} type="button" className="rounded-full border border-line px-2.5 py-1 text-xs text-fg hover:border-accent" onClick={() => void send(e)}>
+                <button key={e} type="button" className="rounded-full border border-line px-2.5 py-1 text-xs pointer-coarse:min-h-11 text-fg hover:border-accent" onClick={() => void send(e)}>
                   {e}
                 </button>
               ))}
@@ -177,13 +177,13 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
           onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
           placeholder="p. ej. cocina de 3x3 al este de la sala con puerta al sur"
           maxLength={1000}
-          className="h-9 min-w-0 flex-1 rounded-md border border-line bg-canvas px-3 text-sm"
+          className="h-9 min-w-0 flex-1 rounded-md pointer-coarse:h-11 border border-line bg-canvas px-3 text-sm"
         />
         <button
           type="submit"
           aria-label="Enviar"
           disabled={busy || !text.trim()}
-          className="inline-flex size-9 items-center justify-center rounded-md bg-accent text-accent-ink disabled:opacity-40"
+          className="inline-flex size-9 pointer-coarse:size-11 items-center justify-center rounded-md bg-accent text-accent-ink disabled:opacity-40"
         >
           <SendHorizontal className="size-4" aria-hidden />
         </button>

@@ -39,7 +39,7 @@ export function StudioLayout(p: StudioLayoutProps) {
           to={`/p/${p.projectId}`}
           aria-label="Salir del estudio"
           title="Salir del estudio"
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-muted hover:bg-raised hover:text-fg"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md pointer-coarse:size-11 text-muted hover:bg-raised hover:text-fg"
         >
           <ArrowLeft className="size-5" aria-hidden />
         </Link>
@@ -59,7 +59,15 @@ export function StudioLayout(p: StudioLayoutProps) {
       </header>
       {p.banner}
       <main className="relative min-h-0 flex-1">
-        <div className={clsx('grid size-full', p.viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1')}>
+        {/* en escritorio el lienzo deja libre lo que tapan los paneles: así "Encuadrar" usa el área visible */}
+        <div
+          className={clsx(
+            'grid size-full transition-[padding] duration-200',
+            p.viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1',
+            p.leftOpen && 'lg:pl-[284px]',
+            p.rightOpen && 'lg:pr-[344px]',
+          )}
+        >
           {p.viewMode !== '3d' && (
             <section aria-label="Editor 2D" className="min-h-0 border-r border-line">
               {p.editor}

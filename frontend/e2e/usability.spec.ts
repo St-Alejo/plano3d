@@ -86,7 +86,7 @@ test.describe('escritorio', () => {
   test('teclado: se selecciona y edita un ambiente sin tocar el mouse', async ({ page }) => {
     await page.goto(`/p/${projectId}`)
     await expect(page.getByRole('toolbar')).toBeVisible()
-    const item = page.getByRole('button', { name: /Espacio 1/ }).first()
+    const item = page.getByRole('region', { name: 'Ambientes' }).getByRole('button').first()
     await item.focus()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('heading', { name: 'Ambiente' })).toBeVisible()
@@ -99,7 +99,7 @@ test.describe('escritorio', () => {
 
   test('avisa antes de perder cambios al navegar dentro de la app', async ({ page }) => {
     await page.goto(`/p/${projectId}`)
-    await page.getByRole('button', { name: /Espacio 1/ }).first().click()
+    await page.getByRole('region', { name: 'Ambientes' }).getByRole('button').first().click()
     await page.getByLabel('Nombre').fill('Temporal')
     await page.getByRole('button', { name: 'Renombrar' }).click()
     await page.getByRole('link', { name: 'Proyectos', exact: true }).last().click()

@@ -14,6 +14,7 @@ import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
 import { ChatPanel } from '@/features/studio/ChatPanel'
 import { StudioLayout } from '@/features/studio/StudioLayout'
+import { TutorialButton } from '@/features/studio/TutorialButton'
 import { toggleFullscreen } from '@/lib/fullscreen'
 import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
 import { buildActions } from './actions'
@@ -65,7 +66,8 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   const groupSize = useEditor((s) => s.group.length)
   // en un plano en blanco el lienzo necesita espacio: capas y catálogo arrancan plegados
   const [layersOpen, setLayersOpen] = useState(!(layout === 'studio' && project.has_source === false))
-  const [inspectorOpen, setInspectorOpen] = useState(true)
+  // en el celular el inspector taparía todo el lienzo: arranca plegado
+  const [inspectorOpen, setInspectorOpen] = useState(() => window.matchMedia('(min-width: 1024px)').matches)
   const [conflict, setConflict] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -272,6 +274,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
         <span className="hidden sm:inline">Guardar</span>
       </Button>
       <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} />
+      <TutorialButton compact initial={project.has_source === false ? 'crear' : 'editar'} />
       {!studio && (
         <Link to={`/p/${project.id}/estudio`} aria-label="Abrir el estudio a pantalla completa" title="Estudio a pantalla completa" className={linkClass}>
           <Maximize2 className="size-4" aria-hidden /> <span className="hidden sm:inline">Estudio</span>
@@ -318,7 +321,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           <Tabs.Trigger
             key={v}
             value={v}
-            className="h-9 text-xs text-muted data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
+            className="h-9 text-xs text-muted pointer-coarse:h-11 data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
           >
             {l}
           </Tabs.Trigger>

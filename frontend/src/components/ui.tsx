@@ -107,7 +107,7 @@ export const TextField = forwardRef<
         <input
           ref={ref}
           id={inputId}
-          className="h-10 w-full min-w-0 bg-transparent px-3 text-sm text-fg outline-none placeholder:text-subtle"
+          className="h-10 w-full min-w-0 bg-transparent px-3 pointer-coarse:h-11 text-sm text-fg outline-none placeholder:text-subtle"
           {...rest}
         />
         {suffix && <span className="pr-3 font-mono text-xs text-subtle">{suffix}</span>}

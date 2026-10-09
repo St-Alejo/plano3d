@@ -349,7 +349,7 @@ export function DropCta() {
         <p className="mt-4 max-w-md text-lg leading-relaxed text-white/75">
           Súbelo y en unos segundos tienes el modelo listo para revisar, corregir y recorrer.
         </p>
-        <Link to="/proyectos" className="group mt-6 inline-flex min-h-11 items-center gap-2 font-medium text-white/90 transition-colors hover:text-white">
+        <Link to="/proyectos" className="group mt-6 inline-flex min-h-12 items-center gap-2 font-medium text-white/90 transition-colors hover:text-white">
           Ver mis proyectos <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
         </Link>
       </div>

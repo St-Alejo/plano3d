@@ -24,11 +24,14 @@ describe('Estudio a pantalla completa', () => {
     renderStudio()
     expect(await screen.findByTestId('studio')).toBeInTheDocument()
     expect(screen.getByRole('toolbar', { name: 'Herramientas del editor' })).toBeInTheDocument()
+    // en pantalla angosta (jsdom) el inspector arranca plegado para no tapar el lienzo
     const panel = screen.getByRole('button', { name: 'Panel de propiedades' })
+    expect(screen.queryByRole('tab', { name: 'Propiedades' })).toBeNull()
+    await userEvent.click(panel)
     expect(screen.getByRole('tab', { name: 'Propiedades' })).toBeInTheDocument()
+    expect(panel).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(panel)
     expect(screen.queryByRole('tab', { name: 'Propiedades' })).toBeNull()
-    expect(panel).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('el botón de salir vuelve a la página del proyecto', async () => {
