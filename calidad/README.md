@@ -75,6 +75,18 @@ correcciones están documentadas en la bitácora.
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
 | **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,73 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
 
+| **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". No cumple el resto: muros F1 0,65 (faltan tabiques interiores), 1/7 ambientes, sin nombres |
+
+**Por qué casa4 no cumple todavía (causa medida):**
+- El OCR lee bien la hoja (COCINA, ALCOBA1-3, SALA-COMEDOR y ~25 cotas). Fallaba la búsqueda de la línea
+  de cota: dos cadenas paralelas a 22 px se tomaban por caras de un muro, el papel curvado parte las líneas
+  y los ticks miden 4-5 px. Con `cv/dimension_text.py` (texto primero) la escala quedó resuelta.
+- Lo que falta es geométrico: los tabiques de 0,12 m (dos líneas finas a ~10 px) no se emparejan como muros
+  en la ruta raster, así que no cierran los ambientes y los nombres leídos no tienen dónde ponerse.
+- La verdad trae `homography` (metros → píxeles de la foto, por las 4 esquinas del edificio) porque una
+  escala y un origen no alcanzan con perspectiva; se genera con `tests/real/casa4/make_truth.py` desde el
+  modelo levantado a mano (`scripts/modelos/planta_2do_piso_opc3.py`).
+
 **Por qué casa3 no cumple todavía (causa medida):**
 - A esa resolución, autos, mesas y sofás están dibujados con la misma línea blanca que los muros.
 - Los textos son ilegibles para el OCR local, así que no hay nombres de ambientes ni de niveles.

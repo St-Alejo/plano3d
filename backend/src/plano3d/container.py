@@ -141,7 +141,10 @@ def default_selector() -> DetectorSelector:
     # la lectura de nombres de ambientes es local (sin costo); sin OCR quedan genéricos
     classic = ClassicCVDetector(RapidOcrSpotter() if ocr_available() else None, wall_segmenter())
     # una lámina con varias plantas se separa y cada planta pasa por el detector híbrido
-    photo = MultiLevelDetector(HybridPhotoDetector(RasterVectorDetector(reader), classic))
+    # fotos: además de la lectura por línea de cota, cotas "texto primero" y nombres
+    spotter = RapidOcrSpotter() if ocr_available() else None
+    raster = RasterVectorDetector(reader, spotter)
+    photo = MultiLevelDetector(HybridPhotoDetector(raster, classic))
     return DetectorSelector(
         [DxfDetector(), VectorPdfDetector(), photo, classic], OpenCVImageInspector()
     )

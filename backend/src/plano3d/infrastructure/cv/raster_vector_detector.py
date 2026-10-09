@@ -26,12 +26,18 @@ from plano3d.application.ports import (
     FloorPlanDetector,
     ImageQuality,
     ProgressPublisher,
+    SpottedText,
     TextReader,
+    TextSpotter,
 )
-from plano3d.domain import MeasureSource
+from plano3d.domain import LabelKind, MeasureSource
+from plano3d.domain.plan_text import classify_label, parse_length
+from plano3d.domain.scale_fit import ScaleFit, ScalePair, fit_scale
 from plano3d.domain.solver import solve_level
 from plano3d.infrastructure.cv.context import CVContext, as_u8
+from plano3d.infrastructure.cv.dimension_text import TextDimension, read_text_dimensions
 from plano3d.infrastructure.cv.dimensions import (
+    DimLine,
     DimReading,
     find_dimension_lines,
     read_dimensions,
@@ -49,12 +55,23 @@ from plano3d.infrastructure.vector.builder import (
     WallsStage,
     assemble_model,
 )
-from plano3d.infrastructure.vector.primitives import ArcPrim, Closed, DimPrim, Drawing, Line
+from plano3d.infrastructure.vector.primitives import (
+    ArcPrim,
+    Closed,
+    DimPrim,
+    Drawing,
+    Line,
+    Text,
+)
 from plano3d.infrastructure.vector.walls import Tol, pair_lines
 
 ASSUMED_WALL_M = 0.18
 MIN_DIM_SUPPORT = 2
 MIN_ROOMS_TO_TRUST = 1
+#: cotas "texto primero" (fotos): más apoyo y más tolerancia que las de línea primero,
+#: porque el papel curvado y la perspectiva deforman algunos tramos
+MIN_TEXT_SUPPORT = 3
+TEXT_REL_TOL = 0.03
 
 
 @dataclass
@@ -62,6 +79,8 @@ class RasterContext(VectorContext):
     cv: CVContext | None = None
     vec: Vectorized | None = None
     readings: list[DimReading] = field(default_factory=list)
+    #: textos de toda la hoja (px de la imagen rectificada): cotas y nombres de ambientes
+    spotted: list[SpottedText] = field(default_factory=list)
 
 
 class _ClassicStage(PipelineStage[RasterContext]):
@@ -98,14 +117,17 @@ class DimensionScaleStage(PipelineStage[RasterContext]):
     key = "dimensions"
     title = "Lectura de cotas y escala"
 
-    def __init__(self, reader: TextReader | None) -> None:
+    def __init__(self, reader: TextReader | None, spotter: TextSpotter | None = None) -> None:
         self._reader = reader
+        self._spotter = spotter
 
     def run(self, ctx: RasterContext) -> RasterContext:
         cv = ctx.require(ctx.cv, "cv")
         v = ctx.require(ctx.vec, "vec")
         ink = cv.require(cv.ink, "ink")
         img = cv.require(cv.rectified, "rectified")
+        if self._spotter is not None:
+            ctx.spotted = self._spotter.spot(img)
         fit = None
         if self._reader is not None:
             gray = as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
@@ -121,6 +143,8 @@ class DimensionScaleStage(PipelineStage[RasterContext]):
                 ctx.readings = inliers
             else:
                 fit = None
+        if fit is None and self._spotter is not None:
+            fit, ctx.readings = _text_first(v, img, ink, self._spotter, ctx.spotted)
         if fit is not None:
             ctx.mpp = fit.meters_per_unit
             ctx.scale_source = "dimensions"
@@ -144,6 +168,37 @@ class DimensionScaleStage(PipelineStage[RasterContext]):
             "dimensions_read": float(len(ctx.readings)),
             "scale_confidence": ctx.scale_confidence,
         }
+
+
+def _text_first(
+    v: Vectorized,
+    img: np.ndarray,
+    ink: np.ndarray,
+    spotter: TextSpotter,
+    spotted: list[SpottedText],
+) -> tuple[ScaleFit | None, list[DimReading]]:
+    """Escala por cotas leídas "texto primero" (ver ``dimension_text``)."""
+    dims = read_text_dimensions(img, ink, spotter, spotted)
+    pairs: list[ScalePair] = []
+    owners: list[tuple[int, float]] = []
+    for k, d in enumerate(dims):
+        for value in d.meters:
+            pairs.append(ScalePair(d.length, value, k, k))
+            owners.append((k, value))
+    fit = fit_scale(pairs, rel_tol=TEXT_REL_TOL)
+    if fit is None or fit.support < MIN_TEXT_SUPPORT or not _plausible(v, fit.meters_per_unit):
+        return None, []
+    readings = []
+    for i in fit.inliers:
+        k, value = owners[i]
+        readings.append(_as_reading(dims[k], value, k))
+    return fit, readings
+
+
+def _as_reading(d: TextDimension, value: float, k: int) -> DimReading:
+    line = Line(d.p1[0], d.p1[1], d.p2[0], d.p2[1])
+    # índice negativo: no corresponde a ningún trazo vectorizado (no se quita del dibujo)
+    return DimReading(DimLine(line, -(k + 1), ()), d.text, value, d.confidence, d.center, k)
 
 
 def _plausible(v: Vectorized, mpp: float) -> bool:
@@ -193,6 +248,12 @@ class ToDrawingStage(PipelineStage[RasterContext]):
             if i not in dim_strokes or i >= len(v.strokes)
         ]
         d.arcs = [ArcPrim(a.cx * f, a.cy * f, a.r * f, a.start, a.sweep) for a in v.arcs]
+        # nombres de ambientes y rótulos leídos en la hoja (las cotas van aparte)
+        d.texts = [
+            Text(t.x * f, t.y * f, t.text, t.height * f)
+            for t in ctx.spotted
+            if parse_length(t.text) is None and classify_label(t.text) is not LabelKind.OTHER
+        ]
         d.closed = [
             Closed(tuple((float(x) * f, float(y) * f) for x, y in c.reshape(-1, 2)), True)
             for c in v.solids
@@ -264,14 +325,16 @@ class SolveStage(PipelineStage[RasterContext]):
         return {k: v for k, v in ctx.metrics.items() if k.startswith(("dims_", "walls_"))}
 
 
-def raster_stages(reader: TextReader | None) -> list[PipelineStage[RasterContext]]:
+def raster_stages(
+    reader: TextReader | None, spotter: TextSpotter | None = None
+) -> list[PipelineStage[RasterContext]]:
     return [
         _ClassicStage(IngestStage()),
         _ClassicStage(SheetLayoutStage()),
         _ClassicStage(RectifyStage()),
         _ClassicStage(PreprocessStage()),
         VectorizeStage(),
-        DimensionScaleStage(reader),
+        DimensionScaleStage(reader, spotter),
         ToDrawingStage(),
         WallsStage(),  # type: ignore[list-item]
         RoomsStage(),  # type: ignore[list-item]
@@ -305,8 +368,11 @@ class RasterVectorDetector(FloorPlanDetector):
 
     name: DetectorName = "raster-vector"
 
-    def __init__(self, reader: TextReader | None = None) -> None:
+    def __init__(
+        self, reader: TextReader | None = None, spotter: TextSpotter | None = None
+    ) -> None:
         self._reader = reader
+        self._spotter = spotter
 
     def supports(self, quality: ImageQuality) -> bool:
         return quality.width >= 400 and quality.height >= 400
@@ -314,7 +380,7 @@ class RasterVectorDetector(FloorPlanDetector):
     async def detect(
         self, request: DetectionRequest, progress: ProgressPublisher
     ) -> DetectionResult:
-        stages = raster_stages(self._reader)
+        stages = raster_stages(self._reader, self._spotter)
         pipeline = Pipeline(
             stages, preview=lambda c: model_to_dto(c.model) if c.model is not None else None
         )
