@@ -2,55 +2,55 @@
   "case": "casa3",
   "detector": "raster-vector",
   "metrics": {
-    "walls": 45.0,
-    "rooms": 4.0,
-    "meters_per_pixel": 0.011369163424124511,
-    "mpp_walls": 0.013636363636363637,
-    "mpp_doors": 0.011369163424124511,
+    "walls": 24.0,
+    "rooms": 3.0,
+    "meters_per_pixel": 0.01612096481981934,
+    "mpp_walls": 0.012974588938714499,
+    "mpp_doors": 0.01612096481981934,
     "fallback_classic": 1.0,
     "levels": 3.0
   },
   "scale": {
-    "mpp": 0.045000000000000005,
+    "mpp": 0.045523358994434895,
     "source": "estimated",
-    "error": -0.28
+    "error": -0.2716
   },
   "levels_det": 3,
   "levels_gt": 3,
   "levels": [
     {
       "name": "Planta baja",
-      "walls_det": 45,
+      "walls_det": 19,
       "walls_gt": 9,
-      "wall_p": 0.269,
-      "wall_r": 0.936,
-      "wall_f1": 0.418,
-      "wall_f1_ends": 0.074,
-      "open_p": 0.032,
+      "wall_p": 0.564,
+      "wall_r": 0.866,
+      "wall_f1": 0.683,
+      "wall_f1_ends": 0.286,
+      "open_p": 0.167,
       "open_r": 0.143,
-      "open_det": 31,
+      "open_det": 6,
       "open_gt": 7,
-      "rooms_det": 4,
+      "rooms_det": 1,
       "rooms_gt": 3,
-      "room_iou": 0.25,
+      "room_iou": 0.312,
       "names_ok": 0,
       "rooms": [
         {
           "truth": "cocina",
-          "iou": 0.286,
-          "label": "Espacio 2",
+          "iou": 0.075,
+          "label": "Espacio 1",
           "name_ok": false
         },
         {
           "truth": "baño",
-          "iou": 0.019,
-          "label": "Espacio 3",
+          "iou": 0.018,
+          "label": "Espacio 1",
           "name_ok": false
         },
         {
           "truth": "sala",
-          "iou": 0.445,
-          "label": "Espacio 3",
+          "iou": 0.843,
+          "label": "Espacio 1",
           "name_ok": false
         }
       ],
@@ -71,136 +71,10 @@
         },
         {
           "at": [
-            5.8,
-            0.91
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            5.77,
-            2.81
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            2.36,
-            6.83
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            5.89,
-            6.83
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            8.3,
-            6.83
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            2.89,
-            8.75
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            5.57,
-            8.75
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            7.58,
-            9.72
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
             1.96,
-            10.26
+            10.31
           ],
           "kind": "door"
-        },
-        {
-          "at": [
-            2.54,
-            10.85
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            6.5,
-            10.85
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            2.46,
-            11.97
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            6.02,
-            11.97
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            2.82,
-            12.53
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            5.17,
-            12.53
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            6.02,
-            14.19
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            6.05,
-            15.21
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            9.08,
-            15.21
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            2.01,
-            15.37
-          ],
-          "kind": "window"
         },
         {
           "at": [
@@ -218,133 +92,56 @@
         },
         {
           "at": [
-            8.83,
-            11.13
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            8.3,
-            10.15
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            6.87,
-            10.8
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            4.52,
-            2.95
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            4.52,
-            7.61
+            3.47,
+            7.48
           ],
           "kind": "door"
-        },
-        {
-          "at": [
-            3.78,
-            2.06
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            3.22,
-            1.84
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            1.1,
-            14.36
-          ],
-          "kind": "window"
         }
       ]
     },
     {
       "name": "Planta alta",
-      "walls_det": 35,
+      "walls_det": 24,
       "walls_gt": 20,
-      "wall_p": 0.513,
-      "wall_r": 0.569,
-      "wall_f1": 0.54,
-      "wall_f1_ends": 0.145,
-      "open_p": 0.08,
-      "open_r": 0.182,
-      "open_det": 25,
+      "wall_p": 0.738,
+      "wall_r": 0.713,
+      "wall_f1": 0.725,
+      "wall_f1_ends": 0.318,
+      "open_p": 0.0,
+      "open_r": 0.0,
+      "open_det": 16,
       "open_gt": 11,
-      "rooms_det": 7,
+      "rooms_det": 3,
       "rooms_gt": 4,
-      "room_iou": 0.733,
+      "room_iou": 0.615,
       "names_ok": 0,
       "rooms": [
         {
           "truth": "recamara",
-          "iou": 0.911,
+          "iou": 0.932,
           "label": "Espacio 2",
           "name_ok": false
         },
         {
           "truth": "estar",
-          "iou": 0.566,
-          "label": "Espacio 4",
+          "iou": 0.926,
+          "label": "Espacio 3",
           "name_ok": false
         },
         {
           "truth": "recamara",
-          "iou": 0.625,
-          "label": "Espacio 7",
+          "iou": 0.0,
+          "label": "",
           "name_ok": false
         },
         {
           "truth": "baño",
-          "iou": 0.831,
+          "iou": 0.6,
           "label": "Espacio 1",
           "name_ok": false
         }
       ],
       "openings": [
-        {
-          "at": [
-            1.33,
-            -4.75
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            4.11,
-            -4.75
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            5.86,
-            -4.75
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            7.77,
-            -4.75
-          ],
-          "kind": "window"
-        },
         {
           "at": [
             4.58,
@@ -354,141 +151,106 @@
         },
         {
           "at": [
-            6.15,
+            6.93,
             3.59
           ],
           "kind": "window"
         },
         {
           "at": [
-            3.44,
-            6.03
+            1.19,
+            3.85
           ],
           "kind": "door"
         },
         {
           "at": [
-            0.23,
-            6.74
+            2.8,
+            3.85
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            2.91,
+            4.41
           ],
           "kind": "window"
         },
         {
           "at": [
-            3.42,
-            6.74
+            2.18,
+            4.97
           ],
           "kind": "window"
         },
         {
           "at": [
-            6.73,
-            6.74
+            2.86,
+            5.97
           ],
           "kind": "door"
         },
         {
           "at": [
-            6.23,
-            8.09
+            7.09,
+            8.91
           ],
           "kind": "window"
         },
         {
           "at": [
-            7.42,
-            12.17
+            5.63,
+            7.48
           ],
           "kind": "door"
         },
         {
           "at": [
-            3.15,
-            13.92
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            6.74,
-            13.92
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            8.33,
-            8.5
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            8.33,
-            10.98
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            8.03,
-            8.49
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            5.73,
-            7.35
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            4.66,
+            4.62,
             4.1
           ],
           "kind": "window"
         },
         {
           "at": [
-            4.66,
-            8.05
+            4.62,
+            7.82
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.53,
+            2.68
           ],
           "kind": "door"
         },
         {
           "at": [
-            3.62,
-            2.67
+            1.62,
+            5.41
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            0.51,
+            5.09
           ],
           "kind": "door"
         },
         {
           "at": [
-            1.12,
-            -3.93
+            0.14,
+            -1.19
           ],
           "kind": "window"
         },
         {
           "at": [
-            0.05,
-            -2.85
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            0.05,
-            -1.18
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            0.05,
-            -0.31
+            0.14,
+            11.21
           ],
           "kind": "window"
         }
@@ -496,47 +258,25 @@
     },
     {
       "name": "Azotea",
-      "walls_det": 22,
+      "walls_det": 10,
       "walls_gt": 10,
-      "wall_p": 0.488,
-      "wall_r": 0.744,
-      "wall_f1": 0.589,
-      "wall_f1_ends": 0.125,
-      "open_p": 0.0,
+      "wall_p": 1.0,
+      "wall_r": 0.575,
+      "wall_f1": 0.73,
+      "wall_f1_ends": 0.4,
+      "open_p": 1.0,
       "open_r": 1.0,
-      "open_det": 3,
+      "open_det": 0,
       "open_gt": 0,
-      "rooms_det": 1,
+      "rooms_det": 0,
       "rooms_gt": 0,
       "room_iou": 0.0,
       "names_ok": 0,
       "rooms": [],
-      "openings": [
-        {
-          "at": [
-            3.39,
-            -4.11
-          ],
-          "kind": "window"
-        },
-        {
-          "at": [
-            3.39,
-            -1.84
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            3.02,
-            -3.44
-          ],
-          "kind": "window"
-        }
-      ]
+      "openings": []
     }
   ],
-  "when": "2026-10-09T00:20:49",
+  "when": "2026-10-09T01:08:08",
   "pass": {
     "scale": false,
     "levels": true,
@@ -549,7 +289,7 @@
     "Planta alta: ambientes": false,
     "Planta alta: nombres": false,
     "Azotea: muros": false,
-    "Azotea: aberturas": false,
+    "Azotea: aberturas": true,
     "Azotea: ambientes": false,
     "Azotea: nombres": true
   }

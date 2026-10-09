@@ -131,7 +131,10 @@ correcciones están documentadas en la bitácora.
   - básica difícil: recall de ventanas 0,17 → 0,73;
   - pero **casa2 deja de cumplir** (ambientes 6/6 → 5/6, IoU 0,93 → 0,79, recall de aberturas 0,92 → 0,88)
     y la suite compleja con detector clásico empeora (F1@15 0,09 → 0,07, escala 34 % → 39 %, ambientes OK 17 % → 8 %);
-  - **queda apagada**, igual que v1;
+  - **por eso solo actúa en láminas CAD de fondo oscuro** (`dark_sheet`, como casa3): así casa3 conserva
+    la mejora y casa1, casa2 y la suite compleja quedan idénticas a sin red (la ganancia de ventanas en la
+    básica se pierde, porque esos planos son claros). Con esa condición **queda activa por defecto**
+    (`PLANO3D_SEG_MODEL=0` la apaga; en la imagen Docker el modelo está en `PLANO3D_MODELS_DIR`);
   - la ruta raster-vector (`--detector raster`) no usa la red: solo filtra la máscara del detector clásico.
 - **Aprendizaje con el uso:**
   - `scripts/export_dataset.py` convierte cada proyecto corregido en el editor en un par imagen/máscara;
@@ -156,7 +159,7 @@ cd backend
 .venv/Scripts/python -m pytest -q                                  # pruebas
 PYTHONIOENCODING=utf-8 .venv/Scripts/python scripts/eval_real.py casa1 casa2 casa3
 PYTHONIOENCODING=utf-8 .venv/Scripts/python scripts/eval.py --suite basic
-PLANO3D_SEG_MODEL=1 ... (mismos comandos)                          # con la red de muros
+PLANO3D_SEG_MODEL=0 ... (mismos comandos)                          # sin la red de muros
 # servidores locales para ver 2D/3D:
 PLANO3D_MODE=memory .venv/Scripts/uvicorn plano3d.main:app --port 8000
 cd ../frontend && npx vite --port 5173
@@ -177,14 +180,13 @@ versión del generador: **si cambia `ml/synth.py`, hay que borrarla**.
 ## 7. Dónde quedó y cómo continuar en otra sesión
 
 **Lo último que pasó (2026-10-09):** la **red v2** se entrenó completa, después de corregir
-el consumo de RAM del entrenador. Está evaluada (sección 5) y **queda apagada**: mejora
-mucho casa3, pero rompe casa2 y empeora la suite compleja.
+el consumo de RAM del entrenador. Aplicada a todo rompía casa2 y empeoraba la suite compleja.
+Ahora solo actúa en láminas CAD oscuras y **queda activa por defecto** (sección 5).
 
 **Siguientes pasos sugeridos, en orden:**
-1. Que la red no rompa casa2. Hay dos caminos:
-   - aplicarla solo donde sirve (lámina CAD oscura o baja resolución, como casa3), según el análisis de lámina;
-   - o subir el umbral `keep_at` y reentrenar (v3) con más renders a color.
-   Activarla por defecto solo si mejora en todo.
+1. Recuperar la ganancia de ventanas de la básica (0,17 → 0,73 con la red) sin romper casa2:
+   reentrenar (v3) con más renders a color o abrir la condición a planos de baja resolución, y
+   activar solo lo que mejore en todo.
 2. casa3:
    - escala por arcos de puerta (radio de los cuartos de círculo) o por objetos;
    - nombres de niveles y ambientes con Claude solo si el OCR local no alcanza, siempre dentro del tope.

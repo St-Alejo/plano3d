@@ -69,3 +69,5 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 - falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes
 
 ### 2026-10-09 00:21 — Red de muros v2 (U-Net 1,3M, 4800 sintéticos de 6 estilos, val IoU 0,900; entrenador con datos uint8 por lote, ya no se queda sin RAM). Con red: casa3 F1 muros 0,68/0,72/0,73 (sin red 0,42/0,54/0,59; v1 0,48/0,60/0,64), básica difícil ventanas 0,17→0,73; pero casa2 deja de cumplir (ambientes 5/6, IoU 0,79, recall aberturas 0,88) y compleja clásica empeora (F1@15 0,09→0,07, escala 34%→39%, ambientes OK 17%→8%). La ruta raster no usa la red. Queda apagada por defecto.
+
+### 2026-10-09 01:13 — La red de muros v2 solo actúa en láminas CAD oscuras (dark_sheet, que MultiLevelDetector ahora conserva al separar plantas). Con red: casa1 y casa2 CUMPLEN igual que sin red; casa3 muros 0,68/0,72/0,73; básica y compleja clásica idénticas a sin red (F1@15 0,09, escala 34%, ambientes OK 17%). Queda activa por defecto.
