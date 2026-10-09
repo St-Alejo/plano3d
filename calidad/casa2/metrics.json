@@ -7,7 +7,8 @@
     "meters_per_pixel": 0.02328767123287671,
     "mpp_walls": 0.0225,
     "mpp_doors": 0.02328767123287671,
-    "fallback_classic": 1.0
+    "fallback_classic": 1.0,
+    "mpp_faces": 0.027738402502564
   },
   "scale": {
     "mpp": 0.02328767123287671,
@@ -250,7 +251,7 @@
       ]
     }
   ],
-  "when": "2026-10-09T04:35:40",
+  "when": "2026-10-09T09:28:03",
   "pass": {
     "scale": true,
     "levels": true,

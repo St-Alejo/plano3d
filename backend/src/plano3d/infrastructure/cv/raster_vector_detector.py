@@ -10,10 +10,12 @@ vectorial del importador DXF/PDF (pares de caras → muros, ADR-013). En medio:
 
 from __future__ import annotations
 
+import math
 import statistics
 from dataclasses import dataclass, field, replace
 
 import cv2
+import numpy as np
 
 from plano3d.application.dto import model_to_dto
 from plano3d.application.pipeline import Pipeline, PipelineStage
@@ -339,6 +341,24 @@ class RasterVectorDetector(FloorPlanDetector):
         )
 
 
+def _faces_mpp(raster: DetectionResult, classic: DetectionResult) -> float | None:
+    """Escala estimada por raster-vector, en px de la imagen rectificada por la clásica."""
+    if raster.model.scale.source != "estimated":
+        return None
+    if raster.image_transform is None or classic.image_transform is None:
+        return None
+
+    def px_per_upload_px(h: tuple[float, ...]) -> float:
+        m = np.array(h, np.float64).reshape(3, 3)
+        return math.sqrt(abs(np.linalg.det(m[:2, :2])))
+
+    return (
+        raster.model.scale.meters_per_pixel
+        * px_per_upload_px(raster.image_transform)
+        / px_per_upload_px(classic.image_transform)
+    )
+
+
 class HybridPhotoDetector(FloorPlanDetector):
     """Composite: intenta la ruta raster-vector y, si no cierra ambientes, la CV clásica.
 
@@ -389,6 +409,11 @@ class HybridPhotoDetector(FloorPlanDetector):
                 ),
             )
         metrics = {**second.metrics, "fallback_classic": 1.0}
+        faces = _faces_mpp(first, second)
+        if faces is not None:
+            # escala por la distancia entre las caras de los muros (pares de líneas): la
+            # pide quien junta varias plantas cuando los muros eran huecos
+            metrics["mpp_faces"] = faces
         return DetectionResult(
             model=model,
             rectified_png=second.rectified_png,

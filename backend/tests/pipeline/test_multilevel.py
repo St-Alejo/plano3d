@@ -126,3 +126,30 @@ def test_red_de_muros_solo_en_laminas_cad_oscuras() -> None:
     net.calls = 0
     asyncio.run(detector.detect(DetectionRequest("p", encode_png(light), "image/png"), _Quiet()))
     assert net.calls == 0
+
+
+def test_muros_huecos_se_reconocen_al_ampliar() -> None:
+    from plano3d.infrastructure.cv.multilevel import _upscale
+
+    hollow = np.full((300, 300, 3), 255, np.uint8)
+    for d in (0, 3):  # muro de dos líneas de cara de 1 px con 2 px de hueco
+        cv2.rectangle(hollow, (40 + d, 40 + d), (260 - d, 260 - d), (0, 0, 0), 1)
+    solid = np.full((300, 300, 3), 255, np.uint8)
+    cv2.rectangle(solid, (40, 40), (260, 260), (0, 0, 0), 4)
+    _, f, face = _upscale(hollow)
+    assert f > 1 and face == f  # una línea de 1 px, ampliada
+    assert _upscale(solid)[2] == 0.0
+
+
+def test_con_muros_huecos_manda_la_escala_entre_caras() -> None:
+    from plano3d.application.ports import DetectionResult
+    from plano3d.domain import BuildingModel, Scale
+    from plano3d.infrastructure.cv.multilevel import _scale_candidates
+
+    r = DetectionResult(
+        BuildingModel("p", Scale(0.01, "estimated", 0.35), (Level("l", "N"),)),
+        b"",
+        {"mpp_walls": 0.010, "mpp_faces": 0.013, "mpp_doors": 0.012},
+    )
+    assert _scale_candidates(r) == [0.010, 0.012]
+    assert _scale_candidates(r, hollow=True) == [0.013, 0.012]
