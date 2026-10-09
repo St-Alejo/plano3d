@@ -5,6 +5,7 @@ import { api, type Corners } from '@/api/client'
 import { Button, TextField } from '@/components/ui'
 import { CornerEditor } from './CornerEditor'
 import { StartBlank } from './StartBlank'
+import { TutorialButton } from '@/features/studio/TutorialButton'
 import { DEFAULT_CORNERS } from './corners'
 import { CaptureWarnings, ExtraShots } from './CaptureExtras'
 import { ACCEPT, MAX_MB, isDxf, isImage, validateFile } from './validateFile'
@@ -174,7 +175,7 @@ export function NewPlanPage() {
         </div>
       )}
 
-      {!file && <StartBlank />}
+      {!file && <StartBlank tutorial={<TutorialButton initial="crear" />} />}
 
       {file && (
         <div className="flex flex-col gap-6">
