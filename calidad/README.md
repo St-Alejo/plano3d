@@ -187,8 +187,15 @@ Ahora solo actúa en láminas CAD oscuras y **queda activa por defecto** (secci�
 1. Recuperar la ganancia de ventanas de la básica (0,17 → 0,73 con la red) sin romper casa2:
    reentrenar (v3) con más renders a color o abrir la condición a planos de baja resolución, y
    activar solo lo que mejore en todo.
-2. casa3:
-   - escala por arcos de puerta (radio de los cuartos de círculo) o por objetos;
-   - nombres de niveles y ambientes con Claude solo si el OCR local no alcanza, siempre dentro del tope.
+2. casa3 (escala ya resuelta: −8 %, ver bitácora):
+   - **ambientes**: en la planta baja solo cierra 1 de 3 (no se detecta el tabique de la
+     cocina) y en la alta falta la franja de abajo (dormitorio y baño). Es lo que más pesa:
+     sin ambientes no hay nombres ni áreas;
+   - **nombres**: los rótulos miden ~2 px de alto, ilegibles también para Claude visión. Lo
+     viable es nombrar por el **mobiliario** (inodoro → baño, cama → dormitorio, estufa →
+     cocina, mesa → comedor), con un clasificador o con Claude visión por recorte de ambiente;
+   - **linderos**: el muro izquierdo coincide con el lindero y se dibuja con el mismo trazo;
+     recortar por la envolvente de ambientes borraría muros reales mientras falten
+     ambientes (medido en la planta alta). Hoy se corrigen a mano en el editor.
 3. Recuperar las caídas puntuales de la suite compleja que registra la bitácora.
 4. Revisión visual final 2D/3D de las tres casas y despliegue en Railway (ver README principal).
