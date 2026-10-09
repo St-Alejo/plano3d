@@ -500,55 +500,79 @@ def esquinas_recorte(margen: float = MARGEN) -> list[list[float]]:
 
 
 def aligned_model(project_id: str, source: SourceImage, margen: float = MARGEN) -> BuildingModel:
-    """El modelo puesto sobre la foto rectificada (que cubre edificio + margen)."""
+    """El modelo puesto sobre la foto rectificada (que cubre edificio + margen).
+
+    La rectificación no conserva exacta la proporción de la hoja (papel curvado: ~1 %), así
+    que la escala es el promedio de la horizontal y la vertical y el modelo va centrado: el
+    desfase con la foto queda repartido en los dos bordes.
+    """
     base = build_model(project_id)
-    mpp = (ANCHO + 2 * margen) / source.width_px
+    mpp_x = (ANCHO + 2 * margen) / source.width_px
+    mpp_y = (LARGO + 2 * margen) / source.height_px
+    mpp = (mpp_x + mpp_y) / 2
+    dx = (source.width_px * mpp - ANCHO) / 2
+    dy = (source.height_px * mpp - LARGO) / 2
     return BuildingModel(
         project_id=project_id,
         scale=Scale(mpp, "dimensions", 1.0),
-        levels=tuple(lv.translated(margen, margen) for lv in base.levels),
+        levels=tuple(lv.translated(dx, dy) for lv in base.levels),
         source_image=source,
     )
 
 
-def upload(api: str, name: str = PROJECT_NAME, timeout: float = 300.0) -> str:
+def upload(
+    api: str, name: str = PROJECT_NAME, project_id: str | None = None, timeout: float = 300.0
+) -> str:
+    """Crea el proyecto con la foto (o reusa ``project_id``) y le pone este modelo."""
     with httpx.Client(base_url=api.rstrip("/"), timeout=120) as http:
-        with PHOTO.open("rb") as fh:
-            r = http.post(
-                "/api/projects",
-                files={"file": (PHOTO.name, fh, "image/jpeg")},
-                data={"name": name, "corners": json.dumps(esquinas_recorte())},
-            )
-        r.raise_for_status()
-        pid = str(r.json()["id"])
-        t0 = time.monotonic()
-        while True:
-            r = http.get(f"/api/projects/{pid}")
+        if project_id is None:
+            with PHOTO.open("rb") as fh:
+                r = http.post(
+                    "/api/projects",
+                    files={"file": (PHOTO.name, fh, "image/jpeg")},
+                    data={"name": name, "corners": json.dumps(esquinas_recorte())},
+                )
             r.raise_for_status()
-            body = r.json()
-            if body["status"] in ("ready", "failed"):
-                break
-            if time.monotonic() - t0 > timeout:
-                raise TimeoutError(f"El proyecto {pid} sigue en {body['status']}")
-            time.sleep(1.0)
+            project_id = str(r.json()["id"])
+        r = _wait_ready(http, project_id, timeout)
+        body = r.json()
         src = (body.get("model") or {}).get("source_image")
         if not src:
             raise RuntimeError(f"La detección no dejó imagen rectificada ({body['status']})")
-        model = aligned_model(pid, SourceImage(src["key"], src["width_px"], src["height_px"]))
+        model = aligned_model(
+            project_id, SourceImage(src["key"], src["width_px"], src["height_px"])
+        )
         r = http.put(
-            f"/api/projects/{pid}/model",
+            f"/api/projects/{project_id}/model",
             params={"summary": "Modelo fiel desde las cotas de la lámina"},
-            headers={"If-Match": r.headers.get("ETag", "*")},
+            headers={"If-Match": r.headers.get("ETag", "*"), "Content-Type": "application/json"},
             content=model_to_dto(model).model_dump_json(),
         )
         r.raise_for_status()
-        return pid
+        return project_id
+
+
+def _wait_ready(http: httpx.Client, project_id: str, timeout: float) -> httpx.Response:
+    """Espera a que termine la detección. Mientras analiza, el servidor puede no responder."""
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < timeout:
+        try:
+            r = http.get(f"/api/projects/{project_id}")
+        except httpx.TransportError:
+            time.sleep(2.0)
+            continue
+        r.raise_for_status()
+        if r.json()["status"] in ("ready", "failed"):
+            return r
+        time.sleep(1.0)
+    raise TimeoutError(f"El proyecto {project_id} no terminó en {timeout:.0f} s")
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--api", help="URL de la API (p. ej. http://localhost:8000)")
     ap.add_argument("--json", type=Path, help="escribe el modelo (contrato BuildingModelDTO)")
+    ap.add_argument("--proyecto", help="con --api: reemplaza el modelo de un proyecto ya subido")
     args = ap.parse_args(argv)
     if not args.api and not args.json:
         ap.error("indica --api o --json")
@@ -558,7 +582,7 @@ def main(argv: list[str] | None = None) -> int:
         args.json.write_text(dto.model_dump_json(indent=2), encoding="utf-8")
         print(f"Modelo escrito en {args.json}")
     if args.api:
-        pid = upload(args.api)
+        pid = upload(args.api, project_id=args.proyecto)
         print(f"Proyecto {pid} listo: ábrelo en la app en /p/{pid} (3D en /p/{pid}/3d)")
     return 0
 
