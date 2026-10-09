@@ -148,8 +148,11 @@ def default_selector() -> DetectorSelector:
 
 
 def wall_segmenter() -> WallProbability | None:
-    """Red de muros (ONNX) si está publicada y activada con ``PLANO3D_SEG_MODEL=1``."""
-    if os.environ.get("PLANO3D_SEG_MODEL", "").lower() not in ("1", "true", "si", "sí"):
+    """Red de muros (ONNX) si está publicada; se apaga con ``PLANO3D_SEG_MODEL=0``.
+
+    Solo actúa en láminas CAD de fondo oscuro (ver ``WallMaskStage``).
+    """
+    if os.environ.get("PLANO3D_SEG_MODEL", "1").lower() not in ("1", "true", "si", "sí"):
         return None
     seg = WallSegmenter()
     return seg.probability if seg.available else None

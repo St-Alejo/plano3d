@@ -42,6 +42,9 @@ class DetectionRequest:
     #: (m/px de la imagen rectificada, confianza) ya conocidos por otro detector, p. ej. de
     #: las cotas leídas: el detector la usa en vez de estimar la suya
     scale_hint: tuple[float, float] | None = None
+    #: la lámina original era CAD de fondo oscuro (la imagen ya llega normalizada a papel
+    #: claro): ahí los muebles se dibujan con la misma línea que los muros
+    dark_sheet: bool = False
 
 
 @dataclass

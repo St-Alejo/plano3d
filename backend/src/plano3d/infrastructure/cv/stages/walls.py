@@ -126,13 +126,15 @@ class WallMaskStage(PipelineStage[CVContext]):
             gray = as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
             # gris con la iluminación compensada: en una foto la sombra no cambia el "tono"
             mask = filter_by_tone(mask, normalize_illumination(gray))
-        if self._segmenter is not None and img is not None:
-            # la red decide qué manchas son muros y cuáles muebles, autos o cotas
+        if self._segmenter is not None and img is not None and ctx.dark_sheet:
+            # la red decide qué manchas son muros y cuáles muebles, autos o cotas. Solo en
+            # láminas CAD oscuras: en renders a color y planos claros la máscara clásica
+            # ya es mejor (medido: casa2 y la suite compleja empeoran con la red)
             from plano3d.infrastructure.ml.seg_model import filter_pixels
 
             gray = img if img.ndim == 2 else as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
             # la red se entrenó con muros de ~5 px: se le muestra el plano a esa escala
-            # (un mueble de 1 px ampliado ×4 parecería un muro a la escala original)
+            # (un mueble de 1 px ampliado x4 parecería un muro a la escala original)
             f = float(np.clip(SEG_WALL_PX / t, 0.2, 1.0))
             small = as_u8(cv2.resize(gray, None, fx=f, fy=f, interpolation=cv2.INTER_AREA))
             prob = np.asarray(

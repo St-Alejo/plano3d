@@ -210,6 +210,7 @@ class SheetLayoutStage(PipelineStage[CVContext]):
         if is_dark_sheet(img):
             # CAD de fondo oscuro: el resto del pipeline espera tinta oscura sobre papel
             img = ctx.original = remove_frame(normalize_dark_sheet(img))
+            ctx.dark_sheet = True
         box = drawing_box(img)
         self._cropped = 0.0
         if box is not None:

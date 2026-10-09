@@ -98,3 +98,31 @@ def test_azotea_con_antepechos() -> None:
     )
     heights = [w.height for w in with_parapets(Level("l", "Azotea", walls=walls)).walls]
     assert heights == [1.1, 1.1, 1.1, 1.1, 2.6]
+
+
+class _Recorder:
+    """Red de muros falsa: todo es muro, y anota cuántas veces se la consultó."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def __call__(self, gray: np.ndarray) -> np.ndarray:
+        self.calls += 1
+        return np.ones(gray.shape[:2], np.float32)
+
+
+def test_red_de_muros_solo_en_laminas_cad_oscuras() -> None:
+    net = _Recorder()
+    detector = MultiLevelDetector(ClassicCVDetector(segmenter=net))
+    asyncio.run(detector.detect(DetectionRequest("p", encode_png(_sheet()), "image/png"), _Quiet()))
+    assert net.calls == 2  # una vez por planta
+
+    # el mismo plano en papel claro (tinta oscura): la máscara clásica no pasa por la red
+    light = np.full((600, 500, 3), 250, np.uint8)
+    dark_ink = np.full((600, 500, 3), (40, 34, 30), np.uint8)
+    plan = np.zeros((600, 500, 3), np.uint8)
+    _plan(plan, 100, 100)
+    light[plan[..., 0] > 0] = dark_ink[plan[..., 0] > 0]
+    net.calls = 0
+    asyncio.run(detector.detect(DetectionRequest("p", encode_png(light), "image/png"), _Quiet()))
+    assert net.calls == 0

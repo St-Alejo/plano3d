@@ -33,6 +33,9 @@ COPY --from=deps /install /usr/local
 COPY src ./src
 COPY alembic ./alembic
 COPY alembic.ini pyproject.toml ./
+# red de muros (onnxruntime); los .pt de entrenamiento no entran (.dockerignore)
+COPY models ./models
+ENV PLANO3D_MODELS_DIR=/app/models
 RUN pip install --no-deps . \
  && useradd --create-home --uid 10001 app \
  && mkdir -p /app/data && chown app /app/data

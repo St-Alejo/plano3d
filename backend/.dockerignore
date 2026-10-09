@@ -8,3 +8,5 @@ htmlcov
 data
 *.db
 tests/fixtures/real/*.jpg
+models/*.pt
+ml/data

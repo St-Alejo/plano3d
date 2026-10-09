@@ -8,6 +8,8 @@ necesita PyTorch. Si no hay modelo o no hay onnxruntime, todo sigue sin ella.
 from __future__ import annotations
 
 import logging
+import os
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -19,7 +21,11 @@ import numpy.typing as npt
 log = logging.getLogger(__name__)
 
 Img = npt.NDArray[np.uint8]
-MODELS = Path(__file__).resolve().parents[4] / "models"
+#: carpeta de los ``plan-seg-vN.onnx``; en la imagen Docker el paquete vive en site-packages
+#: y la carpeta se indica con ``PLANO3D_MODELS_DIR``
+MODELS = Path(
+    os.environ.get("PLANO3D_MODELS_DIR") or Path(__file__).resolve().parents[4] / "models"
+)
 #: lado máximo con que se pasa la imagen por la red (más grande se reduce)
 MAX_SIDE = 1600
 
@@ -63,7 +69,10 @@ class WallSegmenter:
 
 
 def _latest() -> Path | None:
-    found = sorted(MODELS.glob("plan-seg-v*.onnx"))
+    # orden numérico: v10 es más reciente que v9
+    found = sorted(
+        MODELS.glob("plan-seg-v*.onnx"), key=lambda p: int(re.sub(r"\D", "", p.stem) or 0)
+    )
     return found[-1] if found else None
 
 

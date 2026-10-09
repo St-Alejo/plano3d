@@ -75,6 +75,8 @@ class CVContext:
     corners: Sequence[tuple[float, float]] | None = None
     #: (m/px, confianza) conocidos de antemano (ver ``DetectionRequest.scale_hint``)
     scale_hint: tuple[float, float] | None = None
+    #: ver ``DetectionRequest.dark_sheet``; también lo marca el análisis de la lámina
+    dark_sheet: bool = False
 
     original: Img | None = None
     rectified: Img | None = None

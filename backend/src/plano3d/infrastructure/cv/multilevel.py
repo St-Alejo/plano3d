@@ -27,7 +27,7 @@ from plano3d.application.ports import (
 from plano3d.domain import BuildingModel, Level, Scale, SourceImage, Wall
 from plano3d.infrastructure.cv.context import Img, as_u8
 from plano3d.infrastructure.cv.imageio import decode, encode_png
-from plano3d.infrastructure.cv.stages.layout import Box, plan_blocks, prepare_sheet
+from plano3d.infrastructure.cv.stages.layout import Box, is_dark_sheet, plan_blocks, prepare_sheet
 
 #: lado mínimo (px) con que se detecta cada planta: las láminas suelen dibujar los muros
 #: con líneas de 1 px, que hay que engrosar ampliando para que la detección las vea
@@ -162,7 +162,9 @@ class MultiLevelDetector(FloorPlanDetector):
     ) -> DetectionResult:
         if request.content_type == "application/pdf" or request.corners:
             return await self._inner.detect(request, progress)
-        sheet = prepare_sheet(decode(request.image_bytes, request.content_type, max_side=10_000))
+        raw = decode(request.image_bytes, request.content_type, max_side=10_000)
+        dark = request.dark_sheet or is_dark_sheet(raw)
+        sheet = prepare_sheet(raw)
         blocks = plan_blocks(sheet)
         if len(blocks) < 2:
             return await self._inner.detect(request, progress)
@@ -178,6 +180,7 @@ class MultiLevelDetector(FloorPlanDetector):
                 content_type="image/png",
                 corners=None,
                 scale_hint=None,
+                dark_sheet=dark,
             )
             try:
                 r = await self._inner.detect(sub, progress)
