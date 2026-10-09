@@ -18,3 +18,7 @@ class FileTooLargeError(ApplicationError):
 
 class NoDetectorAvailableError(ApplicationError):
     pass
+
+
+class AssistantUnavailableError(ApplicationError):
+    """No hay asistente (sin credenciales, sin presupuesto o la API falló)."""

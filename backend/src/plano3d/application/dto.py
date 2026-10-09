@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -274,6 +274,20 @@ class CaptureCheckDTO(_DTO):
     height: int
     paper_found: bool
     warnings: list[str] = []
+
+
+class AssistantRequestDTO(_DTO):
+    message: str = Field(min_length=1, max_length=1000)
+    context: str = Field(
+        "", max_length=6000, description="resumen del plano actual (ambientes y aberturas)"
+    )
+
+
+class AssistantReplyDTO(_DTO):
+    ops: list[dict[str, Any]] = Field(
+        description="operaciones del chat (forma de PlanOp en el frontend)"
+    )
+    reply: str
 
 
 class BlankProjectDTO(_DTO):

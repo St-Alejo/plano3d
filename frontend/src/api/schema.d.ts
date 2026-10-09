@@ -117,6 +117,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/assistant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assistant
+         * @description Respaldo del chat del editor: interpreta lo que el intérprete local no entendió.
+         */
+        post: operations["assistant_api_projects__project_id__assistant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/image": {
         parameters: {
             query?: never;
@@ -294,6 +314,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AssistantReplyDTO */
+        AssistantReplyDTO: {
+            /**
+             * Ops
+             * @description operaciones del chat (forma de PlanOp en el frontend)
+             */
+            ops: {
+                [key: string]: unknown;
+            }[];
+            /** Reply */
+            reply: string;
+        };
+        /** AssistantRequestDTO */
+        AssistantRequestDTO: {
+            /**
+             * Context
+             * @description resumen del plano actual (ambientes y aberturas)
+             * @default
+             */
+            context: string;
+            /** Message */
+            message: string;
+        };
         /** BlankProjectDTO */
         BlankProjectDTO: {
             /**
@@ -1262,6 +1305,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    assistant_api_projects__project_id__assistant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantRequestDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantReplyDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description No hay asistente con IA (el chat usa el intérprete local) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -1,6 +1,51 @@
 {
   "components": {
     "schemas": {
+      "AssistantReplyDTO": {
+        "properties": {
+          "ops": {
+            "description": "operaciones del chat (forma de PlanOp en el frontend)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ops",
+            "type": "array"
+          },
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ops",
+          "reply"
+        ],
+        "title": "AssistantReplyDTO",
+        "type": "object"
+      },
+      "AssistantRequestDTO": {
+        "properties": {
+          "context": {
+            "default": "",
+            "description": "resumen del plano actual (ambientes y aberturas)",
+            "maxLength": 6000,
+            "title": "Context",
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AssistantRequestDTO",
+        "type": "object"
+      },
       "BlankProjectDTO": {
         "properties": {
           "name": {
@@ -1941,6 +1986,62 @@
         "summary": "Get Project",
         "tags": [
           "proyectos"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/assistant": {
+      "post": {
+        "description": "Respaldo del chat del editor: interpreta lo que el intérprete local no entendió.",
+        "operationId": "assistant_api_projects__project_id__assistant_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantReplyDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "No hay asistente con IA (el chat usa el intérprete local)"
+          }
+        },
+        "summary": "Assistant",
+        "tags": [
+          "modelo"
         ]
       }
     },

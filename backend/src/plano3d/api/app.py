@@ -29,6 +29,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from plano3d.application.dto import (
+    AssistantReplyDTO,
+    AssistantRequestDTO,
     BlankProjectDTO,
     BuildingModelDTO,
     CalibrateScaleDTO,
@@ -51,6 +53,7 @@ from plano3d.application.dto import (
     stats_to_dto,
 )
 from plano3d.application.use_cases.errors import (
+    AssistantUnavailableError,
     FileTooLargeError,
     NoDetectorAvailableError,
     ProjectNotFoundError,
@@ -176,6 +179,20 @@ async def create_project(
 async def create_blank_project(body: BlankProjectDTO, c: ContainerDep) -> ProjectDTO:
     """Plano desde cero: sin foto, listo para dibujar en el editor o con el chat."""
     return project_to_dto(await c.create_blank_project.execute(body.name))
+
+
+@router.post(
+    "/projects/{project_id}/assistant",
+    response_model=AssistantReplyDTO,
+    responses={503: {"description": "No hay asistente con IA (el chat usa el intérprete local)"}},
+    tags=["modelo"],
+)
+async def assistant(
+    project_id: str, body: AssistantRequestDTO, c: ContainerDep
+) -> AssistantReplyDTO:
+    """Respaldo del chat del editor: interpreta lo que el intérprete local no entendió."""
+    r = await c.interpret_chat.execute(project_id, body.message, body.context)
+    return AssistantReplyDTO(ops=r.ops, reply=r.reply)
 
 
 def _etag(revision: int) -> str:
@@ -397,6 +414,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
 
     handlers: list[tuple[type[Exception], int]] = [
         (ProjectNotFoundError, 404),
+        (AssistantUnavailableError, 503),
         (UnsupportedFileError, 415),
         (FileTooLargeError, 413),
         (InvalidStateTransitionError, 409),

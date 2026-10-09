@@ -1,4 +1,4 @@
-import type { BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck } from './types'
+import type { AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck } from './types'
 
 export class ApiError extends Error {
   constructor(
@@ -100,6 +100,10 @@ export const api = {
     if (onProgress) return uploadWithProgress<{ id: string; status: string }>('/projects', form, onProgress)
     return request<{ id: string; status: string }>('/projects', { method: 'POST', body: form })
   },
+
+  /** Chat del editor: lo que el intérprete local no entendió lo interpreta la IA (503 si no hay). */
+  assistant: (id: string, message: string, context: string) =>
+    request<AssistantReply>(`/projects/${encodeURIComponent(id)}/assistant`, { method: 'POST', ...json({ message, context }) }),
 
   /** Plano desde cero: sin foto, listo para dibujar. */
   createBlankProject: (name: string) => request<Project>('/projects/blank', { method: 'POST', ...json({ name }) }),

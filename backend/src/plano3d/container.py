@@ -12,11 +12,13 @@ from dataclasses import dataclass, field
 from plano3d.application.ports import (
     FileStorage,
     JobQueue,
+    PlanAssistant,
     ProgressBroker,
     ProjectRepository,
     TextReader,
 )
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
+from plano3d.application.use_cases.assistant import InterpretChat
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
     CheckCapture,
@@ -59,6 +61,14 @@ from plano3d.infrastructure.ocr.rapid import available as ocr_available
 from plano3d.infrastructure.vector.detectors import DxfDetector, VectorPdfDetector
 
 
+def default_assistant() -> PlanAssistant | None:
+    if not claude_available():
+        return None
+    from plano3d.infrastructure.assistant.claude_assistant import ClaudePlanAssistant
+
+    return ClaudePlanAssistant()
+
+
 @dataclass
 class Container:
     repo: ProjectRepository
@@ -67,6 +77,8 @@ class Container:
     progress: ProgressBroker
     selector: DetectorSelector
     _closers: list[object] = field(default_factory=list)
+    #: intérprete con IA del chat del editor (None: solo el intérprete local del navegador)
+    assistant: PlanAssistant | None = field(default_factory=lambda: default_assistant())
 
     @property
     def create_project(self) -> CreateProject:
@@ -75,6 +87,10 @@ class Container:
     @property
     def create_blank_project(self) -> CreateBlankProject:
         return CreateBlankProject(self.repo)
+
+    @property
+    def interpret_chat(self) -> InterpretChat:
+        return InterpretChat(self.repo, self.assistant)
 
     @property
     def check_capture(self) -> CheckCapture:
