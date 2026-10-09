@@ -20,7 +20,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
-from shapely.geometry import LineString, Point, Polygon
+from shapely.geometry import LineString, MultiPoint, Point, Polygon
 from shapely.ops import unary_union
 
 from plano3d.infrastructure.vector.primitives import ArcPrim, Closed, Insert, Line, Pt, block_kind
@@ -1103,6 +1103,30 @@ def columns_from_closed(closed: Iterable[Closed], column_layer: bool = False) ->
         else:
             out.append(ColumnCand((ctr.x, ctr.y), e1, e2, False, rot % (math.pi / 2)))
     return out
+
+
+def plausible_columns(cands: list[ColumnCand], walls: Sequence[WallCand]) -> list[ColumnCand]:
+    """Descarta manchas que en una imagen se confunden con columnas.
+
+    Una columna toca un muro o, si es exenta (porche, galería), está dentro del edificio y
+    lejos de otras. Las marcas de cota, puntas de flecha y achurados dan filas de manchas
+    iguales y muy juntas, casi siempre fuera del contorno. Sin escala: todo se mide en
+    tamaños de la propia columna.
+    """
+    if not cands or not walls:
+        return cands
+    lines = [(LineString([w.p1, w.p2]), w.thickness) for w in walls]
+    hull = MultiPoint([p for w in walls for p in (w.p1, w.p2)]).convex_hull
+
+    def keep(c: ColumnCand) -> bool:
+        size = max(c.width, c.depth)
+        p = Point(c.center)
+        if min(ln.distance(p) - t / 2 for ln, t in lines) <= size * 0.75:
+            return True
+        lonely = all(math.dist(c.center, o.center) >= 3 * size for o in cands if o is not c)
+        return lonely and bool(hull.contains(p))
+
+    return [c for c in cands if keep(c)]
 
 
 def point_in(poly: Polygon, x: float, y: float) -> bool:

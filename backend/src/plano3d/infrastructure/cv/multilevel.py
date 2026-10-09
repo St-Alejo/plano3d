@@ -15,7 +15,7 @@ from dataclasses import replace
 import cv2
 import numpy as np
 import numpy.typing as npt
-from shapely.geometry import MultiPoint, Point
+from shapely.geometry import LineString, MultiPoint, Point
 
 from plano3d.application.ports import (
     DetectionRequest,
@@ -24,7 +24,7 @@ from plano3d.application.ports import (
     ImageQuality,
     ProgressPublisher,
 )
-from plano3d.domain import BuildingModel, Level, Scale, SourceImage, Wall
+from plano3d.domain import BuildingModel, Column, Level, Scale, SourceImage, Wall
 from plano3d.infrastructure.cv.context import Img, as_u8
 from plano3d.infrastructure.cv.imageio import decode, encode_png
 from plano3d.infrastructure.cv.stages.layout import Box, is_dark_sheet, plan_blocks, prepare_sheet
@@ -145,7 +145,14 @@ def with_parapets(level: Level) -> Level:
     walls = tuple(
         replace(w, height=PARAPET_M, openings=()) if on_edge(w) else w for w in level.walls
     )
-    return replace(level, walls=walls)
+    # una azotea no tiene pilares exentos de piso completo: solo quedan los que tocan un muro
+    lines = [(LineString([(w.start.x, w.start.y), (w.end.x, w.end.y)]), w.thickness) for w in walls]
+
+    def touches_wall(c: Column) -> bool:
+        p = Point(c.center.x, c.center.y)
+        return bool(min(ln.distance(p) - t / 2 for ln, t in lines) <= max(c.width, c.depth) * 0.75)
+
+    return replace(level, walls=walls, columns=tuple(c for c in level.columns if touches_wall(c)))
 
 
 class MultiLevelDetector(FloorPlanDetector):

@@ -2,7 +2,7 @@
   "case": "casa2",
   "detector": "raster-vector",
   "metrics": {
-    "walls": 27.0,
+    "walls": 23.0,
     "rooms": 6.0,
     "meters_per_pixel": 0.02328767123287671,
     "mpp_walls": 0.0225,
@@ -19,12 +19,12 @@
   "levels": [
     {
       "name": "Planta 1",
-      "walls_det": 27,
+      "walls_det": 23,
       "walls_gt": 20,
-      "wall_p": 0.927,
+      "wall_p": 0.948,
       "wall_r": 0.992,
-      "wall_f1": 0.958,
-      "wall_f1_ends": 0.511,
+      "wall_f1": 0.969,
+      "wall_f1_ends": 0.558,
       "open_p": 0.92,
       "open_r": 0.92,
       "open_det": 25,
@@ -250,7 +250,7 @@
       ]
     }
   ],
-  "when": "2026-10-09T01:07:44",
+  "when": "2026-10-09T04:35:40",
   "pass": {
     "scale": true,
     "levels": true,

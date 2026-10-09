@@ -20,12 +20,12 @@
   "levels": [
     {
       "name": "Planta baja",
-      "walls_det": 19,
+      "walls_det": 16,
       "walls_gt": 9,
-      "wall_p": 0.564,
+      "wall_p": 0.606,
       "wall_r": 0.866,
-      "wall_f1": 0.683,
-      "wall_f1_ends": 0.286,
+      "wall_f1": 0.713,
+      "wall_f1_ends": 0.32,
       "open_p": 0.167,
       "open_r": 0.143,
       "open_det": 6,
@@ -276,7 +276,7 @@
       "openings": []
     }
   ],
-  "when": "2026-10-09T01:08:08",
+  "when": "2026-10-09T04:35:50",
   "pass": {
     "scale": false,
     "levels": true,

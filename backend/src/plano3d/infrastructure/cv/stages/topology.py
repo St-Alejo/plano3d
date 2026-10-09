@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from shapely.geometry import LineString
+
 from plano3d.application.pipeline import PipelineStage
 from plano3d.infrastructure.cv.context import CVContext, Segment
 
@@ -84,12 +86,46 @@ class TopologyStage(PipelineStage[CVContext]):
     title = "Topología de muros"
 
     def run(self, ctx: CVContext) -> CVContext:
-        ctx.segments = snap_endpoints(ctx.segments, ctx.wall_thickness_px)
+        ctx.segments = drop_stray_groups(snap_endpoints(ctx.segments, ctx.wall_thickness_px))
         return ctx
 
     def metrics(self, ctx: CVContext) -> dict[str, float]:
         total_m = sum(s.length for s in ctx.segments) * ctx.meters_per_pixel
         return {"wall_length_m": round(total_m, 2)}
+
+
+#: un grupo de muros desconectado se conserva si suma al menos esta fracción del mayor
+KEEP_RATIO = 0.15
+
+
+def drop_stray_groups(segments: list[Segment], keep_ratio: float = KEEP_RATIO) -> list[Segment]:
+    """Descarta grupos de "muros" sueltos lejos del edificio (marcas, muebles, autos).
+
+    Mismo criterio que la ruta vectorial (``connected_only``): los muros que se tocan forman
+    un grupo; los grupos chicos frente al edificio principal no son muros.
+    """
+    n = len(segments)
+    parent = list(range(n))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    lines = [LineString(s.endpoints()) for s in segments]
+    for i in range(n):
+        for j in range(i + 1, n):
+            tol = max(segments[i].thickness, segments[j].thickness) + 2.0
+            if lines[i].distance(lines[j]) <= tol:
+                parent[find(i)] = find(j)
+    total: dict[int, float] = {}
+    for i in range(n):
+        total[find(i)] = total.get(find(i), 0.0) + segments[i].length
+    if not total:
+        return segments
+    biggest = max(total.values())
+    return [s for i, s in enumerate(segments) if total[find(i)] >= keep_ratio * biggest]
 
 
 def dangling_endpoints(segments: list[Segment], tol: float = 1.0) -> int:

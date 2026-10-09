@@ -68,6 +68,7 @@ from plano3d.infrastructure.vector.walls import (
     object_rectangles,
     pair_arcs,
     pair_lines,
+    plausible_columns,
     rooms_from_walls,
     snap,
 )
@@ -343,7 +344,13 @@ def assemble_model(ctx: VectorContext, d: Drawing) -> BuildingModel:
             continue
 
     columns = []
-    for c in ctx.columns:
+    # en DXF/PDF la capa de columnas es exacta; en una imagen se filtran las manchas sueltas
+    cands = (
+        ctx.columns
+        if ctx.source is MeasureSource.VECTOR
+        else plausible_columns(ctx.columns, ctx.walls)
+    )
+    for c in cands:
         try:
             columns.append(
                 Column(
