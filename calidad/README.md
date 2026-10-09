@@ -83,6 +83,19 @@ correcciones están documentadas en la bitácora.
   y los ticks miden 4-5 px. Con `cv/dimension_text.py` (texto primero) la escala quedó resuelta.
 - Lo que falta es geométrico: los tabiques de 0,12 m (dos líneas finas a ~10 px) no se emparejan como muros
   en la ruta raster, así que no cierran los ambientes y los nombres leídos no tienen dónde ponerse.
+- Diagnóstico de los tabiques (2026-10-09, medido paso a paso contra la verdad, ruta raster):
+  pares de caras P 0,56 / R 0,84 → tras `connected_only` R 0,70; ambientes IoU ~0,2 con cualquier cierre.
+  Causa: en la foto las dos líneas de un tabique de 0,12 m (~10 px) se funden en una banda de 3-4 px que
+  queda fuera de la capa fina y de la gruesa (`split_ink` + `_drop_text`), así que falta una cara.
+  Probado y descartado (sin mejora o peor): desvío lateral al encadenar (`drift`), cerrar huecos cortos
+  (`bridge`), más tolerancia en `connected_only`, conservar tramos cortos alargados en `_drop_text`.
+- Lo que SÍ funcionó en prototipo (no integrado): con la escala ya conocida por las cotas, un cierre
+  morfológico de 0,15 m + apertura de 0,08 m da una **máscara de bandas** casi igual a los muros reales
+  (cotas y muebles desaparecen). Ejes del esqueleto de esa máscara → muros P 0,75 / R 0,79. Ambientes como
+  zonas libres de la máscara, sellando vanos con los ejes encadenados, los radios de los arcos de puerta y
+  pares de extremos de banda alineados: IoU medio 0,05 → 0,51 (punto fijo 0,89, alcoba 3 0,88, social 0,84);
+  faltan baños y separar alcoba 1/2 (puertas entre dos uniones en T). Integrarlo exige validarlo en más fotos
+  reales: ajustarlo solo con casa4 sería sobreajuste.
 - La verdad trae `homography` (metros → píxeles de la foto, por las 4 esquinas del edificio) porque una
   escala y un origen no alcanzan con perspectiva; se genera con `tests/real/casa4/make_truth.py` desde el
   modelo levantado a mano (`scripts/modelos/planta_2do_piso_opc3.py`).
