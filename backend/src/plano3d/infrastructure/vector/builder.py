@@ -60,9 +60,12 @@ from plano3d.infrastructure.vector.walls import (
     Tol,
     WallCand,
     _Evidence,
+    bridge_columns,
     chain_walls,
     columns_from_closed,
     connected_only,
+    door_walls,
+    extend_to_doors,
     exterior_walls,
     find_stairs,
     object_rectangles,
@@ -148,14 +151,18 @@ class WallsStage(PipelineStage[VectorContext]):
             [*d.detail_arcs, *(a for i, a in enumerate(d.arcs) if i not in used_arcs)],
             d.inserts,
         )
-        walls = chain_walls([*pieces, *curved], evidence, ctx.tol)
-        walls = connected_only(snap(walls, ctx.tol.snap))
-        ctx.walls = walls
-        ctx.stairs = stairs
-        ctx.columns = columns_from_closed(
+        columns = columns_from_closed(
             [c for c in d.closed if c.filled or layer_role(c.layer) is LayerRole.COLUMN],
             column_layer=True,
         )
+        walls = chain_walls([*pieces, *curved], evidence, ctx.tol)
+        walls = extend_to_doors(walls, evidence.arcs)
+        walls = bridge_columns(walls, columns)
+        walls = door_walls(walls, evidence.arcs)
+        walls = connected_only(snap(walls, ctx.tol.snap))
+        ctx.walls = walls
+        ctx.stairs = stairs
+        ctx.columns = columns
         return ctx
 
     def metrics(self, ctx: VectorContext) -> dict[str, float]:
@@ -171,7 +178,7 @@ class RoomsStage(PipelineStage[VectorContext]):
     title = "Ambientes"
 
     def run(self, ctx: VectorContext) -> VectorContext:
-        ctx.rooms = rooms_from_walls(ctx.walls)
+        ctx.rooms = rooms_from_walls(ctx.walls, columns=ctx.columns)
         return ctx
 
     def metrics(self, ctx: VectorContext) -> dict[str, float]:

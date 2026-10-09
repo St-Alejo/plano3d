@@ -1039,9 +1039,26 @@ def connected_only(walls: list[WallCand], keep_ratio: float = 0.15) -> list[Wall
 # ----------------------------------------------------------------------------- ambientes
 
 
-def rooms_from_walls(walls: Iterable[WallCand], min_area: float = 1.0) -> list[Polygon]:
-    """Cada agujero de la unión de huellas (vanos cerrados) es un ambiente."""
+#: m: rendija máxima (la mitad) que se sella al buscar ambientes con columnas
+ROOM_CLOSING = 0.08
+
+
+def rooms_from_walls(
+    walls: Iterable[WallCand],
+    min_area: float = 1.0,
+    columns: Sequence[ColumnCand] = (),
+) -> list[Polygon]:
+    """Cada agujero de la unión de huellas (vanos cerrados) es un ambiente.
+
+    Con columnas el dibujo suele dejar rendijas de pocos cm entre el muro y la columna:
+    un cierre morfológico de la unión las sella (los vanos de puerta, de 60 cm o más,
+    siguen abiertos). Las columnas no recortan el ambiente: su área es la declarada.
+    """
     union = unary_union([w.footprint() for w in walls])
+    if columns:
+        union = union.buffer(ROOM_CLOSING, join_style="mitre").buffer(
+            -ROOM_CLOSING, join_style="mitre"
+        )
     polys = list(getattr(union, "geoms", [union]))
     rooms: list[Polygon] = []
     for poly in polys:
@@ -1103,6 +1120,164 @@ def columns_from_closed(closed: Iterable[Closed], column_layer: bool = False) ->
         else:
             out.append(ColumnCand((ctr.x, ctr.y), e1, e2, False, rot % (math.pi / 2)))
     return out
+
+
+def bridge_columns(walls: list[WallCand], columns: Sequence[ColumnCand]) -> list[WallCand]:
+    """Prolonga hasta el centro de la columna cada muro recto que muere en ella.
+
+    En el dibujo el muro se corta en la cara de la columna; en la obra muro y columna
+    forman un solo cerramiento. Sin esto dos tramos colineales separados por una columna
+    (o las dos alas de una esquina) quedan sueltos y los ambientes no cierran.
+    """
+    for col in columns:
+        half = max(col.width, col.depth) / 2
+        for w in walls:
+            if w.curved:
+                continue
+            u = w.direction
+            for end in (0, 1):
+                p = w.p1 if end == 0 else w.p2
+                reach = half + w.thickness + 0.15  # el muro puede morir a unos cm de la cara
+                if abs(p[0] - col.center[0]) > reach or abs(p[1] - col.center[1]) > reach:
+                    continue
+                # proyección del centro de la columna sobre el eje del muro
+                along = _dot(_sub(col.center, p), u)
+                if abs(_dot(_sub(col.center, p), (-u[1], u[0]))) > half:
+                    continue
+                outward = along if end == 1 else -along
+                if outward <= 0:
+                    continue  # el centro queda dentro del muro: ya llega
+                q = (p[0] + u[0] * along, p[1] + u[1] * along)
+                if end == 0:
+                    for op in w.openings:
+                        op.offset += outward
+                    w.x1, w.y1 = q
+                else:
+                    w.x2, w.y2 = q
+    return walls
+
+
+def extend_to_doors(walls: list[WallCand], arcs: Sequence[ArcPrim]) -> list[WallCand]:
+    """Prolonga un muro por la puerta que se abre junto a su extremo.
+
+    Cuando el vano queda entre el extremo de un muro y una columna o un muro
+    perpendicular no hay un segundo tramo colineal con el que encadenarlo. La puerta se
+    reconoce por su arco de giro: bisagra y hoja cerrada sobre el eje del muro, más allá
+    del extremo. El muro se alarga hasta la jamba y el vano queda como puerta. Cada arco
+    alarga un solo muro (si no, los dos tramos colineales se solaparían en el vano).
+    """
+    used: set[int] = set()
+    for w in walls:
+        if w.curved:
+            continue
+        for end in (0, 1):
+            u = w.direction
+            out = (-u[0], -u[1]) if end == 0 else u
+            n = (-out[1], out[0])
+            p = w.p1 if end == 0 else w.p2
+            best: tuple[float, float, ArcPrim, float] | None = None
+            for arc in arcs:
+                if id(arc) in used or not 0.5 <= arc.r <= 1.3 or not 1.2 <= abs(arc.sweep) <= 1.95:
+                    continue
+                c = (arc.cx, arc.cy)
+                sc, oc = _dot(_sub(c, p), out), _dot(_sub(c, p), n)
+                if abs(oc) > w.thickness + 0.06:  # bisagra en el eje o en la cara del muro
+                    continue
+                for e in (arc.p1, arc.p2):
+                    se, oe = _dot(_sub(e, p), out), _dot(_sub(e, p), n)
+                    if abs(oe) > w.thickness + 0.06:
+                        continue
+                    lo, hi = min(sc, se), max(sc, se)
+                    if -0.1 <= lo <= 0.3 and hi - lo >= 0.45 and (best is None or lo < best[0]):
+                        best = (lo, hi, arc, sc)
+            if best is None:
+                continue
+            lo, hi, arc, sc = best
+            used.add(id(arc))
+            lo = max(lo, 0.0)
+            q = (p[0] + out[0] * hi, p[1] + out[1] * hi)
+            jamb = (p[0] + out[0] * lo, p[1] + out[1] * lo)
+            if end == 0:
+                for op in w.openings:
+                    op.offset += hi
+                w.x1, w.y1 = q
+            else:
+                w.x2, w.y2 = q
+            u = w.direction
+            start = q if end == 0 else jamb  # extremo del vano más cercano a p1
+            hinge = (arc.cx, arc.cy)
+            side = _dot(_sub(arc.point(0.5), hinge), (-u[1], u[0]))
+            w.openings.append(
+                OpeningCand(
+                    _dot(_sub(start, w.p1), u),
+                    hi - lo,
+                    "door",
+                    0.9,
+                    operation="swing",
+                    hinge_at_end=_dot(_sub(hinge, w.p1), u)
+                    > _dot(_sub(start, w.p1), u) + (hi - lo) / 2,
+                    opens_left=side > 0,
+                )
+            )
+            w.openings.sort(key=lambda o: o.offset)
+    return walls
+
+
+def door_walls(walls: list[WallCand], arcs: Sequence[ArcPrim]) -> list[WallCand]:
+    """Muros que son SOLO una puerta: el vano ocupa todo el tramo entre dos muros.
+
+    Pasa en pasillos (la puerta de la alcoba va de un muro transversal al siguiente):
+    no hay ningún tramo de muro dibujado, solo el arco de giro. Se crea un muro de
+    bisagra a jamba (la posición cerrada de la hoja) si ambos extremos tocan muros y
+    el arco no explica ya una puerta existente.
+    """
+    if not walls:
+        return walls
+    t = float(np.median([w.thickness for w in walls if not w.curved] or [0.12]))
+    axes = [LineString(w.axis()) for w in walls]
+
+    def explained(arc: ArcPrim, leaf_angle: float) -> bool:
+        """¿Un muro paralelo a la hoja cerrada ya contiene esta puerta (o su bisagra)?"""
+        c = Point(arc.cx, arc.cy)
+        for w, ax in zip(walls, axes, strict=True):
+            if w.curved or _angle_diff(w.angle, leaf_angle) > 10:
+                continue
+            if ax.distance(c) > w.thickness / 2 + 0.12:
+                continue
+            s = _dot(_sub((arc.cx, arc.cy), w.p1), w.direction)
+            if any(
+                o.kind == "door" and o.offset - 0.2 <= s <= o.offset + o.width + 0.2
+                for o in w.openings
+            ):
+                return True
+            if -0.05 <= s <= w.chord + 0.05:
+                return True  # bisagra dentro de un muro macizo: no es un vano propio
+        return False
+
+    def touches(p: Pt) -> bool:
+        q = Point(p)
+        return any(
+            ax.distance(q) <= w.thickness / 2 + 0.15 for w, ax in zip(walls, axes, strict=True)
+        )
+
+    new: list[WallCand] = []
+    for arc in arcs:
+        if not 0.5 <= arc.r <= 1.3 or not 1.2 <= abs(arc.sweep) <= 1.95:
+            continue
+        hinge = (arc.cx, arc.cy)
+        for e in (arc.p1, arc.p2):
+            mid = ((hinge[0] + e[0]) / 2, (hinge[1] + e[1]) / 2)
+            leaf = math.degrees(math.atan2(e[1] - hinge[1], e[0] - hinge[0])) % 180.0
+            if not (touches(hinge) and touches(e)) or touches(mid) or explained(arc, leaf):
+                continue
+            w = WallCand(hinge[0], hinge[1], e[0], e[1], t, confidence=0.8)
+            side = _dot(_sub(arc.point(0.5), hinge), (-w.direction[1], w.direction[0]))
+            w.openings.append(
+                OpeningCand(0.0, w.chord, "door", 0.9, "swing", False, opens_left=side > 0)
+            )
+            new.append(w)
+            break
+    return walls + new
 
 
 def plausible_columns(cands: list[ColumnCand], walls: Sequence[WallCand]) -> list[ColumnCand]:
