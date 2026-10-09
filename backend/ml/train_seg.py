@@ -65,6 +65,13 @@ def to_tensor(x: np.ndarray, y: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]
     return 1.0 - xt, yt  # tinta = 1: mismo convenio para todos los estilos
 
 
+def batch(
+    x: np.ndarray, y: np.ndarray, idx: np.ndarray | slice
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Convierte a float solo el lote: el conjunto completo se queda en uint8 (4x menos RAM)."""
+    return to_tensor(x[idx], y[idx])
+
+
 def dice_loss(logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     p = torch.sigmoid(logits)
     inter = (p * target).sum((2, 3))
@@ -121,22 +128,18 @@ def main() -> None:
         if real:
             x, y = np.concatenate([x, xr]), np.concatenate([y, yr])
     print(f"datos: {len(x)} + {len(xv)} en {time.time() - t0:.0f} s", flush=True)
-    xt, yt = to_tensor(x, y)
-    xvt, yvt = to_tensor(xv, yv)
-
     model = WallUNet()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    steps = args.epochs * (len(xt) // args.batch)
+    steps = args.epochs * (len(x) // args.batch)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=args.lr, total_steps=steps)
     bce = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(3.0))
     history = []
     for epoch in range(args.epochs):
         model.train()
-        perm = torch.randperm(len(xt))
+        perm = torch.randperm(len(x)).numpy()
         total = 0.0
         for k in range(0, len(perm) - args.batch + 1, args.batch):
-            idx = perm[k : k + args.batch]
-            xb, yb = xt[idx], yt[idx]
+            xb, yb = batch(x, y, perm[k : k + args.batch])
             if torch.rand(1) < 0.5:  # aumentos baratos: espejos y giros de 90°
                 xb, yb = xb.flip(3), yb.flip(3)
             r = int(torch.randint(0, 4, (1,)))
@@ -147,10 +150,13 @@ def main() -> None:
             loss.backward()
             opt.step()
             sched.step()
-            total += float(loss)
+            total += loss.item()
         model.eval()
         with torch.no_grad():
-            val = [iou(model(xvt[k : k + 32]), yvt[k : k + 32]) for k in range(0, len(xvt), 32)]
+            val = [
+                iou(model(xb), yb)
+                for xb, yb in (batch(xv, yv, slice(k, k + 32)) for k in range(0, len(xv), 32))
+            ]
         row = {
             "epoch": epoch + 1,
             "loss": round(total / (len(perm) // args.batch), 4),
