@@ -67,3 +67,5 @@ Cada entrada: cambio y métricas resultantes (scripts/eval_real.py).
 - Planta alta: muros F1 0.54 (P 0.51 R 0.57, extremos 0.14, 35/20) · aberturas P 0.08 R 0.18 (25/11) · ambientes 7/4 IoU 0.73 nombres 0/4
 - Azotea: muros F1 0.59 (P 0.49 R 0.74, extremos 0.12, 22/10) · aberturas P 0.00 R 1.00 (3/0) · ambientes 1/0 IoU 0.00 nombres 0/0
 - falta: scale, Planta baja: muros, Planta baja: aberturas, Planta baja: ambientes, Planta baja: nombres, Planta alta: muros, Planta alta: aberturas, Planta alta: ambientes, Planta alta: nombres, Azotea: muros, Azotea: aberturas, Azotea: ambientes
+
+### 2026-10-09 00:21 — Red de muros v2 (U-Net 1,3M, 4800 sintéticos de 6 estilos, val IoU 0,900; entrenador con datos uint8 por lote, ya no se queda sin RAM). Con red: casa3 F1 muros 0,68/0,72/0,73 (sin red 0,42/0,54/0,59; v1 0,48/0,60/0,64), básica difícil ventanas 0,17→0,73; pero casa2 deja de cumplir (ambientes 5/6, IoU 0,79, recall aberturas 0,88) y compleja clásica empeora (F1@15 0,09→0,07, escala 34%→39%, ambientes OK 17%→8%). La ruta raster no usa la red. Queda apagada por defecto.

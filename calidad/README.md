@@ -73,7 +73,7 @@ correcciones están documentadas en la bitácora.
 |---|---|---|---|
 | **casa1** | Planta técnica con cotas | 1 de 3 ambientes, sin nombres, puertas mal ubicadas | ✅ **CUMPLE**: muros 1,00 · aberturas P/R 1,00 · ambientes 3/3, IoU 0,95 · nombres 3/3 · escala 0,0 % |
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
-| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). No cumple umbrales: muros F1 0,42 / 0,54 / 0,59 por planta (0,48 / 0,60 / 0,64 con la red), ambientes de la planta alta IoU 0,74, escala −28 % |
+| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). No cumple umbrales: muros F1 0,42 / 0,54 / 0,59 por planta (0,48 / 0,60 / 0,64 con la red), ambientes de la planta alta IoU 0,74, escala −28 %. Con la red v2: muros 0,68 / 0,72 / 0,73 |
 
 **Por qué casa3 no cumple todavía (causa medida):**
 - A esa resolución, autos, mesas y sofás están dibujados con la misma línea blanca que los muros.
@@ -125,6 +125,14 @@ correcciones están documentadas en la bitácora.
   - mejora los muros de casa3 y no cambia casa1/casa2;
   - en los sintéticos tuvo resultados mixtos;
   - por la regla "solo se publica si mejora en todo", **queda apagada**: se activa con `PLANO3D_SEG_MODEL=1`.
+- **v2** (`models/plan-seg-v2.onnx`, 4800 sintéticos de los 6 estilos, IoU de validación 0,900
+  sobre una validación más difícil que la de v1). Con la red activada se carga la versión más alta:
+  - casa3: muros F1 0,42 / 0,54 / 0,59 → **0,68 / 0,72 / 0,73** (v1: 0,48 / 0,60 / 0,64); escala −28 % → −27 %;
+  - básica difícil: recall de ventanas 0,17 → 0,73;
+  - pero **casa2 deja de cumplir** (ambientes 6/6 → 5/6, IoU 0,93 → 0,79, recall de aberturas 0,92 → 0,88)
+    y la suite compleja con detector clásico empeora (F1@15 0,09 → 0,07, escala 34 % → 39 %, ambientes OK 17 % → 8 %);
+  - **queda apagada**, igual que v1;
+  - la ruta raster-vector (`--detector raster`) no usa la red: solo filtra la máscara del detector clásico.
 - **Aprendizaje con el uso:**
   - `scripts/export_dataset.py` convierte cada proyecto corregido en el editor en un par imagen/máscara;
   - `ml/train_seg.py --real-dir` los mezcla en el reentrenamiento.
@@ -159,28 +167,25 @@ Para entrenar se necesita el extra `[train]`:
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install onnx
-python -m ml.train_seg --samples 3000 --epochs 8 --out models/plan-seg-v2.onnx
+python -m ml.train_seg --samples 4800 --val 300 --epochs 8 --out models/plan-seg-v3.onnx
 ```
+
+En CPU tarda ~10 min por época con 4800 muestras. Los datos se quedan en uint8 y solo cada
+lote pasa a float, así que bastan ~2 GB de RAM. La caché `ml/data/synth_v2_*.npz` no lleva la
+versión del generador: **si cambia `ml/synth.py`, hay que borrarla**.
 
 ## 7. Dónde quedó y cómo continuar en otra sesión
 
-**Lo último que pasó:** el entrenamiento de la **red v2** (4800 sintéticos, 6 estilos,
-8 épocas) se cortó **por falta de memoria del equipo** justo después de generar los
-datos. Los datos quedaron en caché en `backend/ml/data/`. En el mismo corte se cayeron
-los servidores de desarrollo (Vite :5173 y API :8000). No se reiniciaron sin
-autorización.
-
-**Pregunta pendiente para el usuario (retomar desde aquí):**
-
-> ¿Quieres que relance el entrenamiento de v2 con menos memoria (unas 3000 muestras o
-> lotes más chicos) y que vuelva a levantar los servidores de desarrollo?
+**Lo último que pasó (2026-10-09):** la **red v2** se entrenó completa, después de corregir
+el consumo de RAM del entrenador. Está evaluada (sección 5) y **queda apagada**: mejora
+mucho casa3, pero rompe casa2 y empeora la suite compleja.
 
 **Siguientes pasos sugeridos, en orden:**
-1. Reentrenar v2 con menos memoria. Por ejemplo, `--samples 3000 --batch 8`, o cargar
-   los datos por partes en lugar de tenerlos todos en RAM. Evaluar con y sin red (reales
-   + `--suite basic` + `--suite complex`) y activarla por defecto solo si mejora en todo.
+1. Que la red no rompa casa2. Hay dos caminos:
+   - aplicarla solo donde sirve (lámina CAD oscura o baja resolución, como casa3), según el análisis de lámina;
+   - o subir el umbral `keep_at` y reentrenar (v3) con más renders a color.
+   Activarla por defecto solo si mejora en todo.
 2. casa3:
-   - quitar autos y muebles de la máscara de muros (red v2);
    - escala por arcos de puerta (radio de los cuartos de círculo) o por objetos;
    - nombres de niveles y ambientes con Claude solo si el OCR local no alcanza, siempre dentro del tope.
 3. Recuperar las caídas puntuales de la suite compleja que registra la bitácora.
