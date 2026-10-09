@@ -172,7 +172,11 @@ class Furniture:
 
 @dataclass(frozen=True, slots=True)
 class Stair:
-    """Tramo recto de escalera: línea de huella de ``start`` (abajo) a ``end`` (arriba)."""
+    """Tramo recto de escalera: línea de huella de ``start`` (abajo) a ``end`` (arriba).
+
+    ``base`` es la altura (m, sobre el piso del nivel) desde la que arranca el tramo: 0 en el
+    primer tramo; en una escalera en L o en U, los siguientes arrancan donde llegó el anterior.
+    """
 
     id: str
     start: Point2D
@@ -182,8 +186,11 @@ class Stair:
     riser: float = 0.175
     to_level_id: str | None = None
     confidence: float = 1.0
+    base: float = 0.0
 
     def __post_init__(self) -> None:
+        if self.base < 0 or not math.isfinite(self.base):
+            raise InvalidGeometryError(f"La escalera {self.id} necesita una base no negativa")
         if self.steps < 2:
             raise InvalidGeometryError(f"La escalera {self.id} necesita al menos 2 peldaños")
         if self.width <= 0 or self.riser <= 0:

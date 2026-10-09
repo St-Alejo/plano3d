@@ -82,7 +82,7 @@ describe('SceneBuilder: elementos del modelo v2', () => {
       { id: 'c2', center: { x: 2, y: 2 }, width: 0.4, depth: 0.4, round: true, rotation: 0, confidence: 1 },
     ]
     lv.stairs = [
-      { id: 's1', start: { x: 6, y: 1 }, end: { x: 9, y: 1 }, width: 1, steps: 12, riser: 0.175, confidence: 1 },
+      { id: 's1', start: { x: 6, y: 1 }, end: { x: 9, y: 1 }, width: 1, steps: 12, riser: 0.175, confidence: 1, base: 0 },
     ]
     lv.walls.push({
       id: 'curva',

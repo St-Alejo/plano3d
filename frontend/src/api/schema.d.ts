@@ -865,6 +865,12 @@ export interface components {
         /** StairDTO */
         StairDTO: {
             /**
+             * Base
+             * @description altura de arranque del tramo sobre el piso, m
+             * @default 0
+             */
+            base: number;
+            /**
              * Confidence
              * @default 1
              */

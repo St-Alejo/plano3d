@@ -145,6 +145,7 @@ class StairDTO(_DTO):
     to_level_id: str | None = None
     confidence: float = 1.0
     tread: float | None = Field(default=None, description="solo salida, huella en m")
+    base: float = Field(default=0.0, description="altura de arranque del tramo sobre el piso, m")
 
 
 class DimensionDTO(_DTO):
@@ -425,6 +426,7 @@ def _level_to_dto(lv: Level) -> LevelDTO:
                 to_level_id=s.to_level_id,
                 confidence=s.confidence,
                 tread=s.tread,
+                base=s.base,
             )
             for s in lv.stairs
         ],
@@ -574,6 +576,7 @@ def _level_from_dto(lv: LevelDTO) -> Level:
                 riser=s.riser,
                 to_level_id=s.to_level_id,
                 confidence=s.confidence,
+                base=s.base,
             )
             for s in (lv.stairs or [])
         ),

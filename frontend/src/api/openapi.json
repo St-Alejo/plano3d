@@ -1360,6 +1360,12 @@
       },
       "StairDTO": {
         "properties": {
+          "base": {
+            "default": 0.0,
+            "description": "altura de arranque del tramo sobre el piso, m",
+            "title": "Base",
+            "type": "number"
+          },
           "confidence": {
             "default": 1.0,
             "title": "Confidence",

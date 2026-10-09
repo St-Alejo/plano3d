@@ -164,6 +164,12 @@ describe('modelo v2 en 3D', () => {
     expect(steps[0]!.size[0]).toBeCloseTo(0.25)
   })
 
+  it('un tramo con base (escalera en U) arranca a esa altura', () => {
+    const steps = stairSteps({ start: { x: 0, y: 0 }, end: { x: 1, y: 0 }, width: 0.9, steps: 4, riser: 0.16, base: 1.6 })
+    expect(steps[0]!.size[1]).toBeCloseTo(1.76)
+    expect(steps.at(-1)!.size[1]).toBeCloseTo(2.24)
+  })
+
   it('la hoja de la puerta gira sobre su bisagra hacia el lado que abre', () => {
     const w = { start: { x: 0, y: 0 }, end: { x: 4, y: 0 }, thickness: 0.15 }
     const left = doorLeaf(w, { offset: 1, width: 0.9, height: 2.1, opens_left: true })

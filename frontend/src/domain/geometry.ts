@@ -138,6 +138,8 @@ interface StairLike {
   width: number
   steps: number
   riser: number
+  /** altura de arranque del tramo (escaleras en L o en U); 0 si falta */
+  base?: number | null
 }
 
 /** Peldaños macizos de un tramo recto: cada uno llega hasta el piso (escalera maciza). */
@@ -151,7 +153,7 @@ export function stairSteps(s: StairLike): StepBox[] {
   const tread = run / s.steps
   return Array.from({ length: s.steps }, (_, i) => {
     const along = tread * (i + 0.5)
-    const h = s.riser * (i + 1)
+    const h = (s.base ?? 0) + s.riser * (i + 1)
     return {
       center: [s.start.x + ux * along, h / 2, s.start.y + uy * along] as [number, number, number],
       size: [tread, h, s.width] as [number, number, number],

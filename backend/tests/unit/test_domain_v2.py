@@ -133,6 +133,14 @@ class TestElements:
         with pytest.raises(InvalidGeometryError):
             Stair(id="s", start=Point2D(0, 0), end=Point2D(3, 0), width=1.0, steps=1)
 
+    def test_stair_base_for_l_and_u_flights(self) -> None:
+        """Un segundo tramo arranca a la altura donde llegó el primero; nunca bajo el piso."""
+        s = Stair(id="s", start=Point2D(0, 0), end=Point2D(1, 0), width=0.9, steps=4, base=1.4)
+        assert s.base == pytest.approx(1.4)
+        assert Stair(id="s", start=Point2D(0, 0), end=Point2D(1, 0), width=0.9, steps=4).base == 0
+        with pytest.raises(InvalidGeometryError):
+            Stair(id="s", start=Point2D(0, 0), end=Point2D(1, 0), width=0.9, steps=4, base=-0.1)
+
     def test_column(self) -> None:
         assert Column("c", Point2D(0, 0), 0.4, 0.4, round=True).area == pytest.approx(
             math.pi * 0.04
@@ -185,7 +193,10 @@ def full_model() -> BuildingModel:
         walls=(wall,),
         rooms=(room,),
         columns=(Column("c1", Point2D(2, 2), 0.3, 0.4, rotation=0.1),),
-        stairs=(Stair("s1", Point2D(1, 1), Point2D(4, 1), 1.0, 14, 0.18, "l1"),),
+        stairs=(
+            Stair("s1", Point2D(1, 1), Point2D(4, 1), 1.0, 14, 0.18, "l1"),
+            Stair("s2", Point2D(4, 1), Point2D(4, 3), 1.0, 8, 0.18, "l1", base=2.52),
+        ),
         dimensions=(
             Dimension(
                 "d1",
