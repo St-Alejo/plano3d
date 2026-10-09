@@ -107,7 +107,19 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     return { scale: s, x: (size.width - box.w * s) / 2 - box.x * s, y: (size.height - box.h * s) / 2 - box.y * s }
   }, [size.width, size.height, imgW, imgH, mpp, bounds])
   const view = userView ?? autoView
-  const fit = useCallback(() => setView(null), [])
+  // reencuadrar recalcula el contenido: el plano pudo crecer (dibujo, chat)
+  const fit = useCallback(() => {
+    setBounds(contentBounds(useEditor.getState().model))
+    setView(null)
+  }, [])
+  // pedido externo de reencuadre (chat): se atiende al renderizar, como el cambio de proyecto
+  const fitRequest = useEditor((s) => s.fitRequest)
+  const [fitSeen, setFitSeen] = useState(fitRequest)
+  if (fitSeen !== fitRequest) {
+    setFitSeen(fitRequest)
+    setBounds(contentBounds(model))
+    setView(null)
+  }
   useEffect(() => setPointer(null, view.scale / autoView.scale), [view.scale, autoView.scale, setPointer])
 
   const toPx = (p: Point) => ({ x: p.x / mpp, y: p.y / mpp })

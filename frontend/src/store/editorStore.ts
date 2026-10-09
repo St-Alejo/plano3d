@@ -93,6 +93,9 @@ interface EditorState {
   clearError: () => void
   /** aviso al usuario que no viene de un comando (p. ej. "no cabe") */
   setError: (message: string) => void
+  /** sube cada vez que se pide reencuadrar el plano (p. ej. tras dibujar con el chat) */
+  fitRequest: number
+  requestFit: () => void
   reset: () => void
 }
 
@@ -222,6 +225,8 @@ export const useEditor = create<EditorState>()((set, get) => {
     toggleDimensions: () => set({ showDimensions: !get().showDimensions }),
     clearError: () => set({ error: null }),
     setError: (message) => set({ error: message }),
+    fitRequest: 0,
+    requestFit: () => set((s) => ({ fitRequest: s.fitRequest + 1 })),
     reset: () => {
       history.clear()
       roomMemory.clear()

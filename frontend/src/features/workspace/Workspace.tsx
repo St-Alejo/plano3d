@@ -12,6 +12,7 @@ import { CalibrateDialog } from '@/features/editor2d/CalibrateDialog'
 import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
+import { ChatPanel } from '@/features/studio/ChatPanel'
 import { StudioLayout } from '@/features/studio/StudioLayout'
 import { toggleFullscreen } from '@/lib/fullscreen'
 import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
@@ -62,7 +63,8 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   const viewMode = useEditor((s) => s.viewMode)
   const setViewMode = useEditor((s) => s.setViewMode)
   const groupSize = useEditor((s) => s.group.length)
-  const [layersOpen, setLayersOpen] = useState(true)
+  // en un plano en blanco el lienzo necesita espacio: capas y catálogo arrancan plegados
+  const [layersOpen, setLayersOpen] = useState(!(layout === 'studio' && project.has_source === false))
   const [inspectorOpen, setInspectorOpen] = useState(true)
   const [conflict, setConflict] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -363,6 +365,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           viewer={viewer}
           left={leftPanel}
           right={inspector}
+          overlay={<ChatPanel projectId={project.id} defaultOpen={project.has_source === false} />}
           viewMode={desktop ? viewMode : '2d'}
           leftOpen={layersOpen && desktop}
           rightOpen={inspectorOpen}
