@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
-import { Box, Check, Command, PanelLeft, Save } from 'lucide-react'
+import { Box, Check, Command, Maximize2, PanelLeft, Save } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
@@ -12,6 +12,8 @@ import { CalibrateDialog } from '@/features/editor2d/CalibrateDialog'
 import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
+import { StudioLayout } from '@/features/studio/StudioLayout'
+import { toggleFullscreen } from '@/lib/fullscreen'
 import { selectIsDirty, useEditor, type ViewMode } from '@/store/editorStore'
 import { buildActions } from './actions'
 import { AreaSchedulePanel } from './AreaSchedulePanel'
@@ -42,7 +44,10 @@ function useIsDesktop(): boolean {
   return desktop
 }
 
-export function Workspace({ project, onReload }: { project: Project; onReload: () => void }) {
+export type WorkspaceLayout = 'classic' | 'studio'
+
+export function Workspace({ project, onReload, layout = 'classic' }: { project: Project; onReload: () => void; layout?: WorkspaceLayout }) {
+  const studio = layout === 'studio'
   const load = useEditor((s) => s.load)
   const model = useEditor((s) => s.model)
   const dirty = useEditor(selectIsDirty)
@@ -58,6 +63,7 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
   const setViewMode = useEditor((s) => s.setViewMode)
   const groupSize = useEditor((s) => s.group.length)
   const [layersOpen, setLayersOpen] = useState(true)
+  const [inspectorOpen, setInspectorOpen] = useState(true)
   const [conflict, setConflict] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -131,8 +137,11 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
         openPalette: () => setPalette(true),
         openHelp: () => setHelp(true),
         open3D: () => void navigate(`/p/${project.id}/3d`),
+        studio: studio
+          ? { fullscreen: () => void toggleFullscreen(), exit: () => void navigate(`/p/${project.id}`) }
+          : { open: () => void navigate(`/p/${project.id}/estudio`) },
       }),
-    [save, navigate, project.id],
+    [save, navigate, project.id, studio],
   )
   useEditorShortcuts(actions)
 
@@ -170,98 +179,109 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
     </Suspense>
   )
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <UnsavedChangesGuard dirty={dirty} onSave={() => save()} />
-      <Dialog.Root open={conflict !== null} onOpenChange={(o) => !o && setConflict(null)}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-canvas/70 backdrop-blur-sm" />
-          <Dialog.Content className="corner-ticks fixed top-1/2 left-1/2 z-50 w-[min(92vw,460px)] -translate-x-1/2 -translate-y-1/2 border border-line-strong bg-surface p-6">
-            <Dialog.Title className="font-display text-lg font-semibold">Otra versión se guardó mientras editabas</Dialog.Title>
-            <Dialog.Description className="mt-1 text-sm text-muted">
-              {conflict} Puedes cargar la versión guardada (tus cambios se descartan) o sobrescribirla con la tuya
-              (la otra queda en el historial y se puede restaurar).
-            </Dialog.Description>
-            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setConflict(null)
-                  onReload()
-                }}
-              >
-                Cargar la versión guardada
-              </Button>
-              <Button variant="primary" loading={saving} onClick={() => void save(true)}>
-                Sobrescribir con la mía
-              </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-      <Toolbar
-        trailing={
-          <>
-            {desktop && (
-              <>
-                <IconButton label="Panel de capas" active={layersOpen} onClick={() => setLayersOpen((o) => !o)}>
-                  <PanelLeft className="size-5" aria-hidden />
-                </IconButton>
-                <ToggleGroup.Root
-                  type="single"
-                  value={viewMode}
-                  onValueChange={(v) => v && setViewMode(v as ViewMode)}
-                  aria-label="Vista"
-                  className="flex rounded-md border border-line p-0.5"
-                >
-                  {(
-                    [
-                      ['2d', 'Plano', '1'],
-                      ['split', 'Dividido', '2'],
-                      ['3d', '3D', '3'],
-                    ] as const
-                  ).map(([v, l, k]) => (
-                    <ToggleGroup.Item
-                      key={v}
-                      value={v}
-                      title={`${l} (${k})`}
-                      className="h-7 rounded-sm px-2.5 text-xs text-muted data-[state=on]:bg-raised data-[state=on]:text-fg"
-                    >
-                      {l}
-                    </ToggleGroup.Item>
-                  ))}
-                </ToggleGroup.Root>
-                <IconButton label="Buscar un comando" shortcut="Ctrl+K" onClick={() => setPalette(true)}>
-                  <Command className="size-5" aria-hidden />
-                </IconButton>
-              </>
-            )}
-            <span className="hidden font-mono text-xs text-subtle xl:inline" aria-live="polite">
-              {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
-            </span>
+  const conflictDialog = (
+    <Dialog.Root open={conflict !== null} onOpenChange={(o) => !o && setConflict(null)}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-canvas/70 backdrop-blur-sm" />
+        <Dialog.Content className="corner-ticks fixed top-1/2 left-1/2 z-50 w-[min(92vw,460px)] -translate-x-1/2 -translate-y-1/2 border border-line-strong bg-surface p-6">
+          <Dialog.Title className="font-display text-lg font-semibold">Otra versión se guardó mientras editabas</Dialog.Title>
+          <Dialog.Description className="mt-1 text-sm text-muted">
+            {conflict} Puedes cargar la versión guardada (tus cambios se descartan) o sobrescribirla con la tuya
+            (la otra queda en el historial y se puede restaurar).
+          </Dialog.Description>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
-              size="sm"
-              variant={dirty ? 'primary' : 'secondary'}
-              loading={saving}
-              disabled={!dirty}
-              aria-label={dirty ? 'Guardar cambios' : 'Todo guardado'}
-              title={dirty ? 'Guardar (Ctrl+S)' : 'No hay cambios pendientes'}
-              icon={dirty ? <Save className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
-              onClick={() => void save()}
+              variant="ghost"
+              onClick={() => {
+                setConflict(null)
+                onReload()
+              }}
             >
-              <span className="hidden sm:inline">Guardar</span>
+              Cargar la versión guardada
             </Button>
-            <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} />
-            <Link
-              to={`/p/${project.id}/3d`}
-              aria-label="Recorrer en 3D"
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line-strong px-3 text-sm hover:border-accent pointer-coarse:h-11 pointer-coarse:min-w-11"
-            >
-              <Box className="size-4" aria-hidden /> <span className="hidden sm:inline">Recorrer</span>
-            </Link>
-          </>
-        }
-      />
+            <Button variant="primary" loading={saving} onClick={() => void save(true)}>
+              Sobrescribir con la mía
+            </Button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+
+  const viewToggle = (
+    <ToggleGroup.Root
+      type="single"
+      value={viewMode}
+      onValueChange={(v) => v && setViewMode(v as ViewMode)}
+      aria-label="Vista"
+      className="flex rounded-md border border-line p-0.5"
+    >
+      {(
+        [
+          ['2d', 'Plano', '1'],
+          ['split', 'Dividido', '2'],
+          ['3d', '3D', '3'],
+        ] as const
+      ).map(([v, l, k]) => (
+        <ToggleGroup.Item
+          key={v}
+          value={v}
+          title={`${l} (${k})`}
+          className="h-7 rounded-sm px-2.5 text-xs text-muted data-[state=on]:bg-raised data-[state=on]:text-fg"
+        >
+          {l}
+        </ToggleGroup.Item>
+      ))}
+    </ToggleGroup.Root>
+  )
+
+  const linkClass =
+    'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line-strong px-3 text-sm hover:border-accent pointer-coarse:h-11 pointer-coarse:min-w-11'
+
+  const trailing = (
+    <>
+      {desktop && (
+        <>
+          {!studio && (
+            <IconButton label="Panel de capas" active={layersOpen} onClick={() => setLayersOpen((o) => !o)}>
+              <PanelLeft className="size-5" aria-hidden />
+            </IconButton>
+          )}
+          {viewToggle}
+          <IconButton label="Buscar un comando" shortcut="Ctrl+K" onClick={() => setPalette(true)}>
+            <Command className="size-5" aria-hidden />
+          </IconButton>
+        </>
+      )}
+      <span className="hidden font-mono text-xs text-subtle xl:inline" aria-live="polite">
+        {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
+      </span>
+      <Button
+        size="sm"
+        variant={dirty ? 'primary' : 'secondary'}
+        loading={saving}
+        disabled={!dirty}
+        aria-label={dirty ? 'Guardar cambios' : 'Todo guardado'}
+        title={dirty ? 'Guardar (Ctrl+S)' : 'No hay cambios pendientes'}
+        icon={dirty ? <Save className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
+        onClick={() => void save()}
+      >
+        <span className="hidden sm:inline">Guardar</span>
+      </Button>
+      <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} />
+      {!studio && (
+        <Link to={`/p/${project.id}/estudio`} aria-label="Abrir el estudio a pantalla completa" title="Estudio a pantalla completa" className={linkClass}>
+          <Maximize2 className="size-4" aria-hidden /> <span className="hidden sm:inline">Estudio</span>
+        </Link>
+      )}
+      <Link to={`/p/${project.id}/3d`} aria-label="Recorrer en 3D" className={linkClass}>
+        <Box className="size-4" aria-hidden /> <span className="hidden sm:inline">Recorrer</span>
+      </Link>
+    </>
+  )
+
+  const banner = (
+    <>
       {hint && !desktop && <p className="border-b border-line bg-canvas px-3 py-1.5 text-xs text-muted">{hint}</p>}
       {(error || saveError) && (
         <div role="alert" className="flex items-center justify-between gap-2 border-b border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
@@ -271,48 +291,108 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
           </button>
         </div>
       )}
+    </>
+  )
+
+  const leftPanel = (
+    <>
+      <LayersPanel />
+      <div className="mt-6">
+        <CatalogPanel />
+      </div>
+    </>
+  )
+
+  const inspector = (
+    <Tabs.Root defaultValue="props" className="flex min-h-0 flex-1 flex-col bg-surface">
+      <Tabs.List aria-label="Inspector" className="grid shrink-0 grid-cols-2 border-b border-line">
+        {(
+          [
+            ['props', 'Propiedades'],
+            ['areas', 'Áreas'],
+          ] as const
+        ).map(([v, l]) => (
+          <Tabs.Trigger
+            key={v}
+            value={v}
+            className="h-9 text-xs text-muted data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
+          >
+            {l}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+      <Tabs.Content value="props" asChild>
+        <aside aria-label="Propiedades" className="min-h-0 flex-1 overflow-y-auto p-4">
+          {groupSize > 1 ? <GroupInspector /> : <PropertiesPanel onSolve={() => void solve()} solving={solving} />}
+        </aside>
+      </Tabs.Content>
+      <Tabs.Content value="areas" className="min-h-0 flex-1 overflow-y-auto p-4">
+        <AreaSchedulePanel projectName={project.name} />
+      </Tabs.Content>
+    </Tabs.Root>
+  )
+
+  const dialogs = (
+    <>
+      <CommandPalette open={palette} onOpenChange={setPalette} actions={actions} />
+      <ShortcutsHelp open={help} onOpenChange={setHelp} actions={actions} />
+      <CalibrateDialog
+        line={calib}
+        onClose={() => setCalib(null)}
+        onConfirm={(meters) => {
+          if (calib) dispatch(new CalibrateScale(calib.a, calib.b, meters))
+          setCalib(null)
+          useEditor.getState().setTool('select')
+        }}
+      />
+    </>
+  )
+
+  if (studio)
+    return (
+      <>
+        <UnsavedChangesGuard dirty={dirty} onSave={() => save()} />
+        {conflictDialog}
+        <StudioLayout
+          projectId={project.id}
+          title={project.name}
+          toolbar={<Toolbar trailing={trailing} />}
+          banner={banner}
+          editor={editor}
+          viewer={viewer}
+          left={leftPanel}
+          right={inspector}
+          viewMode={desktop ? viewMode : '2d'}
+          leftOpen={layersOpen && desktop}
+          rightOpen={inspectorOpen}
+          onToggleLeft={() => setLayersOpen((o) => !o)}
+          onToggleRight={() => setInspectorOpen((o) => !o)}
+          statusBar={desktop ? <StatusBar hint={hint} onHelp={() => setHelp(true)} /> : undefined}
+        />
+        {dialogs}
+      </>
+    )
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <UnsavedChangesGuard dirty={dirty} onSave={() => save()} />
+      {conflictDialog}
+      <Toolbar trailing={trailing} />
+      {banner}
 
       {desktop ? (
         <>
           <div className={`grid min-h-0 flex-1 ${layersOpen ? 'grid-cols-[220px_minmax(0,1fr)_300px]' : 'grid-cols-[minmax(0,1fr)_300px]'}`}>
             {layersOpen && (
               <aside aria-label="Capas y objetos" className="min-h-0 overflow-y-auto border-r border-line bg-surface p-3">
-                <LayersPanel />
-                <div className="mt-6">
-                  <CatalogPanel />
-                </div>
+                {leftPanel}
               </aside>
             )}
             <div className={`grid min-h-0 ${viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {viewMode !== '3d' && <section aria-label="Editor 2D" className="min-h-0 border-r border-line">{editor}</section>}
               {viewMode !== '2d' && <section aria-label="Vista 3D" className="min-h-0 border-r border-line">{viewer}</section>}
             </div>
-            <Tabs.Root defaultValue="props" className="flex min-h-0 flex-col bg-surface">
-              <Tabs.List aria-label="Inspector" className="grid shrink-0 grid-cols-2 border-b border-line">
-                {(
-                  [
-                    ['props', 'Propiedades'],
-                    ['areas', 'Áreas'],
-                  ] as const
-                ).map(([v, l]) => (
-                  <Tabs.Trigger
-                    key={v}
-                    value={v}
-                    className="h-9 text-xs text-muted data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
-                  >
-                    {l}
-                  </Tabs.Trigger>
-                ))}
-              </Tabs.List>
-              <Tabs.Content value="props" asChild>
-                <aside aria-label="Propiedades" className="min-h-0 flex-1 overflow-y-auto p-4">
-                  {groupSize > 1 ? <GroupInspector /> : <PropertiesPanel onSolve={() => void solve()} solving={solving} />}
-                </aside>
-              </Tabs.Content>
-              <Tabs.Content value="areas" className="min-h-0 flex-1 overflow-y-auto p-4">
-                <AreaSchedulePanel projectName={project.name} />
-              </Tabs.Content>
-            </Tabs.Root>
+            {inspector}
           </div>
           <StatusBar hint={hint} onHelp={() => setHelp(true)} />
         </>
@@ -342,17 +422,7 @@ export function Workspace({ project, onReload }: { project: Project; onReload: (
         </Tabs.Root>
       )}
 
-      <CommandPalette open={palette} onOpenChange={setPalette} actions={actions} />
-      <ShortcutsHelp open={help} onOpenChange={setHelp} actions={actions} />
-      <CalibrateDialog
-        line={calib}
-        onClose={() => setCalib(null)}
-        onConfirm={(meters) => {
-          if (calib) dispatch(new CalibrateScale(calib.a, calib.b, meters))
-          setCalib(null)
-          useEditor.getState().setTool('select')
-        }}
-      />
+      {dialogs}
     </div>
   )
 }

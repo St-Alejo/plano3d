@@ -45,6 +45,8 @@ export interface ActionContext {
   openPalette: () => void
   openHelp: () => void
   open3D: () => void
+  /** dentro del estudio: pantalla completa y salir; fuera: abrirlo */
+  studio?: { fullscreen: () => void; exit: () => void } | { open: () => void }
 }
 
 const mod = (e: KeyboardEvent) => e.ctrlKey || e.metaKey
@@ -161,8 +163,19 @@ export function buildActions(ctx: ActionContext): EditorAction[] {
     { id: 'view.image', label: 'Mostrar u ocultar el plano original', group: 'Vista', run: () => st().toggleLayer('image', 'hidden') },
     { id: 'project.save', label: 'Guardar', group: 'Proyecto', keys: 'Ctrl+S', match: combo('mod+s'), run: ctx.save },
     { id: 'project.3d', label: 'Recorrer en 3D', group: 'Proyecto', run: ctx.open3D },
+    ...studioActions(ctx),
     { id: 'app.palette', label: 'Buscar un comando', group: 'Proyecto', keys: 'Ctrl+K', match: combo('mod+k'), run: ctx.openPalette },
     { id: 'app.help', label: 'Ver atajos de teclado', group: 'Proyecto', keys: '?', match: combo('?'), run: ctx.openHelp },
+  ]
+}
+
+function studioActions(ctx: ActionContext): EditorAction[] {
+  const s = ctx.studio
+  if (!s) return []
+  if ('open' in s) return [{ id: 'view.studio', label: 'Abrir el estudio a pantalla completa', group: 'Vista', keys: 'F', match: combo('f'), run: s.open }]
+  return [
+    { id: 'view.fullscreen', label: 'Pantalla completa', group: 'Vista', keys: 'F', match: combo('f'), run: s.fullscreen },
+    { id: 'view.exitStudio', label: 'Salir del estudio', group: 'Vista', run: s.exit },
   ]
 }
 
