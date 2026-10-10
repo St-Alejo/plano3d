@@ -108,7 +108,7 @@ test('muro continuo: clic a clic se cierra un contorno y queda un ambiente', asy
   ] as const) {
     const p = await screenOf(page, { x, y })
     await page.mouse.click(p.x, p.y)
-    await page.waitForTimeout(120)
+    await page.waitForTimeout(60) // clics rápidos: no deben cortar la cadena
   }
   await page.keyboard.press('Control+s')
   await expect(page.getByText('guardado', { exact: true })).toBeVisible()

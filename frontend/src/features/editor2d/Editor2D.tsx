@@ -314,8 +314,12 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     setGuides([])
     const lenPx = Math.hypot(b.x - a.x, b.y - a.y)
     if (lenPx < 4 / view.scale) {
-      // un clic sin arrastrar con la herramienta muro empieza un muro continuo en ese punto
-      if (tool === 'wall' && !chain) setChain({ start: a, last: a })
+      // un clic sin arrastrar empieza un muro continuo; repetirlo en el mismo punto (doble clic) lo termina.
+      // (no se usa el dblclick del lienzo: dos clics rápidos en puntos distintos también lo disparan)
+      if (tool === 'wall') {
+        setChain(chain ? null : { start: a, last: a })
+        setHover(null)
+      }
       return
     }
     if (tool === 'room') {
@@ -478,10 +482,6 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
         onMouseUp={onUp}
         onTouchEnd={onUp}
         onMouseLeave={() => setPointer(null)}
-        onDblClick={() => {
-          setChain(null)
-          setHover(null)
-        }}
       >
         <Layer listening={false}>{image && !hidden.has('image') && <KImage image={image} width={imgW} height={imgH} opacity={0.55} />}</Layer>
 
