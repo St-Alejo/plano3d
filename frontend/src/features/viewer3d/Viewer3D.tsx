@@ -8,7 +8,8 @@ import { modelBounds } from '@/domain/model'
 import { sunDirection, type SunPosition } from '@/domain/sun'
 import { BuildingMesh, type Pick } from './BuildingMesh'
 import { prefersReducedMotion } from './motion'
-import { WalkControls, type WalkInput } from './WalkControls'
+import { DoorAnimator } from './doors'
+import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
 import type { BuiltScene } from './scene/SceneBuilder'
 import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
@@ -21,7 +22,7 @@ export interface Viewer3DProps {
   overlayUrl?: string
   overlayOpacity?: number
   flyTo?: Point | null
-  walkStart?: Point
+  walkStart?: WalkStart
   walkInput?: React.RefObject<WalkInput>
   touch?: boolean
   grow?: boolean
@@ -263,6 +264,7 @@ export function Viewer3D({
           onScene={handleScene}
           onPoint={measure?.onPoint}
         />
+        <DoorAnimator root={built?.root ?? null} />
         {measure && <MeasureMarks points={measure.points} />}
         {overlayUrl && overlayOpacity > 0 && (
           <Suspense fallback={null}>
@@ -272,7 +274,7 @@ export function Viewer3D({
         {mode === 'orbit' ? (
           <OrbitRig model={model} flyTo={flyTo} preset={preset} />
         ) : (
-          <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} />
+          <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} />
         )}
       </Canvas>
     </div>

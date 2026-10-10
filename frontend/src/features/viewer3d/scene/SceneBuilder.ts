@@ -7,12 +7,14 @@
  */
 import * as THREE from 'three'
 import type { BuildingModel, Level } from '@/api/types'
-import { curvedWallBoxes, doorLeaf, roomShapePoints, slidingLeaves, stairSteps, wallToBoxes } from '@/domain/geometry'
+import { curvedWallBoxes, roomShapePoints, slidingTracks, stairLandings, stairSteps, stairWell, swingLeaves, wallToBoxes } from '@/domain/geometry'
 import { pointAlong, wallDirection } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
 
 export const FLOOR_THICKNESS = 0.05
+/** grosor de la losa entre pisos */
+export const SLAB_THICKNESS = 0.12
 
 export interface BuiltScene {
   root: THREE.Group
@@ -102,6 +104,7 @@ export class SceneBuilder {
           mesh.position.set(mid.x, lv.elevation + o.sill + o.height / 2, mid.y)
           mesh.rotation.y = -Math.atan2(dir.y, dir.x)
           mesh.name = `glass:${o.id}`
+          mesh.userData = { kind: 'window', openingId: o.id, wallId: w.id, levelId: lv.id }
           this.glass.add(mesh)
         }
       }
@@ -142,27 +145,95 @@ export class SceneBuilder {
           this.elements.add(mesh)
         }
       }
+      // descansos entre tramos (escaleras en L y en U)
+      for (const [i, l] of stairLandings(lv.stairs ?? []).entries()) {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(...l.box.size), this.materials.stair())
+        mesh.position.set(l.box.center[0], lv.elevation + l.box.center[1], l.box.center[2])
+        mesh.rotation.y = l.box.rotationY
+        mesh.castShadow = true
+        mesh.receiveShadow = true
+        mesh.name = `landing:${lv.id}:${i}`
+        mesh.userData = { kind: 'stair', stairId: lv.stairs?.[0]?.id, levelId: lv.id }
+        this.elements.add(mesh)
+      }
     }
     return this
   }
 
+  /**
+   * Losa de cada piso superior: cubre la envolvente del nivel con el hueco de la escalera
+   * que llega desde abajo. Así al subir no se ve el vacío y hay dónde pararse fuera de
+   * los ambientes detectados (pasillos).
+   */
+  withSlabs(): this {
+    const levels = [...this.levels()].sort((a, b) => a.elevation - b.elevation)
+    levels.forEach((lv, i) => {
+      if (i === 0 || lv.walls.length === 0) return
+      const xs = lv.walls.flatMap((w) => [w.start.x, w.end.x])
+      const ys = lv.walls.flatMap((w) => [w.start.y, w.end.y])
+      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+      // la losa se dibuja en XY con y negada (como los pisos) y se acuesta
+      const shape = new THREE.Shape([new THREE.Vector2(x0, -y0), new THREE.Vector2(x1, -y0), new THREE.Vector2(x1, -y1), new THREE.Vector2(x0, -y1)])
+      const below = levels[i - 1]!
+      const well = stairWell(below.stairs ?? [])
+      if (well) shape.holes.push(new THREE.Path([new THREE.Vector2(well.minX, -well.minY), new THREE.Vector2(well.minX, -well.maxY), new THREE.Vector2(well.maxX, -well.maxY), new THREE.Vector2(well.maxX, -well.minY)]))
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: SLAB_THICKNESS, bevelEnabled: false })
+      const mesh = new THREE.Mesh(geo, this.materials.column())
+      mesh.rotation.x = -Math.PI / 2
+      mesh.position.y = lv.elevation - FLOOR_THICKNESS - SLAB_THICKNESS
+      mesh.receiveShadow = true
+      mesh.name = `slab:${lv.id}`
+      mesh.userData = { kind: 'slab', levelId: lv.id }
+      this.floors.add(mesh)
+    })
+    return this
+  }
+
+  /**
+   * Puertas animables: cada hoja cuelga de un pivote (`userData.anim`) que el recorrido
+   * interpola entre cerrada (0) y abierta (1). Batiente: gira sobre la bisagra; doble
+   * batiente: dos hojas; corrediza: la hoja se desliza a lo largo del muro.
+   */
   withDoors(): this {
     for (const lv of this.levels()) {
       for (const w of lv.walls) {
         if (w.bulge) continue
         for (const o of w.openings.filter((x) => x.kind === 'door' && x.operation !== 'none')) {
-          const leaves = o.operation === 'sliding' ? slidingLeaves(w, o) : [doorLeaf(w, o)]
-          // una corrediza ancha es un paño de vidrio (puerta-ventana), no de madera
-          const material = o.operation === 'sliding' && o.width >= GLAZED_DOOR_M ? this.materials.glass() : this.materials.door()
-          for (const leaf of leaves) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(...leaf.size), material)
-            mesh.position.set(leaf.center[0], lv.elevation + leaf.center[1], leaf.center[2])
-            mesh.rotation.y = leaf.rotationY
-            mesh.castShadow = true
-            mesh.name = `door:${o.id}`
-            mesh.userData = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
-            this.elements.add(mesh)
+          const info = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
+          const door = new THREE.Group()
+          door.name = `door:${o.id}`
+          door.userData = info
+          if (o.operation === 'sliding') {
+            // una corrediza ancha es un paño de vidrio (puerta-ventana), no de madera
+            const material = o.width >= GLAZED_DOOR_M ? this.materials.glass() : this.materials.door()
+            for (const t of slidingTracks(w, o)) {
+              const pivot = new THREE.Group()
+              pivot.position.set(t.closed.center[0], lv.elevation, t.closed.center[2])
+              pivot.rotation.y = t.closed.rotationY
+              pivot.userData = { ...info, anim: { type: 'slide', closed: [t.closed.center[0], t.closed.center[2]], open: t.open } }
+              const mesh = new THREE.Mesh(new THREE.BoxGeometry(...t.closed.size), material)
+              mesh.position.y = t.closed.center[1]
+              mesh.castShadow = true
+              mesh.userData = info
+              pivot.add(mesh)
+              door.add(pivot)
+            }
+          } else {
+            for (const leaf of swingLeaves(w, o)) {
+              const pivot = new THREE.Group()
+              pivot.position.set(leaf.hinge.x, lv.elevation, leaf.hinge.y)
+              pivot.rotation.y = leaf.closed
+              pivot.userData = { ...info, anim: { type: 'rotate', closed: leaf.closed, open: leaf.open } }
+              const mesh = new THREE.Mesh(new THREE.BoxGeometry(leaf.width, leaf.height, 0.04), this.materials.door())
+              // la hoja sale de la bisagra hacia el otro lado del vano
+              mesh.position.set(leaf.width / 2, leaf.height / 2, 0)
+              mesh.castShadow = true
+              mesh.userData = info
+              pivot.add(mesh)
+              door.add(pivot)
+            }
           }
+          this.elements.add(door)
         }
       }
     }
@@ -191,6 +262,7 @@ export class SceneBuilder {
 export function buildScene(model: BuildingModel, materials?: MaterialFactory): BuiltScene {
   return new SceneBuilder(model, materials)
     .withFloors()
+    .withSlabs()
     .withWalls()
     .withGlass()
     .withColumns()

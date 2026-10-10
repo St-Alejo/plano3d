@@ -2,7 +2,9 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { BuildingModel } from '@/api/types'
+import { kindOf } from './doors'
 import { MaterialFactory } from './scene/MaterialFactory'
+import { useWalk } from './walkStore'
 import { prefersReducedMotion } from './motion'
 import { buildScene, disposeScene, type BuiltScene } from './scene/SceneBuilder'
 
@@ -81,6 +83,13 @@ export function BuildingMesh({
     if (onPoint) {
       e.stopPropagation()
       onPoint([e.point.x, e.point.y, e.point.z])
+      return
+    }
+    // tocar una puerta la abre o la cierra (en orbitar y en recorrer; con el mouse capturado se usa E)
+    const hit = kindOf(e.object)
+    if (hit?.kind === 'door' && !document.pointerLockElement) {
+      e.stopPropagation()
+      useWalk.getState().toggleDoor(String(hit.data.openingId))
       return
     }
     if (!onPick) return

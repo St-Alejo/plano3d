@@ -2,7 +2,7 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Ruler } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point } from '@/api/types'
@@ -13,7 +13,10 @@ import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { Joystick } from './Joystick'
 import { Viewer3D, type ViewMode } from './Viewer3D'
-import type { WalkInput } from './WalkControls'
+import type { WalkInput, WalkStart } from './WalkControls'
+import { WalkHud } from './WalkHud'
+import { resetDoorProgress } from './doors'
+import { useWalk } from './walkStore'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
 import type { BuiltScene } from './scene/SceneBuilder'
 import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
@@ -29,7 +32,7 @@ export function ViewerPage() {
   const [mode, setMode] = useState<ViewMode>('orbit')
   const [overlay, setOverlay] = useState(0)
   const [flyTo, setFlyTo] = useState<Point | null>(null)
-  const [walkStart, setWalkStart] = useState<Point | undefined>()
+  const [walkStart, setWalkStart] = useState<WalkStart | undefined>()
   const [exporting, setExporting] = useState(false)
   const scene = useRef<BuiltScene | null>(null)
   const walkInput = useRef<WalkInput>({ x: 0, y: 0 })
@@ -52,7 +55,20 @@ export function ViewerPage() {
   }, [])
   const onPoint = useCallback((p: [number, number, number]) => setPoints((prev) => (prev.length >= 2 ? [p] : [...prev, p])), [])
 
-  const rooms = useMemo(() => (project?.model ? tourWaypoints(project.model.levels.flatMap((l) => l.rooms)) : []), [project])
+  // cada ambiente recuerda su nivel: al elegirlo, se aparece sobre su piso
+  const rooms = useMemo(() => {
+    const m = project?.model
+    if (!m) return []
+    const levelOf = new Map(m.levels.flatMap((l) => l.rooms.map((r) => [r.id, l.id] as const)))
+    return tourWaypoints(m.levels.flatMap((l) => l.rooms)).map((r) => ({ ...r, levelId: levelOf.get(r.id) }))
+  }, [project])
+
+  // puertas cerradas al entrar; en el celular se abren solas al acercarse
+  useEffect(() => {
+    useWalk.getState().reset()
+    resetDoorProgress()
+    useWalk.getState().setAutoDoors(touch)
+  }, [id, touch])
 
   if (loading) return <div className="p-8"><Spinner label="Cargando modelo" /></div>
   if (error || !project?.model)
@@ -97,8 +113,8 @@ export function ViewerPage() {
     canvas.toBlob((blob) => blob && downloadBlob(blob, `${fileBase}.png`), 'image/png')
   }
 
-  const goTo = (p: Point) => {
-    if (mode === 'walk') setWalkStart({ ...p })
+  const goTo = (p: Point, levelId?: string) => {
+    if (mode === 'walk') setWalkStart({ ...p, levelId })
     else setFlyTo({ ...p })
   }
 
@@ -110,7 +126,7 @@ export function ViewerPage() {
         overlayUrl={project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)}
         overlayOpacity={overlay}
         flyTo={flyTo}
-        walkStart={walkStart ?? rooms[0]?.at}
+        walkStart={walkStart ?? (rooms[0] ? { ...rooms[0].at, levelId: rooms[0].levelId } : undefined)}
         walkInput={walkInput}
         touch={touch}
         onScene={onScene}
@@ -122,6 +138,8 @@ export function ViewerPage() {
         display={display}
         measure={measuring ? { points, onPoint } : null}
       />
+
+      {mode === 'walk' && <WalkHud model={model} touch={touch} />}
 
       {/* barra superior: compacta en el celular (solo íconos) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
@@ -200,7 +218,7 @@ export function ViewerPage() {
                 {rooms.map((r) => {
                   const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
                   return (
-                    <button key={r.id} type="button" onClick={() => goTo(r.at)} className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9">
+                    <button key={r.id} type="button" onClick={() => goTo(r.at, r.levelId)} className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9">
                       <span>{r.label}</span>
                       <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
                     </button>
@@ -327,7 +345,7 @@ export function ViewerPage() {
               <button id="walk-start" type="button" className="mb-2 block rounded-md bg-brand px-3 py-2 text-sm font-medium text-brand-ink">
                 Clic para caminar
               </button>
-              <Kbd>W A S D</Kbd> moverse · mouse para mirar · <Kbd>Esc</Kbd> soltar
+              <Kbd>W A S D</Kbd> moverse · <Kbd>Shift</Kbd> correr · <Kbd>E</Kbd> abrir o usar · <Kbd>Q</Kbd>/<Kbd>Z</Kbd> piso · <Kbd>Esc</Kbd> soltar
             </div>
           ))}
       </div>
