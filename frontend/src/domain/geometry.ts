@@ -212,3 +212,109 @@ export function slidingLeaves(w: Pick<Wall, 'start' | 'end' | 'thickness'>, o: O
     rotationY,
   }))
 }
+
+/** Hoja batiente lista para animar: gira en Y sobre su bisagra entre `closed` y `open`. */
+export interface HingedLeaf {
+  /** bisagra en planta */
+  hinge: Point
+  width: number
+  height: number
+  /** rotación Y del pivote con la puerta cerrada y abierta (90°) */
+  closed: number
+  open: number
+}
+
+/**
+ * Hojas batientes de una puerta: una (batiente) o dos (doble batiente, cada una de la mitad
+ * del vano). Con el pivote en la bisagra, abrir es interpolar la rotación.
+ */
+export function swingLeaves(w: Pick<Wall, 'start' | 'end'>, o: OpeningLike & { operation?: string | null }, openDeg = 90): HingedLeaf[] {
+  const dir = wallDirection(w)
+  const side = (o.opens_left ?? true) ? 1 : -1
+  const leaf = (hingeOffset: number, along: 1 | -1, width: number): HingedLeaf => {
+    const hinge = { x: w.start.x + dir.x * hingeOffset, y: w.start.y + dir.y * hingeOffset }
+    const base = Math.atan2(dir.y * along, dir.x * along)
+    const opened = base + (side * along * -openDeg * Math.PI) / 180
+    return { hinge, width, height: o.height, closed: -base, open: -opened }
+  }
+  if (o.operation === 'double_swing') return [leaf(o.offset, 1, o.width / 2), leaf(o.offset + o.width, -1, o.width / 2)]
+  return [o.hinge_at_end ? leaf(o.offset + o.width, -1, o.width) : leaf(o.offset, 1, o.width)]
+}
+
+/** Recorrido de cada hoja corrediza: de su posición cerrada a la abierta (sobre la otra hoja). */
+export function slidingTracks(w: Pick<Wall, 'start' | 'end' | 'thickness'>, o: OpeningLike): { closed: StepBox; open: [number, number] }[] {
+  const dir = wallDirection(w)
+  return slidingLeaves(w, o).map((leaf, i) => {
+    // la primera hoja corre hacia el final del vano y deja libre su mitad; la segunda queda fija
+    const shift = i === 0 ? o.width * 0.42 : 0
+    return { closed: leaf, open: [leaf.center[0] + dir.x * shift, leaf.center[2] + dir.y * shift] }
+  })
+}
+
+/**
+ * Descansos de escaleras en L o en U: entre el final de un tramo y el arranque del siguiente
+ * (que empieza a la altura donde terminó el anterior) se pone una plataforma maciza.
+ */
+export function stairLandings(stairs: StairLike[]): { box: StepBox; top: number }[] {
+  const flights = [...stairs].sort((a, b) => (a.base ?? 0) - (b.base ?? 0))
+  const out: { box: StepBox; top: number }[] = []
+  for (let i = 0; i + 1 < flights.length; i++) {
+    const a = flights[i]!
+    const b = flights[i + 1]!
+    const top = (a.base ?? 0) + a.riser * a.steps
+    if (Math.abs((b.base ?? 0) - top) > 0.05) continue
+    const gap = Math.hypot(b.start.x - a.end.x, b.start.y - a.end.y)
+    if (gap < 0.05 || gap > 2.5) continue
+    // en el marco del tramo `a`: desde su final, hacia adelante un ancho de escalera, y lo que
+    // ocupe el arranque de `b` (en U queda al lado; en L, adelante)
+    const dir = (s: StairLike) => {
+      const l = Math.hypot(s.end.x - s.start.x, s.end.y - s.start.y) || 1
+      return { x: (s.end.x - s.start.x) / l, y: (s.end.y - s.start.y) / l }
+    }
+    const da = dir(a)
+    const db = dir(b)
+    const pa = { x: -da.y, y: da.x }
+    const pb = { x: -db.y, y: db.x }
+    const pts: Point[] = []
+    for (const k of [-1, 1]) {
+      const ea = { x: a.end.x + pa.x * k * (a.width / 2), y: a.end.y + pa.y * k * (a.width / 2) }
+      const sb = { x: b.start.x + pb.x * k * (b.width / 2), y: b.start.y + pb.y * k * (b.width / 2) }
+      pts.push(ea, { x: ea.x + da.x * a.width, y: ea.y + da.y * a.width }, sb, { x: sb.x - db.x * b.width, y: sb.y - db.y * b.width })
+    }
+    const u = pts.map((p) => (p.x - a.end.x) * da.x + (p.y - a.end.y) * da.y)
+    const v = pts.map((p) => (p.x - a.end.x) * pa.x + (p.y - a.end.y) * pa.y)
+    // nunca se mete en el tramo `a` (sus peldaños terminan en u = 0)
+    const u0 = Math.max(0, Math.min(...u))
+    const u1 = Math.max(...u)
+    const v0 = Math.min(...v)
+    const v1 = Math.max(...v)
+    const cu = (u0 + u1) / 2
+    const cv = (v0 + v1) / 2
+    out.push({
+      box: {
+        center: [a.end.x + da.x * cu + pa.x * cv, top / 2, a.end.y + da.y * cu + pa.y * cv],
+        size: [u1 - u0, top, v1 - v0],
+        rotationY: -Math.atan2(da.y, da.x),
+      },
+      top,
+    })
+  }
+  return out
+}
+
+/** Rectángulo en planta que ocupan unos tramos de escalera (el hueco que deja la losa de arriba). */
+export function stairWell(stairs: StairLike[], margin = 0.05): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  if (stairs.length === 0) return null
+  const pts = stairs.flatMap((s) => {
+    const len = Math.hypot(s.end.x - s.start.x, s.end.y - s.start.y) || 1
+    const nx = (-(s.end.y - s.start.y) / len) * (s.width / 2)
+    const ny = ((s.end.x - s.start.x) / len) * (s.width / 2)
+    return [s.start, s.end].flatMap((p) => [
+      { x: p.x + nx, y: p.y + ny },
+      { x: p.x - nx, y: p.y - ny },
+    ])
+  })
+  const xs = pts.map((p) => p.x)
+  const ys = pts.map((p) => p.y)
+  return { minX: Math.min(...xs) - margin, minY: Math.min(...ys) - margin, maxX: Math.max(...xs) + margin, maxY: Math.max(...ys) + margin }
+}
