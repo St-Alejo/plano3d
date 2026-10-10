@@ -138,6 +138,9 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const [naming, setNaming] = useState<{ roomId: string; text: string } | null>(null)
   /** puerta o ventana en arrastre: dónde quedaría (muro destino) y si cabe */
   const [ghost, setGhost] = useState<(Placement & { wall: Wall; opening: Opening }) | null>(null)
+  // muro continuo: cada clic sigue desde el final del muro anterior (Esc o doble clic termina)
+  const [chain, setChain] = useState<{ start: Point; last: Point } | null>(null)
+  const [hover, setHover] = useState<Point | null>(null)
   const grid = gridStep > 0 ? gridStep / mpp : 0 // paso de rejilla en px de imagen
   // al cambiar de herramienta se descarta la medición en curso
   const [measureTool, setMeasureTool] = useState(tool)
@@ -146,11 +149,20 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     setMeasure([])
   }
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMeasure([])
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMeasure([])
+      setChain(null)
+      setHover(null)
+    }
     window.addEventListener('keydown', esc)
     return () => window.removeEventListener('keydown', esc)
   }, [])
   if (typed && tool !== 'wall') setTyped(null)
+  if (chain && tool !== 'wall') {
+    setChain(null)
+    setHover(null)
+  }
   useEffect(() => {
     if (!typed) return
     const onKey = (e: KeyboardEvent) => {
@@ -169,7 +181,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       } else if (e.key === 'Enter') {
         const v = parseLength(typed.text)
         try {
-          if (v !== null) dispatch(new SetWallLength(useEditor.getState().levelId, typed.wallId, v))
+          if (v !== null && dispatch(new SetWallLength(useEditor.getState().levelId, typed.wallId, v))) {
+            // la cadena sigue desde el nuevo final del muro
+            const w = selectLevel(useEditor.getState())?.walls.find((x) => x.id === typed.wallId)
+            if (w) setChain((c) => (c ? { ...c, last: { x: w.end.x / mpp, y: w.end.y / mpp } } : c))
+          }
         } catch {
           /* largo inválido: se ignora */
         }
@@ -179,7 +195,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     // en captura: el largo tecleado tiene prioridad sobre los atajos de una letra
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [typed, dispatch])
+  }, [typed, dispatch, mpp])
 
   const pointerPx = (stage: Konva.Stage): Point | null => {
     const p = stage.getRelativePointerPosition()
@@ -225,7 +241,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     if (!stage || !level) return
     const p = pointerPx(stage)
     if (!p) return
-    if (tool === 'wall' || tool === 'room' || tool === 'calibrate' || tool === 'dimension') {
+    if (tool === 'wall' && chain) {
+      const s = snapWithGuides(p, { anchor: chain.last, candidates, tol: screenTol, grid })
+      setGuides(s.guides)
+      setDraft({ a: chain.last, b: s.point })
+    } else if (tool === 'wall' || tool === 'room' || tool === 'calibrate' || tool === 'dimension') {
       const s = tool !== 'calibrate' ? snapWithGuides(p, { candidates, tol: screenTol, grid }) : { point: p, guides: [] }
       setGuides(s.guides)
       setDraft({ a: s.point, b: s.point })
@@ -264,7 +284,14 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
       setBox({ ...box, b: p })
       return
     }
-    if (!draft) return
+    if (!draft) {
+      if (tool === 'wall' && chain) {
+        const s = snapWithGuides(p, { anchor: chain.last, candidates, tol: screenTol, grid })
+        setGuides(s.guides)
+        setHover(s.point)
+      }
+      return
+    }
     // el ambiente es un rectángulo: sin imán a 0°/90° respecto de la primera esquina
     const anchor = tool === 'room' ? undefined : draft.a
     const s = tool !== 'calibrate' ? snapWithGuides(p, { anchor, candidates, tol: screenTol, grid }) : { point: p, guides: [] }
@@ -286,7 +313,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     setDraft(null)
     setGuides([])
     const lenPx = Math.hypot(b.x - a.x, b.y - a.y)
-    if (lenPx < 4 / view.scale) return
+    if (lenPx < 4 / view.scale) {
+      // un clic sin arrastrar con la herramienta muro empieza un muro continuo en ese punto
+      if (tool === 'wall' && !chain) setChain({ start: a, last: a })
+      return
+    }
     if (tool === 'room') {
       const template = level.walls[0]
       try {
@@ -306,6 +337,11 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
         if (dispatch(cmd)) {
           select({ kind: 'wall', id: cmd.wall.id })
           setTyped({ wallId: cmd.wall.id, text: '' })
+          // cerrar el contorno (volver al primer punto) termina la cadena
+          const start = chain?.start ?? a
+          const closed = chain && Math.hypot(b.x - start.x, b.y - start.y) < 1e-6
+          setChain(closed ? null : { start, last: b })
+          setHover(null)
         }
       } catch {
         /* muro demasiado corto: se ignora */
@@ -442,6 +478,10 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
         onMouseUp={onUp}
         onTouchEnd={onUp}
         onMouseLeave={() => setPointer(null)}
+        onDblClick={() => {
+          setChain(null)
+          setHover(null)
+        }}
       >
         <Layer listening={false}>{image && !hidden.has('image') && <KImage image={image} width={imgW} height={imgH} opacity={0.55} />}</Layer>
 
@@ -702,6 +742,19 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               fill="rgba(95,212,232,0.08)"
               listening={false}
             />
+          )}
+          {chain && hover && !draft && (
+            <Line
+              points={[chain.last.x, chain.last.y, hover.x, hover.y]}
+              stroke={C.draft}
+              strokeWidth={(level?.walls[0]?.thickness ?? 0.15) / mpp}
+              opacity={0.45}
+              lineCap="square"
+              listening={false}
+            />
+          )}
+          {chain && (
+            <Circle x={chain.last.x} y={chain.last.y} radius={6 / view.scale} fill={C.draft} listening={false} />
           )}
           {draft && tool === 'room' && (() => {
             const r = rectFrom(toM(draft.a), toM(draft.b))

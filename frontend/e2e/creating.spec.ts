@@ -91,3 +91,31 @@ test('dibujar una casa escribiendo en el chat', async ({ page, request }) => {
   expect(lv.walls.flatMap((w) => w.openings.map((o) => o.kind)).sort()).toEqual(['door', 'door', 'window'])
   await request.delete(`/api/projects/${created.id}`)
 })
+
+test('muro continuo: clic a clic se cierra un contorno y queda un ambiente', async ({ page, request }) => {
+  const created = (await (await request.post('/api/projects/blank', { data: { name: 'Muro continuo E2E' } })).json()) as { id: string }
+  await page.goto(`/p/${created.id}/estudio`)
+  await page.getByRole('button', { name: 'Cerrar chat' }).click()
+  await page.keyboard.press('1')
+  await expect(page.locator('[data-testid=editor2d] canvas').first()).toBeVisible()
+  await page.keyboard.press('w')
+  for (const [x, y] of [
+    [1, 1],
+    [5, 1],
+    [5, 4],
+    [1, 4],
+    [1, 1],
+  ] as const) {
+    const p = await screenOf(page, { x, y })
+    await page.mouse.click(p.x, p.y)
+    await page.waitForTimeout(120)
+  }
+  await page.keyboard.press('Control+s')
+  await expect(page.getByText('guardado', { exact: true })).toBeVisible()
+  const saved = (await (await page.request.get(`/api/projects/${created.id}`)).json()) as {
+    model: { levels: { walls: unknown[]; rooms: unknown[] }[] }
+  }
+  expect(saved.model.levels[0]!.walls).toHaveLength(4)
+  expect(saved.model.levels[0]!.rooms).toHaveLength(1)
+  await request.delete(`/api/projects/${created.id}`)
+})
