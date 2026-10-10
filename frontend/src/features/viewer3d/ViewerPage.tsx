@@ -11,6 +11,7 @@ import { roomArea } from '@/domain/model'
 import { sunPosition } from '@/domain/sun'
 import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
+import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
 import { Viewer3D, type ViewMode } from './Viewer3D'
 import type { WalkInput, WalkStart } from './WalkControls'
@@ -171,6 +172,9 @@ export function ViewerPage() {
           </ToggleGroup.Item>
         </ToggleGroup.Root>
         <div className="pointer-events-auto flex gap-2">
+        <div className="rounded-md bg-canvas/80 backdrop-blur [&>button]:h-11 [&>button]:w-11">
+          <TutorialButton compact initial="recorrer" />
+        </div>
         {/* en el celular la barra no da para más botones: PNG y OBJ desde pantallas medianas */}
         <div className="hidden gap-2 sm:flex">
         <Button className="h-11" aria-label="Guardar imagen PNG" title="Guardar la vista actual como imagen" icon={<Camera className="size-4" aria-hidden />} onClick={doPng}>

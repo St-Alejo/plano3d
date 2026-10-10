@@ -8,7 +8,7 @@ import { CirclePlay, X } from 'lucide-react'
 import { useState } from 'react'
 import clsx from 'clsx'
 
-export type TutorialKind = 'editar' | 'crear'
+export type TutorialKind = 'editar' | 'crear' | 'recorrer'
 
 const TUTORIALS: Record<TutorialKind, { title: string; src: string; summary: string }> = {
   editar: {
@@ -20,6 +20,11 @@ const TUTORIALS: Record<TutorialKind, { title: string; src: string; summary: str
     title: 'Crear desde cero',
     src: '/tutoriales/crear.webm',
     summary: 'Escribe en el chat «sala de 4x5, cocina de 3x3 al este de la sala…» o dibuja ambientes con la herramienta H.',
+  },
+  recorrer: {
+    title: 'Recorrer en 3D',
+    src: '/tutoriales/recorrer.webm',
+    summary: 'Camina con W A S D o el joystick, abre puertas con E o el botón, sube escaleras caminando o con Q/Z, y usa el minimapa.',
   },
 }
 
@@ -84,9 +89,9 @@ export function TutorialButton({ initial = 'editar', compact = false, label = 'V
             </Dialog.Close>
           </div>
           <Tabs.Root value={tab} onValueChange={(v) => setTab(v as TutorialKind)}>
-            <Tabs.List aria-label="Tutoriales" className="mb-3 grid grid-cols-2 rounded-md border border-line p-0.5">
+            <Tabs.List aria-label="Tutoriales" className="mb-3 grid grid-cols-3 rounded-md border border-line p-0.5">
               {(Object.keys(TUTORIALS) as TutorialKind[]).map((k) => (
-                <Tabs.Trigger key={k} value={k} className="h-9 rounded-sm text-sm text-muted data-[state=active]:bg-raised data-[state=active]:text-fg">
+                <Tabs.Trigger key={k} value={k} className="h-9 rounded-sm text-xs sm:text-sm text-muted data-[state=active]:bg-raised data-[state=active]:text-fg">
                   {TUTORIALS[k].title}
                 </Tabs.Trigger>
               ))}
