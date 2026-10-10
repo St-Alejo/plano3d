@@ -28,8 +28,8 @@ const room = (id: string, label: string, x0: number, y0: number, x1: number, y1:
 })
 
 /**
- * Pasillo largo (8×2 m) que termina en una puerta hacia un cuarto con una escalera que sube
- * a una planta alta. Se arranca en el pasillo mirando hacia la puerta (la dirección más libre).
+ * Pasillo largo (8×3 m) que termina en una puerta hacia un cuarto con una escalera (a un
+ * costado, fuera del paso) que sube a una planta alta. Se arranca en el pasillo mirando hacia la puerta (la dirección más libre).
  */
 async function makeHouse(request: APIRequestContext): Promise<string> {
   const p = (await (await request.post('/api/projects/blank', { data: { name: 'Recorrido E2E' } })).json()) as {
@@ -46,19 +46,19 @@ async function makeHouse(request: APIRequestContext): Promise<string> {
         elevation: 0,
         walls: [
           wall('a', 0, 0, 12, 0),
-          wall('b', 12, 0, 12, 2),
-          wall('c', 12, 2, 0, 2),
-          wall('d', 0, 2, 0, 0),
-          wall('puerta', 8, 0, 8, 2, [{ id: 'op1', kind: 'door', offset: 0.55, width: 0.9, height: 2.1, sill: 0, confidence: 1 }]),
+          wall('b', 12, 0, 12, 3),
+          wall('c', 12, 3, 0, 3),
+          wall('d', 0, 3, 0, 0),
+          wall('puerta', 8, 0, 8, 3, [{ id: 'op1', kind: 'door', offset: 1.05, width: 0.9, height: 2.1, sill: 0, confidence: 1 }]),
         ],
-        rooms: [room('r1', 'A pasillo', 0.08, 0.08, 7.92, 1.92), room('r2', 'B cuarto', 8.08, 0.08, 11.92, 1.92)],
-        stairs: [{ id: 'st', start: { x: 11.5, y: 1 }, end: { x: 8.5, y: 1 }, width: 0.9, steps: 15, riser: 0.18, base: 0, confidence: 1 }],
+        rooms: [room('r1', 'A pasillo', 0.08, 0.08, 7.92, 2.92), room('r2', 'B cuarto', 8.08, 0.08, 11.92, 2.92)],
+        stairs: [{ id: 'st', start: { x: 11.5, y: 2.55 }, end: { x: 8.5, y: 2.55 }, width: 0.8, steps: 15, riser: 0.18, base: 0, confidence: 1 }],
       },
       {
         id: 'pa',
         name: 'Planta alta',
         elevation: 2.7,
-        walls: [wall('a2', 0, 0, 12, 0), wall('b2', 12, 0, 12, 2), wall('c2', 12, 2, 0, 2), wall('d2', 0, 2, 0, 0)],
+        walls: [wall('a2', 0, 0, 12, 0), wall('b2', 12, 0, 12, 3), wall('c2', 12, 3, 0, 3), wall('d2', 0, 3, 0, 0)],
         rooms: [],
       },
     ],
@@ -100,6 +100,7 @@ test.describe('escritorio', () => {
     await page.keyboard.up('KeyW')
     await expect(page.getByRole('button', { name: /Abrir puerta/ })).toBeVisible()
     await page.keyboard.press('KeyE')
+    // abierta y al frente, se ofrece cerrarla
     await expect(page.getByRole('button', { name: /Cerrar puerta/ })).toBeVisible()
     await page.keyboard.down('KeyW')
     await expect.poll(() => num(page, 'x'), { timeout: 8000 }).toBeGreaterThan(8.3)

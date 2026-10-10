@@ -355,6 +355,13 @@ export function WalkControls({
         }
       }
     }
+    // una puerta abierta gira fuera de la mira: si está cerca y al frente, se ofrece cerrarla
+    if (!focus) {
+      const near = nearestDoor(world, b.levelId, { x: b.x, y: b.z }, 1.6)
+      if (near && st.doors[near.openingId] && forward.x * (near.center.x - b.x) + forward.z * (near.center.y - b.z) > 0) {
+        focus = { kind: 'door', id: near.openingId, open: true }
+      }
+    }
     st.setFocus(focus)
 
     const idx = world.levels.findIndex((l) => l.id === b.levelId)
