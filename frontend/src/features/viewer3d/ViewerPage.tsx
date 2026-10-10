@@ -62,6 +62,12 @@ export function ViewerPage() {
     const levelOf = new Map(m.levels.flatMap((l) => l.rooms.map((r) => [r.id, l.id] as const)))
     return tourWaypoints(m.levels.flatMap((l) => l.rooms)).map((r) => ({ ...r, levelId: levelOf.get(r.id) }))
   }, [project])
+  // el recorrido empieza en el ambiente más grande (la sala, casi siempre), no en el primero por nombre
+  const firstRoom = useMemo(() => {
+    const all = project?.model?.levels.flatMap((l) => l.rooms) ?? []
+    const big = all.reduce<(typeof all)[number] | undefined>((best, r) => (!best || roomArea(r) > roomArea(best) ? r : best), undefined)
+    return rooms.find((r) => r.id === big?.id) ?? rooms[0]
+  }, [project, rooms])
 
   // puertas cerradas al entrar; en el celular se abren solas al acercarse
   useEffect(() => {
@@ -126,7 +132,7 @@ export function ViewerPage() {
         overlayUrl={project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)}
         overlayOpacity={overlay}
         flyTo={flyTo}
-        walkStart={walkStart ?? (rooms[0] ? { ...rooms[0].at, levelId: rooms[0].levelId } : undefined)}
+        walkStart={walkStart ?? (firstRoom ? { ...firstRoom.at, levelId: firstRoom.levelId } : undefined)}
         walkInput={walkInput}
         touch={touch}
         onScene={onScene}
