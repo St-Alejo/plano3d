@@ -4,6 +4,11 @@
  * secuencia) se registran aquí a medida que existen.
  */
 import type { BuildingModel } from '@/api/types'
+import type { BrickId } from '@/domain/structure/bricks'
+import { deriveStructure } from '@/domain/structure/derive'
+import { masonryLayout } from '@/domain/structure/masonryLayout'
+import { NSR10 } from '@/domain/structure/nsr10'
+import { ConstructionBuilder } from '../scene/ConstructionBuilder'
 import type { MaterialFactory } from '../scene/MaterialFactory'
 import { buildScene, type BuiltScene } from '../scene/SceneBuilder'
 
@@ -15,6 +20,10 @@ export interface ModeOptions {
   roof?: boolean
   /** calidad alta: guardaescobas, marcos, alféizares y terreno */
   realism?: boolean
+  /** obra: unidad de mampostería */
+  brick?: BrickId
+  /** obra: ocultar el ladrillo para ver el esqueleto de concreto */
+  hideMasonry?: boolean
 }
 
 export interface ViewModeStrategy {
@@ -23,6 +32,10 @@ export interface ViewModeStrategy {
   /** una línea para el título del botón */
   hint: string
   build(model: BuildingModel, materials: MaterialFactory, opts?: ModeOptions): BuiltScene
+  /** altura del terreno (por defecto justo bajo el piso); la obra lo baja para ver la cimentación */
+  groundY?: number
+  /** modo de obra: muestra la ficha de cada elemento, la leyenda y la unidad de mampostería */
+  construction?: boolean
 }
 
 export const presentacion: ViewModeStrategy = {
@@ -32,7 +45,25 @@ export const presentacion: ViewModeStrategy = {
   build: (model, materials, opts = {}) => buildScene(model, materials, { details: opts.realism, site: opts.realism, roof: opts.roof }),
 }
 
-export const PLAN_MODES: ViewModeStrategy[] = [presentacion]
+export const obra: ViewModeStrategy = {
+  id: 'obra',
+  label: 'Obra (maestro)',
+  hint: 'Cimentación, columnetas, vigas y ladrillo pieza por pieza, con sus medidas',
+  groundY: -(NSR10.foundationDepth + 0.1),
+  construction: true,
+  build: (model, materials, opts = {}) => {
+    const s = deriveStructure(model, { brick: opts.brick ?? 'tolete' })
+    return new ConstructionBuilder(model, s, materials)
+      .withFoundations()
+      .withColumns()
+      .withBeams()
+      .withSlabs()
+      .withMasonry(opts.hideMasonry ? [] : masonryLayout(model, s))
+      .build()
+  },
+}
+
+export const PLAN_MODES: ViewModeStrategy[] = [presentacion, obra]
 
 /** La estrategia de un id (por ejemplo `?modo=` de la URL); uno desconocido cae en Presentación. */
 export function planMode(id: string | null | undefined): ViewModeStrategy {

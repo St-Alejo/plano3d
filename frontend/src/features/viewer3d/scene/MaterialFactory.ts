@@ -25,6 +25,17 @@ const FLOORS: { match: RegExp; spec: FloorSpec }[] = [
 ]
 const DEFAULT_FLOOR: FloorSpec = { color: '#bfae96', roughness: 0.6, material: 'porcelanato' }
 
+/** Tonos de concreto por tipo de elemento (también los usa la leyenda del modo Obra). */
+export const CONCRETE_TINT = {
+  footing: '#8f8b84',
+  plinth: '#a9a49a',
+  column: '#d9d6cf',
+  beam: '#c2bdb3',
+  lintel: '#c9b9a0',
+  slab: '#b8b5ad',
+  lean: '#7d7a74',
+} as const
+
 export interface MaterialOptions {
   /**
    * Cargar las fotos PBR (color, relieve y rugosidad). Apagado por defecto: en las
@@ -231,6 +242,28 @@ export class MaterialFactory {
 
   roof(): THREE.MeshStandardMaterial {
     return this.cached('roof', () => new THREE.MeshStandardMaterial(this.pbr('teja', '#ffffff', 1) ?? { color: '#b5583a', roughness: 0.8 }))
+  }
+
+  /**
+   * Obra negra: concreto de los elementos estructurales. El tono distingue el tipo de
+   * elemento en la leyenda (cimiento oscuro, columnetas claras, vigas intermedias).
+   */
+  concrete(kind: 'footing' | 'plinth' | 'column' | 'beam' | 'lintel' | 'slab' | 'lean'): THREE.MeshStandardMaterial {
+    const tint = CONCRETE_TINT[kind]
+    return this.cached(`concrete:${kind}`, () => new THREE.MeshStandardMaterial(this.pbr('concreto', tint, 0.6) ?? { color: tint, roughness: 0.9 }))
+  }
+
+  /** Ladrillo de arcilla: cada pieza se tiñe aparte (InstancedMesh.setColorAt), el material es blanco. */
+  brick(): THREE.MeshStandardMaterial {
+    return this.cached('brick', () => new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85 }))
+  }
+
+  mortar(): THREE.MeshStandardMaterial {
+    return this.cached('mortar', () => new THREE.MeshStandardMaterial({ color: '#b9b2a4', roughness: 1 }))
+  }
+
+  earth(): THREE.MeshStandardMaterial {
+    return this.cached('earth', () => new THREE.MeshStandardMaterial(this.pbr('tierra', '#a08a6c', 0.8) ?? { color: '#8a7358', roughness: 1 }))
   }
 
   lawn(): THREE.MeshStandardMaterial {

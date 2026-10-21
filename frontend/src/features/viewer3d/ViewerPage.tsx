@@ -19,6 +19,8 @@ import { WalkHud } from './WalkHud'
 import { resetDoorProgress } from './doors'
 import { useWalk } from './walkStore'
 import { PLAN_MODES, planMode } from './modes'
+import { ObraPanel } from './ObraPanel'
+import type { BrickId } from '@/domain/structure/bricks'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
 import { exportRoot, type BuiltScene } from './scene/SceneBuilder'
 import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
@@ -89,6 +91,10 @@ export function ViewerPage() {
     }
   }
   const [roof, setRoof] = useState(false)
+  // modo obra: unidad de mampostería, esqueleto sin ladrillo y elemento tocado
+  const [brick, setBrick] = useState<BrickId>('tolete')
+  const [hideMasonry, setHideMasonry] = useState(false)
+  const [elementId, setElementId] = useState<string | null>(null)
   const [sunOn, setSunOn] = useState(false)
   const [sunDate, setSunDate] = useState(today)
   const [sunHour, setSunHour] = useState(10)
@@ -193,6 +199,10 @@ export function ViewerPage() {
         strategy={strategy}
         quality={quality}
         roof={roof}
+        brick={brick}
+        hideMasonry={hideMasonry}
+        highlightElementId={strategy.construction ? elementId : null}
+        onElement={strategy.construction && !measuring ? setElementId : undefined}
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
@@ -278,6 +288,17 @@ export function ViewerPage() {
                   ))}
                 </ToggleGroup.Root>
               )}
+              {strategy.construction && (
+                <ObraPanel
+                  model={model}
+                  brick={brick}
+                  onBrick={setBrick}
+                  hideMasonry={hideMasonry}
+                  onHideMasonry={setHideMasonry}
+                  elementId={elementId}
+                  onClose={() => setElementId(null)}
+                />
+              )}
               <label id="overlay-label" className="flex justify-between text-xs text-muted">
                 <span>Plano original sobre el modelo</span>
                 <span className="font-mono">{Math.round(overlay * 100)}%</span>
@@ -288,7 +309,7 @@ export function ViewerPage() {
                 </Slider.Track>
                 <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Opacidad del plano original" />
               </Slider.Root>
-              <nav aria-label="Ambientes" className="flex max-h-40 flex-col overflow-y-auto">
+              <nav aria-label="Ambientes" className="flex max-h-40 shrink-0 flex-col overflow-y-auto">
                 {rooms.map((r) => {
                   const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
                   return (
@@ -323,10 +344,12 @@ export function ViewerPage() {
                     <option value="baja">Baja (fluida)</option>
                   </select>
                 </label>
-                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
-                  <span>Cubierta (techo de teja)</span>
-                  <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
-                </label>
+                {!strategy.construction && (
+                  <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                    <span>Cubierta (techo de teja)</span>
+                    <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                  </label>
+                )}
                 <label className="flex items-center justify-between gap-2 text-xs">
                   <span>Visualización</span>
                   <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>

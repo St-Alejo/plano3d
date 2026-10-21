@@ -13,7 +13,7 @@ import { prefersReducedMotion } from './motion'
 import { DoorAnimator } from './doors'
 import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
 import type { BuiltScene } from './scene/SceneBuilder'
-import type { ViewModeStrategy } from './modes'
+import type { ModeOptions, ViewModeStrategy } from './modes'
 import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 export type ViewMode = 'orbit' | 'walk'
@@ -51,6 +51,11 @@ export interface Viewer3DProps {
   quality?: Quality
   /** cubierta sobre el último piso */
   roof?: boolean
+  /** modo obra: unidad de mampostería, ocultar el ladrillo y elemento tocado/resaltado */
+  brick?: ModeOptions['brick']
+  hideMasonry?: boolean
+  highlightElementId?: string | null
+  onElement?: (id: string) => void
 }
 
 function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: string; opacity: number }) {
@@ -131,7 +136,7 @@ function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: Poin
   )
 }
 
-function Lights({ model, ground, sun, quality }: { model: BuildingModel; ground: string; sun?: SunPosition | null; quality: Quality }) {
+function Lights({ model, ground, sun, quality, groundY = -0.06 }: { model: BuildingModel; ground: string; sun?: SunPosition | null; quality: Quality; groundY?: number }) {
   const { center, size } = useMemo(() => modelBounds(model), [model])
   // con estudio solar, la luz principal sale de la dirección real del sol
   const dir = sun ? sunDirection(sun) : null
@@ -174,7 +179,7 @@ function Lights({ model, ground, sun, quality }: { model: BuildingModel; ground:
           <Environment files={`${import.meta.env.BASE_URL}hdri/cielo_1k.hdr`} background backgroundBlurriness={0.02} environmentIntensity={0.8} />
         </Suspense>
       )}
-      <mesh rotation-x={-Math.PI / 2} position={[center.x, -0.06, center.y]} receiveShadow>
+      <mesh rotation-x={-Math.PI / 2} position={[center.x, groundY, center.y]} receiveShadow>
         <planeGeometry args={[Math.max(size * 6, 400), Math.max(size * 6, 400)]} />
         <meshStandardMaterial color={ground} roughness={1} />
       </mesh>
@@ -255,6 +260,10 @@ export function Viewer3D({
   // incrustado (editor, vista previa) va liviano; la página 3D pasa la calidad elegida
   quality = 'baja',
   roof = false,
+  brick,
+  hideMasonry,
+  highlightElementId,
+  onElement,
 }: Viewer3DProps) {
   const [built, setBuilt] = useState<BuiltScene | null>(null)
   // estable: BuildingMesh libera la escena anterior cuando cambia este callback
@@ -286,7 +295,7 @@ export function Viewer3D({
         <color attach="background" args={[sky]} />
         {/* con cielo HDRI la niebla toma el tono del horizonte: el terreno se funde sin borde */}
         <fog attach="fog" args={quality === 'alta' ? ['#c5cdd2', 35, 170] : [sky, 30, 120]} />
-        <Lights model={model} ground={quality === 'baja' ? (sky === '#151816' ? '#202421' : '#d5d6cd') : sky === '#151816' ? '#3d4733' : '#8c9a72'} sun={sun} quality={quality} />
+        <Lights model={model} ground={quality === 'baja' ? (sky === '#151816' ? '#202421' : '#d5d6cd') : sky === '#151816' ? '#3d4733' : '#8c9a72'} sun={sun} quality={quality} groundY={strategy?.groundY} />
         <SectionClip height={section} />
         <BuildingMesh
           model={model}
@@ -295,7 +304,11 @@ export function Viewer3D({
           textures={quality === 'alta'}
           grow={grow}
           highlightWallId={highlightWallId}
+          highlightElementId={highlightElementId}
+          brick={brick}
+          hideMasonry={hideMasonry}
           onPick={onPick}
+          onElement={onElement}
           onScene={handleScene}
           onPoint={measure?.onPoint}
         />
