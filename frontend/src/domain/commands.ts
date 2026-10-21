@@ -209,7 +209,7 @@ export class UpdateWall extends WallEdit {
   constructor(
     levelId: string,
     wallId: string,
-    private readonly patch: Partial<Pick<Wall, 'thickness' | 'height' | 'material'>>,
+    private readonly patch: Partial<Pick<Wall, 'thickness' | 'height' | 'material' | 'kind' | 'structural'>>,
   ) {
     super(levelId, wallId)
   }

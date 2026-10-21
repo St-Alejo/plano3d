@@ -1,5 +1,5 @@
 import { AlertTriangle, AlignCenterHorizontal, FlipHorizontal2, Info, OctagonAlert, Trash2 } from 'lucide-react'
-import type { Dimension, MeasureStatus, Opening, Room } from '@/api/types'
+import type { Dimension, MeasureStatus, Opening, Room, WallKind } from '@/api/types'
 import { useState } from 'react'
 import {
   DeleteOpening,
@@ -22,6 +22,14 @@ import { GRID_STEPS, type Selection } from '@/store/editorStore'
 import { FurnitureInspector, MaterialSelect } from './FurnitureInspector'
 import { ColumnInspector, StairInspector } from './ItemInspector'
 import { FLOOR_MATERIALS, WALL_MATERIALS } from '@/domain/materials'
+import { isConfined } from '@/domain/structure/derive'
+
+const WALL_KIND_LABEL: Record<WallKind, string> = {
+  unknown: 'Sin definir (se confina)',
+  exterior: 'Fachada',
+  interior: 'Interior',
+  partition: 'Tabique (no estructural)',
+}
 import { Badge, Button, TextField } from '@/components/ui'
 import { selectLevel, useEditor } from '@/store/editorStore'
 
@@ -219,6 +227,35 @@ export function PropertiesPanel({ onSolve, solving = false }: SolveProps = {}) {
         <NumberField key={`${selection.id}-Grosor-${w.thickness}`} label="Grosor" suffix="m" min={0.02} step={0.01} value={w.thickness} onCommit={(v) => dispatch(new UpdateWall(level.id, w.id, { thickness: v }))} />
         <NumberField key={`${selection.id}-Altura-${w.height}`} label="Altura" suffix="m" min={0.5} step={0.1} value={w.height} onCommit={(v) => dispatch(new UpdateWall(level.id, w.id, { height: v }))} />
         <MaterialSelect label="Acabado" value={w.material} options={WALL_MATERIALS} onChange={(id) => id && dispatch(new SetWallMaterial(level.id, [w.id], id))} />
+        <fieldset className="flex flex-col gap-2 border-t border-line pt-3">
+          <legend className="text-xs font-medium">Obra (mampostería confinada)</legend>
+          <label className="flex items-center justify-between gap-2 text-xs">
+            <span>Tipo de muro</span>
+            <select
+              value={w.kind ?? 'unknown'}
+              onChange={(e) => dispatch(new UpdateWall(level.id, w.id, { kind: e.target.value as WallKind }))}
+              className="h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11"
+            >
+              {(Object.keys(WALL_KIND_LABEL) as WallKind[]).map((k) => (
+                <option key={k} value={k}>
+                  {WALL_KIND_LABEL[k]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+            <span>Estructural (se confina aunque sea tabique)</span>
+            <input
+              type="checkbox"
+              checked={w.structural === true}
+              onChange={(e) => dispatch(new UpdateWall(level.id, w.id, { structural: e.target.checked }))}
+              className="size-4 accent-[var(--color-accent)]"
+            />
+          </label>
+          <p className="text-xs text-subtle">
+            {isConfined(w) ? 'Lleva columnetas, viga de amarre y cimiento.' : 'Tabique: no se confina ni lleva cimiento propio.'}
+          </p>
+        </fieldset>
         <Button
           variant="danger"
           icon={<Trash2 className="size-4" aria-hidden />}
