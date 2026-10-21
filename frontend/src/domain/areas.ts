@@ -3,6 +3,7 @@
  * Lógica pura; la interfaz lo muestra, lo exporta a CSV y lo imprime.
  */
 import type { Level, Point, RoomType } from '@/api/types'
+import { csv, csvCell, csvNum } from './csv'
 import { roomArea } from './model'
 
 export const ROOM_TYPE_LABEL: Record<RoomType, string> = {
@@ -54,23 +55,13 @@ export function areaSchedule(level: Level): AreaSchedule {
   return { rows, total: rows.reduce((s, r) => s + r.area, 0) }
 }
 
-/** marca de orden de bytes: Excel la necesita para leer el UTF-8 (tildes, m²) */
-const BOM = String.fromCharCode(0xfeff)
-
-/** Número con coma decimal (Excel en español la interpreta como número). */
-const num = (v: number) => v.toFixed(2).replace('.', ',')
-const cell = (v: string) => (/[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
-
 /**
  * CSV separado por punto y coma, con BOM para que Excel respete las tildes.
  * Incluye el porcentaje de cada ambiente y la fila de total.
  */
 export function areaCsv(schedule: AreaSchedule): string {
   const head = ['Ambiente', 'Tipo', 'Área (m²)', 'Perímetro (m)', '% del total']
-  const lines = schedule.rows.map((r) =>
-    [cell(r.label), cell(r.type), num(r.area), num(r.perimeter), num(schedule.total ? (r.area / schedule.total) * 100 : 0)].join(';'),
-  )
-  lines.push(['Área útil total', '', num(schedule.total), '', num(schedule.total ? 100 : 0)].join(';'))
-  const EOL = '\r\n'
-  return BOM + [head.join(';'), ...lines].join(EOL) + EOL
+  const rows = schedule.rows.map((r) => [csvCell(r.label), csvCell(r.type), csvNum(r.area), csvNum(r.perimeter), csvNum(schedule.total ? (r.area / schedule.total) * 100 : 0)])
+  rows.push(['Área útil total', '', csvNum(schedule.total), '', csvNum(schedule.total ? 100 : 0)])
+  return csv(head, rows)
 }
