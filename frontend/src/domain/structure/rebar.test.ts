@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { sampleModel, wall } from '@/test/fixtures'
 import { deriveStructure } from './derive'
 import { BARS, NSR10 } from './nsr10'
-import { barWeight, rebarSchedule, steelByDiameter, stirrupCount } from './rebar'
+import { barWeight, rebarCsv, rebarSchedule, steelByDiameter, stirrupCount, stirrupPositions } from './rebar'
 
 describe('estribos', () => {
   it('a 10 cm en los 45 cm de cada nudo y a 20 cm en el centro', () => {
@@ -61,5 +61,41 @@ describe('despiece', () => {
     // una casa de 70 m² en un piso lleva del orden de cientos de kilos, no toneladas
     expect(total).toBeGreaterThan(150)
     expect(total).toBeLessThan(1500)
+  })
+})
+
+describe('posición de los estribos', () => {
+  it('tantos como el despiece, en orden, densos junto a los nudos', () => {
+    const s = NSR10.columnRebar.stirrups
+    for (const len of [0.6, 1, 2, 2.7, 4.3]) {
+      const p = stirrupPositions(len, s)
+      expect(p).toHaveLength(stirrupCount(len, s))
+      expect(p[0]).toBe(0)
+      expect(p.at(-1)).toBeCloseTo(len)
+      for (let i = 1; i < p.length; i++) expect(p[i]! - p[i - 1]!).toBeGreaterThan(0)
+      // ninguna separación pasa de la general; junto al nudo, de la de nudo
+      for (let i = 1; i < p.length; i++) expect(p[i]! - p[i - 1]!).toBeLessThanOrEqual(s.spacing + 1e-9)
+      expect(p[1]! - p[0]!).toBeLessThanOrEqual(s.nodeSpacing! + 1e-9)
+    }
+  })
+})
+
+describe('cartilla en CSV', () => {
+  const bars = rebarSchedule(deriveStructure(sampleModel()))
+  const text = rebarCsv(bars)
+  const BOM = String.fromCharCode(0xfeff)
+  const rows = text.slice(BOM.length).trim().split('\r\n')
+
+  it('BOM, punto y coma, una fila por marca y los totales por diámetro', () => {
+    expect(text.startsWith(BOM)).toBe(true)
+    expect(rows[0]).toBe('Marca;Elemento;Barra;Forma;Tramos (m);Cantidad;Largo de corte (m);Largo total (m);Peso (kg)')
+    const diameters = steelByDiameter(bars).size
+    expect(rows).toHaveLength(1 + bars.length + diameters)
+    expect(rows.at(-1)).toMatch(/^Total;;Nº\d/)
+  })
+
+  it('coma decimal: Excel en español lo lee como número', () => {
+    const first = rows[1]!.split(';')
+    expect(first[6]).toMatch(/^\d+,\d{2}$/)
   })
 })

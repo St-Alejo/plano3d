@@ -36,6 +36,9 @@ export const CONCRETE_TINT = {
   lean: '#7d7a74',
 } as const
 
+/** Color de cada diámetro de barra en el despiece (el mismo de la leyenda). */
+export const BAR_TINT = { 2: '#d08b3a', 3: '#b2462b', 4: '#3c6f93', 5: '#6b4ba0' } as const
+
 export interface MaterialOptions {
   /**
    * Cargar las fotos PBR (color, relieve y rugosidad). Apagado por defecto: en las
@@ -251,6 +254,16 @@ export class MaterialFactory {
   concrete(kind: 'footing' | 'plinth' | 'column' | 'beam' | 'lintel' | 'slab' | 'lean'): THREE.MeshStandardMaterial {
     const tint = CONCRETE_TINT[kind]
     return this.cached(`concrete:${kind}`, () => new THREE.MeshStandardMaterial(this.pbr('concreto', tint, 0.6) ?? { color: tint, roughness: 0.9 }))
+  }
+
+  /** Concreto a rayos X (despiece de acero): deja ver las barras por dentro. */
+  ghostConcrete(kind: keyof typeof CONCRETE_TINT): THREE.MeshStandardMaterial {
+    return this.cached(`ghost:${kind}`, () => new THREE.MeshStandardMaterial({ color: CONCRETE_TINT[kind], roughness: 0.9, transparent: true, opacity: 0.18, depthWrite: false }))
+  }
+
+  /** Acero de refuerzo: blanco, cada barra se tiñe por diámetro (InstancedMesh.setColorAt). */
+  steel(): THREE.MeshStandardMaterial {
+    return this.cached('steel', () => new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: 0.45, roughness: 0.5 }))
   }
 
   /** Ladrillo de arcilla: cada pieza se tiñe aparte (InstancedMesh.setColorAt), el material es blanco. */

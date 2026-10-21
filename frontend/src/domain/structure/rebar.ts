@@ -2,6 +2,7 @@
  * Despiece de acero: de cada elemento estructural salen sus barras con forma, largo de
  * corte y cantidad, como en la cartilla que se le entrega al ferretero y al maestro.
  */
+import { csv, csvNum } from '../csv'
 import { distance } from '../model'
 import type { LinearElement, Structure, TieColumn } from './derive'
 import { BARS, NSR10, type BarNo, type Reinforcement } from './nsr10'
@@ -30,6 +31,23 @@ export function stirrupCount(length: number, s: Reinforcement['stirrups']): numb
   const dense = zone > 0 ? 2 * Math.ceil(zone / s.nodeSpacing! - 1e-9) : 0
   const middle = length - 2 * zone
   return dense + Math.max(0, Math.ceil(middle / s.spacing - 1e-9)) + 1
+}
+
+/**
+ * Dónde va cada estribo a lo largo de `length` (desde 0): denso en las zonas de nudo y a la
+ * separación general en el centro. Da tantas posiciones como `stirrupCount`.
+ */
+export function stirrupPositions(length: number, s: Reinforcement['stirrups']): number[] {
+  if (length <= 0) return []
+  const zone = s.nodeSpacing && s.nodeZone ? Math.min(s.nodeZone, length / 2) : 0
+  const dense = zone > 0 ? Math.ceil(zone / s.nodeSpacing! - 1e-9) : 0
+  const middle = length - 2 * zone
+  const steps = Math.max(0, Math.ceil(middle / s.spacing - 1e-9))
+  const out: number[] = [0]
+  for (let i = 1; i <= dense; i++) out.push((zone * i) / dense)
+  for (let i = 1; i <= steps; i++) out.push(zone + (middle * i) / steps)
+  for (let i = 1; i <= dense; i++) out.push(length - zone + (zone * i) / dense)
+  return out
 }
 
 /** Estribo cerrado con dos ganchos de 135° alrededor de una sección b × h con recubrimiento c. */
@@ -89,4 +107,24 @@ export function steelByDiameter(bars: Bar[]): Map<BarNo, number> {
   const out = new Map<BarNo, number>()
   for (const b of bars) out.set(b.no, (out.get(b.no) ?? 0) + barWeight(b))
   return out
+}
+
+const SHAPE_LABEL: Record<BarShape, string> = { recta: 'Recta', L: 'Con ganchos de 90°', estribo: 'Estribo cerrado 135°' }
+
+/** Despiece para el ferretero: una fila por marca y el total de kilos por diámetro. */
+export function rebarCsv(bars: Bar[]): string {
+  const head = ['Marca', 'Elemento', 'Barra', 'Forma', 'Tramos (m)', 'Cantidad', 'Largo de corte (m)', 'Largo total (m)', 'Peso (kg)']
+  const rows = bars.map((b) => [
+    b.mark,
+    b.elementId,
+    BARS[b.no].name,
+    SHAPE_LABEL[b.shape],
+    b.legs.map((l) => csvNum(l)).join(' + '),
+    String(b.count),
+    csvNum(b.cutLength),
+    csvNum(b.cutLength * b.count),
+    csvNum(barWeight(b), 1),
+  ])
+  for (const [no, kg] of [...steelByDiameter(bars)].sort(([a], [b]) => a - b)) rows.push(['Total', '', BARS[no].name, '', '', '', '', '', csvNum(kg, 1)])
+  return csv(head, rows)
 }

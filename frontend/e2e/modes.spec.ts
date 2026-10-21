@@ -82,3 +82,27 @@ test('modo obra: selector, enlace, leyenda y ficha al tocar un elemento', async 
   await expect(page.getByRole('region', { name: 'Obra' })).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test('despiece de acero: cartilla, fila ↔ 3D y CSV para el ferretero', async ({ page }) => {
+  test.slow()
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(`/p/${projectId}/3d?modo=acero`)
+  const steel = page.getByRole('region', { name: 'Despiece de acero' })
+  await expect(steel.getByRole('list', { name: 'Acero por diámetro' })).toContainText('Total acero')
+  // en acero no se ofrecen los controles de mampostería
+  await expect(page.getByRole('combobox', { name: 'Unidad de mampostería' })).toHaveCount(0)
+
+  // tocar una fila la marca y abre la ficha del elemento (que también se resalta en el 3D)
+  const row = steel.getByRole('row').nth(1)
+  const mark = (await row.getByRole('cell').first().textContent())!.trim()
+  await row.click()
+  await expect(row).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('article', { name: 'Ficha del elemento' })).toContainText(mark.replace(/-[LE]$/, ''))
+
+  const download = page.waitForEvent('download')
+  await steel.getByRole('button', { name: 'Descargar despiece (CSV)' }).click()
+  const file = await download
+  expect(file.suggestedFilename()).toMatch(/^despiece-acero-.*\.csv$/)
+  expect(errors).toEqual([])
+})

@@ -296,7 +296,10 @@ export function ViewerPage() {
                   hideMasonry={hideMasonry}
                   onHideMasonry={setHideMasonry}
                   elementId={elementId}
+                  onElement={setElementId}
                   onClose={() => setElementId(null)}
+                  steel={strategy.steel}
+                  fileBase={fileBase}
                 />
               )}
               <label id="overlay-label" className="flex justify-between text-xs text-muted">

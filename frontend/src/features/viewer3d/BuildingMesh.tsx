@@ -17,13 +17,13 @@ const HIGHLIGHT = new THREE.Color('#2f80ed')
 
 /**
  * Resalta un elemento de obra: las mallas con ese `elementId` toman el material de resaltado
- * y, en los ladrillos instanciados, las piezas de ese paño se tiñen de azul.
+ * y, en las mallas instanciadas (ladrillos, barras), las piezas de ese paño o elemento se tiñen de azul.
  */
 function highlightStructure(root: THREE.Object3D, id: string | null | undefined, highlight: THREE.Material) {
   root.traverse((obj) => {
     if (!(obj instanceof THREE.Mesh) || obj.userData.kind !== 'structure') return
     if (obj instanceof THREE.InstancedMesh) {
-      const panels = obj.userData.panelIds as string[] | undefined
+      const panels = obj.userData.instanceIds as string[] | undefined
       const colors = obj.instanceColor
       if (!panels || !colors) return
       const base = (obj.userData.baseColors ??= Float32Array.from(colors.array)) as Float32Array
@@ -143,9 +143,9 @@ export function BuildingMesh({
       useWalk.getState().toggleDoor(String(hit.data.openingId))
       return
     }
-    const data = e.object.userData as { kind?: string; wallId?: string; roomId?: string; furnitureId?: string; elementId?: string; panelIds?: string[] }
+    const data = e.object.userData as { kind?: string; wallId?: string; roomId?: string; furnitureId?: string; elementId?: string; instanceIds?: string[] }
     if (data.kind === 'structure' && onElement) {
-      const id = data.elementId ?? (e.instanceId != null ? data.panelIds?.[e.instanceId] : undefined)
+      const id = data.elementId ?? (e.instanceId != null ? data.instanceIds?.[e.instanceId] : undefined)
       if (id) {
         e.stopPropagation()
         onElement(id)

@@ -36,6 +36,8 @@ export interface ViewModeStrategy {
   groundY?: number
   /** modo de obra: muestra la ficha de cada elemento, la leyenda y la unidad de mampostería */
   construction?: boolean
+  /** despiece de acero: muestra la cartilla de barras en lugar de los controles de mampostería */
+  steel?: boolean
 }
 
 export const presentacion: ViewModeStrategy = {
@@ -63,7 +65,19 @@ export const obra: ViewModeStrategy = {
   },
 }
 
-export const PLAN_MODES: ViewModeStrategy[] = [presentacion, obra]
+export const acero: ViewModeStrategy = {
+  id: 'acero',
+  label: 'Despiece de acero',
+  hint: 'El hierro de cada elemento con su diámetro real, y la cartilla de despiece',
+  groundY: obra.groundY,
+  construction: true,
+  steel: true,
+  // concreto a rayos X: se ve cómo va el hierro por dentro
+  build: (model, materials, opts = {}) =>
+    new ConstructionBuilder(model, deriveStructure(model, { brick: opts.brick ?? 'tolete' }), materials, true).withFoundations().withColumns().withBeams().withRebar().build(),
+}
+
+export const PLAN_MODES: ViewModeStrategy[] = [presentacion, obra, acero]
 
 /** La estrategia de un id (por ejemplo `?modo=` de la URL); uno desconocido cae en Presentación. */
 export function planMode(id: string | null | undefined): ViewModeStrategy {
