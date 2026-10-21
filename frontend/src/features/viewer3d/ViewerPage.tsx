@@ -13,20 +13,46 @@ import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
-import { Viewer3D, type ViewMode } from './Viewer3D'
+import { Viewer3D, type Quality, type ViewMode } from './Viewer3D'
 import type { WalkInput, WalkStart } from './WalkControls'
 import { WalkHud } from './WalkHud'
 import { resetDoorProgress } from './doors'
 import { useWalk } from './walkStore'
 import { PLAN_MODES, planMode } from './modes'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
-import type { BuiltScene } from './scene/SceneBuilder'
+import { exportRoot, type BuiltScene } from './scene/SceneBuilder'
 import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 const SELECT = 'h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11'
 const today = () => new Date().toISOString().slice(0, 10)
 
 const isTouch = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
+const QUALITY_KEY = 'plano3d-calidad'
+
+/** ¿El navegador dibuja sin tarjeta gráfica (SwiftShader, llvmpipe)? Ahí la calidad alta no fluye. */
+function softwareRenderer(): boolean {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2')
+    const info = gl?.getExtension('WEBGL_debug_renderer_info')
+    const name = gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : ''
+    gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    return /swiftshader|llvmpipe|software|basic render/i.test(name)
+  } catch {
+    return false
+  }
+}
+
+/** La calidad elegida se recuerda; sin elección, baja en celulares o sin GPU, y alta en el resto. */
+function initialQuality(): Quality {
+  try {
+    const saved = localStorage.getItem(QUALITY_KEY)
+    if (saved === 'alta' || saved === 'baja') return saved
+  } catch {
+    // almacenamiento bloqueado: se usa el valor por defecto
+  }
+  return isTouch() || softwareRenderer() ? 'baja' : 'alta'
+}
 
 export function ViewerPage() {
   const { id = '' } = useParams()
@@ -53,6 +79,16 @@ export function ViewerPage() {
   // herramientas de análisis
   const [preset, setPreset] = useState<{ name: CameraPreset; nonce: number } | null>(null)
   const [display, setDisplay] = useState<DisplayMode>('material')
+  const [quality, setQualityState] = useState<Quality>(initialQuality)
+  const setQuality = (q: Quality) => {
+    setQualityState(q)
+    try {
+      localStorage.setItem(QUALITY_KEY, q)
+    } catch {
+      // sin almacenamiento la elección dura lo que la página
+    }
+  }
+  const [roof, setRoof] = useState(false)
   const [sunOn, setSunOn] = useState(false)
   const [sunDate, setSunDate] = useState(today)
   const [sunHour, setSunHour] = useState(10)
@@ -101,7 +137,7 @@ export function ViewerPage() {
     if (!scene.current) return
     setExporting(true)
     try {
-      downloadBlob(await exportGlb(scene.current.root), `${project.name.replace(/[^\w-]+/g, '_') || 'plano'}.glb`)
+      downloadBlob(await exportGlb(exportRoot(scene.current)), `${project.name.replace(/[^\w-]+/g, '_') || 'plano'}.glb`)
     } finally {
       setExporting(false)
     }
@@ -118,7 +154,7 @@ export function ViewerPage() {
     if (!scene.current) return
     setExporting(true)
     try {
-      downloadBlob(await exportObj(scene.current.root), `${fileBase}.obj`)
+      downloadBlob(await exportObj(exportRoot(scene.current)), `${fileBase}.obj`)
     } finally {
       setExporting(false)
     }
@@ -155,6 +191,8 @@ export function ViewerPage() {
         display={display}
         measure={measuring ? { points, onPoint } : null}
         strategy={strategy}
+        quality={quality}
+        roof={roof}
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
@@ -278,6 +316,17 @@ export function ViewerPage() {
                     </button>
                   ))}
                 </div>
+                <label className="flex items-center justify-between gap-2 text-xs">
+                  <span>Calidad</span>
+                  <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} className={SELECT} title="Alta: cielo, sombras suaves y oclusión ambiental. Baja: más fluida en equipos modestos.">
+                    <option value="alta">Alta (realista)</option>
+                    <option value="baja">Baja (fluida)</option>
+                  </select>
+                </label>
+                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                  <span>Cubierta (techo de teja)</span>
+                  <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                </label>
                 <label className="flex items-center justify-between gap-2 text-xs">
                   <span>Visualización</span>
                   <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>

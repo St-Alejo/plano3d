@@ -35,6 +35,7 @@ const SPEED = 2.2 // m/s
 const RUN = 1.8
 const LOOK_SPEED = 0.005
 const REACH = 2.4 // m: hasta dónde alcanza el "mirar y actuar"
+const DECOR = new Set(['detail', 'roof', 'site'])
 const AUTO_DOOR = 1.3 // m: las puertas automáticas abren a esta distancia
 // vectores de trabajo reutilizados en cada frame (sin crear basura para el GC)
 const forward = new THREE.Vector3()
@@ -341,7 +342,8 @@ export function WalkControls({
     if (root) {
       ray.setFromCamera(new THREE.Vector2(0, 0), cam)
       ray.far = REACH
-      const hit = ray.intersectObject(root, true).find((h) => h.object.visible)
+      // marcos, guardaescobas, cubierta y terreno son decorado: la mira los atraviesa
+      const hit = ray.intersectObject(root, true).find((h) => h.object.visible && !DECOR.has(String(kindOf(h.object)?.kind)))
       const k = hit ? kindOf(hit.object) : null
       if (k?.kind === 'door') {
         const id = String(k.data.openingId)

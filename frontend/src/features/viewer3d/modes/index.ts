@@ -9,19 +9,27 @@ import { buildScene, type BuiltScene } from '../scene/SceneBuilder'
 
 export type PlanMode = 'presentacion' | 'obra' | 'acero' | 'secuencia'
 
+/** Ajustes de la vista que cada modo puede respetar. */
+export interface ModeOptions {
+  /** mostrar la cubierta (tapa los ambientes vistos desde arriba) */
+  roof?: boolean
+  /** calidad alta: guardaescobas, marcos, alféizares y terreno */
+  realism?: boolean
+}
+
 export interface ViewModeStrategy {
   id: PlanMode
   label: string
   /** una línea para el título del botón */
   hint: string
-  build(model: BuildingModel, materials: MaterialFactory): BuiltScene
+  build(model: BuildingModel, materials: MaterialFactory, opts?: ModeOptions): BuiltScene
 }
 
 export const presentacion: ViewModeStrategy = {
   id: 'presentacion',
   label: 'Presentación',
   hint: 'La casa terminada, con acabados y muebles',
-  build: (model, materials) => buildScene(model, materials),
+  build: (model, materials, opts = {}) => buildScene(model, materials, { details: opts.realism, site: opts.realism, roof: opts.roof }),
 }
 
 export const PLAN_MODES: ViewModeStrategy[] = [presentacion]

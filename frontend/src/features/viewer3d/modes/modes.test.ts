@@ -11,12 +11,13 @@ const names = (s: ReturnType<typeof buildScene>) => {
 }
 
 describe('modos del plano', () => {
-  it('presentación arma exactamente la escena de siempre', () => {
-    const a = presentacion.build(sampleModel(), new MaterialFactory())
-    const b = buildScene(sampleModel())
-    expect(names(a)).toEqual(names(b))
-    disposeScene(a)
-    disposeScene(b)
+  it('presentación es la escena de siempre; en calidad alta suma detalles y terreno', () => {
+    const plain = presentacion.build(sampleModel(), new MaterialFactory())
+    expect(names(plain)).toEqual(names(buildScene(sampleModel())))
+    const real = presentacion.build(sampleModel(), new MaterialFactory(), { realism: true, roof: true })
+    expect(names(real)).toEqual(names(buildScene(sampleModel(), undefined, { details: true, site: true, roof: true })))
+    disposeScene(plain)
+    disposeScene(real)
   })
 
   it('un id desconocido o vacío cae en presentación', () => {

@@ -25,6 +25,8 @@ export interface Pick {
 export function BuildingMesh({
   model,
   strategy = presentacion,
+  roof = false,
+  textures = true,
   grow = true,
   highlightWallId,
   onPick,
@@ -34,6 +36,10 @@ export function BuildingMesh({
   model: BuildingModel
   /** modo del plano: qué escena se arma (presentación, obra...) */
   strategy?: ViewModeStrategy
+  /** cubierta sobre el último piso */
+  roof?: boolean
+  /** calidad alta: fotos PBR y detalles; sin ellas, la escena liviana de color liso */
+  textures?: boolean
   grow?: boolean
   highlightWallId?: string | null
   onPick?: (p: Pick) => void
@@ -41,14 +47,15 @@ export function BuildingMesh({
   /** modo medir: recibe el punto de la superficie tocada, en lugar de seleccionar */
   onPoint?: (p: [number, number, number]) => void
 }) {
-  const materials = useMemo(() => new MaterialFactory(), [])
-  const scene = useMemo(() => strategy.build(model, materials), [model, materials, strategy])
+  // fotos PBR (public/texturas): se cargan en segundo plano, el material se ve liso mientras tanto
+  const materials = useMemo(() => new MaterialFactory({ textures, base: import.meta.env.BASE_URL }), [textures])
+  const scene = useMemo(() => strategy.build(model, materials, { roof, realism: textures }), [model, materials, strategy, roof, textures])
   const progress = useRef(grow && !prefersReducedMotion() ? 0 : 1)
   const grownFor = useRef<string | null>(null)
   // useFrame anima a través de un ref: la escena memorizada no se muta durante el render
   const animated = useRef<THREE.Object3D[]>([])
   useEffect(() => {
-    animated.current = [scene.walls, scene.glass, scene.furniture]
+    animated.current = [scene.walls, scene.glass, scene.furniture, scene.details]
   }, [scene])
 
   // solo se anima la primera vez que aparece cada proyecto, no en cada edición

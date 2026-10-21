@@ -5,23 +5,35 @@
  */
 import * as THREE from 'three'
 import type { Tone } from '@/domain/catalog'
-import { floorMaterial, wallMaterial, type Pattern } from '@/domain/materials'
+import { floorMaterial, TEXTURES, wallMaterial, type MaterialSpec, type Pattern, type TextureId } from '@/domain/materials'
 
 export type WallPart = 'solid' | 'sill' | 'lintel'
 
 interface FloorSpec {
   color: string
   roughness: number
+  /** acabado del catálogo que se usa cuando hay texturas */
+  material: string
 }
 
 const FLOORS: { match: RegExp; spec: FloorSpec }[] = [
-  { match: /cocin|kitchen/i, spec: { color: '#d9d4c7', roughness: 0.35 } },
-  { match: /ba[ñn]o|bath|toilet/i, spec: { color: '#cfd8dc', roughness: 0.25 } },
-  { match: /dormi|habita|bed|cuarto/i, spec: { color: '#b08a64', roughness: 0.6 } },
-  { match: /sala|living|estar|comedor/i, spec: { color: '#a67c52', roughness: 0.55 } },
-  { match: /patio|terraza|balc/i, spec: { color: '#9e9e92', roughness: 0.85 } },
+  { match: /cocin|kitchen/i, spec: { color: '#d9d4c7', roughness: 0.35, material: 'porcelanato' } },
+  { match: /ba[ñn]o|bath|toilet/i, spec: { color: '#cfd8dc', roughness: 0.25, material: 'baldosa_gris' } },
+  { match: /dormi|habita|alcoba|bed|cuarto/i, spec: { color: '#b08a64', roughness: 0.6, material: 'madera_roble' } },
+  { match: /sala|living|estar|comedor/i, spec: { color: '#a67c52', roughness: 0.55, material: 'madera_roble' } },
+  { match: /patio|terraza|balc/i, spec: { color: '#9e9e92', roughness: 0.85, material: 'cemento' } },
 ]
-const DEFAULT_FLOOR: FloorSpec = { color: '#bfae96', roughness: 0.6 }
+const DEFAULT_FLOOR: FloorSpec = { color: '#bfae96', roughness: 0.6, material: 'porcelanato' }
+
+export interface MaterialOptions {
+  /**
+   * Cargar las fotos PBR (color, relieve y rugosidad). Apagado por defecto: en las
+   * pruebas no hay imágenes y el resultado es el material de color liso de siempre.
+   */
+  textures?: boolean
+  /** raíz de los archivos públicos (import.meta.env.BASE_URL) */
+  base?: string
+}
 
 const TONES: Record<Tone, { color: string; roughness: number; metalness?: number; opacity?: number }> = {
   wood: { color: '#9a7452', roughness: 0.6 },
@@ -81,6 +93,51 @@ function patternTexture(pattern: Pattern, color: string): THREE.Texture | null {
 
 export class MaterialFactory {
   private readonly cache = new Map<string, THREE.Material>()
+  private readonly maps = new Map<string, THREE.Texture>()
+  private readonly loader: THREE.TextureLoader | null
+  private readonly base: string
+
+  constructor(options: MaterialOptions = {}) {
+    this.loader = options.textures && typeof document !== 'undefined' ? new THREE.TextureLoader() : null
+    this.base = options.base ?? '/'
+  }
+
+  get textured(): boolean {
+    return this.loader !== null
+  }
+
+  /** Un mapa de la textura, repetido cada `tileM` metros (las UV de la escena están en metros). */
+  private map(id: TextureId, kind: 'color' | 'normal' | 'rough'): THREE.Texture {
+    const key = `${id}:${kind}`
+    let t = this.maps.get(key)
+    if (!t) {
+      t = this.loader!.load(`${this.base}texturas/${id}/${kind}.webp`)
+      t.wrapS = t.wrapT = THREE.RepeatWrapping
+      const k = 1 / TEXTURES[id].tileM
+      t.repeat.set(k, k)
+      t.anisotropy = 8
+      if (kind === 'color') t.colorSpace = THREE.SRGBColorSpace
+      this.maps.set(key, t)
+    }
+    return t
+  }
+
+  /** Parámetros PBR de una textura, o null si no se cargan texturas. */
+  private pbr(id: TextureId | undefined, tint = '#ffffff', normal = 0.8): THREE.MeshStandardMaterialParameters | null {
+    if (!this.loader || !id) return null
+    return {
+      color: tint,
+      map: this.map(id, 'color'),
+      normalMap: this.map(id, 'normal'),
+      normalScale: new THREE.Vector2(normal, normal),
+      roughnessMap: this.map(id, 'rough'),
+      roughness: 1,
+    }
+  }
+
+  private finish(spec: MaterialSpec): THREE.MeshStandardMaterialParameters | null {
+    return this.pbr(spec.texture, spec.tint)
+  }
 
   private cached<M extends THREE.Material>(key: string, make: () => M): M {
     let m = this.cache.get(key)
@@ -96,7 +153,7 @@ export class MaterialFactory {
   wall(part: WallPart = 'solid', materialId = 'plaster'): THREE.MeshStandardMaterial {
     const spec = wallMaterial(materialId) ?? wallMaterial('plaster')!
     return this.cached(`wall:${spec.id}:${part}`, () => {
-      const m = new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness })
+      const m = new THREE.MeshStandardMaterial(this.finish(spec) ?? { color: spec.color, roughness: spec.roughness })
       // dinteles y antepechos un tono más oscuro: se leen los huecos a la distancia
       if (part !== 'solid') m.color.multiplyScalar(0.95)
       return m
@@ -108,6 +165,8 @@ export class MaterialFactory {
     const spec = floorMaterial(materialId)
     if (!spec) return this.floorFor(label)
     return this.cached(`floor:${spec.id}`, () => {
+      const pbr = this.finish(spec)
+      if (pbr) return new THREE.MeshStandardMaterial(pbr)
       const map = patternTexture(spec.pattern, spec.color)
       return new THREE.MeshStandardMaterial({ color: map ? '#ffffff' : spec.color, map, roughness: spec.roughness })
     })
@@ -131,6 +190,7 @@ export class MaterialFactory {
 
   floorFor(label: string): THREE.MeshStandardMaterial {
     const spec = FLOORS.find((f) => f.match.test(label))?.spec ?? DEFAULT_FLOOR
+    if (this.textured) return this.floor(spec.material, label)
     return this.cached(
       `floor:${spec.color}`,
       () => new THREE.MeshStandardMaterial({ color: spec.color, roughness: spec.roughness }),
@@ -138,15 +198,43 @@ export class MaterialFactory {
   }
 
   column(): THREE.MeshStandardMaterial {
-    return this.cached('column', () => new THREE.MeshStandardMaterial({ color: '#c9c6bd', roughness: 0.8 }))
+    return this.cached('column', () => new THREE.MeshStandardMaterial(this.pbr('concreto', '#d2d0c8') ?? { color: '#c9c6bd', roughness: 0.8 }))
   }
 
   stair(): THREE.MeshStandardMaterial {
-    return this.cached('stair', () => new THREE.MeshStandardMaterial({ color: '#a98c6a', roughness: 0.6 }))
+    return this.cached('stair', () => new THREE.MeshStandardMaterial(this.pbr('madera', '#c9a582') ?? { color: '#a98c6a', roughness: 0.6 }))
   }
 
   door(): THREE.MeshStandardMaterial {
-    return this.cached('door', () => new THREE.MeshStandardMaterial({ color: '#8d6e4f', roughness: 0.55 }))
+    return this.cached('door', () => new THREE.MeshStandardMaterial(this.pbr('madera', '#b48c66', 0.5) ?? { color: '#8d6e4f', roughness: 0.55 }))
+  }
+
+  /** guardaescobas y sobrecimiento a la vista */
+  skirting(): THREE.MeshStandardMaterial {
+    return this.cached('skirting', () => new THREE.MeshStandardMaterial(this.pbr('concreto', '#8e8c86', 0.4) ?? { color: '#8e8c86', roughness: 0.7 }))
+  }
+
+  /** perfilería de aluminio de ventanas */
+  frame(): THREE.MeshStandardMaterial {
+    return this.cached('frame', () => new THREE.MeshStandardMaterial({ color: '#d9dcdc', roughness: 0.35, metalness: 0.7 }))
+  }
+
+  /** marco de madera de las puertas */
+  doorFrame(): THREE.MeshStandardMaterial {
+    return this.cached('doorFrame', () => new THREE.MeshStandardMaterial(this.pbr('madera', '#8f6a4b', 0.5) ?? { color: '#6f5139', roughness: 0.55 }))
+  }
+
+  /** alféizar de ventana y andén perimetral */
+  sill(): THREE.MeshStandardMaterial {
+    return this.cached('sill', () => new THREE.MeshStandardMaterial(this.pbr('concreto', '#e4e2da', 0.5) ?? { color: '#dedcd4', roughness: 0.6 }))
+  }
+
+  roof(): THREE.MeshStandardMaterial {
+    return this.cached('roof', () => new THREE.MeshStandardMaterial(this.pbr('teja', '#ffffff', 1) ?? { color: '#b5583a', roughness: 0.8 }))
+  }
+
+  lawn(): THREE.MeshStandardMaterial {
+    return this.cached('lawn', () => new THREE.MeshStandardMaterial(this.pbr('pasto', '#c9d8b0', 0.6) ?? { color: '#7f9a62', roughness: 1 }))
   }
 
   glass(): THREE.MeshPhysicalMaterial {
@@ -172,10 +260,15 @@ export class MaterialFactory {
   }
 
   dispose(): void {
+    const shared = new Set(this.maps.values())
     this.cache.forEach((m) => {
-      if (m instanceof THREE.MeshStandardMaterial) m.map?.dispose()
+      // la textura procedural de piso es propia del material
+      if (m instanceof THREE.MeshStandardMaterial && m.map && !shared.has(m.map)) m.map.dispose()
       m.dispose()
     })
     this.cache.clear()
+    // los mapas PBR se comparten entre materiales: se liberan una sola vez aquí
+    this.maps.forEach((t) => t.dispose())
+    this.maps.clear()
   }
 }

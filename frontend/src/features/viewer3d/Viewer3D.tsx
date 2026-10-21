@@ -1,4 +1,6 @@
-import { Html, Line, OrbitControls, useTexture } from '@react-three/drei'
+import { Environment, Html, Line, OrbitControls, useTexture } from '@react-three/drei'
+import { EffectComposer, N8AO, SMAA, ToneMapping } from '@react-three/postprocessing'
+import { ToneMappingMode } from 'postprocessing'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
@@ -15,6 +17,9 @@ import type { ViewModeStrategy } from './modes'
 import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 export type ViewMode = 'orbit' | 'walk'
+
+/** alta: cielo HDRI, oclusión ambiental y antialias; baja: solo luces (celulares) */
+export type Quality = 'alta' | 'baja'
 
 export interface Viewer3DProps {
   model: BuildingModel
@@ -43,6 +48,9 @@ export interface Viewer3DProps {
   measure?: { points: [number, number, number][]; onPoint: (p: [number, number, number]) => void } | null
   /** modo del plano (presentación por defecto) */
   strategy?: ViewModeStrategy
+  quality?: Quality
+  /** cubierta sobre el último piso */
+  roof?: boolean
 }
 
 function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: string; opacity: number }) {
@@ -123,15 +131,19 @@ function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: Poin
   )
 }
 
-function Lights({ model, ground, sun }: { model: BuildingModel; ground: string; sun?: SunPosition | null }) {
+function Lights({ model, ground, sun, quality }: { model: BuildingModel; ground: string; sun?: SunPosition | null; quality: Quality }) {
   const { center, size } = useMemo(() => modelBounds(model), [model])
   // con estudio solar, la luz principal sale de la dirección real del sol
   const dir = sun ? sunDirection(sun) : null
   const day = !sun || sun.altitude > 0
   const sunPos: [number, number, number] = dir
     ? [center.x + dir[0] * size * 2.2, Math.max(0.5, dir[1] * size * 2.2), center.y + dir[2] * size * 2.2]
-    : [center.x + size * 0.35, size * 2.2, center.y + size * 0.25]
+    : quality === 'alta'
+      ? // luz de media tarde desde un costado: la casa arroja sombra hacia la cámara y las caras se distinguen
+        [center.x - size * 0.9, size * 1.5, center.y + size * 0.5]
+      : [center.x + size * 0.35, size * 2.2, center.y + size * 0.25]
   const light = useRef<THREE.DirectionalLight>(null)
+  const hdri = quality === 'alta'
   useEffect(() => {
     const l = light.current
     if (!l) return
@@ -144,18 +156,26 @@ function Lights({ model, ground, sun }: { model: BuildingModel; ground: string; 
   }, [center, size])
   return (
     <>
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#eaf4ff', '#3a3f4a', 1.4]} />
+      {/* el cielo HDRI ya ilumina de todos lados: las luces de relleno bajan para no lavar los colores */}
+      <ambientLight intensity={hdri ? 0.12 : 0.55} />
+      <hemisphereLight args={['#eaf4ff', '#3a3f4a', hdri ? 0.35 : 1.4]} />
       <directionalLight
         ref={light}
         position={sunPos}
-        intensity={day ? 2.0 : 0.05}
+        intensity={day ? (hdri ? 2.6 : 2.0) : 0.05}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
+        shadow-normalBias={0.02}
+        shadow-radius={hdri ? 4 : 1}
       />
+      {hdri && (
+        <Suspense fallback={null}>
+          <Environment files={`${import.meta.env.BASE_URL}hdri/cielo_1k.hdr`} background backgroundBlurriness={0.02} environmentIntensity={0.8} />
+        </Suspense>
+      )}
       <mesh rotation-x={-Math.PI / 2} position={[center.x, -0.06, center.y]} receiveShadow>
-        <planeGeometry args={[size * 6, size * 6]} />
+        <planeGeometry args={[Math.max(size * 6, 400), Math.max(size * 6, 400)]} />
         <meshStandardMaterial color={ground} roughness={1} />
       </mesh>
     </>
@@ -232,6 +252,9 @@ export function Viewer3D({
   display = 'material',
   measure,
   strategy,
+  // incrustado (editor, vista previa) va liviano; la página 3D pasa la calidad elegida
+  quality = 'baja',
+  roof = false,
 }: Viewer3DProps) {
   const [built, setBuilt] = useState<BuiltScene | null>(null)
   // estable: BuildingMesh libera la escena anterior cuando cambia este callback
@@ -255,14 +278,21 @@ export function Viewer3D({
         dpr={[1, 2]}
         camera={{ fov: 55, near: 0.05, far: 500, position: [10, 10, 10] }}
         gl={{ preserveDrawingBuffer: true, antialias: true }}
+        onCreated={({ gl }) => {
+          // AgX conserva los colores de las texturas mejor que ACES con luz fuerte
+          gl.toneMapping = THREE.AgXToneMapping
+        }}
       >
         <color attach="background" args={[sky]} />
-        <fog attach="fog" args={[sky, 30, 120]} />
-        <Lights model={model} ground={sky === '#151816' ? '#202421' : '#d5d6cd'} sun={sun} />
+        {/* con cielo HDRI la niebla toma el tono del horizonte: el terreno se funde sin borde */}
+        <fog attach="fog" args={quality === 'alta' ? ['#c5cdd2', 35, 170] : [sky, 30, 120]} />
+        <Lights model={model} ground={quality === 'baja' ? (sky === '#151816' ? '#202421' : '#d5d6cd') : sky === '#151816' ? '#3d4733' : '#8c9a72'} sun={sun} quality={quality} />
         <SectionClip height={section} />
         <BuildingMesh
           model={model}
           strategy={strategy}
+          roof={roof}
+          textures={quality === 'alta'}
           grow={grow}
           highlightWallId={highlightWallId}
           onPick={onPick}
@@ -275,6 +305,14 @@ export function Viewer3D({
           <Suspense fallback={null}>
             <PlanOverlay model={model} url={overlayUrl} opacity={overlayOpacity} />
           </Suspense>
+        )}
+        {quality === 'alta' && (
+          // N8AO oscurece rincones y encuentros de muros: es lo que más quita el aspecto de maqueta
+          <EffectComposer multisampling={0}>
+            <N8AO aoRadius={0.5} distanceFalloff={0.4} intensity={3.5} halfRes />
+            <SMAA />
+            <ToneMapping mode={ToneMappingMode.AGX} />
+          </EffectComposer>
         )}
         {mode === 'orbit' ? (
           <OrbitRig model={model} flyTo={flyTo} preset={preset} />
