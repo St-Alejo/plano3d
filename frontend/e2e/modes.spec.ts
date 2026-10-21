@@ -106,3 +106,30 @@ test('despiece de acero: cartilla, fila ↔ 3D y CSV para el ferretero', async (
   expect(file.suggestedFilename()).toMatch(/^despiece-acero-.*\.csv$/)
   expect(errors).toEqual([])
 })
+
+test('secuencia de obra: recorre los pasos y se reproduce sin errores', async ({ page }) => {
+  test.slow()
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(`/p/${projectId}/3d?modo=secuencia`)
+  const seq = page.getByRole('region', { name: 'Secuencia de obra' })
+  const card = seq.getByRole('article', { name: 'Paso actual' })
+  await expect(card).toContainText(/Paso 1 de \d+/)
+  await expect(card).toContainText('Replanteo y excavación')
+  const total = Number((await card.innerText()).match(/de (\d+)/)![1])
+
+  await seq.getByRole('button', { name: 'Paso siguiente' }).click()
+  await expect(card).toContainText(`Paso 2 de ${total}`)
+  await expect(card).toContainText('Solado')
+  await seq.getByRole('button', { name: 'Paso anterior' }).click()
+  await expect(card).toContainText(`Paso 1 de ${total}`)
+
+  // del último paso, reproducir vuelve a empezar y avanza solo
+  await seq.getByRole('slider', { name: 'Paso de la obra' }).fill(String(total))
+  await expect(card).toContainText(`Paso ${total} de ${total}`)
+  await seq.getByRole('button', { name: 'Reproducir la obra' }).click()
+  await expect(card).toContainText(/Paso [2-9] de/, { timeout: 15_000 })
+  await seq.getByRole('button', { name: 'Pausar' }).click()
+  await expect(seq.getByRole('button', { name: 'Reproducir la obra' })).toBeVisible()
+  expect(errors).toEqual([])
+})

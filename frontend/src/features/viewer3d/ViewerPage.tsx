@@ -103,8 +103,11 @@ export function ViewerPage() {
   const [measuring, setMeasuring] = useState(false)
   const [points, setPoints] = useState<[number, number, number][]>([])
   const box = useRef<HTMLDivElement>(null)
+  // la secuencia de obra anima la escena armada: se guarda también como estado
+  const [built, setBuilt] = useState<BuiltScene | null>(null)
   const onScene = useCallback((s: BuiltScene) => {
     scene.current = s
+    setBuilt(s)
   }, [])
   const onPoint = useCallback((p: [number, number, number]) => setPoints((prev) => (prev.length >= 2 ? [p] : [...prev, p])), [])
 
@@ -201,8 +204,8 @@ export function ViewerPage() {
         roof={roof}
         brick={brick}
         hideMasonry={hideMasonry}
-        highlightElementId={strategy.construction ? elementId : null}
-        onElement={strategy.construction && !measuring ? setElementId : undefined}
+        highlightElementId={strategy.panel ? elementId : null}
+        onElement={strategy.panel && !measuring ? setElementId : undefined}
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
@@ -288,8 +291,10 @@ export function ViewerPage() {
                   ))}
                 </ToggleGroup.Root>
               )}
-              {strategy.construction && (
+              {strategy.panel && (
                 <ObraPanel
+                  variant={strategy.panel}
+                  root={built?.root ?? null}
                   model={model}
                   brick={brick}
                   onBrick={setBrick}
@@ -298,7 +303,6 @@ export function ViewerPage() {
                   elementId={elementId}
                   onElement={setElementId}
                   onClose={() => setElementId(null)}
-                  steel={strategy.steel}
                   fileBase={fileBase}
                 />
               )}
@@ -347,7 +351,7 @@ export function ViewerPage() {
                     <option value="baja">Baja (fluida)</option>
                   </select>
                 </label>
-                {!strategy.construction && (
+                {!strategy.panel && (
                   <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
                     <span>Cubierta (techo de teja)</span>
                     <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />

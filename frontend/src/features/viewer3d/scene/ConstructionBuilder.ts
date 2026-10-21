@@ -6,7 +6,8 @@
  *
  * Cada malla estructural lleva `userData = { kind: 'structure', elementId }` para que el
  * visor muestre su ficha al tocarla; en las mallas instanciadas (ladrillos, barras, estribos)
- * `userData.instanceIds` dice a qué paño o elemento pertenece cada instancia.
+ * `userData.instanceIds` dice a qué paño o elemento pertenece cada instancia. Todo lleva
+ * además `userData.step`, el paso de la secuencia constructiva en que se construye.
  */
 import * as THREE from 'three'
 import type { BuildingModel, Point } from '@/api/types'
@@ -16,6 +17,7 @@ import { brickOf, type LinearElement, type Structure, type TieColumn } from '@/d
 import type { Brick } from '@/domain/structure/masonryLayout'
 import { BARS, NSR10, type BarNo, type Reinforcement } from '@/domain/structure/nsr10'
 import { stirrupPositions } from '@/domain/structure/rebar'
+import { STEP } from '@/domain/structure/schedule'
 import type { BuiltScene } from './SceneBuilder'
 import { BAR_TINT, CONCRETE_TINT, MaterialFactory } from './MaterialFactory'
 import { worldUv } from './uv'
@@ -35,11 +37,19 @@ function hash(n: number): number {
   return x - Math.floor(x)
 }
 
-/** Una barra o estribo a dibujar: matriz de la instancia, diámetro y elemento al que pertenece. */
+/** Una barra o estribo a dibujar: matriz de la instancia, diámetro, elemento y paso de obra. */
 interface SteelPiece {
   matrix: THREE.Matrix4
   no: BarNo
   elementId: string
+  step: string
+}
+
+/** Paso de la secuencia en que se funde cada elemento lineal. */
+function linearStep(e: LinearElement): string {
+  if (e.kind === 'footing') return STEP.cimentacion
+  if (e.kind === 'plinth') return STEP.sobrecimiento
+  return STEP.vigas(e.levelId)
 }
 
 /** Estribo cerrado de a × d (ejes de la barra) en el plano XY, como tubo del diámetro de la barra. */
@@ -104,7 +114,7 @@ export class ConstructionBuilder {
     const len = distance(e.start, e.end)
     const mid: Point = { x: (e.start.x + e.end.x) / 2, y: (e.start.y + e.end.y) / 2 }
     const angle = Math.atan2(e.end.y - e.start.y, e.end.x - e.start.x)
-    return this.box([len, height, width], [mid.x, bottom + height / 2, mid.y], -angle, material, e.id, { kind: 'structure', elementId: e.id, elementKind: e.kind, levelId: e.levelId })
+    return this.box([len, height, width], [mid.x, bottom + height / 2, mid.y], -angle, material, e.id, { kind: 'structure', elementId: e.id, elementKind: e.kind, levelId: e.levelId, step: linearStep(e) })
   }
 
   /** Solado, viga de cimentación y sobrecimiento bajo los muros confinados. */
@@ -114,6 +124,7 @@ export class ConstructionBuilder {
       // solado de 5 cm, 5 cm más ancho a cada lado
       const lean = this.linear(f, this.concrete('lean'), NSR10.leanConcrete, f.bottom - NSR10.leanConcrete, f.width + 0.1)
       lean.name = `${f.id}:solado`
+      lean.userData.step = STEP.solado
       this.structure.add(lean)
     }
     for (const p of this.s.plinths) this.structure.add(this.linear(p, this.concrete('plinth')))
@@ -131,6 +142,7 @@ export class ConstructionBuilder {
       elementId: c.id,
       elementKind: 'column',
       levelId: c.levelId,
+      step: STEP.columnas(c.levelId),
     })
   }
 
@@ -153,7 +165,7 @@ export class ConstructionBuilder {
           mesh.position.y = lv.elevation - GROUND_SLAB
           mesh.receiveShadow = true
           mesh.name = `placa:${r.id}`
-          mesh.userData = { kind: 'structure', elementId: `placa:${lv.id}`, elementKind: 'slab', levelId: lv.id, roomId: r.id }
+          mesh.userData = { kind: 'structure', elementId: `placa:${lv.id}`, elementKind: 'slab', levelId: lv.id, roomId: r.id, step: STEP.placa }
           this.floors.add(mesh)
         }
         return
@@ -171,7 +183,7 @@ export class ConstructionBuilder {
       mesh.castShadow = true
       mesh.receiveShadow = true
       mesh.name = `losa:${lv.id}`
-      mesh.userData = { kind: 'structure', elementId: `losa:${lv.id}`, elementKind: 'slab', levelId: lv.id }
+      mesh.userData = { kind: 'structure', elementId: `losa:${lv.id}`, elementKind: 'slab', levelId: lv.id, step: STEP.losa(lv.id) }
       this.floors.add(mesh)
     })
     return this
@@ -192,7 +204,9 @@ export class ConstructionBuilder {
     const color = new THREE.Color()
     const joint = brickJoint(this.s)
     let n = 0
-    for (const [wallId, list] of byWall) {
+    for (const [wallId, unsorted] of byWall) {
+      // de abajo hacia arriba: la secuencia muestra las primeras `count` instancias (hiladas que suben)
+      const list = [...unsorted].sort((a, b) => a.bottom - b.bottom)
       const w = walls.get(wallId)
       if (!w) continue
       const dir = wallDirection(w)
@@ -211,7 +225,7 @@ export class ConstructionBuilder {
       })
       const instanceIds = list.map((b) => b.panelId)
       for (const im of [mesh, mortar]) {
-        im.userData = { kind: 'structure', elementKind: 'masonry', wallId, instanceIds }
+        im.userData = { kind: 'structure', elementKind: 'masonry', wallId, instanceIds, step: STEP.muros(list[0]!.levelId), bottoms: list.map((b) => b.bottom) }
         im.receiveShadow = true
         im.computeBoundingSphere()
         this.masonry.add(im)
@@ -229,10 +243,10 @@ export class ConstructionBuilder {
   withRebar(): this {
     const bars: SteelPiece[] = []
     const rings = new Map<string, { a: number; d: number; db: number; pieces: SteelPiece[] }>()
-    const ring = (a: number, d: number, no: BarNo, matrix: THREE.Matrix4, elementId: string) => {
+    const ring = (a: number, d: number, no: BarNo, matrix: THREE.Matrix4, elementId: string, step: string) => {
       const key = `${a.toFixed(3)}x${d.toFixed(3)}:${no}`
       if (!rings.has(key)) rings.set(key, { a, d, db: BARS[no].db, pieces: [] })
-      rings.get(key)!.pieces.push({ matrix, no, elementId })
+      rings.get(key)!.pieces.push({ matrix, no, elementId, step })
     }
     const up = new THREE.Vector3(0, 1, 0)
     const one = new THREE.Vector3(1, 1, 1)
@@ -246,6 +260,7 @@ export class ConstructionBuilder {
 
     for (const e of [...this.s.footings, ...this.s.beams, ...this.s.lintels]) {
       if (!e.rebar) continue
+      const step = e.kind === 'footing' ? STEP.aceroCimentacion : STEP.aceroVigas(e.levelId)
       const cover = e.kind === 'footing' ? NSR10.cover.footing : NSR10.cover.beam
       const run = distance(e.start, e.end) - 2 * cover
       const angle = Math.atan2(e.end.y - e.start.y, e.end.x - e.start.x)
@@ -253,9 +268,9 @@ export class ConstructionBuilder {
       const frame = new THREE.Matrix4().compose(new THREE.Vector3((e.start.x + e.end.x) / 2, e.bottom, (e.start.y + e.end.y) / 2), new THREE.Quaternion().setFromAxisAngle(up, -angle), one)
       const db = BARS[e.rebar.bars.no].db
       for (const [z, y] of barCorners(e.width, e.height, cover, e.rebar))
-        bars.push({ matrix: place(frame, new THREE.Vector3(0, y, z), lying, new THREE.Vector3(db, run, db)), no: e.rebar.bars.no, elementId: e.id })
+        bars.push({ matrix: place(frame, new THREE.Vector3(0, y, z), lying, new THREE.Vector3(db, run, db)), no: e.rebar.bars.no, elementId: e.id, step })
       for (const x of stirrupPositions(run, e.rebar.stirrups))
-        ring(e.width - 2 * cover, e.height - 2 * cover, e.rebar.stirrups.no, place(frame, new THREE.Vector3(-run / 2 + x, e.height / 2, 0), standing), e.id)
+        ring(e.width - 2 * cover, e.height - 2 * cover, e.rebar.stirrups.no, place(frame, new THREE.Vector3(-run / 2 + x, e.height / 2, 0), standing), e.id, step)
     }
 
     for (const c of this.s.columns) {
@@ -272,22 +287,27 @@ export class ConstructionBuilder {
         [1, 1],
         [-1, 1],
       ] as const)
-        bars.push({ matrix: place(frame, new THREE.Vector3(x * (c.along / 2 - inset), run / 2, z * (c.across / 2 - inset)), none, new THREE.Vector3(db, run, db)), no: r.bars.no, elementId: c.id })
-      for (const y of stirrupPositions(c.height, r.stirrups)) ring(c.along - 2 * cover, c.across - 2 * cover, r.stirrups.no, place(frame, new THREE.Vector3(0, y, 0), flat), c.id)
+        bars.push({ matrix: place(frame, new THREE.Vector3(x * (c.along / 2 - inset), run / 2, z * (c.across / 2 - inset)), none, new THREE.Vector3(db, run, db)), no: r.bars.no, elementId: c.id, step: STEP.aceroColumnas(c.levelId) })
+      for (const y of stirrupPositions(c.height, r.stirrups)) ring(c.along - 2 * cover, c.across - 2 * cover, r.stirrups.no, place(frame, new THREE.Vector3(0, y, 0), flat), c.id, STEP.aceroColumnas(c.levelId))
     }
 
     const steel = new THREE.Group()
     steel.name = 'acero'
     const color = new THREE.Color()
-    const add = (geometry: THREE.BufferGeometry, pieces: SteelPiece[], name: string) => {
-      if (pieces.length === 0) return
+    // una malla por paso de obra: la secuencia muestra el acero de cada etapa por separado
+    const add = (geometry: THREE.BufferGeometry, all: SteelPiece[], name: string) => {
+      const steps = new Map<string, SteelPiece[]>()
+      for (const p of all) steps.set(p.step, [...(steps.get(p.step) ?? []), p])
+      for (const [step, pieces] of steps) addStep(geometry, pieces, `${name}@${step}`, step)
+    }
+    const addStep = (geometry: THREE.BufferGeometry, pieces: SteelPiece[], name: string, step: string) => {
       const mesh = new THREE.InstancedMesh(geometry, this.materials.steel(), pieces.length)
       pieces.forEach((p, i) => {
         mesh.setMatrixAt(i, p.matrix)
         mesh.setColorAt(i, color.set(BAR_TINT[p.no]))
       })
       mesh.name = name
-      mesh.userData = { kind: 'structure', elementKind: 'rebar', instanceIds: pieces.map((p) => p.elementId) }
+      mesh.userData = { kind: 'structure', elementKind: 'rebar', instanceIds: pieces.map((p) => p.elementId), step }
       mesh.computeBoundingSphere()
       mesh.castShadow = true
       steel.add(mesh)

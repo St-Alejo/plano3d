@@ -57,7 +57,7 @@ describe('escena de obra', () => {
 
   it('las barras de una columneta quedan dentro de su sección', () => {
     const scene = new ConstructionBuilder(model, s, new MaterialFactory(), true).withColumns().withRebar().build()
-    const bars = meshes(scene.elements).find((m): m is THREE.InstancedMesh => m instanceof THREE.InstancedMesh && m.name === 'barras')!
+    const bars = meshes(scene.elements).find((m): m is THREE.InstancedMesh => m instanceof THREE.InstancedMesh && m.name.startsWith('barras@acero-columnas'))!
     const ids = bars.userData.instanceIds as string[]
     const c = s.columns[0]!
     const m = new THREE.Matrix4()

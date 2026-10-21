@@ -34,11 +34,14 @@ export interface ViewModeStrategy {
   build(model: BuildingModel, materials: MaterialFactory, opts?: ModeOptions): BuiltScene
   /** altura del terreno (por defecto justo bajo el piso); la obra lo baja para ver la cimentación */
   groundY?: number
-  /** modo de obra: muestra la ficha de cada elemento, la leyenda y la unidad de mampostería */
-  construction?: boolean
-  /** despiece de acero: muestra la cartilla de barras en lugar de los controles de mampostería */
-  steel?: boolean
+  /**
+   * modos de obra: qué panel acompaña la escena (ficha de cada elemento más los controles de
+   * mampostería, la cartilla de acero o la línea de tiempo); sin panel, la casa terminada
+   */
+  panel?: ConstructionPanel
 }
+
+export type ConstructionPanel = 'obra' | 'acero' | 'secuencia'
 
 export const presentacion: ViewModeStrategy = {
   id: 'presentacion',
@@ -52,7 +55,7 @@ export const obra: ViewModeStrategy = {
   label: 'Obra (maestro)',
   hint: 'Cimentación, columnetas, vigas y ladrillo pieza por pieza, con sus medidas',
   groundY: -(NSR10.foundationDepth + 0.1),
-  construction: true,
+  panel: 'obra',
   build: (model, materials, opts = {}) => {
     const s = deriveStructure(model, { brick: opts.brick ?? 'tolete' })
     return new ConstructionBuilder(model, s, materials)
@@ -70,14 +73,26 @@ export const acero: ViewModeStrategy = {
   label: 'Despiece de acero',
   hint: 'El hierro de cada elemento con su diámetro real, y la cartilla de despiece',
   groundY: obra.groundY,
-  construction: true,
-  steel: true,
+  panel: 'acero',
   // concreto a rayos X: se ve cómo va el hierro por dentro
   build: (model, materials, opts = {}) =>
     new ConstructionBuilder(model, deriveStructure(model, { brick: opts.brick ?? 'tolete' }), materials, true).withFoundations().withColumns().withBeams().withRebar().build(),
 }
 
-export const PLAN_MODES: ViewModeStrategy[] = [presentacion, obra, acero]
+export const secuencia: ViewModeStrategy = {
+  id: 'secuencia',
+  label: 'Secuencia de obra',
+  hint: 'La casa construyéndose paso a paso, desde el replanteo hasta la losa',
+  groundY: obra.groundY,
+  panel: 'secuencia',
+  // todo, acero incluido: en su paso se ve la canasta antes de que el concreto la tape
+  build: (model, materials, opts = {}) => {
+    const s = deriveStructure(model, { brick: opts.brick ?? 'tolete' })
+    return new ConstructionBuilder(model, s, materials).withFoundations().withColumns().withBeams().withSlabs().withMasonry(masonryLayout(model, s)).withRebar().build()
+  },
+}
+
+export const PLAN_MODES: ViewModeStrategy[] = [presentacion, obra, acero, secuencia]
 
 /** La estrategia de un id (por ejemplo `?modo=` de la URL); uno desconocido cae en Presentación. */
 export function planMode(id: string | null | undefined): ViewModeStrategy {
