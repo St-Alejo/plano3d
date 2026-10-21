@@ -133,3 +133,21 @@ test('secuencia de obra: recorre los pasos y se reproduce sin errores', async ({
   await expect(seq.getByRole('button', { name: 'Reproducir la obra' })).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test('cantidades de obra: totales, por etapa y CSV', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(`/p/${projectId}/3d?modo=obra`)
+  await page.getByText('Cantidades de obra').click()
+  const table = page.getByRole('table', { name: 'Cantidades' })
+  await expect(table).toContainText('Ladrillo tolete')
+  await expect(table).toContainText('bultos')
+  // por etapa: solo lo de esa etapa
+  await page.getByRole('combobox', { name: 'Qué comprar para' }).selectOption({ label: 'Solado de limpieza' })
+  await expect(table).toContainText('Concreto del solado')
+  await expect(table).not.toContainText('Ladrillo')
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Descargar cantidades (CSV)' }).click()
+  expect((await download).suggestedFilename()).toMatch(/^cantidades-obra-.*\.csv$/)
+  expect(errors).toEqual([])
+})

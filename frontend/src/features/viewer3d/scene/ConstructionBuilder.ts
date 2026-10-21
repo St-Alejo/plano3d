@@ -11,20 +11,17 @@
  */
 import * as THREE from 'three'
 import type { BuildingModel, Point } from '@/api/types'
-import { roomShapePoints, stairWell } from '@/domain/geometry'
+import { roomShapePoints } from '@/domain/geometry'
 import { distance, pointAlong, wallDirection } from '@/domain/model'
 import { brickOf, type LinearElement, type Structure, type TieColumn } from '@/domain/structure/derive'
 import type { Brick } from '@/domain/structure/masonryLayout'
 import { BARS, NSR10, type BarNo, type Reinforcement } from '@/domain/structure/nsr10'
 import { stirrupPositions } from '@/domain/structure/rebar'
+import { upperSlabFootprint } from '@/domain/structure/quantities'
 import { STEP } from '@/domain/structure/schedule'
 import type { BuiltScene } from './SceneBuilder'
 import { BAR_TINT, CONCRETE_TINT, MaterialFactory } from './MaterialFactory'
 import { worldUv } from './uv'
-
-/** Espesor de la placa de contrapiso y de la losa de entrepiso. */
-const GROUND_SLAB = 0.08
-const UPPER_SLAB = 0.12
 
 /** Variación de color de las piezas: ningún ladrillo de arcilla sale igual a otro. */
 const BRICK_TONES = ['#a4532f', '#9b4c2b', '#ad5d36', '#94482a', '#b0633a', '#a0502f']
@@ -160,9 +157,9 @@ export class ConstructionBuilder {
       if (i === 0) {
         for (const r of lv.rooms) {
           const shape = new THREE.Shape(roomShapePoints(r).map(([x, y]) => new THREE.Vector2(x, y)))
-          const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: GROUND_SLAB, bevelEnabled: false }), this.materials.concrete('slab'))
+          const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: NSR10.groundSlab, bevelEnabled: false }), this.materials.concrete('slab'))
           mesh.rotation.x = -Math.PI / 2
-          mesh.position.y = lv.elevation - GROUND_SLAB
+          mesh.position.y = lv.elevation - NSR10.groundSlab
           mesh.receiveShadow = true
           mesh.name = `placa:${r.id}`
           mesh.userData = { kind: 'structure', elementId: `placa:${lv.id}`, elementKind: 'slab', levelId: lv.id, roomId: r.id, step: STEP.placa }
@@ -170,16 +167,14 @@ export class ConstructionBuilder {
         }
         return
       }
-      if (lv.walls.length === 0) return
-      const xs = lv.walls.flatMap((w) => [w.start.x, w.end.x])
-      const ys = lv.walls.flatMap((w) => [w.start.y, w.end.y])
-      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
+      const slab = upperSlabFootprint(lv, levels[i - 1])
+      if (!slab) return
+      const { x0, x1, y0, y1, well } = slab
       const shape = new THREE.Shape([new THREE.Vector2(x0, -y0), new THREE.Vector2(x1, -y0), new THREE.Vector2(x1, -y1), new THREE.Vector2(x0, -y1)])
-      const well = stairWell(levels[i - 1]!.stairs ?? [])
       if (well) shape.holes.push(new THREE.Path([new THREE.Vector2(well.minX, -well.minY), new THREE.Vector2(well.minX, -well.maxY), new THREE.Vector2(well.maxX, -well.maxY), new THREE.Vector2(well.maxX, -well.minY)]))
-      const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: UPPER_SLAB, bevelEnabled: false }), this.materials.concrete('slab'))
+      const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: NSR10.upperSlab, bevelEnabled: false }), this.materials.concrete('slab'))
       mesh.rotation.x = -Math.PI / 2
-      mesh.position.y = lv.elevation - UPPER_SLAB
+      mesh.position.y = lv.elevation - NSR10.upperSlab
       mesh.castShadow = true
       mesh.receiveShadow = true
       mesh.name = `losa:${lv.id}`

@@ -13,6 +13,7 @@ import { masonryLayout } from '@/domain/structure/masonryLayout'
 import { rebarSchedule } from '@/domain/structure/rebar'
 import { constructionSchedule } from '@/domain/structure/schedule'
 import type { ConstructionPanel } from './modes'
+import { QuantitiesPanel } from './QuantitiesPanel'
 import { RebarSchedulePanel } from './RebarSchedulePanel'
 import { CONCRETE_TINT } from './scene/MaterialFactory'
 import { SequencePanel } from './SequencePanel'
@@ -111,6 +112,7 @@ export function ObraPanel({
         <p className="text-xs text-subtle">Toque una columneta, una viga o un muro para ver sus medidas y su hierro.</p>
       )}
       {variant === 'acero' && <RebarSchedulePanel bars={bars} selectedId={elementId} onSelect={onElement} fileBase={fileBase} />}
+      <QuantitiesPanel model={model} structure={structure} fileBase={fileBase} />
       <p className="flex gap-1.5 text-[11px] leading-snug text-subtle">
         <HardHat className="size-3.5 shrink-0" aria-hidden />
         {structure.columns.length} columnetas, {structure.beams.length} vigas de amarre. Guía didáctica según NSR-10 Título E: no reemplaza el diseño firmado por un ingeniero.

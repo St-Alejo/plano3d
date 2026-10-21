@@ -75,6 +75,9 @@ export const NSR10 = {
   /** profundidad del fondo de la cimentación bajo el piso terminado y espesor del solado */
   foundationDepth: 0.6,
   leanConcrete: 0.05,
+  /** placa de contrapiso sobre relleno compactado y losa maciza de entrepiso */
+  groundSlab: 0.08,
+  upperSlab: 0.12,
 } as const
 
 /** Lado de una columneta con ancho igual al muro y área mínima de confinamiento, redondeado a 5 cm. */
