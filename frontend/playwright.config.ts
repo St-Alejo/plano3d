@@ -17,7 +17,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } }, testIgnore: /mobile.spec.ts/ },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|modes)\.spec\.ts/ },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /(mobile|usability|walk)\.spec\.ts/ },
+    // los modos de obra dibujan miles de ladrillos y barras: sin GPU eso le quita la CPU a la API de
+    // un worker y otras pruebas no alcanzan a guardar. Corren solos, al final.
+    { name: 'obra', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } }, testMatch: /modes\.spec\.ts/, dependencies: ['desktop', 'mobile'] },
   ],
 })
