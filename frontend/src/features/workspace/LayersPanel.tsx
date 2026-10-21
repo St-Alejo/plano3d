@@ -19,6 +19,8 @@ export function LayersPanel() {
   const toggle = useEditor((s) => s.toggleLayer)
   const levels = useEditor((s) => s.model?.levels ?? [])
   const setLevel = useEditor((s) => s.setLevel)
+  const showStructure = useEditor((s) => s.showStructure)
+  const toggleStructure = useEditor((s) => s.toggleStructure)
   const count: Partial<Record<LayerKey, number>> = level
     ? {
         rooms: level.rooms.length,
@@ -84,6 +86,23 @@ export function LayersPanel() {
             </li>
           )
         })}
+        {/* derivada del plano (no se edita): solo se ve u oculta */}
+        <li className={clsx('flex items-center gap-1 rounded-sm py-0.5 pr-1 pl-2 text-sm hover:bg-raised', !showStructure && 'text-subtle')}>
+          <span className="flex-1 truncate" title="Columnetas, vigas y cimentación según NSR-10 Título E (guía didáctica)">
+            Estructura (obra)
+          </span>
+          <button
+            type="button"
+            aria-pressed={showStructure}
+            aria-label={showStructure ? 'Ocultar estructura (obra)' : 'Mostrar estructura (obra)'}
+            title={showStructure ? 'Ocultar' : 'Mostrar'}
+            onClick={toggleStructure}
+            className="inline-flex size-7 items-center justify-center rounded-sm text-muted hover:text-fg pointer-coarse:size-11"
+          >
+            {showStructure ? <Eye className="size-3.5" aria-hidden /> : <EyeOff className="size-3.5" aria-hidden />}
+          </button>
+          <span className="size-7 pointer-coarse:size-11" aria-hidden />
+        </li>
       </ul>
     </section>
   )

@@ -151,3 +151,17 @@ test('cantidades de obra: totales, por etapa y CSV', async ({ page }) => {
   expect((await download).suggestedFilename()).toMatch(/^cantidades-obra-.*\.csv$/)
   expect(errors).toEqual([])
 })
+
+test('láminas: detalles tipo en el 3D y capa de estructura en el editor', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(`/p/${projectId}/3d?modo=obra`)
+  await page.getByText('Detalles tipo (secciones)').click()
+  for (const name of ['Columneta', 'Viga de amarre', 'Viga de cimentación']) await expect(page.getByRole('img', { name: `Sección de ${name}` })).toBeVisible()
+
+  await page.goto(`/p/${projectId}`)
+  const show = page.getByRole('button', { name: 'Mostrar estructura (obra)' })
+  await show.click()
+  await expect(page.getByRole('button', { name: 'Ocultar estructura (obra)' })).toHaveAttribute('aria-pressed', 'true')
+  expect(errors).toEqual([])
+})

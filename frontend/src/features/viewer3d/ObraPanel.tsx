@@ -17,6 +17,7 @@ import { QuantitiesPanel } from './QuantitiesPanel'
 import { RebarSchedulePanel } from './RebarSchedulePanel'
 import { CONCRETE_TINT } from './scene/MaterialFactory'
 import { SequencePanel } from './SequencePanel'
+import { StructureDetails } from './StructureDetails'
 
 const SELECT = 'h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11'
 
@@ -112,6 +113,7 @@ export function ObraPanel({
         <p className="text-xs text-subtle">Toque una columneta, una viga o un muro para ver sus medidas y su hierro.</p>
       )}
       {variant === 'acero' && <RebarSchedulePanel bars={bars} selectedId={elementId} onSelect={onElement} fileBase={fileBase} />}
+      <StructureDetails structure={structure} />
       <QuantitiesPanel model={model} structure={structure} fileBase={fileBase} />
       <p className="flex gap-1.5 text-[11px] leading-snug text-subtle">
         <HardHat className="size-3.5 shrink-0" aria-hidden />

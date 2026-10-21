@@ -17,6 +17,7 @@ import { placeOpening, type Placement } from '@/domain/openings'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { PlanElements } from './PlanElements'
+import { StructureOverlay } from './StructureOverlay'
 import { contentBounds, parseLength, pointInPolygon, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
 
@@ -76,6 +77,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const selectMany = useEditor((s) => s.selectMany)
   const group = useEditor((s) => s.group)
   const hidden = useEditor((s) => s.hiddenLayers)
+  const showStructure = useEditor((s) => s.showStructure)
   const locked = useEditor((s) => s.lockedLayers)
   const setPointer = useEditor((s) => s.setPointer)
   const brush = useEditor((s) => s.brush)
@@ -658,6 +660,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               onMoveItem={(item, dx, dy) => dispatch(translateItem(level.id, item, dx, dy))}
             />
           )}
+
+          {showStructure && model && level && <StructureOverlay model={model} levelId={level.id} mpp={mpp} scale={view.scale} />}
 
           {selectedWall &&
             group.length === 1 &&

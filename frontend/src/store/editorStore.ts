@@ -51,6 +51,8 @@ interface EditorState {
   clipboard: Wall[]
   hiddenLayers: ReadonlySet<LayerKey>
   lockedLayers: ReadonlySet<LayerKey>
+  /** capa "Estructura (obra)": columnetas, vigas y cimentación derivadas del plano (apagada al inicio) */
+  showStructure: boolean
   viewMode: ViewMode
   /** posición del puntero sobre el plano, en metros (barra de estado) */
   cursor: Point | null
@@ -79,6 +81,7 @@ interface EditorState {
   selectMany: (items: Selected[]) => void
   setClipboard: (walls: Wall[]) => void
   toggleLayer: (layer: LayerKey, which: 'hidden' | 'locked') => void
+  toggleStructure: () => void
   setViewMode: (mode: ViewMode) => void
   setPointer: (cursor: Point | null, zoom?: number) => void
   setBrush: (brush: Partial<{ wall: string; floor: string }>) => void
@@ -164,6 +167,7 @@ export const useEditor = create<EditorState>()((set, get) => {
     clipboard: [],
     hiddenLayers: new Set<LayerKey>(),
     lockedLayers: new Set<LayerKey>(),
+    showStructure: false,
     viewMode: 'split',
     cursor: null,
     zoom: 1,
@@ -216,6 +220,7 @@ export const useEditor = create<EditorState>()((set, get) => {
       which === 'hidden'
         ? set({ hiddenLayers: toggled(get().hiddenLayers, layer) })
         : set({ lockedLayers: toggled(get().lockedLayers, layer) }),
+    toggleStructure: () => set({ showStructure: !get().showStructure }),
     setViewMode: (viewMode) => set({ viewMode }),
     setPointer: (cursor, zoom) => set(zoom === undefined ? { cursor } : { cursor, zoom }),
     setBrush: (brush) => set({ brush: { ...get().brush, ...brush } }),

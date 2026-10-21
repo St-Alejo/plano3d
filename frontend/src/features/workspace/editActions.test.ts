@@ -53,6 +53,16 @@ describe('multiselección en el store', () => {
     s.toggleLayer('rooms', 'hidden')
     expect(useEditor.getState().hiddenLayers.size).toBe(0)
   })
+
+  it('la capa de estructura arranca apagada y se prende aparte de las demás', () => {
+    const s = useEditor.getState()
+    expect(s.showStructure).toBe(false)
+    s.toggleStructure()
+    expect(useEditor.getState().showStructure).toBe(true)
+    expect(useEditor.getState().hiddenLayers.size).toBe(0)
+    useEditor.getState().toggleStructure()
+    expect(useEditor.getState().showStructure).toBe(false)
+  })
 })
 
 describe('acciones sobre la selección', () => {
