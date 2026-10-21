@@ -3,7 +3,7 @@ import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Ruler } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point } from '@/api/types'
 import { tourWaypoints } from '@/domain/geometry'
@@ -18,6 +18,7 @@ import type { WalkInput, WalkStart } from './WalkControls'
 import { WalkHud } from './WalkHud'
 import { resetDoorProgress } from './doors'
 import { useWalk } from './walkStore'
+import { PLAN_MODES, planMode } from './modes'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
 import type { BuiltScene } from './scene/SceneBuilder'
 import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
@@ -31,6 +32,15 @@ export function ViewerPage() {
   const { id = '' } = useParams()
   const { data: project, error, loading } = useAsync(() => api.getProject(id), [id])
   const [mode, setMode] = useState<ViewMode>('orbit')
+  // el modo del plano vive en la URL (?modo=obra) para poder compartir el enlace
+  const [params, setParams] = useSearchParams()
+  const strategy = planMode(params.get('modo'))
+  const choosePlanMode = (id: string) =>
+    setParams((p) => {
+      if (id === 'presentacion') p.delete('modo')
+      else p.set('modo', id)
+      return p
+    }, { replace: true })
   const [overlay, setOverlay] = useState(0)
   const [flyTo, setFlyTo] = useState<Point | null>(null)
   const [walkStart, setWalkStart] = useState<WalkStart | undefined>()
@@ -144,6 +154,7 @@ export function ViewerPage() {
         preset={preset}
         display={display}
         measure={measuring ? { points, onPoint } : null}
+        strategy={strategy}
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
@@ -214,6 +225,21 @@ export function ViewerPage() {
           </button>
           {panelOpen && (
             <div id="viewer-panel" className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto border-t border-line p-3">
+              {PLAN_MODES.length > 1 && (
+                <ToggleGroup.Root
+                  type="single"
+                  value={strategy.id}
+                  onValueChange={(v) => v && choosePlanMode(v)}
+                  aria-label="Modo del plano"
+                  className="grid grid-cols-2 gap-1 border-b border-line pb-2"
+                >
+                  {PLAN_MODES.map((m) => (
+                    <ToggleGroup.Item key={m.id} value={m.id} title={m.hint} className="min-h-11 rounded-sm px-2 text-xs text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink sm:min-h-8">
+                      {m.label}
+                    </ToggleGroup.Item>
+                  ))}
+                </ToggleGroup.Root>
+              )}
               <label id="overlay-label" className="flex justify-between text-xs text-muted">
                 <span>Plano original sobre el modelo</span>
                 <span className="font-mono">{Math.round(overlay * 100)}%</span>

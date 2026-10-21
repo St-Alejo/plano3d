@@ -11,6 +11,7 @@ import { prefersReducedMotion } from './motion'
 import { DoorAnimator } from './doors'
 import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
 import type { BuiltScene } from './scene/SceneBuilder'
+import type { ViewModeStrategy } from './modes'
 import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 export type ViewMode = 'orbit' | 'walk'
@@ -40,6 +41,8 @@ export interface Viewer3DProps {
   display?: DisplayMode
   /** medir en 3D: puntos marcados y callback al tocar una superficie */
   measure?: { points: [number, number, number][]; onPoint: (p: [number, number, number]) => void } | null
+  /** modo del plano (presentación por defecto) */
+  strategy?: ViewModeStrategy
 }
 
 function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: string; opacity: number }) {
@@ -228,6 +231,7 @@ export function Viewer3D({
   preset,
   display = 'material',
   measure,
+  strategy,
 }: Viewer3DProps) {
   const [built, setBuilt] = useState<BuiltScene | null>(null)
   // estable: BuildingMesh libera la escena anterior cuando cambia este callback
@@ -258,6 +262,7 @@ export function Viewer3D({
         <SectionClip height={section} />
         <BuildingMesh
           model={model}
+          strategy={strategy}
           grow={grow}
           highlightWallId={highlightWallId}
           onPick={onPick}

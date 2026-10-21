@@ -6,7 +6,8 @@ import { kindOf } from './doors'
 import { MaterialFactory } from './scene/MaterialFactory'
 import { useWalk } from './walkStore'
 import { prefersReducedMotion } from './motion'
-import { buildScene, disposeScene, type BuiltScene } from './scene/SceneBuilder'
+import { disposeScene, type BuiltScene } from './scene/SceneBuilder'
+import { presentacion, type ViewModeStrategy } from './modes'
 
 const GROW_SECONDS = 1.4
 
@@ -23,6 +24,7 @@ export interface Pick {
  */
 export function BuildingMesh({
   model,
+  strategy = presentacion,
   grow = true,
   highlightWallId,
   onPick,
@@ -30,6 +32,8 @@ export function BuildingMesh({
   onPoint,
 }: {
   model: BuildingModel
+  /** modo del plano: qué escena se arma (presentación, obra...) */
+  strategy?: ViewModeStrategy
   grow?: boolean
   highlightWallId?: string | null
   onPick?: (p: Pick) => void
@@ -38,7 +42,7 @@ export function BuildingMesh({
   onPoint?: (p: [number, number, number]) => void
 }) {
   const materials = useMemo(() => new MaterialFactory(), [])
-  const scene = useMemo(() => buildScene(model, materials), [model, materials])
+  const scene = useMemo(() => strategy.build(model, materials), [model, materials, strategy])
   const progress = useRef(grow && !prefersReducedMotion() ? 0 : 1)
   const grownFor = useRef<string | null>(null)
   // useFrame anima a través de un ref: la escena memorizada no se muta durante el render
