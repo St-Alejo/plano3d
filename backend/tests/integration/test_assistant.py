@@ -82,6 +82,15 @@ def test_to_plan_op_normalizes_flat_rows() -> None:
         "between": "Cocina",
     }
     assert to_plan_op(nulls | {"op": "add_room", "name": "x"}) is None  # sin medidas
+    wall = nulls | {"op": "set_wall", "room": "Sala", "side": "norte", "thickness": 0.2}
+    assert to_plan_op(wall) == {"op": "set_wall", "room": "Sala", "side": "norte", "thickness": 0.2}
+    assert to_plan_op(nulls | {"op": "set_wall", "room": "Sala"}) is None  # nada que cambiar
+    size = nulls | {"op": "resize_room", "room": "Sala", "width": 5}
+    assert to_plan_op(size) == {"op": "resize_room", "room": "Sala", "width": 5.0}
+    door = nulls | {"op": "set_opening", "room": "Baño", "kind": "door", "width": 0.8}
+    assert to_plan_op(door) == {"op": "set_opening", "room": "Baño", "kind": "door", "width": 0.8}
+    floor = nulls | {"op": "set_floor", "room": "Sala", "material": "madera"}
+    assert to_plan_op(floor) == {"op": "set_floor", "room": "Sala", "material": "madera"}
     assert to_plan_op(nulls | {"op": "explotar"}) is None
 
 

@@ -30,8 +30,13 @@ OPS = [
     "rename_room",
     "delete_room",
     "add_furniture",
+    "set_wall",
+    "resize_room",
+    "set_opening",
+    "set_floor",
 ]
 SIDES = ["norte", "sur", "este", "oeste"]
+WALL_KINDS = ["exterior", "interior", "partition"]
 
 _SYSTEM = (
     "Eres el asistente de un editor de planos arquitectónicos en español. Conviertes lo que "
@@ -46,6 +51,14 @@ _SYSTEM = (
     "- delete_opening: room, kind y side opcionales.\n"
     "- move_opening: room, kind y from_side opcionales, to_side y to_room opcional.\n"
     "- rename_room: room y name. delete_room: room. add_furniture: item (mueble) y room.\n"
+    "- set_wall: room y side opcionales (sin room = todos los muros del nivel) y lo que "
+    "cambia: thickness (m), height (m), wall_kind (exterior|interior|partition = tabique), "
+    "structural (true/false) o material (pañete blanco, pintura arena, pintura verde salvia, "
+    "ladrillo a la vista, concreto).\n"
+    "- resize_room: room y width y/o depth nuevos (m, de eje a eje).\n"
+    "- set_opening: room, kind y side opcionales, y width, height o sill (antepecho) en m.\n"
+    "- set_floor: room y material (madera roble, madera oscura, porcelanato claro, baldosa "
+    "gris, cemento pulido).\n"
     "Si algo no se puede expresar con estas operaciones, no inventes: deja ops vacío y "
     "explícalo en reply. reply es una frase breve en español."
 )
@@ -68,6 +81,12 @@ _OP_FIELDS: dict[str, Any] = {
     "to_side": _SIDE,
     "to_room": _NULLABLE_STR,
     "item": _NULLABLE_STR,
+    "thickness": _NULLABLE_NUM,
+    "height": _NULLABLE_NUM,
+    "sill": _NULLABLE_NUM,
+    "wall_kind": {"type": ["string", "null"], "enum": [*WALL_KINDS, None]},
+    "structural": {"type": ["boolean", "null"]},
+    "material": _NULLABLE_STR,
 }
 SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -129,6 +148,21 @@ def to_plan_op(raw: dict[str, Any]) -> dict[str, object] | None:
             return {"op": op, "room": str(f["room"])}
         if op == "add_furniture":
             return {"op": op, "item": str(f["item"]), "room": str(f["room"])}
+        if op == "set_wall":
+            changes = ("thickness", "height", "wall_kind", "structural", "material")
+            if not any(k in f for k in changes):
+                return None
+            return {"op": op, **{k: f[k] for k in ("room", "side", *changes) if k in f}}
+        if op == "resize_room":
+            size: dict[str, object] = {k: float(f[k]) for k in ("width", "depth") if k in f}
+            return {"op": op, "room": str(f["room"]), **size} if size else None
+        if op == "set_opening":
+            sizes = ("width", "height", "sill")
+            if "room" not in f or not any(k in f for k in sizes):
+                return None
+            return {"op": op, **{k: f[k] for k in ("kind", "room", "side", *sizes) if k in f}}
+        if op == "set_floor":
+            return {"op": op, "room": str(f["room"]), "material": str(f["material"])}
     except (KeyError, TypeError, ValueError):
         return None
     return None

@@ -123,3 +123,92 @@ describe('opsToCommand: del chat al plano', () => {
     expect(level().walls).toHaveLength(4)
   })
 })
+
+describe('parseChat: ajustes de muros, ambientes, aberturas y pisos', () => {
+  const cases: [string, PlanOp[]][] = [
+    ['muros de 20 cm', [{ op: 'set_wall', room: undefined, side: undefined, thickness: 0.2 }]],
+    ['sube los muros a 2,8 m', [{ op: 'set_wall', room: undefined, side: undefined, height: 2.8 }]],
+    ['el muro norte de la sala de 25 cm de espesor', [{ op: 'set_wall', room: 'sala', side: 'norte', thickness: 0.25 }]],
+    ['la altura de los muros de la cocina a 3', [{ op: 'set_wall', room: 'cocina', side: undefined, height: 3 }]],
+    ['el muro este de la sala es tabique', [{ op: 'set_wall', room: 'sala', side: 'este', wall_kind: 'partition' }]],
+    ['los muros de la cocina son estructurales', [{ op: 'set_wall', room: 'cocina', side: undefined, structural: true }]],
+    ['pinta los muros de la sala de verde', [{ op: 'set_wall', room: 'sala', side: undefined, material: 'verde' }]],
+    ['pinta el baño de blanco', [{ op: 'set_wall', room: 'baño', material: 'blanco' }]],
+    ['piso de madera en la sala', [{ op: 'set_floor', room: 'sala', material: 'madera' }]],
+    ['cambia el piso de la cocina a porcelanato', [{ op: 'set_floor', room: 'cocina', material: 'porcelanato' }]],
+    ['agranda la sala a 5x4', [{ op: 'resize_room', room: 'sala', width: 5, depth: 4 }]],
+    ['deja la cocina de 3 m de fondo', [{ op: 'resize_room', room: 'cocina', depth: 3 }]],
+    ['la puerta del baño de 80', [{ op: 'set_opening', kind: 'door', room: 'baño', side: undefined, width: 0.8 }]],
+    ['ensancha la ventana norte de la sala a 1,5 m', [{ op: 'set_opening', kind: 'window', room: 'sala', side: 'norte', width: 1.5 }]],
+    ['sube el antepecho de la ventana de la cocina a 1,2', [{ op: 'set_opening', kind: 'window', room: 'cocina', side: undefined, sill: 1.2 }]],
+  ]
+  it.each(cases)('«%s»', (msg, ops) => {
+    const r = parseChat(msg)
+    expect(r.unknown).toEqual([])
+    expect(r.ops).toEqual(ops)
+  })
+
+  it('las frases de dibujo de siempre no se confunden con los ajustes', () => {
+    expect(parseChat('ventana de 1,20 en el norte de alcoba').ops[0]?.op).toBe('add_opening')
+    expect(parseChat('pon una puerta en la cocina al este').ops[0]?.op).toBe('add_opening')
+    expect(parseChat('pon una cama doble en la alcoba').ops[0]?.op).toBe('add_furniture')
+    expect(parseChat('haz una sala de 4x5').ops[0]?.op).toBe('add_room')
+  })
+
+  it('un acabado que no existe no se adivina', () => {
+    expect(parseChat('piso de oro en la sala').ops.map((o) => o.op)).not.toContain('set_floor')
+  })
+})
+
+describe('opsToCommand: ajustes', () => {
+  beforeEach(() => {
+    useEditor.getState().reset()
+    useEditor.getState().load('prj_b', blank())
+  })
+  const say = (msg: string) => {
+    const { ops, unknown } = parseChat(msg)
+    expect(unknown).toEqual([])
+    const st = useEditor.getState()
+    const r = opsToCommand(st.model!, st.levelId, ops)
+    expect(st.dispatch(r.command)).toBe(true)
+    return r.summary
+  }
+  const level = () => selectLevel(useEditor.getState())!
+  const xs = () => level().walls.flatMap((w) => [w.start.x, w.end.x])
+
+  it('espesor, altura, tipo y acabado de los muros', () => {
+    say('sala de 4x5, cocina de 3x3 al este de la sala')
+    expect(say('muros de 20 cm')).toEqual(['Cambié de todos los muros: espesor 0,2 m'])
+    expect(level().walls.every((w) => w.thickness === 0.2)).toBe(true)
+    say('el muro este de la sala es tabique')
+    expect(level().walls.filter((w) => w.kind === 'partition')).toHaveLength(1)
+    say('pinta los muros de la cocina de ladrillo')
+    expect(level().walls.filter((w) => w.material === 'ladrillo')).toHaveLength(4)
+    say('sube los muros a 2,8')
+    expect(level().walls.every((w) => w.height === 2.8)).toBe(true)
+  })
+
+  it('cambiar el tamaño de un ambiente corre sus muros y se deshace de una vez', () => {
+    say('sala de 4x5')
+    expect(say('agranda la sala a 5x6')).toEqual(['Sala ahora mide 5 × 6 m'])
+    expect(Math.max(...xs())).toBeCloseTo(5)
+    expect(Math.max(...level().walls.flatMap((w) => [w.start.y, w.end.y]))).toBeCloseTo(6)
+    useEditor.getState().undo()
+    expect(Math.max(...xs())).toBeCloseTo(4)
+  })
+
+  it('ancho de una puerta y piso de un ambiente', () => {
+    say('sala de 4x5 con puerta al sur')
+    say('la puerta de la sala de 1,2')
+    expect(level().walls.flatMap((w) => w.openings)[0]?.width).toBe(1.2)
+    say('piso de madera en la sala')
+    expect(level().rooms[0]?.floor_material).toBe('madera_roble')
+  })
+
+  it('las medidas imposibles se explican', () => {
+    say('sala de 4x5 con ventana al norte')
+    const st = useEditor.getState()
+    expect(() => opsToCommand(st.model!, st.levelId, parseChat('la ventana de la sala de 9 m').ops)).toThrow(/no cabe/)
+    expect(() => opsToCommand(st.model!, st.levelId, [{ op: 'set_floor', room: 'sala', material: 'oro' }])).toThrow(/No conozco el acabado «oro»/)
+  })
+})

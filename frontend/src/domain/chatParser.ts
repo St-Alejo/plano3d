@@ -6,8 +6,9 @@
  * sobre una copia del texto sin tildes y en minúsculas que conserva la longitud, así
  * los nombres se recortan del texto original y conservan sus tildes ("Baño").
  */
-import type { OpeningKind } from '@/api/types'
-import type { PlanOp, Side } from './planOps'
+import type { OpeningKind, WallKind } from '@/api/types'
+import { FLOOR_MATERIALS, WALL_MATERIALS, type MaterialSpec } from './materials'
+import { findMaterial, type PlanOp, type Side } from './planOps'
 
 export interface ParseResult {
   ops: PlanOp[]
@@ -54,6 +55,51 @@ interface Ctx {
 
 const rx = (src: string) => new RegExp(`^${src}$`, 'd')
 
+const WALL = `(?:muros?|paredes?)`
+const WALL_SIDE = `(?:\\s+(?:del?\\s+)?(?:lado\\s+)?(?<side>${SIDE}))?`
+const ROOM_OPT = `(?:\\s+${DE}\\s+${ART}(?<room>[a-z].*?))?`
+const MEASURE = `(?<v>${NUM})\\s*(?<u>cm|centimetros|m|mts|metros)?`
+
+/**
+ * Metros a partir de "20 cm", "0,2 m" o un número suelto: sin unidad, lo que pasa de
+ * `cmAbove` se lee en centímetros ("muros de 20" → 0,20 m; "puerta de 80" → 0,80 m).
+ */
+function meters(v: string, unit: string | undefined, cmAbove: number): number {
+  const n = num(v)
+  if (unit?.startsWith('c')) return n / 100
+  return unit || n <= cmAbove ? n : n / 100
+}
+
+/** "muros de 20 cm" es espesor y "sube los muros a 2,8" es altura; si no se dice, lo decide la medida. */
+function wallMeasure(g: Grp): { thickness: number } | { height: number } {
+  if (g.dim === 'espesor' || g.dim === 'grosor' || g.dim === 'ancho') return { thickness: meters(g.v!, g.u, 1) }
+  if (g.dim === 'alto' || g.dim === 'altura' || /^(?:sube|baja)/.test(g.verb ?? '')) return { height: meters(g.v!, g.u, 12) }
+  // sin unidad, hasta 12 son metros y más de 12 centímetros; 60 cm o menos es espesor
+  const value = meters(g.v!, g.u, 12)
+  return value <= 0.6 ? { thickness: value } : { height: value }
+}
+
+/** El ambiente de un muro: el nombrado, el de la orden anterior si se dijo un lado, o ninguno (todo el nivel). */
+const wallRoom = (g: Grp, ctx: Ctx) => g.room?.trim() || (g.side ? roomOr(undefined, ctx) : undefined)
+
+function material(list: MaterialSpec[], text: string | undefined): string | null {
+  if (!text) return null
+  try {
+    findMaterial(list, text)
+    return text.trim()
+  } catch {
+    return null
+  }
+}
+
+const KIND_WORD: [RegExp, Partial<{ wall_kind: WallKind; structural: boolean }>][] = [
+  [/^no (?:estructural|portante)/, { structural: false }],
+  [/^(?:estructural|portante)/, { structural: true }],
+  [/^(?:tabique|divisori)/, { wall_kind: 'partition' }],
+  [/^exterior/, { wall_kind: 'exterior' }],
+  [/^interior/, { wall_kind: 'interior' }],
+]
+
 function roomOr(g: string | undefined, ctx: Ctx): string {
   const r = g?.trim() || ctx.lastRoom
   if (!r) throw new NeedsRoom()
@@ -62,6 +108,96 @@ function roomOr(g: string | undefined, ctx: Ctx): string {
 class NeedsRoom extends Error {}
 
 const RULES: Rule[] = [
+  // muros: "muros de 20 cm", "sube los muros a 2,8 m", "el muro norte de la sala de 25 cm de espesor"
+  {
+    re: rx(
+      `(?:(?<verb>haz|hazle|deja|dejale|cambia|cambiale|pon|ponle|ponles|sube|subele|baja|bajale|ajusta|engruesa|adelgaza)\\s+)?${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:a|de|en|con)\\s+${MEASURE}(?:\\s+de\\s+(?<dim>espesor|grosor|ancho|alto|altura))?`,
+    ),
+    build: (g, ctx) => ({ op: 'set_wall', room: wallRoom(g, ctx), side: side(g.side), ...wallMeasure(g) }),
+  },
+  // "la altura de los muros a 2,8", "espesor de los muros de la cocina 20 cm"
+  {
+    re: rx(
+      `(?:(?:cambia|cambiale|pon|ponle|sube|baja|deja|ajusta)\\s+)?${ART}(?<dim>espesor|grosor|altura|alto)\\s+de\\s+${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:(?:a|de|en|es|sea)\\s+)?${MEASURE}`,
+    ),
+    build: (g, ctx) => ({ op: 'set_wall', room: wallRoom(g, ctx), side: side(g.side), ...wallMeasure(g) }),
+  },
+  // tipo de muro: "el muro este de la sala es tabique", "haz estructurales los muros de la cocina"
+  {
+    re: rx(
+      `(?:(?:haz|hazle|deja|vuelve|marca|convierte|cambia|pon)\\s+)?${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:(?:como|a|en|es|son|sea|sean)\\s+)?(?:(?:un|una|muro|muros)\\s+)?(?<what>tabiques?|divisori[oa]s?|(?:no\\s+)?estructural(?:es)?|(?:no\\s+)?portantes?|exteriore?s?|interiore?s?)`,
+    ),
+    build: (g, ctx) => {
+      const hit = KIND_WORD.find(([re]) => re.test(g.what!))
+      return hit ? { op: 'set_wall', room: wallRoom(g, ctx), side: side(g.side), ...hit[1] } : null
+    },
+  },
+  // acabado de muros: "pinta los muros de la sala de verde", "enchapa el muro sur del baño en ladrillo"
+  {
+    re: rx(
+      `(?:pinta|pintale|pintales|enchapa|acaba|cambia el acabado de|cambia el color de)\\s+${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:de|en|con|a|color)\\s+(?:color\\s+)?(?<mat>.+)`,
+    ),
+    build: (g, ctx) => {
+      const mat = material(WALL_MATERIALS, g.mat)
+      return mat ? { op: 'set_wall', room: wallRoom(g, ctx), side: side(g.side), material: mat } : null
+    },
+  },
+  // "pinta la sala de blanco": todos sus muros
+  {
+    re: rx(`(?:pinta|pintale)\\s+${ART}(?<room>[a-z].*?)\\s+(?:de|en|con|color)\\s+(?:color\\s+)?(?<mat>.+)`),
+    build: (g) => {
+      const mat = material(WALL_MATERIALS, g.mat)
+      return mat ? { op: 'set_wall', room: g.room!, material: mat } : null
+    },
+  },
+  // piso: "piso de madera en la sala", "pon porcelanato de piso en el baño"
+  {
+    re: rx(`(?:(?:pon|ponle|mete|usa)\\s+)?(?:un\\s+|el\\s+)?piso\\s+(?:de\\s+|en\\s+)?(?<mat>.+?)\\s+(?:en|a|para)\\s+${ART}(?<room>.+)`),
+    build: (g) => {
+      const mat = material(FLOOR_MATERIALS, g.mat)
+      return mat ? { op: 'set_floor', room: g.room!, material: mat } : null
+    },
+  },
+  // "cambia el piso de la cocina a porcelanato", "piso del baño en baldosa"
+  {
+    re: rx(`(?:(?:cambia|cambiale|pon|ponle|haz)\\s+)?(?:el\\s+)?piso\\s+${DE}\\s+${ART}(?<room>.+?)\\s+(?:a|en|de|por|con)\\s+(?<mat>.+)`),
+    build: (g) => {
+      const mat = material(FLOOR_MATERIALS, g.mat)
+      return mat ? { op: 'set_floor', room: g.room!, material: mat } : null
+    },
+  },
+  // tamaño de un ambiente que ya existe: "agranda la sala a 5x4", "deja la cocina de 3 por 3,5"
+  {
+    re: rx(
+      `(?:agranda|amplia|achica|reduce|redimensiona|ajusta|deja|cambia(?:\\s+el\\s+tamano\\s+de)?)\\s+(?:(?:la|el)\\s+)?(?<room>[a-z].*?)\\s+(?:a|de|en)\\s+(?<w>${NUM})${UNIT}\\s*(?:x|por|×)\\s*(?<h>${NUM})${UNIT}`,
+    ),
+    build: (g) => ({ op: 'resize_room', room: g.room!, width: num(g.w!), depth: num(g.h!) }),
+  },
+  // "agranda la sala a 5 m de ancho", "la cocina de 4 de fondo"
+  {
+    re: rx(
+      `(?:(?:agranda|amplia|achica|reduce|alarga|acorta|ajusta|deja|cambia)\\s+)?(?:(?:la|el)\\s+)?(?<room>[a-z].*?)\\s+(?:a|de|en)\\s+(?<v>${NUM})${UNIT}\\s+de\\s+(?<dim>ancho|fondo|largo|profundidad)`,
+    ),
+    build: (g) => ({ op: 'resize_room', room: g.room!, ...(g.dim === 'ancho' ? { width: num(g.v!) } : { depth: num(g.v!) }) }),
+  },
+  // medida de una abertura: "la puerta del baño de 0,8", "ensancha la ventana norte de la sala a 1,5 m"
+  {
+    re: rx(
+      `(?:(?:haz|hazle|deja|cambia|pon|ponle|ensancha|agranda|achica|angosta|ajusta|sube|baja)\\s+)?${ART}(?<kind>puerta|ventana)(?:\\s+(?:del?\\s+)?(?:muro\\s+|lado\\s+)?(?<side>${SIDE}))?\\s+${DE}\\s+${ART}(?<room>[a-z].*?)(?:\\s+(?:al|del)\\s+(?:muro\\s+|lado\\s+)?(?<side2>${SIDE}))?\\s+(?:a|de|en)\\s+${MEASURE}(?:\\s+de\\s+(?<dim>ancho|alto|altura))?`,
+    ),
+    build: (g) => {
+      const v = meters(g.v!, g.u, 4)
+      const what = g.dim === 'alto' || g.dim === 'altura' ? { height: v } : { width: v }
+      return { op: 'set_opening', kind: kindOf(g.kind!), room: g.room!, side: side(g.side ?? g.side2), ...what }
+    },
+  },
+  // "sube el antepecho de la ventana de la cocina a 1,2"
+  {
+    re: rx(
+      `(?:(?:sube|baja|pon|ponle|cambia|deja)\\s+)?(?:el\\s+)?(?:antepecho|alfeizar)\\s+de\\s+${ART}(?<kind>ventana|puerta)(?:\\s+(?<side>${SIDE}))?\\s+${DE}\\s+${ART}(?<room>[a-z].*?)\\s+(?:a|en|de)\\s+${MEASURE}`,
+    ),
+    build: (g) => ({ op: 'set_opening', kind: kindOf(g.kind!), room: g.room!, side: side(g.side), sill: meters(g.v!, g.u, 3) }),
+  },
   // renombrar: "renombra la alcoba 1 a estudio", "cambia el nombre de la sala por estar"
   {
     re: rx(`(?:renombra|cambia(?:le)? el nombre (?:de|a)|ponle de nombre a|llama)\\s+${ART}(?<room>.+?)\\s+(?:a|como|por)\\s+(?<name>.+)`),
@@ -175,7 +311,7 @@ export function parseChat(message: string): ParseResult {
         if (!op) continue
         ops.push(op)
         if (op.op === 'add_room') ctx.lastRoom = op.name
-        else if ('room' in op) ctx.lastRoom = op.op === 'rename_room' ? op.name : op.room
+        else if ('room' in op && op.room) ctx.lastRoom = op.op === 'rename_room' ? op.name : op.room
         done = true
         break
       } catch (e) {
@@ -198,4 +334,10 @@ export const EXAMPLES = [
   'borra la ventana de la sala',
   'renombra la cocina a comedor',
   'pon una cama doble en la alcoba',
+  'muros de 20 cm',
+  'agranda la sala a 5x4',
+  'la puerta de la cocina de 1 m',
+  'piso de madera en la sala',
+  'pinta los muros de la sala de verde',
+  'el muro este de la sala es tabique',
 ]
