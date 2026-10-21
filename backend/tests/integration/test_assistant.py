@@ -14,16 +14,20 @@ from plano3d.api.app import create_app
 from plano3d.application.ports import AssistantReply, PlanAssistant
 from plano3d.config import Settings
 from plano3d.container import memory_container
-from plano3d.infrastructure.assistant.claude_assistant import ClaudePlanAssistant, to_plan_op
+from plano3d.infrastructure.assistant.claude_assistant import (
+    ClaudePlanAssistant,
+    to_plan_op,
+    to_viewer_action,
+)
 from plano3d.infrastructure.ocr.budget import ClaudeBudget, ResponseCache
 
 
 class FakeAssistant(PlanAssistant):
     def __init__(self) -> None:
-        self.seen: list[tuple[str, str]] = []
+        self.seen: list[tuple[str, str, str]] = []
 
-    async def interpret(self, message: str, context: str) -> AssistantReply:
-        self.seen.append((message, context))
+    async def interpret(self, message: str, context: str, scope: str = "plan") -> AssistantReply:
+        self.seen.append((message, context, scope))
         return AssistantReply(
             [{"op": "add_room", "name": "Sala", "width": 4.0, "depth": 5.0}], "Listo"
         )
@@ -48,7 +52,15 @@ def test_assistant_endpoint_returns_ops() -> None:
             "ops": [{"op": "add_room", "name": "Sala", "width": 4.0, "depth": 5.0}],
             "reply": "Listo",
         }
-        assert fake.seen == [("quiero una sala grande", "(vacío)")]
+        assert fake.seen == [("quiero una sala grande", "(vacío)", "plan")]
+        r = client.post(
+            f"/api/projects/{pid}/assistant",
+            json={"message": "que se vea de noche", "scope": "viewer"},
+        )
+        assert r.status_code == 200, r.text
+        assert fake.seen[-1] == ("que se vea de noche", "", "viewer")
+        bad = {"message": "x", "scope": "otro"}
+        assert client.post(f"/api/projects/{pid}/assistant", json=bad).status_code == 422
 
 
 def test_without_assistant_is_503_and_unknown_project_is_404() -> None:
@@ -92,6 +104,27 @@ def test_to_plan_op_normalizes_flat_rows() -> None:
     floor = nulls | {"op": "set_floor", "room": "Sala", "material": "madera"}
     assert to_plan_op(floor) == {"op": "set_floor", "room": "Sala", "material": "madera"}
     assert to_plan_op(nulls | {"op": "explotar"}) is None
+
+
+def test_to_viewer_action_normalizes_flat_rows() -> None:
+    row: dict[str, Any] = {"value": None, "number": None, "on": None}
+    assert to_viewer_action(row | {"a": "plan_mode", "value": "acero"}) == {
+        "a": "plan_mode",
+        "id": "acero",
+    }
+    assert to_viewer_action(row | {"a": "plan_mode", "value": "fantasia"}) is None
+    assert to_viewer_action(row | {"a": "masonry", "on": False}) == {"a": "masonry", "hidden": True}
+    assert to_viewer_action(row | {"a": "step", "number": 7}) == {"a": "step", "to": 7}
+    assert to_viewer_action(row | {"a": "step", "value": "next"}) == {"a": "step", "to": "next"}
+    assert to_viewer_action(row | {"a": "step", "number": 0}) is None
+    cut = row | {"a": "cut", "on": True, "number": 1.2}
+    assert to_viewer_action(cut) == {"a": "cut", "on": True, "at": 1.2}
+    assert to_viewer_action(row | {"a": "element", "value": " C-3 "}) == {
+        "a": "element",
+        "id": "C-3",
+    }
+    assert to_viewer_action(row | {"a": "overlay", "number": 3}) is None
+    assert to_viewer_action(row | {"a": "explotar"}) is None
 
 
 class _FakeMessages:
@@ -146,3 +179,22 @@ def test_claude_adapter_respects_budget(tmp_path: Path) -> None:
 
     with pytest.raises(AssistantUnavailableError):
         asyncio.run(bot.interpret("algo", ""))
+
+
+def test_claude_adapter_viewer_scope_uses_its_own_schema(tmp_path: Path) -> None:
+    row = {"value": None, "number": None, "on": None}
+    payload = {
+        "actions": [row | {"a": "plan_mode", "value": "obra"}, row | {"a": "roof", "on": "si"}],
+        "reply": "Te muestro la obra.",
+    }
+    messages = _FakeMessages(payload)
+    bot = ClaudePlanAssistant(
+        client=SimpleNamespace(messages=messages),
+        budget=ClaudeBudget(tmp_path / "usage.json", limit_usd=1.0),
+        cache=ResponseCache(tmp_path / "c"),
+    )
+    import asyncio
+
+    r = asyncio.run(bot.interpret("enséñame cómo se construye", "Modo: presentacion", "viewer"))
+    assert r.ops == [{"a": "plan_mode", "id": "obra"}]  # la fila mal formada se descarta
+    assert r.reply == "Te muestro la obra."

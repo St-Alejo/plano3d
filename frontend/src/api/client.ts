@@ -102,8 +102,9 @@ export const api = {
   },
 
   /** Chat del editor: lo que el intérprete local no entendió lo interpreta la IA (503 si no hay). */
-  assistant: (id: string, message: string, context: string) =>
-    request<AssistantReply>(`/projects/${encodeURIComponent(id)}/assistant`, { method: 'POST', ...json({ message, context }) }),
+  /** `scope`: 'plan' edita el plano (chat del editor); 'viewer' ajusta la vista 3D */
+  assistant: (id: string, message: string, context: string, scope: 'plan' | 'viewer' = 'plan') =>
+    request<AssistantReply>(`/projects/${encodeURIComponent(id)}/assistant`, { method: 'POST', ...json({ message, context, scope }) }),
 
   /** Plano desde cero: sin foto, listo para dibujar. */
   createBlankProject: (name: string) => request<Project>('/projects/blank', { method: 'POST', ...json({ name }) }),

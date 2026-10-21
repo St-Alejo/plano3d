@@ -281,11 +281,15 @@ class AssistantRequestDTO(_DTO):
     context: str = Field(
         "", max_length=6000, description="resumen del plano actual (ambientes y aberturas)"
     )
+    scope: Literal["plan", "viewer"] = Field(
+        "plan",
+        description="plan: editar el plano (chat del editor); viewer: ajustar la vista 3D",
+    )
 
 
 class AssistantReplyDTO(_DTO):
     ops: list[dict[str, Any]] = Field(
-        description="operaciones del chat (forma de PlanOp en el frontend)"
+        description="operaciones del chat: PlanOp (scope plan) o ViewerAction (scope viewer)"
     )
     reply: str
 

@@ -242,14 +242,15 @@ class ImageStitcher(ABC):
 class AssistantReply:
     """Lo que el asistente entendió de un mensaje del chat del editor."""
 
-    #: operaciones con la forma de ``PlanOp`` del frontend (ver ``planOps.ts``)
+    #: ``PlanOp`` (``planOps.ts``) o, en la vista 3D, ``ViewerAction`` (``viewerCommands.ts``)
     ops: list[dict[str, object]]
     #: respuesta breve en español para mostrar en el chat
     reply: str
 
 
 class PlanAssistant(ABC):
-    """Interpreta órdenes en lenguaje natural para dibujar o editar un plano."""
+    """Interpreta órdenes en lenguaje natural para editar un plano o ajustar su vista 3D."""
 
     @abstractmethod
-    async def interpret(self, message: str, context: str) -> AssistantReply: ...
+    async def interpret(self, message: str, context: str, scope: str = "plan") -> AssistantReply:
+        """``scope``: ``plan`` (operaciones del editor) o ``viewer`` (ajustes de la vista 3D)."""

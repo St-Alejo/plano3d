@@ -16,7 +16,7 @@ import type { ConstructionPanel } from './modes'
 import { QuantitiesPanel } from './QuantitiesPanel'
 import { RebarSchedulePanel } from './RebarSchedulePanel'
 import { CONCRETE_TINT } from './scene/MaterialFactory'
-import { SequencePanel } from './SequencePanel'
+import { SequencePanel, type StepCommand } from './SequencePanel'
 import { StructureDetails } from './StructureDetails'
 
 const SELECT = 'h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11'
@@ -42,6 +42,7 @@ export function ObraPanel({
   onElement,
   onClose,
   fileBase = 'plano',
+  stepCommand,
 }: {
   variant: ConstructionPanel
   model: BuildingModel
@@ -55,6 +56,8 @@ export function ObraPanel({
   onElement: (id: string) => void
   onClose: () => void
   fileBase?: string
+  /** orden del chat para la línea de tiempo de la secuencia */
+  stepCommand?: StepCommand | null
 }) {
   const structure = useMemo(() => deriveStructure(model, { brick }), [model, brick])
   const bars = useMemo(() => (variant === 'acero' ? rebarSchedule(structure) : []), [variant, structure])
@@ -68,7 +71,7 @@ export function ObraPanel({
 
   return (
     <section aria-label="Obra" className="flex flex-col gap-2 border-b border-line pb-2">
-      {variant === 'secuencia' && <SequencePanel steps={steps} root={root} />}
+      {variant === 'secuencia' && <SequencePanel steps={steps} root={root} command={stepCommand} />}
       {variant === 'obra' && (
         <>
           <label className="flex items-center justify-between gap-2 text-xs">

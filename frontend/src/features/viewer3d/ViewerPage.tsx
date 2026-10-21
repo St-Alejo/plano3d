@@ -8,6 +8,7 @@ import { api } from '@/api/client'
 import type { Point } from '@/api/types'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
+import { fold } from '@/domain/planOps'
 import { sunPosition } from '@/domain/sun'
 import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
@@ -20,7 +21,11 @@ import { resetDoorProgress } from './doors'
 import { useWalk } from './walkStore'
 import { PLAN_MODES, planMode } from './modes'
 import { ObraPanel } from './ObraPanel'
-import type { BrickId } from '@/domain/structure/bricks'
+import { BRICKS, type BrickId } from '@/domain/structure/bricks'
+import { deriveStructure } from '@/domain/structure/derive'
+import type { StepCommand } from './SequencePanel'
+import { ViewerChat, type ViewerReply } from './ViewerChat'
+import { quantityAnswer, type ViewerAction } from './viewerCommands'
 import { downloadBlob, exportGlb } from './scene/exportGlb'
 import { exportRoot, type BuiltScene } from './scene/SceneBuilder'
 import { DISPLAY_LABEL, exportObj, PRESET_LABEL, type CameraPreset, type DisplayMode } from './scene/viewTools'
@@ -95,6 +100,7 @@ export function ViewerPage() {
   const [brick, setBrick] = useState<BrickId>('tolete')
   const [hideMasonry, setHideMasonry] = useState(false)
   const [elementId, setElementId] = useState<string | null>(null)
+  const [stepCommand, setStepCommand] = useState<StepCommand | null>(null)
   const [sunOn, setSunOn] = useState(false)
   const [sunDate, setSunDate] = useState(today)
   const [sunHour, setSunHour] = useState(10)
@@ -180,6 +186,101 @@ export function ViewerPage() {
     else setFlyTo({ ...p })
   }
 
+  /** ids de la estructura derivada, para validar lo que pide el chat ("C-3") */
+  const structureIds = () => {
+    const s = deriveStructure(model, { brick })
+    return [s.columns, s.footings, s.plinths, s.beams, s.lintels, s.panels].map((list) => list.map((e) => e.id))
+  }
+  /** los modos de obra tienen panel; si se pide algo de obra desde la presentación, se entra a Obra */
+  const ensureObra = () => {
+    if (!strategy.panel) choosePlanMode('obra')
+    setPanelOpen(true)
+  }
+
+  /** Aplica una acción del chat de la vista y devuelve qué se hizo. */
+  const runViewerAction = (act: ViewerAction): ViewerReply => {
+    switch (act.a) {
+      case 'plan_mode':
+        choosePlanMode(act.id)
+        setPanelOpen(true)
+        return `Modo ${planMode(act.id).label}`
+      case 'camera':
+        setMode(act.mode)
+        return act.mode === 'walk' ? 'Modo recorrer: haz clic en el modelo para caminar' : 'Modo orbitar'
+      case 'preset':
+        setMode('orbit')
+        setPreset({ name: act.name, nonce: Date.now() })
+        return `Vista ${PRESET_LABEL[act.name].toLowerCase()}`
+      case 'display':
+        setDisplay(act.mode)
+        return `Visualización: ${DISPLAY_LABEL[act.mode].toLowerCase()}`
+      case 'quality':
+        setQuality(act.q)
+        return `Calidad ${act.q}`
+      case 'roof':
+        setRoof(act.on)
+        // la cubierta de teja se ve en la presentación
+        if (act.on && strategy.panel) choosePlanMode('presentacion')
+        return act.on ? 'Puse la cubierta de teja' : 'Quité la cubierta'
+      case 'brick':
+        setBrick(act.id)
+        ensureObra()
+        return `Mampostería en ${BRICKS[act.id].name}`
+      case 'masonry':
+        setHideMasonry(act.hidden)
+        ensureObra()
+        return act.hidden ? 'Oculté el ladrillo: se ve el esqueleto de concreto' : 'Mostré el ladrillo'
+      case 'element': {
+        const ids = structureIds()
+        if (!ids.flat().includes(act.id)) {
+          const prefix = act.id.split('-')[0]
+          const same = ids.flat().filter((id) => id.split('-')[0] === prefix)
+          throw new Error(same.length ? `No hay ${act.id}: van de ${same[0]} a ${same[same.length - 1]}` : `Este plano no tiene ${act.id}`)
+        }
+        ensureObra()
+        setElementId(act.id)
+        return `Seleccioné ${act.id}`
+      }
+      case 'step':
+        if (strategy.id !== 'secuencia') choosePlanMode('secuencia')
+        setPanelOpen(true)
+        setStepCommand({ to: act.to, nonce: Date.now() })
+        return act.to === 'play' ? 'Reproduzco la obra' : act.to === 'next' ? 'Siguiente paso' : act.to === 'prev' ? 'Paso anterior' : act.to === 'last' ? 'Último paso: la obra terminada' : `Paso ${act.to} de la secuencia`
+      case 'cut':
+        setCutOn(act.on)
+        if (act.at !== undefined) setCut(Math.min(3, Math.max(0.2, act.at)))
+        return act.on ? `Corte horizontal a ${(act.at ?? cut).toFixed(2).replace('.', ',')} m` : 'Quité el corte'
+      case 'sun':
+        setSunOn(act.on)
+        if (act.hour !== undefined) setSunHour(act.hour)
+        return act.on ? `Estudio solar${act.hour !== undefined ? ` a las ${Math.floor(act.hour)}:${String(Math.round((act.hour % 1) * 60)).padStart(2, '0')}` : ''}` : 'Apagué el estudio solar'
+      case 'overlay':
+        setOverlay(act.value)
+        return act.value ? `Plano original al ${Math.round(act.value * 100)} %` : 'Oculté el plano original'
+      case 'room': {
+        const q = fold(act.room).replace(/^(?:la|el)\s+/, '')
+        const r = rooms.find((x) => fold(x.label) === q) ?? rooms.find((x) => fold(x.label).startsWith(q) || q.includes(fold(x.label)))
+        if (!r) throw new Error(`No encuentro el ambiente «${act.room}» (hay: ${rooms.map((x) => x.label).join(', ')})`)
+        goTo(r.at, r.levelId)
+        return `Fui a ${r.label}`
+      }
+      case 'ask':
+        return quantityAnswer(model, brick, act.topic)
+    }
+  }
+
+  /** Estado de la vista para el asistente con IA (respaldo del chat). */
+  const viewerContext = () => {
+    const ids = structureIds()
+    const range = (list: string[]) => (list.length ? `${list[0]}…${list[list.length - 1]}` : 'ninguno')
+    return [
+      `Modo del plano: ${strategy.id}. Cámara: ${mode === 'walk' ? 'recorrer' : 'orbitar'}. Calidad: ${quality}.`,
+      `Unidad de mampostería: ${brick}. Ladrillo oculto: ${hideMasonry ? 'sí' : 'no'}. Cubierta: ${roof ? 'sí' : 'no'}. Corte: ${cutOn ? `${cut} m` : 'no'}.`,
+      `Ambientes: ${rooms.map((r) => r.label).join(', ') || 'ninguno'}.`,
+      `Columnetas ${range(ids[0]!)}; vigas de cimentación ${range(ids[1]!)}; vigas de amarre ${range(ids[3]!)}; dinteles ${range(ids[4]!)}; paños ${range(ids[5]!)}.`,
+    ].join('\n')
+  }
+
   return (
     <div ref={box} className="relative flex-1 bg-canvas">
       <Viewer3D
@@ -209,6 +310,11 @@ export function ViewerPage() {
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
+
+      {/* chat de ajustes: debajo de la barra superior, a la derecha */}
+      <div className="pointer-events-none absolute top-16 right-3 z-20 flex justify-end">
+        <ViewerChat projectId={project.id} run={runViewerAction} context={viewerContext} />
+      </div>
 
       {/* barra superior: compacta en el celular (solo íconos) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
@@ -304,6 +410,7 @@ export function ViewerPage() {
                   onElement={setElementId}
                   onClose={() => setElementId(null)}
                   fileBase={fileBase}
+                  stepCommand={stepCommand}
                 />
               )}
               <label id="overlay-label" className="flex justify-between text-xs text-muted">

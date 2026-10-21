@@ -165,3 +165,39 @@ test('láminas: detalles tipo en el 3D y capa de estructura en el editor', async
   await expect(page.getByRole('button', { name: 'Ocultar estructura (obra)' })).toHaveAttribute('aria-pressed', 'true')
   expect(errors).toEqual([])
 })
+
+test('chat de la vista: modos, elementos, pasos y cantidades escribiendo', async ({ page }) => {
+  test.slow()
+  const errors: string[] = []
+  page.on('pageerror', (e) => errors.push(e.message))
+  await page.goto(`/p/${projectId}/3d`)
+  await page.getByRole('button', { name: 'Ajustar escribiendo' }).click()
+  const chat = page.getByRole('region', { name: 'Chat de la vista 3D' })
+  const say = async (msg: string) => {
+    await chat.getByRole('textbox', { name: 'Mensaje para la vista 3D' }).fill(msg)
+    await chat.getByRole('button', { name: 'Enviar' }).click()
+  }
+
+  await say('modo acero')
+  await expect(page).toHaveURL(/modo=acero/)
+  await expect(chat).toContainText('Modo Despiece de acero')
+
+  await say('modo obra y muestra la columneta C-1')
+  await expect(page).toHaveURL(/modo=obra/)
+  await expect(chat).toContainText('Seleccioné C-1')
+  await expect(page.getByRole('region', { name: 'Obra' })).toContainText('C-1')
+
+  await say('muestra la columneta C-99')
+  await expect(chat).toContainText(/No hay C-99: van de C-1 a C-\d+/)
+
+  await say('¿cuántos ladrillos?')
+  await expect(chat).toContainText(/Ladrillo tolete .*und/)
+
+  await say('ve al paso 2')
+  await expect(page).toHaveURL(/modo=secuencia/)
+  await expect(page.getByRole('article', { name: 'Paso actual' })).toContainText(/Paso 2 de \d+/)
+  await say('siguiente paso')
+  await expect(page.getByRole('article', { name: 'Paso actual' })).toContainText(/Paso 3 de \d+/)
+
+  expect(errors).toEqual([])
+})

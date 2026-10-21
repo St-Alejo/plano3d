@@ -14,11 +14,15 @@ class InterpretChat:
         self._repo = repo
         self._assistant = assistant
 
-    async def execute(self, project_id: str, message: str, context: str) -> AssistantReply:
+    async def execute(
+        self, project_id: str, message: str, context: str, scope: str = "plan"
+    ) -> AssistantReply:
         if await self._repo.get(project_id) is None:
             raise ProjectNotFoundError(project_id)
         if self._assistant is None:
             raise AssistantUnavailableError(
                 "El asistente con IA no está disponible en este servidor"
             )
-        return await self._assistant.interpret(message[:MAX_MESSAGE], context[:MAX_CONTEXT])
+        return await self._assistant.interpret(
+            message[:MAX_MESSAGE], context[:MAX_CONTEXT], scope=scope
+        )

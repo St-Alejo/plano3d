@@ -190,8 +190,8 @@ async def create_blank_project(body: BlankProjectDTO, c: ContainerDep) -> Projec
 async def assistant(
     project_id: str, body: AssistantRequestDTO, c: ContainerDep
 ) -> AssistantReplyDTO:
-    """Respaldo del chat del editor: interpreta lo que el intérprete local no entendió."""
-    r = await c.interpret_chat.execute(project_id, body.message, body.context)
+    """Respaldo de los chats (editor y vista 3D): lo que el intérprete local no entendió."""
+    r = await c.interpret_chat.execute(project_id, body.message, body.context, body.scope)
     return AssistantReplyDTO(ops=r.ops, reply=r.reply)
 
 

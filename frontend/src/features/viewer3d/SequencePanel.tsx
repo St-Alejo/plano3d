@@ -8,13 +8,20 @@ import type * as THREE from 'three'
 import type { Step } from '@/domain/structure/schedule'
 import { prefersReducedMotion } from './motion'
 import { stepTimeline } from './scene/timeline'
+import type { StepTarget } from './viewerCommands'
+
+/** Orden externa (del chat): ir a un paso o reproducir; `nonce` permite repetirla. */
+export interface StepCommand {
+  to: StepTarget
+  nonce: number
+}
 
 /** Segundos que tarda cada paso al reproducir. */
 const STEP_SECONDS = 2.2
 
 const ICON_BUTTON = 'inline-flex size-9 items-center justify-center rounded-md border border-line-strong bg-canvas hover:border-accent disabled:opacity-40 pointer-coarse:size-11'
 
-export function SequencePanel({ steps, root }: { steps: Step[]; root: THREE.Object3D | null }) {
+export function SequencePanel({ steps, root, command }: { steps: Step[]; root: THREE.Object3D | null; command?: StepCommand | null }) {
   // t ∈ [0, n]: el paso i se construye entre i e i + 1; se arranca con el primero hecho
   const [t, setT] = useState(1)
   const [playing, setPlaying] = useState(false)
@@ -31,6 +38,19 @@ export function SequencePanel({ steps, root }: { steps: Step[]; root: THREE.Obje
   useEffect(() => {
     latest.current = t
   }, [t])
+  useEffect(() => {
+    if (!command || n === 0) return
+    const { to } = command
+    if (to === 'play') {
+      if (latest.current >= n) setT(0)
+      setPlaying(true)
+      return
+    }
+    setPlaying(false)
+    // el paso k (desde 1) queda completo en t = k
+    const i = Math.min(n - 1, Math.max(0, Math.ceil(latest.current) - 1))
+    setT(to === 'next' ? Math.min(n, i + 2) : to === 'prev' ? Math.max(1, i) : to === 'last' ? n : Math.min(n, Math.max(1, Math.round(to))))
+  }, [command, n])
   useEffect(() => {
     if (!playing) return
     /** avanza a `next`; devuelve false cuando la obra terminó */

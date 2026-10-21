@@ -128,7 +128,7 @@ export interface paths {
         put?: never;
         /**
          * Assistant
-         * @description Respaldo del chat del editor: interpreta lo que el intérprete local no entendió.
+         * @description Respaldo de los chats (editor y vista 3D): lo que el intérprete local no entendió.
          */
         post: operations["assistant_api_projects__project_id__assistant_post"];
         delete?: never;
@@ -318,7 +318,7 @@ export interface components {
         AssistantReplyDTO: {
             /**
              * Ops
-             * @description operaciones del chat (forma de PlanOp en el frontend)
+             * @description operaciones del chat: PlanOp (scope plan) o ViewerAction (scope viewer)
              */
             ops: {
                 [key: string]: unknown;
@@ -336,6 +336,13 @@ export interface components {
             context: string;
             /** Message */
             message: string;
+            /**
+             * Scope
+             * @description plan: editar el plano (chat del editor); viewer: ajustar la vista 3D
+             * @default plan
+             * @enum {string}
+             */
+            scope: "plan" | "viewer";
         };
         /** BlankProjectDTO */
         BlankProjectDTO: {

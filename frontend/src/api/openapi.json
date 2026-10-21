@@ -4,7 +4,7 @@
       "AssistantReplyDTO": {
         "properties": {
           "ops": {
-            "description": "operaciones del chat (forma de PlanOp en el frontend)",
+            "description": "operaciones del chat: PlanOp (scope plan) o ViewerAction (scope viewer)",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -37,6 +37,16 @@
             "maxLength": 1000,
             "minLength": 1,
             "title": "Message",
+            "type": "string"
+          },
+          "scope": {
+            "default": "plan",
+            "description": "plan: editar el plano (chat del editor); viewer: ajustar la vista 3D",
+            "enum": [
+              "plan",
+              "viewer"
+            ],
+            "title": "Scope",
             "type": "string"
           }
         },
@@ -1991,7 +2001,7 @@
     },
     "/api/projects/{project_id}/assistant": {
       "post": {
-        "description": "Respaldo del chat del editor: interpreta lo que el intérprete local no entendió.",
+        "description": "Respaldo de los chats (editor y vista 3D): lo que el intérprete local no entendió.",
         "operationId": "assistant_api_projects__project_id__assistant_post",
         "parameters": [
           {
