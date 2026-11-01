@@ -150,11 +150,11 @@ export function NewPlanPage() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className={`blueprint-grid flex flex-col items-center gap-6 rounded-2xl border-2 border-dashed bg-surface/70 px-6 py-16 text-center transition-[border-color,background-color] duration-300 ${
+          className={`blueprint-grid flex flex-col items-center gap-6 rounded-lg border-2 border-dashed bg-surface/70 px-6 py-16 text-center transition-[border-color,background-color] duration-300 ${
             dragOver ? 'border-accent bg-accent/5' : 'border-line-strong hover:border-accent-dim'
           }`}
         >
-          <span className="grid size-16 place-items-center rounded-2xl bg-accent/10">
+          <span className="grid size-16 place-items-center rounded-lg bg-accent/10">
             <ScanLine className="size-8 text-accent" aria-hidden />
           </span>
           <div>
@@ -179,7 +179,7 @@ export function NewPlanPage() {
 
       {file && (
         <div className="flex flex-col gap-6">
-          <div className="rounded-2xl border border-line bg-surface p-3 shadow-xs">
+          <div className="rounded-lg border border-line bg-surface p-3 shadow-xs">
             {preview && manual && <CornerEditor src={preview} corners={corners} onChange={setCorners} />}
             {preview && !manual && <img src={preview} alt="Vista previa del plano" className="mx-auto max-h-[60vh] object-contain" />}
             {!preview && (
@@ -233,7 +233,7 @@ export function NewPlanPage() {
       )}
 
       {error && (
-        <p role="alert" className="mt-4 rounded-lg bg-danger/8 px-3 py-2 text-sm text-danger">
+        <p role="alert" className="mt-4 rounded-md bg-danger/8 px-3 py-2 text-sm text-danger">
           {error}
         </p>
       )}

@@ -13,7 +13,8 @@
   --color-line: rgb(28 31 29 / 0.09);
   --color-line-strong: rgb(28 31 29 / 0.2);
   --color-fg: #1c1f1d;
-  --color-muted: #545b57;
+  /* muted = texto secundario; subtle = metadatos (los dos pasan AA sobre canvas y surface) */
+  --color-muted: #3f4642;
   --color-subtle: #646b67;
   --color-accent: #2f6b55;
   --color-accent-dim: #5a8f7b;
@@ -23,8 +24,8 @@
   --color-ok: #236640;
   --color-paper: #f3f2ed;
   --color-ink: #1c1f1d;
-  /* acciones primarias: el mismo verde de la landing */
-  --color-brand: #2f6b55;
+  /* acción primaria (un verde más profundo que el acento, que queda para foco y selección) */
+  --color-brand: #24543f;
   --color-brand-ink: #ffffff;
 
   --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
@@ -32,8 +33,11 @@
   --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, monospace;
 
+  /* escala única: sm controles chicos, md botones y campos, lg paneles y tarjetas, xl diálogos y bloques grandes */
   --radius-sm: 6px;
   --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
 }
 
 /* Tema oscuro: carbón neutro (sin azul) con el verde aclarado para mantener el contraste. */
@@ -44,7 +48,7 @@
   --color-line: rgb(236 239 233 / 0.08);
   --color-line-strong: rgb(236 239 233 / 0.18);
   --color-fg: #eceee9;
-  --color-muted: #a7aea9;
+  --color-muted: #bcc2bd;
   --color-subtle: #8a918c;
   --color-accent: #7cc4a3;
   --color-accent-dim: #4f8f74;
@@ -54,7 +58,7 @@
   --color-ok: #74cf98;
   --color-paper: #ecebe5;
   --color-ink: #1c1f1d;
-  --color-brand: #7cc4a3;
+  --color-brand: #8fd1b2;
   --color-brand-ink: #0c1d15;
 }
 
@@ -103,11 +107,11 @@
   /* antes eran marcas de esquina de plano técnico; ahora es la tarjeta redondeada del sistema */
   .corner-ticks {
     position: relative;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
   }
   /* diálogos (Radix): esquinas, sombra amplia y una entrada corta */
   [role='dialog'][data-state] {
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
     border-color: var(--color-line-strong);
     box-shadow: 0 32px 80px -32px rgb(0 0 0 / 0.4);
   }

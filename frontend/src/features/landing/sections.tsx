@@ -78,10 +78,10 @@ export function BeforeAfter() {
 
   return (
     <div>
-      <ClipReveal className="rounded-2xl">
+      <ClipReveal className="rounded-lg">
         <div
           ref={box}
-          className="relative aspect-[4/3] touch-none overflow-hidden rounded-2xl bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
+          className="relative aspect-[4/3] touch-none overflow-hidden rounded-lg bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
           onPointerDown={(e) => {
             dragging.current = true
             e.currentTarget.setPointerCapture(e.pointerId)
@@ -185,7 +185,7 @@ export function EditorDiagram() {
   )
   return (
     <div className="grid items-start gap-12 lg:grid-cols-[7fr_5fr]">
-      <Reveal className="rounded-2xl bg-(--l-paper-2) p-4 sm:p-8">
+      <Reveal className="rounded-lg bg-(--l-paper-2) p-4 sm:p-8">
         <motion.svg
           viewBox="0 0 640 420"
           className="w-full"
@@ -244,7 +244,7 @@ export function EditorDiagram() {
           <StaggerItem
             as="li"
             key={c.n}
-            className="group grid grid-cols-[1.75rem_1fr] gap-3 rounded-xl p-3 transition-colors duration-300 hover:bg-(--l-paper-2)"
+            className="group grid grid-cols-[1.75rem_1fr] gap-3 rounded-lg p-3 transition-colors duration-300 hover:bg-(--l-paper-2)"
           >
             <span className="grid size-7 place-items-center rounded-full label bg-(--l-signal-soft) text-(--l-signal-ink) transition-colors duration-300 group-hover:bg-(--l-signal) group-hover:text-white">
               {c.n}
@@ -268,7 +268,7 @@ export function AreaSchedule() {
   const maxArea = Math.max(...rooms.map((r) => r.area))
   return (
     <div className="grid items-center gap-12 lg:grid-cols-[6fr_5fr]">
-      <ClipReveal className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
+      <ClipReveal className="aspect-[4/3] overflow-hidden rounded-lg bg-(--l-paper-2)">
         <PlanCanvas model={model} className="size-full" label="Plano del apartamento con el área de cada ambiente" />
       </ClipReveal>
       <table className="w-full border-collapse text-[15px]">
@@ -333,7 +333,7 @@ export function DropCta() {
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '0px 0px -10% 0px' }}
       transition={{ duration: 0.9, ease: EASE }}
-      className="relative isolate grid gap-10 overflow-hidden rounded-3xl bg-(--l-deep) p-6 text-white sm:p-12 lg:grid-cols-[5fr_6fr] lg:items-center lg:p-16"
+      className="relative isolate grid gap-10 overflow-hidden rounded-xl bg-(--l-deep) p-6 text-white sm:p-12 lg:grid-cols-[5fr_6fr] lg:items-center lg:p-16"
     >
       {/* luz suave que deriva lentamente detrás del contenido */}
       <motion.span
@@ -365,7 +365,7 @@ export function DropCta() {
           go(e.dataTransfer.files[0])
         }}
         className={clsx(
-          'grid place-items-center gap-4 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-[border-color,background-color,transform] duration-300',
+          'grid place-items-center gap-4 rounded-lg border-2 border-dashed px-6 py-14 text-center transition-[border-color,background-color,transform] duration-300',
           over ? 'scale-[1.02] border-white bg-white/10' : 'border-white/30 hover:border-white/55 hover:bg-white/[0.04]',
         )}
       >
@@ -425,7 +425,7 @@ export function Facts() {
           key={f.label}
           index={i}
           className={clsx(
-            'flex min-h-72 flex-col justify-between rounded-2xl p-6 transition-transform duration-500 ease-out hover:-translate-y-1',
+            'flex min-h-72 flex-col justify-between rounded-lg p-6 transition-transform duration-500 ease-out hover:-translate-y-1',
             f.dark ? 'bg-(--l-deep) text-white' : 'bg-(--l-paper-2)',
           )}
         >

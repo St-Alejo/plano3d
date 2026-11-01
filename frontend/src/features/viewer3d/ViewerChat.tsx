@@ -98,7 +98,7 @@ export function ViewerChat({ projectId, run, context }: { projectId: string; run
   return (
     <section
       aria-label="Chat de la vista 3D"
-      className="pointer-events-auto flex max-h-[min(50vh,460px)] w-[min(380px,calc(100vw-24px))] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
+      className="pointer-events-auto flex max-h-[min(50vh,460px)] w-[min(380px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
     >
       <header className="flex items-center gap-2 border-b border-line px-3 py-2">
         <MessageSquare className="size-4 text-brand" aria-hidden />

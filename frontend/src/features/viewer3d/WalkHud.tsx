@@ -147,7 +147,7 @@ export function WalkHud({ model, touch }: { model: BuildingModel; touch: boolean
       </div>
 
       {help && (
-        <div role="dialog" aria-label="Cómo recorrer" className="pointer-events-auto absolute top-1/2 left-1/2 w-[min(92vw,380px)] -translate-1/2 rounded-xl border border-line-strong bg-canvas/95 p-5 shadow-xl backdrop-blur">
+        <div role="dialog" aria-label="Cómo recorrer" className="pointer-events-auto absolute top-1/2 left-1/2 w-[min(92vw,380px)] -translate-1/2 rounded-lg border border-line-strong bg-canvas/95 p-5 shadow-xl backdrop-blur">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">Cómo recorrer</h2>
             <button type="button" aria-label="Cerrar ayuda" onClick={closeHelp} className="inline-flex size-11 items-center justify-center rounded-md hover:bg-raised">

@@ -81,7 +81,7 @@ export function TutorialButton({ initial = 'editar', compact = false, label = 'V
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-canvas/70 backdrop-blur-sm" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(94vw,880px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-line-strong bg-surface p-4 shadow-xl">
+        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-[min(94vw,880px)] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line-strong bg-surface p-4 shadow-xl">
           <div className="mb-3 flex items-center justify-between gap-3">
             <Dialog.Title className="font-display text-lg font-semibold">Tutorial en video</Dialog.Title>
             <Dialog.Close aria-label="Cerrar" className="rounded p-1.5 text-muted hover:bg-raised hover:text-fg">

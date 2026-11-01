@@ -24,9 +24,9 @@ export function StartBlank({ tutorial }: { tutorial?: ReactNode }) {
   }
 
   return (
-    <section aria-labelledby="blank-title" className="mt-6 rounded-2xl border border-line bg-surface p-6">
+    <section aria-labelledby="blank-title" className="mt-6 rounded-lg border border-line bg-surface p-6">
       <div className="flex items-start gap-4">
-        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand/10">
+        <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-brand/10">
           <PencilRuler className="size-6 text-brand" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">

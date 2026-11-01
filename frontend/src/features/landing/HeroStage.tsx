@@ -100,7 +100,7 @@ function StaticHero({ plan, actions }: { plan: ReactNode; actions: ReactNode }) 
       <div id="hero-title">
         <Headline>{actions}</Headline>
       </div>
-      <Panel className="aspect-[4/3] overflow-hidden rounded-2xl bg-(--l-paper-2)">
+      <Panel className="aspect-[4/3] overflow-hidden rounded-lg bg-(--l-paper-2)">
         <figure className="size-full">
           {plan}
           <figcaption className="sr-only">{caption}</figcaption>
@@ -169,7 +169,7 @@ function AnimatedHero({ model, plan, actions }: { model: BuildingModel; plan: Re
           </div>
           {/* lienzo 3D */}
           <div className="relative order-1 h-[56svh] shrink-0 px-4 pt-20 sm:px-6 lg:order-2 lg:h-auto lg:pt-20 lg:pb-10">
-            <Panel className="relative size-full overflow-hidden rounded-2xl bg-(--l-paper-2) shadow-[0_30px_60px_-30px_rgb(28_31_29/0.35)] ring-1 ring-(--l-hair)">
+            <Panel className="relative size-full overflow-hidden rounded-lg bg-(--l-paper-2) shadow-[0_30px_60px_-30px_rgb(28_31_29/0.35)] ring-1 ring-(--l-hair)">
               <Suspense fallback={plan}>
                 <HeroScene model={model} progress={scrollYProgress} />
               </Suspense>

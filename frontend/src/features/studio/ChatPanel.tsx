@@ -120,7 +120,7 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
   return (
     <section
       aria-label="Chat del plano"
-      className="absolute bottom-4 left-1/2 z-20 flex max-h-[min(60vh,520px)] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-xl border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
+      className="absolute bottom-4 left-1/2 z-20 flex max-h-[min(60vh,520px)] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-lg border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
     >
       <header className="flex items-center gap-2 border-b border-line px-3 py-2">
         <MessageSquare className="size-4 text-brand" aria-hidden />
