@@ -1,13 +1,13 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
-import { Box, Check, Command, Maximize2, PanelLeft, Save } from 'lucide-react'
+import { Box, Check, Command, History, Keyboard, Maximize2, MoreHorizontal, PanelLeft, Save } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
 import type { Point, Project } from '@/api/types'
 import { CalibrateScale, ReplaceModel } from '@/domain/commands'
-import { Button, IconButton, Spinner } from '@/components/ui'
+import { Button, IconButton, Menu, PanelSection, Spinner, type MenuItem } from '@/components/ui'
 import { CalibrateDialog } from '@/features/editor2d/CalibrateDialog'
 import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
@@ -134,6 +134,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   const navigate = useNavigate()
   const [palette, setPalette] = useState(false)
   const [help, setHelp] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const actions = useMemo(
     () =>
       buildActions({
@@ -240,8 +241,13 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
     </ToggleGroup.Root>
   )
 
-  const linkClass =
-    'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-line-strong px-3 text-sm hover:border-accent pointer-coarse:h-11 pointer-coarse:min-w-11'
+  // lo que se usa de vez en cuando va detrás de "Más"; Guardar y Recorrer quedan siempre a la vista
+  const moreItems: MenuItem[] = [
+    { label: 'Historial de versiones', icon: <History className="size-4" aria-hidden />, onSelect: () => setHistoryOpen(true) },
+    { label: 'Buscar un comando', icon: <Command className="size-4" aria-hidden />, shortcut: 'Ctrl+K', onSelect: () => setPalette(true) },
+    { label: 'Atajos de teclado', icon: <Keyboard className="size-4" aria-hidden />, shortcut: '?', onSelect: () => setHelp(true) },
+    ...(!studio ? [{ label: 'Abrir el estudio a pantalla completa', icon: <Maximize2 className="size-4" aria-hidden />, href: `/p/${project.id}/estudio` }] : []),
+  ]
 
   const trailing = (
     <>
@@ -253,17 +259,25 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
             </IconButton>
           )}
           {viewToggle}
-          <IconButton label="Buscar un comando" shortcut="Ctrl+K" onClick={() => setPalette(true)}>
-            <Command className="size-5" aria-hidden />
-          </IconButton>
         </>
       )}
+      <TutorialButton compact initial={project.has_source === false ? 'crear' : 'editar'} />
+      <Menu
+        items={moreItems}
+        trigger={
+          <IconButton label="Más acciones">
+            <MoreHorizontal className="size-5" aria-hidden />
+          </IconButton>
+        }
+      />
+      <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} open={historyOpen} onOpenChange={setHistoryOpen} />
+      <span className="mx-0.5 h-6 w-px bg-line" aria-hidden />
       <span className="hidden font-mono text-xs text-subtle xl:inline" aria-live="polite">
         {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
       </span>
       <Button
         size="sm"
-        variant={dirty ? 'primary' : 'secondary'}
+        variant={dirty ? 'primary' : 'ghost'}
         loading={saving}
         disabled={!dirty}
         aria-label={dirty ? 'Guardar cambios' : 'Todo guardado'}
@@ -273,14 +287,11 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
       >
         <span className="hidden sm:inline">Guardar</span>
       </Button>
-      <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} />
-      <TutorialButton compact initial={project.has_source === false ? 'crear' : 'editar'} />
-      {!studio && (
-        <Link to={`/p/${project.id}/estudio`} aria-label="Abrir el estudio a pantalla completa" title="Estudio a pantalla completa" className={linkClass}>
-          <Maximize2 className="size-4" aria-hidden /> <span className="hidden sm:inline">Estudio</span>
-        </Link>
-      )}
-      <Link to={`/p/${project.id}/3d`} aria-label="Recorrer en 3D" className={linkClass}>
+      <Link
+        to={`/p/${project.id}/3d`}
+        aria-label="Recorrer en 3D"
+        className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md bg-fg px-3 text-sm font-medium text-canvas shadow-sm transition-[filter] hover:brightness-125 pointer-coarse:h-11 pointer-coarse:min-w-11"
+      >
         <Box className="size-4" aria-hidden /> <span className="hidden sm:inline">Recorrer</span>
       </Link>
     </>
@@ -301,12 +312,10 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   )
 
   const leftPanel = (
-    <>
+    <div className="flex flex-col gap-4">
       <LayersPanel />
-      <div className="mt-6">
-        <CatalogPanel />
-      </div>
-    </>
+      <CatalogPanel />
+    </div>
   )
 
   const inspector = (
@@ -321,7 +330,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           <Tabs.Trigger
             key={v}
             value={v}
-            className="h-9 text-xs text-muted pointer-coarse:h-11 data-[state=active]:border-b-2 data-[state=active]:border-brand data-[state=active]:text-fg"
+            className="h-9 text-sm text-muted pointer-coarse:h-11 data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:font-medium data-[state=active]:text-fg"
           >
             {l}
           </Tabs.Trigger>
@@ -420,10 +429,9 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           <Tabs.Content value="3d" className="min-h-[60vh] flex-1">{viewer}</Tabs.Content>
           <Tabs.Content value="props" className="flex flex-1 flex-col gap-8 overflow-y-auto p-4">
             <PropertiesPanel onSolve={() => void solve()} solving={solving} />
-            <div>
-              <h2 className="mb-3 font-serif text-2xl font-normal">Cuadro de áreas</h2>
+            <PanelSection title="Áreas">
               <AreaSchedulePanel projectName={project.name} />
-            </div>
+            </PanelSection>
             <CatalogPanel />
           </Tabs.Content>
         </Tabs.Root>

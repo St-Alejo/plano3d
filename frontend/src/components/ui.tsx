@@ -175,6 +175,7 @@ function readOpen(key: string | undefined, fallback: boolean) {
  */
 export function PanelSection({
   title,
+  ariaLabel,
   storageKey,
   defaultOpen = true,
   actions,
@@ -182,6 +183,8 @@ export function PanelSection({
   className,
 }: {
   title: string
+  /** nombre de la región si debe ser más descriptivo que el título visible */
+  ariaLabel?: string
   storageKey?: string
   defaultOpen?: boolean
   actions?: ReactNode
@@ -202,7 +205,7 @@ export function PanelSection({
     }
   }
   return (
-    <section aria-label={title} className={clsx('flex flex-col', className)}>
+    <section aria-label={ariaLabel ?? title} className={clsx('flex flex-col', className)}>
       <div className="flex items-center gap-1">
         <button
           type="button"

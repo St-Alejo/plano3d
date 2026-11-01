@@ -119,7 +119,8 @@ test('dos personas editando: la segunda recibe el aviso y puede sobrescribir', a
 test('historial: se ve la corrección y se restaura la detección original', async ({ page }) => {
   await openEditor(page)
   const before = await getProject(page)
-  await page.getByRole('button', { name: 'Historial de versiones' }).click()
+  await page.getByRole('button', { name: 'Más acciones' }).click()
+  await page.getByRole('menuitem', { name: 'Historial de versiones' }).click()
   const dialog = page.getByRole('dialog', { name: 'Historial de versiones' })
   await expect(dialog.getByText(/Corrección sobre la detección automática/)).toBeVisible()
   await expect(dialog.getByText(/v1 · Detección automática/)).toBeVisible()

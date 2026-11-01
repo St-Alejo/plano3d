@@ -1,5 +1,6 @@
 /** Panel de capas: ver/ocultar y bloquear cada capa del plano, con su número de elementos. */
 import clsx from 'clsx'
+import { PanelSection } from '@/components/ui'
 import { Eye, EyeOff, Lock, LockOpen } from 'lucide-react'
 import { selectLevel, useEditor, type LayerKey } from '@/store/editorStore'
 
@@ -32,10 +33,10 @@ export function LayersPanel() {
     : {}
 
   return (
-    <section aria-label="Capas" className="flex flex-col gap-1">
+    <PanelSection title="Capas" storageKey="capas">
       {levels.length > 1 && (
         <label className="mb-2 flex flex-col gap-1 text-sm">
-          <span className="font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Nivel</span>
+          <span className="text-xs text-muted">Nivel</span>
           <select
             value={level?.id ?? ''}
             onChange={(e) => setLevel(e.target.value)}
@@ -49,7 +50,6 @@ export function LayersPanel() {
           </select>
         </label>
       )}
-      <h2 className="mb-1 font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Capas</h2>
       <ul className="flex flex-col">
         {LAYERS.map((l) => {
           const off = hidden.has(l.key)
@@ -104,6 +104,6 @@ export function LayersPanel() {
           <span className="size-7 pointer-coarse:size-11" aria-hidden />
         </li>
       </ul>
-    </section>
+    </PanelSection>
   )
 }

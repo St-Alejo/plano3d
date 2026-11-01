@@ -1,7 +1,7 @@
 /** Historial de versiones del modelo: quién/qué se guardó, restaurar, y cuánto se corrigió la detección. */
 import * as Dialog from '@radix-ui/react-dialog'
 import { History, RotateCcw } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '@/api/client'
 import type { CorrectionStats, Revision } from '@/api/types'
 import { Button, ErrorState, Spinner } from '@/components/ui'
@@ -18,27 +18,45 @@ export function HistoryDialog({
   currentRevision,
   dirty,
   onRestored,
+  open: openProp,
+  onOpenChange,
 }: {
   projectId: string
   currentRevision: number
   dirty: boolean
   onRestored: () => void
+  /** controlado desde fuera (p. ej. el menú "Más"): sin botón propio */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [innerOpen, setInnerOpen] = useState(false)
+  const controlled = openProp !== undefined
+  const open = controlled ? openProp : innerOpen
+  const setOpen = (o: boolean) => (controlled ? onOpenChange?.(o) : setInnerOpen(o))
   const [data, setData] = useState<Loaded | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
 
-  const load = async () => {
-    setData(null)
-    setError(null)
-    try {
-      const [revisions, quality] = await Promise.all([api.listRevisions(projectId), api.quality(projectId).catch(() => null)])
-      setData({ revisions, quality })
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo cargar el historial')
+  // cada vez que se abre (por su botón o desde fuera) se recarga la lista: se limpia al cambiar
+  // `open` durante el render (patrón de React para estado derivado) y se pide en el efecto
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setData(null)
+      setError(null)
     }
   }
+  useEffect(() => {
+    if (!open) return
+    let alive = true
+    Promise.all([api.listRevisions(projectId), api.quality(projectId).catch(() => null)])
+      .then(([revisions, quality]) => alive && setData({ revisions, quality }))
+      .catch((e: unknown) => alive && setError(e instanceof Error ? e.message : 'No se pudo cargar el historial'))
+    return () => {
+      alive = false
+    }
+  }, [open, projectId])
 
   const restore = async (n: number) => {
     if (dirty && !window.confirm('Tienes cambios sin guardar que se perderán. ¿Restaurar igual?')) return
@@ -57,16 +75,15 @@ export function HistoryDialog({
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (o) void load()
-      }}
+      onOpenChange={setOpen}
     >
-      <Dialog.Trigger asChild>
-        <Button size="sm" variant="ghost" aria-label="Historial de versiones" title="Historial de versiones" icon={<History className="size-4" aria-hidden />}>
-          <span className="hidden xl:inline">Historial</span>
-        </Button>
-      </Dialog.Trigger>
+      {!controlled && (
+        <Dialog.Trigger asChild>
+          <Button size="sm" variant="ghost" aria-label="Historial de versiones" title="Historial de versiones" icon={<History className="size-4" aria-hidden />}>
+            <span className="hidden xl:inline">Historial</span>
+          </Button>
+        </Dialog.Trigger>
+      )}
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-canvas/70 backdrop-blur-sm" />
         <Dialog.Content className="corner-ticks fixed top-1/2 left-1/2 z-50 flex max-h-[85vh] w-[min(94vw,520px)] -translate-x-1/2 -translate-y-1/2 flex-col border border-line-strong bg-surface">

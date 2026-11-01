@@ -4,7 +4,7 @@
  */
 import { PaintRoller, Plus, Search } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
-import { Button } from '@/components/ui'
+import { Button, PanelSection } from '@/components/ui'
 import { FURNITURE_DRAG, searchCatalog } from '@/domain/catalog'
 import { FLOOR_MATERIALS, WALL_MATERIALS } from '@/domain/materials'
 import { MaterialSelect } from '@/features/editor2d/FurnitureInspector'
@@ -22,9 +22,9 @@ export function CatalogPanel() {
   const setTool = useEditor((s) => s.setTool)
 
   return (
-    <div className="flex flex-col gap-6">
-      <section aria-label="Catálogo de muebles" className="flex flex-col gap-2">
-        <h2 className="mb-1 font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Catálogo</h2>
+    <div className="flex flex-col gap-4">
+      <PanelSection title="Catálogo" ariaLabel="Catálogo de muebles" storageKey="catalogo">
+        <div className="flex flex-col gap-2">
         <label htmlFor={searchId} className="sr-only">
           Buscar muebles
         </label>
@@ -71,17 +71,19 @@ export function CatalogPanel() {
           </div>
         ))}
         {found.length === 0 && <p className="text-xs text-subtle">Ninguna pieza coincide.</p>}
-      </section>
+        </div>
+      </PanelSection>
 
-      <section aria-label="Materiales" className="flex flex-col gap-2">
-        <h2 className="mb-1 font-mono text-[11px] tracking-[0.14em] text-subtle uppercase">Materiales</h2>
+      <PanelSection title="Materiales" storageKey="materiales">
+        <div className="flex flex-col gap-2">
         <MaterialSelect label="Muros" value={brush.wall} options={WALL_MATERIALS} onChange={(id) => id && setBrush({ wall: id })} />
         <MaterialSelect label="Pisos" value={brush.floor} options={FLOOR_MATERIALS} onChange={(id) => id && setBrush({ floor: id })} />
         <Button size="sm" variant={tool === 'paint' ? 'primary' : 'secondary'} aria-pressed={tool === 'paint'} icon={<PaintRoller className="size-4" aria-hidden />} onClick={() => setTool(tool === 'paint' ? 'select' : 'paint')}>
           Pintar (P)
         </Button>
         <p className="text-xs text-subtle">Con el pincel, clic en un muro aplica su acabado; en un ambiente, el piso.</p>
-      </section>
+        </div>
+      </PanelSection>
     </div>
   )
 }

@@ -1,10 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildActions } from '@/features/workspace/actions'
 import { useEditor } from '@/store/editorStore'
 import { StudioPage } from './StudioPage'
+
+// los lienzos (Konva y WebGL) no funcionan en jsdom: si cargan antes del clic tumban la ruta
+vi.mock('@/features/editor2d/Editor2D', () => ({ Editor2D: () => <div data-testid="editor2d" /> }))
+vi.mock('@/features/viewer3d/Viewer3D', () => ({ Viewer3D: () => <div /> }))
 
 beforeEach(() => useEditor.getState().reset())
 

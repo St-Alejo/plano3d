@@ -1,6 +1,8 @@
 import { RotateCcw } from 'lucide-react'
 import { useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useParams } from 'react-router'
+import { useHeaderSlot } from '@/components/headerSlot'
 import { api } from '@/api/client'
 import { Badge, Button, ErrorState, Spinner } from '@/components/ui'
 import { STATUS_LABEL } from '@/features/projects/status'
@@ -12,6 +14,7 @@ export function ProjectPage() {
   const { id = '' } = useParams()
   const { data: project, error, loading, reload } = useAsync(() => api.getProject(id), [id])
   const [retrying, setRetrying] = useState(false)
+  const headerSlot = useHeaderSlot()
   const onFinished = useCallback(() => reload(), [reload])
 
   if (loading && !project) return <div className="p-8"><Spinner label="Cargando proyecto" /></div>
@@ -38,16 +41,20 @@ export function ProjectPage() {
 
   // mientras se muestra el pipeline en vivo, el proyecto está efectivamente procesándose
   const status = STATUS_LABEL[project.status === 'pending' ? 'processing' : project.status]
+  const crumbs = (
+    <nav aria-label="Migas" className="flex min-w-0 items-center gap-2">
+      <span className="h-5 w-px shrink-0 bg-line-strong" aria-hidden />
+      <Link to="/proyectos" className="inline-flex min-h-11 shrink-0 items-center text-sm text-muted hover:text-fg sm:min-h-0">
+        Proyectos
+      </Link>
+      <span className="text-subtle" aria-hidden>/</span>
+      <h1 className="truncate font-display text-sm font-semibold">{project.name}</h1>
+      {project.status !== 'ready' && <Badge tone={status.tone}>{status.text}</Badge>}
+    </nav>
+  )
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-3 border-b border-line px-4 py-2">
-        <Link to="/proyectos" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-fg sm:min-h-0">
-          Proyectos
-        </Link>
-        <span className="text-subtle" aria-hidden>/</span>
-        <h1 className="truncate font-display text-base font-semibold">{project.name}</h1>
-        <Badge tone={status.tone}>{status.text}</Badge>
-      </div>
+      {headerSlot ? createPortal(crumbs, headerSlot) : <div className="flex items-center gap-3 border-b border-line px-4 py-2">{crumbs}</div>}
 
       {(project.status === 'pending' || project.status === 'processing') && <ProcessingView projectId={project.id} onFinished={onFinished} />}
 
