@@ -40,11 +40,16 @@ NOMBRES = {
 SOCIAL = ("r_cocina", "r_sala", "r_corredor")
 
 
-def main() -> None:
+def main(
+    esquinas: tuple[tuple[float, float], ...] = ESQUINAS,
+    out: Path = HERE,
+    description: str | None = None,
+) -> None:
+    """``esquinas`` y ``out`` permiten generar la verdad de otra foto de la misma lámina."""
     lv = build_model().levels[0]
     h = cv2.getPerspectiveTransform(
         np.array([(0, 0), (ANCHO, 0), (ANCHO, LARGO), (0, LARGO)], np.float32),
-        np.array(ESQUINAS, np.float32),
+        np.array(esquinas, np.float32),
     )
     walls = [
         {
@@ -79,18 +84,19 @@ def main() -> None:
             ],
         }
     )
-    ppm = math.dist(ESQUINAS[0], ESQUINAS[1]) / ANCHO
+    ppm = math.dist(esquinas[0], esquinas[1]) / ANCHO
+    doc = __doc__.splitlines()
     truth = {
-        "description": __doc__.splitlines()[0] + " " + __doc__.splitlines()[1].strip(),
+        "description": description or doc[0] + " " + doc[1].strip(),
         "image": "plano.jpg",
         "px_per_m": round(ppm, 2),
-        "origin_px": list(ESQUINAS[0]),
+        "origin_px": list(esquinas[0]),
         "homography": [round(float(v), 8) for v in h.ravel()],
         "has_dimensions": True,
         "scale_tolerance": 0.05,
         "levels": [{"name": "2do piso", "walls": walls, "rooms": rooms}],
     }
-    (HERE / "truth.json").write_text(
+    (out / "truth.json").write_text(
         json.dumps(truth, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     print(f"truth.json: {len(walls)} muros, {len(rooms)} ambientes")
