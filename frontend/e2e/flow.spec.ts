@@ -88,7 +88,10 @@ test('de la foto de un plano a un modelo 3D recorrible', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Clic para caminar' })).toBeVisible()
   await page.getByRole('button', { name: /Cocina E2E/ }).click()
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'GLB' }).click()])
+  const glb = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Exportar' }).click()
+  await page.getByRole('menuitem', { name: 'Descargar modelo GLB' }).click()
+  const download = await glb
   expect(download.suggestedFilename()).toBe('E2E_Depto.glb')
   const path = await download.path()
   const { statSync, readFileSync } = await import('node:fs')
