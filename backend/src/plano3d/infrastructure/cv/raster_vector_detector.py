@@ -300,7 +300,15 @@ class BandRoomsStage(PipelineStage[RasterContext]):
         if ctx.scale_source != "dimensions":
             return ctx
         cv = ctx.require(ctx.cv, "cv")
-        found = band_rooms(cv.require(cv.ink, "ink"), ctx.mpp)
+        v = ctx.require(ctx.vec, "vec")
+        ink = cv.require(cv.ink, "ink")
+        dims = [d.line for d in find_dimension_lines(v.strokes, ink, v.stroke_px)]
+        found = band_rooms(
+            ink,
+            ctx.mpp,
+            [(ln.x1, ln.y1, ln.x2, ln.y2) for ln in dims],
+            [(a.cx, a.cy, a.r) for a in v.arcs],
+        )
         if sum(p.area for p in found) > BAND_GAIN * sum(p.area for p in ctx.rooms):
             ctx.rooms = found
             ctx.metrics["band_rooms"] = float(len(found))

@@ -3,7 +3,7 @@
   "detector": "raster-vector",
   "metrics": {
     "walls": 96.0,
-    "rooms": 10.0,
+    "rooms": 7.0,
     "dimensions": 6.0,
     "meters_per_pixel": 0.007201450393689109
   },
@@ -27,50 +27,50 @@
       "open_r": 0.071,
       "open_det": 19,
       "open_gt": 14,
-      "rooms_det": 10,
+      "rooms_det": 7,
       "rooms_gt": 7,
-      "room_iou": 0.734,
+      "room_iou": 0.912,
       "names_ok": 4,
       "rooms": [
         {
           "truth": "punto fijo",
-          "iou": 0.741,
-          "label": "Espacio 2",
+          "iou": 0.919,
+          "label": "Espacio 1",
           "name_ok": false
         },
         {
           "truth": "alcoba 3",
-          "iou": 0.626,
+          "iou": 0.95,
           "label": "ALCOBA3",
           "name_ok": true
         },
         {
           "truth": "baño 2",
-          "iou": 0.347,
-          "label": "Espacio 7",
+          "iou": 0.855,
+          "label": "Espacio 4",
           "name_ok": false
         },
         {
           "truth": "baño 1",
-          "iou": 0.765,
-          "label": "Espacio 8",
+          "iou": 0.834,
+          "label": "Espacio 5",
           "name_ok": false
         },
         {
           "truth": "alcoba 2",
-          "iou": 0.929,
+          "iou": 0.949,
           "label": "ALCOBA2",
           "name_ok": true
         },
         {
           "truth": "alcoba 1",
-          "iou": 0.941,
+          "iou": 0.951,
           "label": "ALCOBA1",
           "name_ok": true
         },
         {
           "truth": "cocina",
-          "iou": 0.788,
+          "iou": 0.926,
           "label": "COCINA",
           "name_ok": true
         }
@@ -212,13 +212,13 @@
       ]
     }
   ],
-  "when": "2026-11-02T17:28:06",
+  "when": "2026-11-02T18:03:37",
   "pass": {
     "scale": false,
     "levels": true,
     "2do piso: muros": false,
     "2do piso: aberturas": false,
-    "2do piso: ambientes": false,
+    "2do piso: ambientes": true,
     "2do piso: nombres": false
   }
 }

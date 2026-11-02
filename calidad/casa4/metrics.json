@@ -29,48 +29,48 @@
       "open_gt": 14,
       "rooms_det": 8,
       "rooms_gt": 7,
-      "room_iou": 0.688,
+      "room_iou": 0.737,
       "names_ok": 4,
       "rooms": [
         {
           "truth": "punto fijo",
-          "iou": 0.772,
-          "label": "Espacio 2",
+          "iou": 0.936,
+          "label": "Espacio 1",
           "name_ok": false
         },
         {
           "truth": "alcoba 3",
-          "iou": 0.636,
+          "iou": 0.657,
           "label": "ALCOBA3",
           "name_ok": true
         },
         {
           "truth": "baño 2",
-          "iou": 0.039,
-          "label": "COCINA",
+          "iou": 0.139,
+          "label": "Espacio 4",
           "name_ok": false
         },
         {
           "truth": "baño 1",
-          "iou": 0.673,
+          "iou": 0.845,
           "label": "Espacio 6",
           "name_ok": false
         },
         {
           "truth": "alcoba 2",
-          "iou": 0.92,
+          "iou": 0.813,
           "label": "ALCOBA2",
           "name_ok": true
         },
         {
           "truth": "alcoba 1",
-          "iou": 0.936,
+          "iou": 0.94,
           "label": "ALCOBA1",
           "name_ok": true
         },
         {
           "truth": "cocina",
-          "iou": 0.839,
+          "iou": 0.829,
           "label": "COCINA",
           "name_ok": true
         }
@@ -219,7 +219,7 @@
       ]
     }
   ],
-  "when": "2026-11-02T17:26:45",
+  "when": "2026-11-02T18:02:39",
   "pass": {
     "scale": true,
     "levels": true,
