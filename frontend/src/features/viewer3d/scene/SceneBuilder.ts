@@ -7,7 +7,7 @@
  */
 import * as THREE from 'three'
 import type { BuildingModel, Level } from '@/api/types'
-import { curvedWallBoxes, roomShapePoints, slidingTracks, stairLandings, stairSteps, stairWell, swingLeaves, wallToBoxes } from '@/domain/geometry'
+import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes } from '@/domain/geometry'
 import { pointAlong, wallDirection } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
@@ -175,7 +175,8 @@ export class SceneBuilder {
   withStairs(): this {
     for (const lv of this.levels()) {
       for (const s of lv.stairs ?? []) {
-        for (const [i, step] of stairSteps(s).entries()) {
+        // peldaños como losa (abiertos por debajo), no bloques macizos hasta el piso
+        for (const [i, step] of stairTreads(s).entries()) {
           const mesh = new THREE.Mesh(new THREE.BoxGeometry(...step.size), this.materials.stair())
           mesh.position.set(step.center[0], lv.elevation + step.center[1], step.center[2])
           mesh.rotation.y = step.rotationY
@@ -188,7 +189,8 @@ export class SceneBuilder {
         }
       }
       // descansos entre tramos (escaleras en L y en U)
-      for (const [i, l] of stairLandings(lv.stairs ?? []).entries()) {
+      for (const [i, landing] of stairLandings(lv.stairs ?? []).entries()) {
+        const l = { box: slabOf(landing.box, landing.top, STAIR_WAIST * 1.5) }
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(...l.box.size), this.materials.stair())
         mesh.position.set(l.box.center[0], lv.elevation + l.box.center[1], l.box.center[2])
         mesh.rotation.y = l.box.rotationY

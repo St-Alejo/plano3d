@@ -162,6 +162,25 @@ export function stairSteps(s: StairLike): StepBox[] {
   })
 }
 
+/** Espesor de la losa bajo los peldaños al dibujarlos (m): la escalera de concreto típica. */
+export const STAIR_WAIST = 0.15
+
+/**
+ * Recorta verticalmente una caja que sube desde el piso hasta `top`: queda solo la franja de
+ * `depth` bajo su cara superior (sin bajar del piso). Sirve para dibujar peldaños y descansos
+ * como losa, no como bloques macizos hasta el suelo (las cajas macizas siguen sirviendo para
+ * caminar: walkPhysics usa `stairSteps` tal cual).
+ */
+export function slabOf(box: StepBox, top: number, depth: number): StepBox {
+  const bottom = Math.max(0, top - depth)
+  return { ...box, center: [box.center[0], (top + bottom) / 2, box.center[2]], size: [box.size[0], top - bottom, box.size[2]] }
+}
+
+/** Peldaños para dibujar: cada uno con su contrahuella y la losa debajo, abiertos por abajo. */
+export function stairTreads(s: StairLike, waist = STAIR_WAIST): StepBox[] {
+  return stairSteps(s).map((b) => slabOf(b, b.size[1], s.riser + waist))
+}
+
 interface OpeningLike {
   offset: number
   width: number
@@ -182,8 +201,9 @@ export function doorLeaf(w: Pick<Wall, 'start' | 'end' | 'thickness'>, o: Openin
   const along = o.hinge_at_end ? -1 : 1
   const base = Math.atan2(dir.y * along, dir.x * along)
   const side = (o.opens_left ?? true) ? 1 : -1
-  // normal izquierda (-dy, dx) en pantalla = ángulo base - 90° si se avanza en +dir
-  const a = base + (side * along * -openDeg * Math.PI) / 180
+  // opens_left = hacia la normal izquierda (-dy, dx) del muro (convención de building.py),
+  // que es el ángulo de dir + 90°; con la bisagra al final la hoja apunta a -dir y se invierte
+  const a = base + (side * along * openDeg * Math.PI) / 180
   const cx = hinge.x + (Math.cos(a) * o.width) / 2
   const cy = hinge.y + (Math.sin(a) * o.width) / 2
   return {
@@ -234,7 +254,8 @@ export function swingLeaves(w: Pick<Wall, 'start' | 'end'>, o: OpeningLike & { o
   const leaf = (hingeOffset: number, along: 1 | -1, width: number): HingedLeaf => {
     const hinge = { x: w.start.x + dir.x * hingeOffset, y: w.start.y + dir.y * hingeOffset }
     const base = Math.atan2(dir.y * along, dir.x * along)
-    const opened = base + (side * along * -openDeg * Math.PI) / 180
+    // misma convención que doorLeaf: abre hacia (-dy, dx) si opens_left
+    const opened = base + (side * along * openDeg * Math.PI) / 180
     return { hinge, width, height: o.height, closed: -base, open: -opened }
   }
   if (o.operation === 'double_swing') return [leaf(o.offset, 1, o.width / 2), leaf(o.offset + o.width, -1, o.width / 2)]

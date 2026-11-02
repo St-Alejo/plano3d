@@ -6,9 +6,12 @@ import {
   boxVolume,
   curvedWallBoxes,
   doorLeaf,
+  swingLeaves,
   slidingLeaves,
   roomShapePoints,
   stairSteps,
+  stairTreads,
+  STAIR_WAIST,
   tourWaypoints,
   wallAxis,
   wallToBoxes,
@@ -164,6 +167,19 @@ describe('modelo v2 en 3D', () => {
     expect(steps[0]!.size[0]).toBeCloseTo(0.25)
   })
 
+  it('al dibujar, los peldaños altos son losa y no bloques hasta el piso', () => {
+    const s = { start: { x: 0, y: 0 }, end: { x: 3, y: 0 }, width: 1, steps: 12, riser: 0.175 }
+    const treads = stairTreads(s)
+    const top = treads.at(-1)!
+    // misma huella y misma cara superior que el peldaño macizo
+    expect(top.center[1] + top.size[1] / 2).toBeCloseTo(2.1)
+    expect(top.size[1]).toBeCloseTo(0.175 + STAIR_WAIST)
+    // el primero no baja del piso
+    expect(treads[0]!.center[1] - treads[0]!.size[1] / 2).toBeCloseTo(0)
+    // los macizos para caminar no cambian
+    expect(stairSteps(s).at(-1)!.size[1]).toBeCloseTo(2.1)
+  })
+
   it('un tramo con base (escalera en U) arranca a esa altura', () => {
     const steps = stairSteps({ start: { x: 0, y: 0 }, end: { x: 1, y: 0 }, width: 0.9, steps: 4, riser: 0.16, base: 1.6 })
     expect(steps[0]!.size[1]).toBeCloseTo(1.76)
@@ -175,6 +191,9 @@ describe('modelo v2 en 3D', () => {
     const left = doorLeaf(w, { offset: 1, width: 0.9, height: 2.1, opens_left: true })
     const right = doorLeaf(w, { offset: 1, width: 0.9, height: 2.1, opens_left: false })
     expect(Math.sign(left.center[2])).toBe(-Math.sign(right.center[2]))
+    // muro hacia +x: la normal izquierda (-dy, dx) es +y (z en 3D), como en building.py
+    expect(left.center[2]).toBeGreaterThan(0)
+    expect(right.center[2]).toBeLessThan(0)
     expect(left.center[0]).toBeGreaterThan(1)
     expect(left.center[0]).toBeLessThan(1.9)
   })
@@ -188,5 +207,27 @@ describe('slidingLeaves', () => {
     expect(b.center[0] + b.size[0] / 2).toBeCloseTo(3)
     expect(Math.sign(a.center[2])).toBe(-Math.sign(b.center[2]))
     expect(a.size[0] + b.size[0]).toBeGreaterThan(2) // se solapan en el centro
+  })
+})
+
+describe('swingLeaves', () => {
+  // punto medio de la hoja abierta en planta
+  const tip = (l: ReturnType<typeof swingLeaves>[number]) => {
+    const a = -l.open
+    return { x: l.hinge.x + (Math.cos(a) * l.width) / 2, y: l.hinge.y + (Math.sin(a) * l.width) / 2 }
+  }
+  const w = { start: { x: 0, y: 0 }, end: { x: 4, y: 0 } }
+  it('abre hacia la normal izquierda (-dy, dx) con opens_left, con la bisagra en cualquier extremo', () => {
+    for (const hinge_at_end of [false, true]) {
+      const [l] = swingLeaves(w, { offset: 1, width: 0.9, height: 2.1, opens_left: true, hinge_at_end })
+      const [r] = swingLeaves(w, { offset: 1, width: 0.9, height: 2.1, opens_left: false, hinge_at_end })
+      expect(tip(l!).y).toBeGreaterThan(0.3)
+      expect(tip(r!).y).toBeLessThan(-0.3)
+    }
+  })
+  it('doble batiente: las dos hojas abren al mismo lado', () => {
+    const leaves = swingLeaves(w, { offset: 1, width: 1.6, height: 2.1, opens_left: true, operation: 'double_swing' })
+    expect(leaves).toHaveLength(2)
+    for (const l of leaves) expect(tip(l).y).toBeGreaterThan(0.3)
   })
 })
