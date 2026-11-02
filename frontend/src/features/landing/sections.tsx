@@ -452,3 +452,54 @@ export function Footer() {
     </footer>
   )
 }
+
+/** Lo que se puede hacer con un plano, cada cosa con una captura real de la app. */
+const CAPABILITIES = [
+  { img: 'editor', title: 'Editor de planos', text: 'Mueve muros, puertas y medidas; el 3D se actualiza mientras lo haces.', href: '/tutoriales/editar.webm', alt: 'El editor con el plano en 2D a la izquierda y el modelo 3D a la derecha' },
+  { img: 'modelo', title: 'Modelo 3D', text: 'Orbita la maqueta o camina por dentro, con puertas que se abren.', href: '/tutoriales/recorrer.webm', alt: 'La maqueta 3D de un apartamento con sus muebles' },
+  { img: 'pisos', title: 'Piso por piso', text: 'Pasa el cursor por un piso para ver su ficha y aíslalo como una maqueta.', href: '/nuevo', alt: 'Una casa de dos pisos con la planta baja aislada y cortada' },
+  { img: 'obra', title: 'Modo obra', text: 'Columnetas, vigas y ladrillo según NSR-10 Título E, para el maestro.', href: '/nuevo', alt: 'La casa en mampostería confinada, con ladrillo y columnetas' },
+  { img: 'acero', title: 'Despiece de acero', text: 'La cartilla de hierro por elemento, con kilos y archivo CSV.', href: '/nuevo', alt: 'El esqueleto de acero de la casa y la tabla del despiece' },
+  { img: 'secuencia', title: 'Secuencia de obra', text: 'La casa construyéndose etapa por etapa, de la zanja al último muro.', href: '/nuevo', alt: 'La etapa de muros de la secuencia de obra, a pantalla completa' },
+] as const
+
+export function Capabilities() {
+  return (
+    <Stagger as="ul" className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3" gap={0.06} aria-label="Qué puedes hacer">
+      {CAPABILITIES.map((c) => {
+        const external = c.href.endsWith('.webm')
+        return (
+          <StaggerItem key={c.img} as="li" className="group relative flex flex-col">
+            <div className="overflow-hidden rounded-xl border border-(--l-hair) bg-(--l-paper-2) shadow-[0_24px_48px_-32px_rgb(28_31_29/0.45)]">
+              <img
+                src={`/landing/${c.img}.jpg`}
+                alt={c.alt}
+                width={1280}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[16/10] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              />
+            </div>
+            <h3 className="mt-2 text-xl leading-tight">
+              {external ? (
+                <a href={c.href} className="inline-flex min-h-11 items-center after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-(--l-signal)">
+                  {c.title}
+                </a>
+              ) : (
+                <Link to={c.href} className="inline-flex min-h-11 items-center after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-(--l-signal)">
+                  {c.title}
+                </Link>
+              )}
+            </h3>
+            <p className="max-w-sm text-(--l-graphite)">{c.text}</p>
+            <span aria-hidden className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-(--l-signal-ink)">
+              {external ? 'Ver el tutorial' : 'Probar con tu plano'}
+              <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
+          </StaggerItem>
+        )
+      })}
+    </Stagger>
+  )
+}

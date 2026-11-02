@@ -10,7 +10,7 @@ import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
 import { EASE } from './ease'
-import { AreaSchedule, BeforeAfter, DropCta, EditorDiagram, Facts, Footer, SectionHead, Specs, Statement } from './sections'
+import { AreaSchedule, BeforeAfter, Capabilities, DropCta, EditorDiagram, Facts, Footer, SectionHead, Specs, Statement } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
 function Logo() {
@@ -119,6 +119,16 @@ export function LandingPage() {
         <Statement />
 
         <div className="mx-auto grid max-w-6xl gap-28 px-4 py-24 sm:px-6 md:gap-36">
+          <section aria-labelledby="que-puedes-hacer" className="grid gap-10">
+            <SectionHead
+              id="que-puedes-hacer"
+              kicker="Qué puedes hacer"
+              title="Una foto, seis maneras de ver tu casa."
+              lead="Del plano corregido a la maqueta, piso por piso, y de ahí a la obra: ladrillo, acero y el orden en que se construye."
+            />
+            <Capabilities />
+          </section>
+
           <section aria-labelledby="antes-despues" className="grid gap-10">
             <SectionHead
               id="antes-despues"
