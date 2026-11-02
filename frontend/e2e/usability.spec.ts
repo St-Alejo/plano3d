@@ -52,7 +52,7 @@ for (const theme of ['dark', 'light'] as const) {
     test('landing, proyectos, captura y 404', async ({ page }) => {
       // la landing es siempre papel: se audita igual con cualquier tema de la app
       await page.goto('/')
-      await expect(page.getByRole('heading', { level: 1, name: /foto de tu plano/ }).first()).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: /Tu casa, desde el plano/ }).first()).toBeVisible()
       // la entrada del hero (letras y panel 3D) dura ~1.5 s: se audita con todo ya opaco
       await page.waitForTimeout(1800)
       await expectAccessible(page, 'landing')

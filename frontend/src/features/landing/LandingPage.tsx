@@ -1,96 +1,77 @@
 /**
- * Página de entrada. Va fuera del AppShell (tiene su propia cabecera y pie) y
- * siempre en claro, sin depender del tema de la app.
+ * Página de entrada. Va fuera del AppShell (tiene su propia cabecera y pie) y siempre en su
+ * propio tema de noche, sin depender del tema de la app: la casa se construye en pantalla
+ * completa y el resto de la página sigue en el mismo tono, con un solo acento dorado.
  */
 import clsx from 'clsx'
 import { ArrowRight } from 'lucide-react'
-import { motion, MotionConfig, useMotionValueEvent, useScroll, useSpring } from 'motion/react'
+import { motion, MotionConfig, useMotionValueEvent, useScroll } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
 import { EASE } from './ease'
-import { AreaSchedule, BeforeAfter, Capabilities, DropCta, EditorDiagram, Facts, Footer, SectionHead, Specs, Statement } from './sections'
+import { AreaSchedule, BeforeAfter, Capabilities, DropCta, Footer, SectionHead, Specs, WalkFilm } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
-function Logo() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-      <rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--l-signal)" />
-      <path d="M7 17V7h6v5h4v5Z" fill="none" stroke="var(--l-paper)" strokeWidth="1.8" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
 const NAV = [
+  { href: '#que-puedes-hacer', label: 'Qué hace' },
+  { href: '#antes-despues', label: 'Antes y después' },
   { href: '#como-funciona', label: 'Cómo funciona' },
-  { href: '#editor', label: 'Editor' },
-  { href: '#areas', label: 'Áreas' },
 ]
 
-/** Cabecera fija: se compacta y gana sombra al bajar; debajo, la barra de progreso de lectura. */
+/**
+ * Barra simple: el nombre, tres enlaces y una acción. Sobre la escena del hero va sin fondo;
+ * al salir de ella toma el color de la página (sin vidrio ni sombra).
+ */
 function Masthead() {
-  const { scrollY, scrollYProgress } = useScroll()
-  const [scrolled, setScrolled] = useState(false)
-  useMotionValueEvent(scrollY, 'change', (y) => setScrolled(y > 12))
-  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.3 })
+  const { scrollY } = useScroll()
+  const [solid, setSolid] = useState(false)
+  useMotionValueEvent(scrollY, 'change', (y) => {
+    const hero = document.getElementById('hero')
+    const end = hero ? hero.offsetTop + hero.offsetHeight - 80 : 80
+    setSolid(y > end)
+  })
   return (
     <motion.header
-      initial={{ y: -16, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: EASE }}
-      className={clsx(
-        'sticky top-0 z-30 border-b backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300',
-        scrolled ? 'border-(--l-hair) bg-(--l-paper)/80 shadow-[0_6px_24px_-12px_rgb(28_31_29/0.18)]' : 'border-transparent bg-(--l-paper)/0',
-      )}
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: EASE }}
+      className={clsx('fixed inset-x-0 top-0 z-30 transition-colors duration-300', solid ? 'bg-(--l-night)' : 'bg-transparent')}
     >
-      <div
-        className={clsx(
-          'mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 transition-[padding] duration-300 sm:px-6',
-          scrolled ? 'py-2' : 'py-4',
-        )}
-      >
-        <Link to="/" className="group flex min-h-11 items-center gap-2 text-lg font-medium tracking-[-0.03em]" aria-label="Plano 3D, inicio">
-          <span className="transition-transform duration-500 ease-out group-hover:rotate-[-8deg]">
-            <Logo />
-          </span>
+      <div className="frame flex items-center justify-between gap-6 py-4">
+        <Link to="/" className="display flex min-h-11 items-center text-[1.75rem] leading-none" aria-label="Plano 3D, inicio">
           Plano 3D
         </Link>
-        <nav aria-label="Secciones" className="flex items-center gap-1 text-[15px] text-(--l-graphite)">
+        <nav aria-label="Secciones" className="flex items-center gap-2">
           {NAV.map((n) => (
-            <a
-              key={n.href}
-              href={n.href}
-              className="group relative hidden min-h-11 items-center px-3 transition-colors hover:text-(--l-ink) md:inline-flex"
-            >
+            <a key={n.href} href={n.href} className="hidden min-h-11 items-center px-3 text-[15px] transition-opacity hover:opacity-70 md:inline-flex">
               {n.label}
-              <span className="absolute inset-x-3 bottom-2.5 h-px origin-left scale-x-0 bg-(--l-ink) transition-transform duration-300 ease-out group-hover:scale-x-100" />
             </a>
           ))}
           <Link
             to="/proyectos"
-            className="ml-2 inline-flex min-h-11 items-center rounded-full border border-(--l-hair-strong) px-4 font-medium text-(--l-ink) transition-[background-color,color,border-color] duration-300 hover:border-(--l-ink) hover:bg-(--l-ink) hover:text-(--l-paper)"
+            className="ml-2 inline-flex min-h-11 items-center rounded-full bg-(--l-ink) px-5 text-[15px] font-medium text-(--l-night) transition-[background-color,color] duration-300 hover:bg-(--l-signal) hover:text-(--l-on-signal)"
           >
             Abrir la app
           </Link>
         </nav>
       </div>
-      <motion.div aria-hidden className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-(--l-signal)" style={{ scaleX: progress }} />
     </motion.header>
   )
 }
 
 function HeroActions() {
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-3">
+    <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
       <Link
         to="/nuevo"
-        className="group inline-flex h-12 items-center gap-2 rounded-full bg-(--l-signal) px-6 font-medium text-white shadow-[0_8px_24px_-10px_var(--l-signal)] transition-[background-color,transform,box-shadow] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-deep) hover:shadow-[0_14px_30px_-12px_var(--l-deep)] active:translate-y-0"
+        className="group inline-flex h-13 items-center gap-2 rounded-full bg-(--l-signal) px-7 text-[17px] font-medium text-(--l-on-signal) transition-[transform,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-signal-hi) active:translate-y-0"
       >
         Convertir un plano <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
       </Link>
-      <a href="#antes-despues" className="inline-flex h-12 items-center rounded-full px-5 font-medium transition-colors duration-300 hover:bg-(--l-paper-2)">
-        Ver cómo queda
+      <a href="#que-puedes-hacer" className="inline-flex min-h-11 items-center font-medium underline decoration-(--l-signal) decoration-2 underline-offset-[6px]">
+        Ver qué hace
       </a>
     </div>
   )
@@ -99,93 +80,75 @@ function HeroActions() {
 export function LandingPage() {
   useSmoothScroll()
   useEffect(() => {
-    document.title = 'Plano 3D — fotografía tu plano y recórrelo en 3D'
+    document.title = 'Plano 3D: de la foto de tu plano a tu casa en 3D'
     return () => {
       document.title = 'Plano 3D'
     }
   }, [])
   return (
     <MotionConfig reducedMotion="user">
-    <div className="landing min-h-full">
-      <a
-        href="#contenido"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-(--l-ink) focus:px-3 focus:py-2 focus:text-(--l-paper)"
-      >
-        Saltar al contenido
-      </a>
-      <Masthead />
-      <main id="contenido">
-        <HeroStage actions={<HeroActions />} />
-        <Statement />
+      <div className="landing min-h-full">
+        <a
+          href="#contenido"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-(--l-ink) focus:px-3 focus:py-2 focus:text-(--l-night)"
+        >
+          Saltar al contenido
+        </a>
+        <Masthead />
+        <main id="contenido">
+          <HeroStage actions={<HeroActions />} />
 
-        <div className="mx-auto grid max-w-6xl gap-28 px-4 py-24 sm:px-6 md:gap-36">
-          <section aria-labelledby="que-puedes-hacer" className="grid gap-10">
+          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 pt-36 pb-40">
             <SectionHead
               id="que-puedes-hacer"
-              kicker="Qué puedes hacer"
-              title="Una foto, seis maneras de ver tu casa."
+              title="Seis maneras de ver tu casa."
               lead="Del plano corregido a la maqueta, piso por piso, y de ahí a la obra: ladrillo, acero y el orden en que se construye."
             />
             <Capabilities />
           </section>
 
-          <section aria-labelledby="antes-despues" className="grid gap-10">
-            <SectionHead
-              id="antes-despues"
-              kicker="Antes y después"
-              title="Del papel al modelo, sin dibujar nada."
-              lead="Arrastra el divisor: a un lado el plano tal como lo subiste, al otro el modelo que sale de él."
-            />
-            <BeforeAfter />
+          <section aria-labelledby="antes-despues" className="bg-(--l-night-2) py-36">
+            <div className="frame grid gap-16">
+              <SectionHead
+                id="antes-despues"
+                title="Del papel al modelo."
+                lead="Arrastra el divisor: a un lado el plano tal como lo subiste, al otro el modelo que sale de él, en la misma escala."
+              />
+              <BeforeAfter />
+            </div>
           </section>
 
-          <section aria-labelledby="como-funciona" className="grid gap-10">
+          <section aria-labelledby="recorrido" className="frame grid gap-16 py-40">
+            <SectionHead id="recorrido" title="Camínala antes de construirla." />
+            <WalkFilm />
+          </section>
+
+          <section aria-labelledby="como-funciona" className="frame grid gap-20 pb-40">
             <SectionHead
               id="como-funciona"
-              kicker="Cómo funciona"
               title="Qué le das y qué te devuelve."
               lead="No hace falta saber de CAD. Si el plano tiene cotas, las usa; si no, calibras con una medida que conozcas."
             />
             <Specs />
           </section>
 
-          <section aria-labelledby="cifras" className="grid gap-10">
-            <SectionHead
-              id="cifras"
-              kicker="En cifras"
-              title="Lo que pasa entre la foto y el modelo."
-              lead="Cada plano recorre las mismas etapas, del archivo que subes al modelo que exportas."
-            />
-            <Facts />
+          <section aria-labelledby="areas" className="bg-(--l-night-2) py-36">
+            <div className="frame grid gap-16">
+              <SectionHead
+                id="areas"
+                title="Cada ambiente, medido."
+                lead="Los ambientes se recalculan solos a partir de los muros, así que el cuadro de áreas siempre está al día."
+              />
+              <AreaSchedule />
+            </div>
           </section>
 
-          <section aria-labelledby="editor" className="grid gap-10">
-            <SectionHead
-              id="editor"
-              kicker="Editor"
-              title="Lo que la máquina no ve, lo corriges tú."
-              lead="Ningún detector acierta siempre. Por eso cada muro, puerta y medida se puede ajustar a mano, y el 3D se actualiza mientras lo haces."
-            />
-            <EditorDiagram />
-          </section>
-
-          <section aria-labelledby="areas" className="grid gap-10">
-            <SectionHead
-              id="areas"
-              kicker="Áreas"
-              title="Cada ambiente, medido."
-              lead="Los ambientes se recalculan solos a partir de los muros, así que el cuadro de áreas siempre está al día."
-            />
-            <AreaSchedule />
-          </section>
-
-          <section aria-labelledby="empezar">
+          <section aria-labelledby="empezar" className="bg-(--l-signal) py-32 text-(--l-on-signal)">
             <DropCta />
           </section>
-        </div>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
     </MotionConfig>
   )
 }

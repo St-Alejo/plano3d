@@ -127,63 +127,62 @@
 }
 
 /*
- * Landing: siempre en claro, independiente del tema de la app. Fondo casi blanco,
- * tinta grafito y un único acento verde. Geist para todo el texto y Geist Mono
- * solo para etiquetas pequeñas (antetítulos, pasos, leyendas).
- * `--l-signal` pasa AA sobre `--l-paper`; `--l-signal-ink` es para texto pequeño.
+ * Landing: tema de noche propio, independiente del tema de la app (como la obra vista al
+ * atardecer). Tinta hueso sobre noche, un solo acento dorado (la acción y lo que avanza) y la
+ * hoja clara donde se dibuja el plano. Instrument Serif para los titulares, Geist para leer.
+ * Contrastes: hueso sobre noche 15:1, `--l-dim` sobre noche 7,9:1, noche sobre oro 9,6:1.
  */
 .landing {
-  --l-paper: #fafaf7;
-  --l-paper-2: #f0efe9;
-  --l-ink: #1c1f1d;
-  --l-graphite: #5a615d;
-  --l-hair: rgb(28 31 29 / 0.12);
-  --l-hair-strong: rgb(28 31 29 / 0.26);
-  --l-signal: #2f6b55;
-  --l-signal-ink: #24543f;
-  --l-signal-soft: #e2ede6;
-  --l-deep: #17322a;
-  background: var(--l-paper);
+  --l-night: #0e0f0d;
+  --l-night-2: #171916;
+  --l-ink: #f1ece2;
+  --l-dim: #b5ae9f;
+  --l-rule: rgb(241 236 226 / 0.16);
+  --l-signal: #e3b341;
+  --l-signal-hi: #f0c55e;
+  --l-on-signal: #14120c;
+  --l-sheet: #ebe6dc;
+  background: var(--l-night);
   color: var(--l-ink);
   font-family: 'Geist', var(--font-sans);
-  font-feature-settings: 'ss01', 'ss03';
+  font-size: 17px;
 }
 /* el desplazamiento suave lo hace Lenis; esto deja sitio a la cabecera fija si no está activo */
 html:has(.landing) {
-  scroll-padding-top: 7rem;
+  scroll-padding-top: 6rem;
+  background: #0e0f0d;
 }
-/* titulares en peso medio y muy ajustados, como en los sitios de estudio */
+/* un solo marco para toda la página: márgenes iguales a los dos lados */
+.landing .frame {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 96rem;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .landing .frame {
+    padding-inline: 2rem;
+  }
+}
+/* titulares en serif, en peso normal y apretados, como en un cartel de obra */
+.landing .display,
 .landing h1,
 .landing h2 {
-  font-family: inherit;
-  font-weight: 500;
-  letter-spacing: -0.045em;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
-.landing h3 {
-  font-family: inherit;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-/* etiqueta técnica pequeña: mayúsculas en mono, con poco espaciado */
-.landing .label {
-  font-family: 'Geist Mono', var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-/* texto en contorno (marquesina) */
-.landing .text-outline {
-  color: transparent;
-  -webkit-text-stroke: 1.2px var(--l-ink);
+.landing .display em,
+.landing h1 em {
+  font-style: italic;
 }
 .landing p {
   text-wrap: pretty;
 }
 .landing ::selection {
-  background: var(--l-signal-soft);
-  color: var(--l-ink);
+  background: var(--l-signal);
+  color: var(--l-on-signal);
 }
 .landing :focus-visible {
   outline: 2px solid var(--l-signal);

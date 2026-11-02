@@ -1,10 +1,11 @@
 /**
- * Secciones de la landing. Texto directo, tablas y listas sencillas; el único
- * color de acento es el verde de `--l-signal`.
+ * Secciones de la landing, en el mismo lenguaje que el hero: fondo de noche, tinta hueso,
+ * titulares en serif y un único acento dorado. Sin antetítulos, sin numeraciones ni líneas
+ * finas: la jerarquía la llevan el tamaño, el espacio y los cambios de campo de color.
  */
 import { ArrowRight, FileUp } from 'lucide-react'
-import { animate, motion, useInView, useMotionValue, useReducedMotion } from 'motion/react'
-import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { animate, motion, useInView, useReducedMotion } from 'motion/react'
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import clsx from 'clsx'
 
@@ -12,45 +13,118 @@ import { polygonArea } from '@/domain/model'
 import { ACCEPT } from '@/features/capture/validateFile'
 import { PlanCanvas } from './PlanCanvas'
 import { EASE } from './ease'
-import { ClipReveal, Marquee, Odometer, ScrollText, TiltIn } from './effects'
 import { CountUp, Reveal, Stagger, StaggerItem } from './reveal'
 import { sampleApartment } from './sampleApartment'
 
-const HeroScene = lazy(() => import('./HeroScene'))
+const ModelStill = lazy(() => import('./ModelStill'))
 
-export function SectionHead({ id, kicker, title, lead }: { id: string; kicker: string; title: string; lead?: string }) {
+/** Título de sección: el h2 grande a la izquierda y, a la derecha, la frase que lo explica. */
+export function SectionHead({ id, title, lead }: { id: string; title: ReactNode; lead?: string }) {
   return (
-    <Stagger className="grid gap-x-16 gap-y-4 md:grid-cols-[1fr_1fr] md:items-end" gap={0.12}>
+    <Stagger className="grid gap-x-16 gap-y-6 md:grid-cols-[7fr_5fr] md:items-end" gap={0.09}>
       <StaggerItem>
-        <p className="label flex items-center gap-2 text-(--l-signal-ink)">
-          <motion.span
-            aria-hidden
-            className="h-px w-6 origin-left bg-(--l-signal)"
-            variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 0.8, ease: EASE } } }}
-          />
-          {kicker}
-        </p>
-        <h2 id={id} className="mt-4 text-[clamp(2.2rem,4.4vw,3.6rem)] leading-[1]">
+        <h2 id={id} className="display text-[clamp(2.75rem,5.6vw,5.5rem)] leading-[0.95]">
           {title}
         </h2>
       </StaggerItem>
       {lead && (
         <StaggerItem>
-          <p className="max-w-md text-lg leading-relaxed text-(--l-graphite)">{lead}</p>
+          <p className="max-w-md text-lg leading-relaxed">{lead}</p>
         </StaggerItem>
       )}
     </Stagger>
   )
 }
 
-const tag = 'label absolute top-3 rounded-full bg-(--l-paper)/90 px-3 py-1.5 text-(--l-graphite) shadow-sm'
+/* ------------------------------------------------------------------ capacidades */
 
-/** Antes / después: el plano dibujado contra el modelo 3D, con un divisor arrastrable (y accesible). */
+/** Lo que se puede hacer con un plano, cada cosa con una captura real de la app. */
+const CAPABILITIES = [
+  { img: 'editor', title: 'Editor de planos', text: 'Mueve muros, puertas y medidas; el 3D se actualiza mientras lo haces.', href: '/tutoriales/editar.webm', alt: 'El editor con el plano en 2D a la izquierda y el modelo 3D a la derecha' },
+  { img: 'modelo', title: 'Modelo 3D', text: 'Orbita la maqueta o camina por dentro, con puertas que se abren a tu paso.', href: '/tutoriales/recorrer.webm', alt: 'La maqueta 3D de un apartamento con sus muebles' },
+  { img: 'pisos', title: 'Piso por piso', text: 'Pasa el cursor por un piso para ver su ficha y aíslalo como una maqueta.', href: '/nuevo', alt: 'Una casa de dos pisos con la planta baja aislada y cortada' },
+  { img: 'obra', title: 'Modo obra', text: 'Columnetas, vigas y ladrillo según la NSR-10, Título E, con las medidas para el maestro.', href: '/nuevo', alt: 'La casa en mampostería confinada, con ladrillo y columnetas' },
+  { img: 'acero', title: 'Despiece de acero', text: 'La cartilla de hierro por elemento, con kilos, diámetros y archivo CSV.', href: '/nuevo', alt: 'El esqueleto de acero de la casa y la tabla del despiece' },
+  { img: 'secuencia', title: 'Secuencia de obra', text: 'La casa construyéndose etapa por etapa, de la zanja al último muro.', href: '/nuevo', alt: 'La etapa de muros de la secuencia de obra, a pantalla completa' },
+] as const
+
+/**
+ * Lista grande a la izquierda y, a la derecha, la captura del elemento activo (fija mientras
+ * se lee la lista). Pasar el cursor o el foco por un nombre cambia la captura. En el celular
+ * cada elemento lleva su captura debajo.
+ */
+export function Capabilities() {
+  const [active, setActive] = useState(0)
+  return (
+    <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:gap-20">
+      <ul aria-label="Qué puedes hacer" className="grid gap-10 lg:gap-7">
+        {CAPABILITIES.map((c, i) => {
+          const external = c.href.endsWith('.webm')
+          const linkClass = clsx(
+            'display inline-flex min-h-11 items-center text-[clamp(2.1rem,3.4vw,3.25rem)] leading-none transition-colors duration-300 focus-visible:outline-offset-4',
+            i === active ? 'text-(--l-ink)' : 'text-(--l-ink) lg:text-(--l-dim) lg:hover:text-(--l-ink)',
+          )
+          const props = { onMouseEnter: () => setActive(i), onFocus: () => setActive(i), className: linkClass }
+          return (
+            <li key={c.img}>
+              <h3>
+                {external ? (
+                  <a href={c.href} {...props}>
+                    {c.title}
+                  </a>
+                ) : (
+                  <Link to={c.href} {...props}>
+                    {c.title}
+                  </Link>
+                )}
+              </h3>
+              <p className="mt-2 max-w-md">{c.text}</p>
+              <img
+                src={`/landing/${c.img}.jpg`}
+                alt={c.alt}
+                width={1280}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                className="mt-5 aspect-[16/10] w-full object-cover lg:hidden"
+              />
+            </li>
+          )
+        })}
+      </ul>
+      <div className="hidden lg:block">
+        <div className="sticky top-28">
+          <div className="relative aspect-[16/10] overflow-hidden bg-(--l-night-2)">
+            {CAPABILITIES.map((c, i) => (
+              <img
+                key={c.img}
+                src={`/landing/${c.img}.jpg`}
+                alt={i === active ? c.alt : ''}
+                aria-hidden={i !== active}
+                width={1280}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                className={clsx(
+                  'absolute inset-0 size-full object-cover transition-[opacity,transform] duration-700 ease-out',
+                  i === active ? 'scale-100 opacity-100' : 'scale-[1.03] opacity-0',
+                )}
+              />
+            ))}
+          </div>
+          <p className="mt-4 text-(--l-dim)">{CAPABILITIES[active]!.title}: captura de la app con un plano real.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ antes / después */
+
+/** Antes / después: el plano dibujado contra el modelo visto desde arriba, con el mismo encuadre. */
 export function BeforeAfter() {
   const model = useMemo(() => sampleApartment(), [])
   const [split, setSplit] = useState(50)
-  // pose isométrica fija: la misma escena del hero detenida en el paso 4
-  const pose = useMotionValue(0.82)
   const box = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
   const id = useId()
@@ -60,8 +134,8 @@ export function BeforeAfter() {
   // al verlo por primera vez el divisor hace un vaivén corto para sugerir que se puede arrastrar
   useEffect(() => {
     if (!seen || reduce) return
-    const ctl = animate(50, [50, 28, 68, 50], {
-      duration: 2.2,
+    const ctl = animate(50, [50, 26, 72, 50], {
+      duration: 2.4,
       ease: EASE,
       times: [0, 0.3, 0.7, 1],
       delay: 0.3,
@@ -78,10 +152,10 @@ export function BeforeAfter() {
 
   return (
     <div>
-      <ClipReveal className="rounded-lg">
+      <Reveal>
         <div
           ref={box}
-          className="relative aspect-[4/3] touch-none overflow-hidden rounded-lg bg-(--l-paper-2) ring-1 ring-(--l-hair) select-none sm:aspect-[16/9]"
+          className="relative aspect-[4/3] touch-none overflow-hidden bg-(--l-sheet) select-none sm:aspect-[16/9]"
           onPointerDown={(e) => {
             dragging.current = true
             e.currentTarget.setPointerCapture(e.pointerId)
@@ -92,24 +166,26 @@ export function BeforeAfter() {
         >
           <div className="absolute inset-0">
             <Suspense fallback={null}>
-              <HeroScene model={model} progress={pose} />
+              <ModelStill model={model} />
             </Suspense>
           </div>
-          <div className="absolute inset-0 bg-(--l-paper-2)" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
+          <div className="absolute inset-0 bg-(--l-sheet)" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
             <PlanCanvas model={model} className="size-full" label="Plano del apartamento" />
           </div>
-          <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white shadow-[0_0_0_1px_var(--l-hair)]" style={{ left: `${split}%` }} aria-hidden>
-            <span className="absolute top-1/2 left-1/2 grid size-10 -translate-1/2 place-items-center rounded-full bg-white text-(--l-ink) shadow-md ring-4 ring-white/40">
-              <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <div className="pointer-events-none absolute inset-y-0 w-[3px] -translate-x-1/2 bg-(--l-signal)" style={{ left: `${split}%` }} aria-hidden>
+            <span className="absolute top-1/2 left-1/2 grid size-12 -translate-1/2 place-items-center rounded-full bg-(--l-signal) text-(--l-on-signal)">
+              <svg viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M7 5 2 10l5 5M13 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
           </div>
-          <span className={clsx(tag, 'left-3 transition-opacity duration-300', split < 12 && 'opacity-0')}>Plano</span>
-          <span className={clsx(tag, 'right-3 transition-opacity duration-300', split > 88 && 'opacity-0')}>Modelo 3D</span>
+          <span className={clsx('absolute top-4 left-4 bg-(--l-night) px-3 py-1.5 text-sm transition-opacity duration-300', split < 14 && 'opacity-0')}>El plano</span>
+          <span className={clsx('absolute top-4 right-4 bg-(--l-night) px-3 py-1.5 text-sm transition-opacity duration-300', split > 86 && 'opacity-0')}>
+            El modelo
+          </span>
         </div>
-      </ClipReveal>
-      <label htmlFor={id} className="mt-4 flex items-center gap-4 text-sm text-(--l-graphite)">
+      </Reveal>
+      <label htmlFor={id} className="mt-5 flex items-center gap-4">
         <span className="shrink-0">Comparar</span>
         <input
           id={id}
@@ -126,139 +202,69 @@ export function BeforeAfter() {
   )
 }
 
+/* ------------------------------------------------------------------ recorrido en video */
+
+/** El recorrido real grabado de la app, en bucle y sin sonido. */
+export function WalkFilm() {
+  const reduce = useReducedMotion()
+  return (
+    <div className="grid items-end gap-10 lg:grid-cols-[8fr_4fr] lg:gap-16">
+      <Reveal>
+        <video
+          className="aspect-video w-full bg-(--l-night-2) object-cover"
+          src="/tutoriales/recorrer.webm"
+          poster="/landing/recorrido.jpg"
+          autoPlay={!reduce}
+          muted
+          loop
+          playsInline
+          controls={!!reduce}
+          preload="metadata"
+          aria-label="Grabación de la app: se elige Recorrer, se camina por la casa y se abre una puerta"
+        />
+      </Reveal>
+      <Stagger className="grid gap-6" gap={0.09}>
+        <StaggerItem>
+          <p className="text-lg leading-relaxed">
+            Con el teclado, el mouse o el joystick del celular. Las puertas se abren al acercarte, las escaleras se suben y cada ambiente
+            tiene su punto de vista.
+          </p>
+        </StaggerItem>
+        <StaggerItem>
+          <a href="/tutoriales/recorrer.webm" className="group inline-flex min-h-11 items-center gap-2 font-medium text-(--l-signal)">
+            Ver el tutorial completo <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+          </a>
+        </StaggerItem>
+      </Stagger>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ cómo funciona */
+
 const SPECS: { title: string; text: string }[] = [
-  { title: 'Sube lo que tengas', text: 'Una foto con el celular, una imagen escaneada, un PDF o un DXF de AutoCAD. Si el plano es grande, varias fotos se unen solas.' },
+  { title: 'Sube lo que tengas', text: 'Una foto con el celular, una imagen escaneada, un PDF o un DXF de AutoCAD, hasta 25 MB. Si el plano es grande, varias fotos se unen solas.' },
   { title: 'Lee el plano', text: 'Encuentra muros, puertas, ventanas, columnas, escaleras, cotas y ambientes, y marca qué medidas son exactas y cuáles hay que revisar.' },
   { title: 'Medidas reales', text: 'Los DXF y PDF vectoriales salen exactos. En fotos la escala se estima y se fija con una cota que conozcas.' },
-  { title: 'Corrige a mano', text: 'Un editor 2D con imán, cotas sobre cada muro, historial de versiones y una lista de problemas para revisar.' },
-  { title: 'Recórrelo', text: 'Gira alrededor del modelo, vuela a cada ambiente o camina por dentro con teclado, mouse o el joystick del celular.' },
-  { title: 'Llévatelo', text: 'Exporta a GLB y ábrelo en Blender, SketchUp o cualquier visor web.' },
+  { title: 'Corrige a mano', text: 'Un editor 2D con imán a 1 cm, cotas sobre cada muro, historial de versiones y una lista de problemas para revisar.' },
+  { title: 'Ve la obra', text: 'Cimentación, columnetas, vigas y ladrillo según la NSR-10, con la cartilla de acero y la secuencia de construcción.' },
+  { title: 'Llévatelo', text: 'Exporta a GLB u OBJ y ábrelo en Blender, SketchUp o cualquier visor web.' },
 ]
 
 export function Specs() {
   return (
-    <Stagger as="ol" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-      {SPECS.map((s, i) => (
-        <StaggerItem as="li" key={s.title} className="group relative pt-5">
-          {/* la línea superior se completa en verde al pasar el cursor */}
-          <span className="absolute inset-x-0 top-0 h-px bg-(--l-hair-strong)" aria-hidden />
-          <span
-            className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-(--l-signal) transition-transform duration-500 ease-out group-hover:scale-x-100"
-            aria-hidden
-          />
-          <p className="label text-(--l-graphite) tabular-nums transition-colors duration-300 group-hover:text-(--l-signal-ink)">
-            {String(i + 1).padStart(2, '0')}
-          </p>
-          <h3 className="mt-3 text-2xl">{s.title}</h3>
-          <p className="mt-2 leading-relaxed text-(--l-graphite)">{s.text}</p>
+    <Stagger as="ul" className="grid gap-x-16 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      {SPECS.map((s) => (
+        <StaggerItem as="li" key={s.title}>
+          <h3 className="display text-[2.25rem] leading-none">{s.title}</h3>
+          <p className="mt-4 leading-relaxed">{s.text}</p>
         </StaggerItem>
       ))}
     </Stagger>
   )
 }
 
-const CALLOUTS = [
-  { n: 1, t: 'Herramientas', d: 'Seleccionar, muro, puerta, ventana, medir y calibrar, cada una con su atajo de teclado.' },
-  { n: 2, t: 'Plano en 2D', d: 'La imagen original debajo y los muros encima, con imán a la rejilla, a los extremos y a 90°.' },
-  { n: 3, t: '3D en vivo', d: 'Cada cambio se ve al instante. Haz clic en un muro del 3D y queda seleccionado en el plano.' },
-  { n: 4, t: 'Propiedades', d: 'Largo, ángulo, grosor y altura exactos; ancho y antepecho de cada puerta o ventana.' },
-  { n: 5, t: 'Revisión', d: 'Muros sueltos o duplicados y cotas en conflicto, con un clic para ir a cada uno.' },
-  { n: 6, t: 'Historial', d: 'Deshacer sin límite y versiones guardadas que puedes restaurar.' },
-]
-
-/** Esquema simplificado del editor con sus seis zonas numeradas. */
-export function EditorDiagram() {
-  const bubble = (n: number, x: number, y: number) => (
-    <motion.g
-      key={n}
-      style={{ transformOrigin: `${x}px ${y}px`, transformBox: 'view-box' }}
-      variants={{
-        hidden: { opacity: 0, scale: 0.4 },
-        show: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 380, damping: 22, delay: 0.4 + n * 0.08 } },
-      }}
-    >
-      <circle cx={x} cy={y} r="13" fill="var(--l-signal)" />
-      <text x={x} y={y + 4.5} textAnchor="middle" fontFamily="Geist Mono, monospace" fontWeight="500" fontSize="13" fill="#fff">
-        {n}
-      </text>
-    </motion.g>
-  )
-  return (
-    <div className="grid items-start gap-12 lg:grid-cols-[7fr_5fr]">
-      <Reveal className="rounded-lg bg-(--l-paper-2) p-4 sm:p-8">
-        <motion.svg
-          viewBox="0 0 640 420"
-          className="w-full"
-          role="img"
-          aria-label="Esquema del editor con sus seis zonas numeradas"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.4 }}
-        >
-          <rect x="20" y="20" width="600" height="380" rx="14" fill="var(--l-paper)" stroke="var(--l-hair-strong)" />
-          <g fill="none" stroke="var(--l-hair-strong)">
-            <line x1="20" y1="62" x2="620" y2="62" />
-            <line x1="240" y1="62" x2="240" y2="400" />
-            <line x1="460" y1="62" x2="460" y2="400" />
-          </g>
-          {/* barra de herramientas */}
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <rect key={i} x={40 + i * 26} y="32" width="18" height="18" rx="5" fill={i === 0 ? 'var(--l-signal)' : 'var(--l-paper-2)'} />
-          ))}
-          {/* plano en el lienzo 2D */}
-          <g fill="none" stroke="var(--l-ink)" strokeLinecap="square">
-            <path d="M62 104 H212 V350 H62 Z" strokeWidth="6" />
-            <path d="M142 104 V200 H212" strokeWidth="3.5" />
-            <path d="M62 256 H112" strokeWidth="3.5" />
-          </g>
-          <path d="M62 104 H212" stroke="var(--l-signal)" strokeWidth="6" />
-          {/* maqueta isométrica */}
-          <g stroke="var(--l-ink)" strokeWidth="1" strokeLinejoin="round">
-            <path d="M285 270 L350 235 L415 270 L350 305 Z" fill="var(--l-paper-2)" />
-            <path d="M285 270 V205 L350 170 V235 Z" fill="#fff" />
-            <path d="M350 170 L415 205 V270 L350 235 Z" fill="var(--l-signal-soft)" />
-          </g>
-          {/* propiedades */}
-          {[0, 1, 2, 3].map((i) => (
-            <g key={i}>
-              <rect x="480" y={94 + i * 34} width="44" height="6" rx="3" fill="var(--l-hair-strong)" />
-              <rect x="532" y={88 + i * 34} width="68" height="18" rx="5" fill="var(--l-paper-2)" />
-            </g>
-          ))}
-          {[0, 1, 2].map((i) => (
-            <g key={i}>
-              <circle cx="486" cy={260 + i * 26} r="5" fill={i === 1 ? 'var(--l-signal)' : 'var(--l-hair-strong)'} />
-              <rect x="498" y={257 + i * 26} width={88 - i * 14} height="6" rx="3" fill="var(--l-hair-strong)" />
-            </g>
-          ))}
-          {bubble(1, 222, 41)}
-          {bubble(2, 137, 228)}
-          {bubble(3, 350, 120)}
-          {bubble(4, 600, 158)}
-          {bubble(5, 600, 286)}
-          {bubble(6, 600, 41)}
-        </motion.svg>
-      </Reveal>
-      <Stagger as="ol" className="grid content-start gap-2" gap={0.07}>
-        {CALLOUTS.map((c) => (
-          <StaggerItem
-            as="li"
-            key={c.n}
-            className="group grid grid-cols-[1.75rem_1fr] gap-3 rounded-lg p-3 transition-colors duration-300 hover:bg-(--l-paper-2)"
-          >
-            <span className="grid size-7 place-items-center rounded-full label bg-(--l-signal-soft) text-(--l-signal-ink) transition-colors duration-300 group-hover:bg-(--l-signal) group-hover:text-white">
-              {c.n}
-            </span>
-            <div>
-              <p className="font-medium tracking-tight">{c.t}</p>
-              <p className="mt-0.5 leading-relaxed text-(--l-graphite)">{c.d}</p>
-            </div>
-          </StaggerItem>
-        ))}
-      </Stagger>
-    </div>
-  )
-}
+/* ------------------------------------------------------------------ áreas */
 
 /** Cuadro de áreas del apartamento de muestra, medido con las funciones del dominio. */
 export function AreaSchedule() {
@@ -267,51 +273,51 @@ export function AreaSchedule() {
   const total = rooms.reduce((s, r) => s + r.area, 0)
   const maxArea = Math.max(...rooms.map((r) => r.area))
   return (
-    <div className="grid items-center gap-12 lg:grid-cols-[6fr_5fr]">
-      <ClipReveal className="aspect-[4/3] overflow-hidden rounded-lg bg-(--l-paper-2)">
+    <div className="grid items-center gap-12 lg:grid-cols-[6fr_5fr] lg:gap-20">
+      <Reveal className="aspect-[4/3] bg-(--l-sheet)">
         <PlanCanvas model={model} className="size-full" label="Plano del apartamento con el área de cada ambiente" />
-      </ClipReveal>
-      <table className="w-full border-collapse text-[15px]">
-        <caption className="label mb-4 text-left text-(--l-graphite)">Cuadro de áreas del apartamento de ejemplo</caption>
+      </Reveal>
+      <table className="w-full border-collapse text-[17px]">
+        <caption className="mb-5 text-left text-(--l-dim)">Cuadro de áreas del apartamento de ejemplo</caption>
         <thead>
-          <tr className="label border-b border-(--l-hair-strong) text-left text-(--l-graphite)">
-            <th scope="col" className="py-2 font-medium">
+          <tr className="border-b border-(--l-rule) text-left text-(--l-dim)">
+            <th scope="col" className="py-3 font-normal">
               Ambiente
             </th>
-            <th scope="col" className="py-2 text-right font-medium">
+            <th scope="col" className="py-3 text-right font-normal">
               Área (m²)
             </th>
-            <th scope="col" className="py-2 text-right font-medium">
+            <th scope="col" className="py-3 text-right font-normal">
               %
             </th>
           </tr>
         </thead>
         <Stagger as="tbody" gap={0.07}>
           {rooms.map((r) => (
-            <StaggerItem as="tr" key={r.name} className="border-b border-(--l-hair)">
-              <td className="py-3.5">
+            <StaggerItem as="tr" key={r.name} className="border-b border-(--l-rule)">
+              <td className="py-4">
                 {r.name}
                 {/* barra proporcional al área: se dibuja de izquierda a derecha al entrar */}
-                <span className="mt-2 block h-1 overflow-hidden rounded-full bg-(--l-paper-2)" aria-hidden>
+                <span className="mt-2 block h-1 bg-(--l-night-2)" aria-hidden>
                   <motion.span
-                    className="block h-full origin-left rounded-full bg-(--l-signal)"
+                    className="block h-full origin-left bg-(--l-signal)"
                     style={{ width: `${(r.area / maxArea) * 100}%` }}
                     variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 1, ease: EASE, delay: 0.2 } } }}
                   />
                 </span>
               </td>
-              <td className="py-3.5 text-right tabular-nums">{r.area.toFixed(2)}</td>
-              <td className="py-3.5 text-right text-(--l-graphite) tabular-nums">{((r.area / total) * 100).toFixed(0)}</td>
+              <td className="py-4 text-right tabular-nums">{r.area.toFixed(2)}</td>
+              <td className="py-4 text-right tabular-nums">{((r.area / total) * 100).toFixed(0)}</td>
             </StaggerItem>
           ))}
         </Stagger>
         <tfoot>
-          <tr className="font-medium">
-            <td className="pt-4">Área útil</td>
-            <td className="pt-4 text-right tabular-nums">
+          <tr className="display text-3xl">
+            <td className="pt-6">Área útil</td>
+            <td className="pt-6 text-right tabular-nums">
               <CountUp value={total} decimals={2} />
             </td>
-            <td className="pt-4 text-right tabular-nums">100</td>
+            <td className="pt-6 text-right tabular-nums">100</td>
           </tr>
         </tfoot>
       </table>
@@ -319,7 +325,9 @@ export function AreaSchedule() {
   )
 }
 
-/** Cierre con zona de arrastre: el archivo viaja a /nuevo en el estado de la navegación. */
+/* ------------------------------------------------------------------ cierre */
+
+/** Cierre en campo dorado con zona de arrastre: el archivo viaja a /nuevo en el estado de la navegación. */
 export function DropCta() {
   const navigate = useNavigate()
   const input = useRef<HTMLInputElement>(null)
@@ -328,31 +336,22 @@ export function DropCta() {
     if (file) void navigate('/nuevo', { state: { file } })
   }
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40, scale: 0.98 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-      transition={{ duration: 0.9, ease: EASE }}
-      className="relative isolate grid gap-10 overflow-hidden rounded-xl bg-(--l-deep) p-6 text-white sm:p-12 lg:grid-cols-[5fr_6fr] lg:items-center lg:p-16"
-    >
-      {/* luz suave que deriva lentamente detrás del contenido */}
-      <motion.span
-        aria-hidden
-        className="pointer-events-none absolute -top-1/2 -left-1/4 -z-10 size-[42rem] rounded-full bg-[radial-gradient(closest-side,rgb(95_170_140/0.35),transparent)]"
-        animate={{ x: [0, 120, 0], y: [0, 60, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <div>
-        <h2 id="empezar" className="text-[clamp(2.4rem,5vw,4rem)] leading-[0.98]">
-          Tu plano, en 3D, hoy.
-        </h2>
-        <p className="mt-4 max-w-md text-lg leading-relaxed text-white/75">
-          Súbelo y en unos segundos tienes el modelo listo para revisar, corregir y recorrer.
-        </p>
-        <Link to="/proyectos" className="group mt-6 inline-flex min-h-12 items-center gap-2 font-medium text-white/90 transition-colors hover:text-white">
-          Ver mis proyectos <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
-        </Link>
-      </div>
+    <div className="frame grid gap-12 lg:grid-cols-[6fr_5fr] lg:items-center lg:gap-20">
+      <Stagger gap={0.09}>
+        <StaggerItem>
+          <h2 id="empezar" className="display text-[clamp(3rem,7vw,7rem)] leading-[0.9]">
+            Tu plano, en 3D, hoy.
+          </h2>
+        </StaggerItem>
+        <StaggerItem>
+          <p className="mt-6 max-w-md text-xl leading-relaxed">Súbelo y en unos segundos tienes el modelo listo para revisar, corregir, recorrer y construir.</p>
+        </StaggerItem>
+        <StaggerItem>
+          <Link to="/proyectos" className="group mt-6 inline-flex min-h-12 items-center gap-2 text-lg font-medium underline decoration-2 underline-offset-[6px]">
+            Ver mis proyectos <ArrowRight className="size-5 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+          </Link>
+        </StaggerItem>
+      </Stagger>
       <div
         onDragOver={(e) => {
           e.preventDefault()
@@ -365,141 +364,42 @@ export function DropCta() {
           go(e.dataTransfer.files[0])
         }}
         className={clsx(
-          'grid place-items-center gap-4 rounded-lg border-2 border-dashed px-6 py-14 text-center transition-[border-color,background-color,transform] duration-300',
-          over ? 'scale-[1.02] border-white bg-white/10' : 'border-white/30 hover:border-white/55 hover:bg-white/[0.04]',
+          'grid place-items-center gap-4 border-2 border-dashed px-6 py-16 text-center transition-[border-color,background-color,transform] duration-300',
+          over ? 'scale-[1.02] border-(--l-on-signal) bg-black/10' : 'border-(--l-on-signal)/45 hover:border-(--l-on-signal) hover:bg-black/5',
         )}
       >
         <motion.span animate={over ? { y: -6 } : { y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
-          <FileUp className="size-8 text-white/70" aria-hidden />
+          <FileUp className="size-9" aria-hidden />
         </motion.span>
-        <p className="text-lg font-medium">Arrastra aquí tu plano</p>
-        <p className="label text-white/60">JPG · PNG · WEBP · PDF · DXF — hasta 25 MB</p>
+        <p className="display text-4xl">Arrastra aquí tu plano</p>
+        <p>JPG, PNG, WEBP, PDF o DXF, hasta 25 MB</p>
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="mt-2 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 font-medium text-(--l-deep) transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-(--l-signal-soft) active:translate-y-0"
+          className="mt-2 inline-flex h-12 items-center gap-2 rounded-full bg-(--l-on-signal) px-7 font-medium text-(--l-signal) transition-transform duration-300 hover:-translate-y-0.5 active:translate-y-0"
         >
           Elegir archivo
         </button>
         <input ref={input} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => go(e.target.files?.[0])} />
       </div>
-    </motion.div>
-  )
-}
-
-const STATEMENT =
-  'Plano 3D convierte el plano que ya tienes en un modelo que puedes medir, corregir y recorrer, sin dibujar nada desde cero.'
-
-const MARQUEE = ['Muros', 'Puertas', 'Ventanas', 'Cotas', 'Ambientes', 'Escaleras', 'Columnas', 'GLB']
-
-/** Declaración grande que se ilumina palabra a palabra con el scroll, seguida de la marquesina. */
-export function Statement() {
-  return (
-    <section aria-label="Qué es Plano 3D" className="pt-24 md:pt-36">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <ScrollText
-          text={STATEMENT}
-          className="max-w-5xl text-[clamp(2rem,4.6vw,4.1rem)] leading-[1.06] font-medium tracking-[-0.045em]"
-        />
-      </div>
-      <div className="mt-20 md:mt-28">
-        <Marquee items={MARQUEE} />
-      </div>
-    </section>
-  )
-}
-
-const FACTS: { value: number; suffix?: string; label: string; text: string; dark?: boolean }[] = [
-  { value: 10, label: 'etapas de análisis', text: 'Desde corregir la perspectiva de la foto hasta levantar cada muro.', dark: true },
-  { value: 3, label: 'tipos de archivo', text: 'Foto o imagen, PDF y DXF de AutoCAD.' },
-  { value: 25, suffix: 'MB', label: 'por archivo', text: 'Suficiente para un pliego escaneado a buena resolución.' },
-  { value: 1, suffix: 'cm', label: 'de rejilla de imán', text: 'Para ajustar muros con precisión en el editor.' },
-]
-
-/** Cifras en tarjetas que entran inclinadas y cuyos números ruedan como un odómetro. */
-export function Facts() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {FACTS.map((f, i) => (
-        <TiltIn
-          key={f.label}
-          index={i}
-          className={clsx(
-            'flex min-h-72 flex-col justify-between rounded-lg p-6 transition-transform duration-500 ease-out hover:-translate-y-1',
-            f.dark ? 'bg-(--l-deep) text-white' : 'bg-(--l-paper-2)',
-          )}
-        >
-          <p className={clsx('label', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.label}</p>
-          <div>
-            <Odometer value={f.value} suffix={f.suffix} className="text-[clamp(4rem,7vw,5.75rem)] font-medium tracking-[-0.06em]" />
-            <p className={clsx('mt-3 leading-relaxed', f.dark ? 'text-white/70' : 'text-(--l-graphite)')}>{f.text}</p>
-          </div>
-        </TiltIn>
-      ))}
     </div>
   )
 }
 
 export function Footer() {
   return (
-    <footer className="border-t border-(--l-hair)">
-      <div className="label mx-auto flex max-w-6xl flex-col gap-3 px-4 py-10 text-(--l-graphite) sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>
-          <span className="text-(--l-ink)">Plano 3D</span> · Proyecto final de Programación Orientada a Objetos
+    <footer className="bg-(--l-night) pt-24 pb-10">
+      <div className="frame">
+        <p className="display text-[clamp(4.5rem,17vw,17rem)] leading-[0.8]" aria-hidden>
+          Plano 3D
         </p>
-        <p>Bogotá — 2026</p>
+        <div className="mt-10 flex flex-col gap-3 text-(--l-dim) sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            <span className="text-(--l-ink)">Plano 3D</span>, proyecto final de Programación Orientada a Objetos
+          </p>
+          <p>Bogotá, 2026</p>
+        </div>
       </div>
     </footer>
-  )
-}
-
-/** Lo que se puede hacer con un plano, cada cosa con una captura real de la app. */
-const CAPABILITIES = [
-  { img: 'editor', title: 'Editor de planos', text: 'Mueve muros, puertas y medidas; el 3D se actualiza mientras lo haces.', href: '/tutoriales/editar.webm', alt: 'El editor con el plano en 2D a la izquierda y el modelo 3D a la derecha' },
-  { img: 'modelo', title: 'Modelo 3D', text: 'Orbita la maqueta o camina por dentro, con puertas que se abren.', href: '/tutoriales/recorrer.webm', alt: 'La maqueta 3D de un apartamento con sus muebles' },
-  { img: 'pisos', title: 'Piso por piso', text: 'Pasa el cursor por un piso para ver su ficha y aíslalo como una maqueta.', href: '/nuevo', alt: 'Una casa de dos pisos con la planta baja aislada y cortada' },
-  { img: 'obra', title: 'Modo obra', text: 'Columnetas, vigas y ladrillo según NSR-10 Título E, para el maestro.', href: '/nuevo', alt: 'La casa en mampostería confinada, con ladrillo y columnetas' },
-  { img: 'acero', title: 'Despiece de acero', text: 'La cartilla de hierro por elemento, con kilos y archivo CSV.', href: '/nuevo', alt: 'El esqueleto de acero de la casa y la tabla del despiece' },
-  { img: 'secuencia', title: 'Secuencia de obra', text: 'La casa construyéndose etapa por etapa, de la zanja al último muro.', href: '/nuevo', alt: 'La etapa de muros de la secuencia de obra, a pantalla completa' },
-] as const
-
-export function Capabilities() {
-  return (
-    <Stagger as="ul" className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3" gap={0.06} aria-label="Qué puedes hacer">
-      {CAPABILITIES.map((c) => {
-        const external = c.href.endsWith('.webm')
-        return (
-          <StaggerItem key={c.img} as="li" className="group relative flex flex-col">
-            <div className="overflow-hidden rounded-xl border border-(--l-hair) bg-(--l-paper-2) shadow-[0_24px_48px_-32px_rgb(28_31_29/0.45)]">
-              <img
-                src={`/landing/${c.img}.jpg`}
-                alt={c.alt}
-                width={1280}
-                height={800}
-                loading="lazy"
-                decoding="async"
-                className="aspect-[16/10] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-              />
-            </div>
-            <h3 className="mt-2 text-xl leading-tight">
-              {external ? (
-                <a href={c.href} className="inline-flex min-h-11 items-center after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-(--l-signal)">
-                  {c.title}
-                </a>
-              ) : (
-                <Link to={c.href} className="inline-flex min-h-11 items-center after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-4 focus-visible:after:outline-(--l-signal)">
-                  {c.title}
-                </Link>
-              )}
-            </h3>
-            <p className="max-w-sm text-(--l-graphite)">{c.text}</p>
-            <span aria-hidden className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-(--l-signal-ink)">
-              {external ? 'Ver el tutorial' : 'Probar con tu plano'}
-              <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </span>
-          </StaggerItem>
-        )
-      })}
-    </Stagger>
   )
 }
