@@ -6,8 +6,12 @@
  * - La obra es la escena del modo "secuencia" del visor, con su línea de tiempo real
  *   (`stepTimeline`): cimentación, placa, ladrillo hilada a hilada, columnetas y vigas.
  * - Los acabados entran con un barrido: un plano de corte recorre la casa y de un lado queda
- *   la obra gris y del otro la casa terminada, con texturas, muebles y pasto.
- * - Al final la cámara entra a la sala y se encienden las luces de adentro.
+ *   la obra gris y del otro la casa terminada; la tierra se funde en pasto.
+ * - Al final cae la noche: la cámara baja a la altura de los ojos frente a la fachada y las
+ *   ventanas se encienden con las luces de adentro.
+ *
+ * Nada aparece de golpe: la cámara sigue una curva continua con amortiguación, y la luz, el
+ * suelo y el holograma cambian con fundidos atados al scroll.
  *
  * Todo sale de los mismos constructores del visor (SceneBuilder y ConstructionBuilder): lo que
  * se ve en la landing es lo que hace la app con un plano.
@@ -27,14 +31,16 @@ import { ConstructionBuilder } from '@/features/viewer3d/scene/ConstructionBuild
 import { MaterialFactory } from '@/features/viewer3d/scene/MaterialFactory'
 import { buildScene, disposeScene, type BuiltScene } from '@/features/viewer3d/scene/SceneBuilder'
 import { stepTimeline } from '@/features/viewer3d/scene/timeline'
-import { cameraAt, sceneAt, type Pose } from './sequence'
+import { cameraAt, ramp, sceneAt, type Pose } from './sequence'
 
 /** cielo de atardecer ya entrado (fondo y niebla) */
 const DUSK = '#10151c'
 /** luz del holograma */
 const HOLO = '#8cd2ff'
-/** oro del barrido (mismo tono que el acento de la página) */
-const GOLD = '#e3b341'
+/** línea de luz del barrido */
+const SCAN = '#ffe3b3'
+/** luz de adentro, la que se ve por las ventanas de noche */
+const WARM = '#ffb35c'
 /** profundidad de la excavación, como en el modo obra del visor */
 const PIT = NSR10.foundationDepth + 0.1
 
@@ -90,6 +96,7 @@ function excavation(b: ReturnType<typeof modelBounds>, materials: MaterialFactor
   const earth = materials.earth()
   // la forma está en el plano XY: se acuesta y su "y" pasa a ser z
   const top = new THREE.Mesh(new THREE.ShapeGeometry(shape), earth)
+  top.name = 'pit:top'
   top.rotation.x = Math.PI / 2
   top.position.y = -0.03
   top.receiveShadow = true
@@ -127,7 +134,6 @@ interface Built {
   ghost: THREE.Group
   ghostMat: THREE.MeshBasicMaterial
   pit: THREE.Group
-  ceiling: THREE.Mesh
   /** planos de corte del barrido: la obra queda a un lado, la casa terminada al otro */
   cut: { work: THREE.Plane; done: THREE.Plane }
 }
@@ -161,12 +167,7 @@ function useBuilt(model: BuildingModel): { built: Built; materials: MaterialFact
     const ghostMat = new THREE.MeshBasicMaterial({ color: HOLO, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide })
     const cut = { work: new THREE.Plane(new THREE.Vector3(1, 0, 0), 0), done: new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0) }
     const pit = excavation(modelBounds(model), wrk)
-    const bb = modelBounds(model)
-    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(bb.maxX - bb.minX, bb.maxY - bb.minY), new THREE.MeshStandardMaterial({ color: '#ece7dd', roughness: 0.95 }))
-    ceiling.rotation.x = Math.PI / 2
-    ceiling.position.set(bb.center.x, (model.levels[0]?.height ?? 2.4) - 0.01, bb.center.y)
-    ceiling.visible = false
-    return { finished, work, steps: schedule.map((x) => x.id), marks, holo, ghost: ghostOf(finished.walls, ghostMat), ghostMat, pit, ceiling, cut }
+    return { finished, work, steps: schedule.map((x) => x.id), marks, holo, ghost: ghostOf(finished.walls, ghostMat), ghostMat, pit, cut }
   }, [model, materials])
   return { built, materials }
 }
@@ -188,7 +189,12 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
   const scan = useRef<THREE.Group>(null)
   const sun = useRef<THREE.DirectionalLight>(null)
   const lamps = useRef<THREE.Group>(null)
+  const sky = useRef<THREE.HemisphereLight>(null)
+  const scanMat = useRef<THREE.LineBasicMaterial>(null)
   const look = useMemo(() => new THREE.Vector3(), [])
+  // cámara amortiguada: sigue a la curva con un poco de inercia
+  const camRef = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3(), ready: false })
+  const goalRef = useRef({ pos: new THREE.Vector3(), look: new THREE.Vector3() })
   const intro = useRef(0)
 
   // la escena se arma una vez; useFrame la anima a través de este ref
@@ -200,23 +206,36 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
     clipAll(built.work.root, built.cut.work)
     clipAll(built.pit, built.cut.work)
     clipAll(built.finished.root, built.cut.done)
-    // pasto de atardecer: el verde del visor es de mediodía y aquí compite con el dorado
-    const lawn = built.finished.root.getObjectByName('site:lawn') as THREE.Mesh | undefined
-    if (lawn) {
-      const m = (lawn.material as THREE.MeshStandardMaterial).clone()
-      m.color.multiplyScalar(0.45)
-      m.clippingPlanes = [built.cut.done]
-      lawn.material = m
+    // el suelo no se corta con el barrido: la tierra se funde en pasto (sin bordes que salten)
+    const own: THREE.Material[] = []
+    const fading = (mesh: THREE.Mesh | undefined, tint = 1) => {
+      if (!mesh) return
+      const m = (mesh.material as THREE.MeshStandardMaterial).clone()
+      m.color.multiplyScalar(tint)
+      m.clippingPlanes = []
+      m.transparent = true
+      own.push(m)
+      mesh.material = m
     }
+    // pasto de atardecer: el verde del visor es de mediodía y aquí compite con el dorado
+    fading(built.finished.root.getObjectByName('site:lawn') as THREE.Mesh | undefined, 0.45)
+    fading(built.pit.getObjectByName('pit:top') as THREE.Mesh | undefined)
+    // las ventanas se encienden de noche con la luz de adentro
+    built.finished.glass.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return
+      const m = (o.material as THREE.MeshPhysicalMaterial).clone()
+      m.emissive.set(WARM)
+      m.emissiveIntensity = 0
+      own.push(m)
+      o.material = m
+    })
     parts.current = built
     return () => {
-      if (lawn) (lawn.material as THREE.Material).dispose()
+      own.forEach((m) => m.dispose())
       disposeScene(built.finished)
       disposeScene(built.work)
       built.holo.dispose()
       built.ghostMat.dispose()
-      built.ceiling.geometry.dispose()
-      ;(built.ceiling.material as THREE.Material).dispose()
       built.pit.traverse((o) => o instanceof THREE.Mesh && o.geometry.dispose())
     }
   }, [built])
@@ -244,15 +263,14 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
       { p: 0, pose: at(1.2, 1.3, 1.8, 0) },
       { p: 0.18, pose: at(1.15, 0.92, 1.42, -0.4) },
       { p: 0.5, pose: at(1.45, 0.78, 1.05, 0.5) },
-      { p: 0.7, pose: at(0.95, 1.2, 1.2, 0) },
-      { p: 0.84, pose: at(0.45, 0.42, 1.25, 1.1) },
-      // frente a la puerta de entrada, y adentro: el comedor delante y la sala al fondo
-      { p: 0.93, pose: { pos: [3.6, 1.6, 9.6], look: [3.0, 1.2, 3.0] } as Pose },
-      { p: 1, pose: { pos: [4.4, 1.45, 3.95], look: [0.7, 0.9, 1.75] } as Pose },
+      { p: 0.7, pose: at(0.95, 1.1, 1.25, 0.2) },
+      { p: 0.86, pose: at(0.25, 0.5, 1.45, 0.9) },
+      // de noche, en tres cuartos y algo alta: se ven los ambientes encendidos por dentro
+      { p: 1, pose: { pos: [c.x + 7.5, 3.9, c.y + 16.5], look: [c.x - 0.2, 0.8, c.y + 0.4] } as Pose },
     ]
   }, [b])
 
-  useFrame(({ camera, size }) => {
+  useFrame(({ camera, size, gl }, delta) => {
     const sc = parts.current
     if (!sc) return
     const p = progress.get()
@@ -268,46 +286,63 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
     // obra: la línea de tiempo real del modo secuencia
     stepTimeline(sc.work.root, sc.steps, buildToT(st.build, sc.marks))
 
-    // barrido de acabados de izquierda a derecha, con una cortina de luz dorada en el frente
+    // barrido de acabados: el corte cruza la casa; el suelo cambia por fundido
     const x = b.minX - 1.2 + (b.maxX - b.minX + 2.4) * st.sweep
     sc.cut.work.constant = -x
     sc.cut.done.constant = x
-    sc.finished.root.visible = st.sweep > 0.001
-    // el techo solo al entrar: desde afuera taparía la obra y el barrido
-    // la puerta de entrada se abre mientras la cámara se acerca
-    const entry = sc.finished.root.getObjectByName('door:p_acceso')
-    const open = Math.min(1, st.interior * 2.5)
-    entry?.children.forEach((pivot) => {
-      const anim = pivot.userData.anim as { type: string; closed: number; open: number } | undefined
-      if (anim?.type === 'rotate') pivot.rotation.y = anim.closed + (anim.open - anim.closed) * open
-    })
-    // cielo raso solo al entrar: desde afuera taparía la obra y el barrido
-    sc.ceiling.visible = st.interior > 0.6
     sc.work.root.visible = st.sweep < 0.999
-    sc.pit.visible = st.sweep < 0.999
+    const ground = ramp(st.sweep, 0.05, 0.95)
+    const lawn = sc.finished.root.getObjectByName('site:lawn') as THREE.Mesh | undefined
+    if (lawn) {
+      ;(lawn.material as THREE.Material).opacity = ground
+      lawn.visible = ground > 0.001
+    }
+    const earth = sc.pit.getObjectByName('pit:top') as THREE.Mesh | undefined
+    if (earth) (earth.material as THREE.Material).opacity = 1 - ground
+    sc.pit.visible = ground < 0.999
     if (scan.current) {
       scan.current.visible = st.sweep > 0.001 && st.sweep < 0.999
       scan.current.position.x = x
     }
+    // la línea de luz entra y sale con suavidad
+    if (scanMat.current) scanMat.current.opacity = 0.6 * Math.sin(Math.PI * st.sweep)
 
-    // de día de obra a anochecer: el sol baja y se encienden las lámparas de adentro
-    if (sun.current) sun.current.intensity = 2.4 - 1.5 * st.interior
-    if (lamps.current) lamps.current.children.forEach((l) => ((l as THREE.PointLight).intensity = 2.4 * st.interior))
+    // cae la noche: baja el sol y el cielo, y se encienden las luces de adentro
+    if (sun.current) sun.current.intensity = 2.4 - 1.8 * st.dusk
+    if (sky.current) sky.current.intensity = 0.85 - 0.45 * st.dusk
+    if (lamps.current) lamps.current.children.forEach((l) => ((l as THREE.PointLight).intensity = 3.4 * st.dusk))
+    sc.finished.glass.traverse((o) => {
+      if (o instanceof THREE.Mesh) (o.material as THREE.MeshPhysicalMaterial).emissiveIntensity = 1.6 * st.dusk
+    })
+    gl.toneMappingExposure = 1.05 - 0.1 * st.dusk
 
+    // cámara: la curva da la meta y la cámara la sigue con inercia
+    const cam = camRef.current
+    const goal = goalRef.current
     const pose = cameraAt(p, keys)
-    look.set(...pose.look)
-    camera.position.set(...pose.pos)
-    // en vertical la casa no cabe a lo ancho: la cámara se aleja (salvo ya dentro de la casa)
+    goal.pos.set(...pose.pos)
+    goal.look.set(...pose.look)
+    // en vertical la casa no cabe a lo ancho: la cámara se aleja
     const aspect = size.width / size.height
-    if (aspect < 1) camera.position.sub(look).multiplyScalar(1 + 0.9 * (1 - aspect) * (1 - st.interior)).add(look)
+    if (aspect < 1) goal.pos.sub(goal.look).multiplyScalar(1 + 0.9 * (1 - aspect)).add(goal.look)
+    if (!cam.ready) {
+      cam.pos.copy(goal.pos)
+      cam.look.copy(goal.look)
+      cam.ready = true
+    }
+    const f = 1 - Math.exp(-6 * Math.min(delta, 0.1))
+    cam.pos.lerp(goal.pos, f)
+    cam.look.lerp(goal.look, f)
+    camera.position.copy(cam.pos)
+    look.copy(cam.look)
     camera.lookAt(look)
+    // el lienzo solo dibuja a pedido: sigue pidiendo cuadros hasta alcanzar la meta
+    if (cam.pos.distanceToSquared(goal.pos) > 1e-5 || cam.look.distanceToSquared(goal.look) > 1e-5) invalidate()
+
+    // la casa va arriba a la derecha y deja libre la esquina del texto (abajo a la izquierda)
     const persp = camera as THREE.PerspectiveCamera
-    persp.fov = 32 + 24 * st.interior
-    // la casa va arriba a la derecha y deja libre la esquina del texto (abajo a la izquierda);
-    // en vertical solo sube. Dentro de la casa la vista queda centrada.
-    const free = 1 - st.interior
     const wide = size.width > size.height
-    persp.setViewOffset(size.width, size.height, wide ? -0.17 * size.width * free : 0, (wide ? 0.06 : 0.16) * size.height * free, size.width, size.height)
+    persp.setViewOffset(size.width, size.height, wide ? -0.17 * size.width : 0, (wide ? 0.06 : 0.16) * size.height, size.width, size.height)
     persp.updateProjectionMatrix()
   })
 
@@ -316,7 +351,7 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
     <>
       <color attach="background" args={[DUSK]} />
       <fog attach="fog" args={[DUSK, 26, 70]} />
-      <hemisphereLight args={['#9fb4d4', '#2a2118', 0.85]} />
+      <hemisphereLight ref={sky} args={['#9fb4d4', '#2a2118', 0.85]} />
       <ambientLight intensity={0.25} />
       <directionalLight
         ref={sun}
@@ -343,7 +378,6 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
       <primitive object={built.pit} />
       <primitive object={built.work.root} />
       <primitive object={built.finished.root} />
-      <primitive object={built.ceiling} />
 
       {/* holograma: aristas en luz y un velo muy tenue en las caras */}
       <lineSegments geometry={built.holo}>
@@ -351,15 +385,11 @@ function Scene({ model, progress }: { model: BuildingModel; progress: MotionValu
       </lineSegments>
       <primitive object={built.ghost} />
 
-      {/* frente del barrido: un velo muy tenue con su marco de luz dorada */}
+      {/* frente del barrido: un marco de luz fina que entra y sale con suavidad */}
       <group ref={scan} position={[0, 0, b.center.y]} visible={false}>
-        <mesh rotation-y={Math.PI / 2} position-y={1.5}>
-          <planeGeometry args={[b.maxY - b.minY + 1.4, 3.2]} />
-          <meshBasicMaterial color={GOLD} transparent opacity={0.06} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} />
-        </mesh>
-        <lineSegments rotation-y={Math.PI / 2} position-y={1.5}>
-          <edgesGeometry args={[new THREE.PlaneGeometry(b.maxY - b.minY + 1.4, 3.2)]} />
-          <lineBasicMaterial color={GOLD} transparent opacity={0.95} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+        <lineSegments rotation-y={Math.PI / 2} position-y={1.25}>
+          <edgesGeometry args={[new THREE.PlaneGeometry(b.maxY - b.minY + 1.4, 2.5)]} />
+          <lineBasicMaterial ref={scanMat} color={SCAN} transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
         </lineSegments>
       </group>
     </>

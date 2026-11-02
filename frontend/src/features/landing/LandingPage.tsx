@@ -63,16 +63,13 @@ function Masthead() {
 
 function HeroActions() {
   return (
-    <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <div className="mt-8">
       <Link
         to="/nuevo"
-        className="group inline-flex h-13 items-center gap-2 rounded-full bg-(--l-signal) px-7 text-[17px] font-medium text-(--l-on-signal) transition-[transform,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-signal-hi) active:translate-y-0"
+        className="group inline-flex h-13 items-center gap-2 rounded-full bg-(--l-signal) px-7 font-medium text-(--l-on-signal) transition-[transform,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-signal-hi) active:translate-y-0"
       >
         Convertir un plano <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
       </Link>
-      <a href="#que-puedes-hacer" className="inline-flex min-h-11 items-center font-medium underline decoration-(--l-signal) decoration-2 underline-offset-[6px]">
-        Ver qué hace
-      </a>
     </div>
   )
 }

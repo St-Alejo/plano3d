@@ -180,6 +180,27 @@ html:has(.landing) {
 .landing p {
   text-wrap: pretty;
 }
+/* cinco tamaños para toda la página: display, sección, título, entrada y nota */
+.landing .t-display {
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  line-height: 0.92;
+}
+.landing .t-h2 {
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  line-height: 1;
+}
+.landing .t-h3 {
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+.landing .t-lead {
+  font-size: 1.1875rem;
+  line-height: 1.5;
+}
+.landing .t-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
 .landing ::selection {
   background: var(--l-signal);
   color: var(--l-on-signal);

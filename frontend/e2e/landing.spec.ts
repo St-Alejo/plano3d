@@ -18,7 +18,7 @@ test('la secuencia del hero avanza paso a paso con el scroll', async ({ page }) 
   await page.evaluate((y) => window.scrollTo(0, y), box.top + 0.95 * (box.h - vh))
   await expect(steps).toHaveCount(6)
   await expect(steps.nth(5)).toHaveAttribute('aria-current', 'step')
-  await expect(page.getByText(/Entra a la altura de tus ojos/)).toBeVisible()
+  await expect(page.getByText('Tu casa terminada, antes de poner el primer ladrillo.', { exact: true })).toBeVisible()
   expect(errors).toEqual([])
 })
 

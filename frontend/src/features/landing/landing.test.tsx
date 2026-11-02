@@ -11,19 +11,19 @@ import { sampleApartment } from './sampleApartment'
 import { cameraAt, sceneAt, STAGES, type Pose } from './sequence'
 
 describe('sceneAt (coreografía del hero)', () => {
-  it('arranca con el plano en holograma y termina dentro de la casa terminada', () => {
-    expect(sceneAt(0)).toMatchObject({ stage: 0, holo: 1, build: 0, sweep: 0, interior: 0 })
-    expect(sceneAt(1)).toMatchObject({ stage: STAGES.length - 1, holo: 0, build: 3, sweep: 1, interior: 1 })
+  it('arranca con el plano en holograma y termina con la casa terminada de noche', () => {
+    expect(sceneAt(0)).toMatchObject({ stage: 0, holo: 1, build: 0, sweep: 0, dusk: 0 })
+    expect(sceneAt(1)).toMatchObject({ stage: STAGES.length - 1, holo: 0, build: 3, sweep: 1, dusk: 1 })
   })
 
-  it('la obra, el barrido y la entrada avanzan sin retroceder y se pasa por las seis etapas', () => {
+  it('la obra, el barrido y la noche avanzan sin retroceder y se pasa por las seis etapas', () => {
     let prev = sceneAt(0)
     const seen = new Set<number>()
     for (let p = 0; p <= 1.0001; p += 0.005) {
       const s = sceneAt(p)
       expect(s.build).toBeGreaterThanOrEqual(prev.build)
       expect(s.sweep).toBeGreaterThanOrEqual(prev.sweep)
-      expect(s.interior).toBeGreaterThanOrEqual(prev.interior)
+      expect(s.dusk).toBeGreaterThanOrEqual(prev.dusk)
       expect(s.holo).toBeLessThanOrEqual(prev.holo + 1e-9)
       seen.add(s.stage)
       prev = s
@@ -56,6 +56,14 @@ describe('cameraAt', () => {
     const x = cameraAt(0.25, keys).pos[0]
     expect(x).toBeGreaterThan(0)
     expect(x).toBeLessThan(10)
+  })
+
+  it('no se detiene en las claves intermedias: la velocidad sigue al pasar por ellas', () => {
+    const h = 0.01
+    const before = cameraAt(0.5, keys).pos[0] - cameraAt(0.5 - h, keys).pos[0]
+    const after = cameraAt(0.5 + h, keys).pos[0] - cameraAt(0.5, keys).pos[0]
+    expect(before).toBeGreaterThan(0.05)
+    expect(after).toBeGreaterThan(0.05)
   })
 })
 
@@ -104,7 +112,7 @@ describe('LandingPage', () => {
   it('presenta el producto y lleva a la app', () => {
     renderLanding()
     expect(screen.getByRole('heading', { level: 1, name: /Tu casa, desde el plano/ })).toBeInTheDocument()
-    expect(screen.getByText(/Toma una foto de tu plano/)).toBeInTheDocument()
+    expect(screen.getByText(/Sube una foto de tu plano/)).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Convertir un plano/ })[0]).toHaveAttribute('href', '/nuevo')
     expect(screen.getByRole('link', { name: /Abrir la app/ })).toHaveAttribute('href', '/proyectos')
     expect(screen.getByRole('link', { name: /Ver mis proyectos/ })).toHaveAttribute('href', '/proyectos')
