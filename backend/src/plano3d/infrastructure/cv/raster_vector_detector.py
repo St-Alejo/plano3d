@@ -34,7 +34,8 @@ from plano3d.domain import LabelKind, MeasureSource
 from plano3d.domain.plan_text import classify_label, parse_length
 from plano3d.domain.scale_fit import ScaleFit, ScalePair, fit_scale
 from plano3d.domain.solver import solve_level
-from plano3d.infrastructure.cv.band_rooms import band_rooms
+from plano3d.infrastructure.cv.band_rooms import band_rooms, wall_band
+from plano3d.infrastructure.cv.band_walls import band_walls
 from plano3d.infrastructure.cv.context import CVContext, as_u8
 from plano3d.infrastructure.cv.dimension_text import TextDimension, read_text_dimensions
 from plano3d.infrastructure.cv.dimensions import (
@@ -290,11 +291,11 @@ class ToDrawingStage(PipelineStage[RasterContext]):
 
 class BandRoomsStage(PipelineStage[RasterContext]):
     """Si los muros no cierran los ambientes (tabiques sin detectar, vanos abiertos), los
-    ambientes salen de la máscara de bandas. Solo con escala por cotas: los grosores del
-    filtro están en metros."""
+    ambientes y los muros salen de la máscara de bandas. Solo con escala por cotas: los
+    grosores del filtro están en metros."""
 
     key = "band_rooms"
-    title = "Ambientes desde la tinta"
+    title = "Ambientes y muros desde la tinta"
 
     def run(self, ctx: RasterContext) -> RasterContext:
         if ctx.scale_source != "dimensions":
@@ -312,6 +313,11 @@ class BandRoomsStage(PipelineStage[RasterContext]):
         if sum(p.area for p in found) > BAND_GAIN * sum(p.area for p in ctx.rooms):
             ctx.rooms = found
             ctx.metrics["band_rooms"] = float(len(found))
+            # los muros por pares de caras tampoco cerraban: salen de la misma banda
+            band = wall_band(ink, ctx.mpp, [(ln.x1, ln.y1, ln.x2, ln.y2) for ln in dims])
+            walls = band_walls(band, found, ctx.mpp, ctx.walls)
+            if walls:
+                ctx.walls = walls
         return ctx
 
     def metrics(self, ctx: RasterContext) -> dict[str, float]:

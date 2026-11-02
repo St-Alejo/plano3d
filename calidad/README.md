@@ -75,8 +75,8 @@ correcciones están documentadas en la bitácora.
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
 | **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,73 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
 
-| **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". Ambientes por máscara de bandas: 8/7, **IoU 0,74**, nombres 4/7 (antes 1/7, IoU 0,05). Muros F1 0,65 |
-| **casa4hd** | La misma lámina en foto de 2252×4000 (la que subió el usuario, `prj_42b8db5e82`) | 1 ambiente de 1,1 m² | 🟡 Escala +5,9 %. ✅ **Ambientes 7/7, IoU 0,91** (alcobas 0,95, cocina 0,93, punto fijo 0,92, baños 0,86/0,83), nombres 4/7 (los baños y la escalera no tienen rótulo en la lámina). Muros F1 0,61 |
+| **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". Ambientes por máscara de bandas: 8/7, **IoU 0,73**, nombres 4/7 (antes 1/7, IoU 0,05). **Muros F1 0,90** (antes 0,65) |
+| **casa4hd** | La misma lámina en foto de 2252×4000 (la que subió el usuario, `prj_42b8db5e82`) | 1 ambiente de 1,1 m² | 🟡 Escala +5,9 %. ✅ **Ambientes 7/7, IoU 0,91** (alcobas 0,95, cocina 0,93, punto fijo 0,92, baños 0,86/0,83), nombres 4/7 (los baños y la escalera no tienen rótulo en la lámina). ✅ **Muros F1 0,95** (P 0,95 R 0,95; antes 0,61, 96 muros → 26) |
 
 **Por qué casa4 no cumple todavía (causa medida):**
 - El OCR lee bien la hoja (COCINA, ALCOBA1-3, SALA-COMEDOR y ~25 cotas). Fallaba la búsqueda de la línea
@@ -100,7 +100,14 @@ correcciones están documentadas en la bitácora.
   libre de 0,25–1 m² (ducha, closet) se une al vecino a través de una división ≤ 0,15 m; nichos < 0,6 m
   (sanitarios, muebles adosados) se rellenan con un cierre cuadrado. En casa4 (900×1600) la cota "2.91" no se
   reconoce como cota y cierra del todo la parte baja de la alcoba 3: sigue en dos (0,66) y el baño 2 en 0,14.
-  Pendiente también: los muros (las cotas exteriores aún salen como muros).
+- **Muros (2026-11-02, `cv/band_walls.py`)**: cuando los ambientes salen de la banda, los muros también. Zona de
+  muro = banda a ≤ 0,25 m de un ambiente y fuera de todos (se van cotas exteriores, burbujas de ejes y marcas);
+  apertura con una línea de 0,3 m en H y en V; cada pieza se parte en tramos cuyo centro no salta > 8 cm (una
+  burbuja o un mueble pegado no la descartan entera); grosor = percentil 25; se descartan tramos > 0,35 m de
+  grueso o inclinados > 0,05; colineales a < 10 cm se unen por huecos < 1,1 m (puertas); `snap` cierra L y T y
+  las aberturas de los muros por pares de caras se pasan al eje nuevo. casa4hd F1 0,61 → 0,95; casa4 0,65 →
+  0,90. Sobran el contorno de la planta junto al sofá y el lavamanos; en casa4, la cota "2.91" (no reconocida).
+- Pendiente: aberturas (casa4hd P 0,14 R 0,07; casa4 P 0,50 R 0,21).
 - Prototipo previo (antes de integrar): con la escala ya conocida por las cotas, un cierre
   morfológico de 0,15 m + apertura de 0,08 m da una **máscara de bandas** casi igual a los muros reales
   (cotas y muebles desaparecen). Ejes del esqueleto de esa máscara → muros P 0,75 / R 0,79. Ambientes como

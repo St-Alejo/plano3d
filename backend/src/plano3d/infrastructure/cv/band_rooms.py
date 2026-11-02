@@ -163,6 +163,18 @@ def _merge_open(
     return list(groups.values())
 
 
+def wall_band(
+    ink: Img, mpp: float, dim_lines: Sequence[tuple[float, float, float, float]] = ()
+) -> Img:
+    """Banda de los muros: sin las cotas reconocidas ni las islas de tinta."""
+    if dim_lines:
+        ink = ink.copy()
+        t = max(2, round(DIM_ERASE_M / mpp))
+        for x1, y1, x2, y2 in dim_lines:
+            cv2.line(ink, (round(x1), round(y1)), (round(x2), round(y2)), 0, t)
+    return _walls_only(band_mask(ink, mpp), mpp)
+
+
 def band_rooms(
     ink: Img,
     mpp: float,
@@ -176,12 +188,7 @@ def band_rooms(
     ``arcs`` (px): arcos del dibujo (centro, radio); los de tamaño de hoja marcan puertas.
     """
     hinges = [(x, y, r) for x, y, r in arcs if LEAF_M[0] <= r * mpp <= LEAF_M[1]]
-    if dim_lines:
-        ink = ink.copy()
-        t = max(2, round(DIM_ERASE_M / mpp))
-        for x1, y1, x2, y2 in dim_lines:
-            cv2.line(ink, (round(x1), round(y1)), (round(x2), round(y2)), 0, t)
-    band = _walls_only(band_mask(ink, mpp), mpp)
+    band = wall_band(ink, mpp, dim_lines)
     free = cv2.bitwise_not(band)
     h, w = band.shape
     n, labels, stats, _ = cv2.connectedComponentsWithStats(free, connectivity=4)
