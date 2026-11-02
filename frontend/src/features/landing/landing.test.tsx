@@ -1,14 +1,15 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it } from 'vitest'
 
+import { BRICKS } from '@/domain/structure/bricks'
 import { wall } from '@/test/fixtures'
 import { polygonArea } from '@/domain/model'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
-import { solidSpans } from './drawPlan'
 import { DIM_COLORS } from '@/features/editor2d/PlanElements'
-import { DIM_SAMPLES, FORMATS } from './Formats'
-import { NAMED_STAGES } from './HowItWorks'
+import { solidSpans } from './drawPlan'
+import { DIM_SAMPLES, FORMATS, NAMED_STAGES } from './content'
+import { headline, sampleTotals } from './sampleQuantities'
 import { LandingPage } from './LandingPage'
 import { sampleApartment } from './sampleApartment'
 import { cameraAt, sceneAt, STAGES, type Pose } from './sequence'
@@ -125,6 +126,7 @@ describe('LandingPage', () => {
       'Todo lo que sale de un plano.',
       'Foto, PDF o DXF: lo lee.',
       'Del papel al modelo.',
+      'Cuánto ladrillo lleva tu casa.',
       'Tu plano, en 3D, hoy.',
     ])
   })
@@ -159,10 +161,23 @@ describe('LandingPage', () => {
 
   it('lista los cuatro formatos y las tres marcas de cota con los colores del editor', () => {
     renderLanding()
-    const table = screen.getByRole('table', { hidden: true })
+    const table = screen.getByRole('table', { name: /Entradas que acepta la app/, hidden: true })
     expect(within(table).getAllByRole('rowheader', { hidden: true }).map((th) => th.textContent)).toEqual(FORMATS.map((f) => f.name))
     for (const d of DIM_SAMPLES) expect(d.color).toBe(DIM_COLORS[d.status])
     expect(within(screen.getByRole('list', { name: 'Cómo se marca cada cota' })).getAllByRole('listitem')).toHaveLength(3)
+  })
+
+  it('cantidades en vivo: cifras del dominio y cambian al pasar a bloque Nº5', async () => {
+    renderLanding()
+    const pieces = (brick: 'tolete' | 'bloque5') => headline(sampleTotals(brick), brick)[0]!.value.toLocaleString('es-CO')
+    expect(pieces('tolete')).not.toBe(pieces('bloque5'))
+    const figure = () => document.querySelector('[data-figure="piezas"]')!
+    await screen.findByRole('group', { name: 'Pieza de mampostería' })
+    expect(figure()).toHaveTextContent(pieces('tolete'))
+    fireEvent.click(screen.getByRole('button', { name: 'Bloque Nº5' }))
+    expect(screen.getByRole('button', { name: 'Bloque Nº5' })).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() => expect(figure()).toHaveTextContent(pieces('bloque5')))
+    expect(screen.getByRole('table', { name: 'Todos los materiales' })).toHaveTextContent(BRICKS.bloque5.name)
   })
 
   it('cada enlace de la cabecera lleva a una sección que existe', () => {

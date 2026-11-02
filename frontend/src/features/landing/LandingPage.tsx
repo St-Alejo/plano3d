@@ -12,15 +12,15 @@ import { Link } from 'react-router'
 import { HeroStage } from './HeroStage'
 import { Formats } from './Formats'
 import { HowItWorks } from './HowItWorks'
+import { Quantities } from './Quantities'
 import { EASE } from './ease'
 import { BeforeAfter, Capabilities, Closing, Footer, SectionHead } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
 const NAV = [
   { href: '#como-funciona', label: 'Cómo funciona' },
-  { href: '#que-puedes-hacer', label: 'Qué hace' },
   { href: '#formatos', label: 'Formatos' },
-  { href: '#antes-despues', label: 'Antes y después' },
+  { href: '#cantidades', label: 'Cantidades' },
 ]
 
 /**
@@ -111,6 +111,8 @@ export function LandingPage() {
             <SectionHead id="antes-despues" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
             <BeforeAfter />
           </section>
+
+          <Quantities />
 
           <section aria-labelledby="empezar" className="py-20 sm:py-32">
             <Closing />

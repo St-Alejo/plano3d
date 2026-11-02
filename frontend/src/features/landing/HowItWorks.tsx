@@ -7,23 +7,9 @@ import { Pause, Play } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { STAGES as PIPELINE } from '@/features/processing/progressState'
+import { HOW_STEPS as STEPS } from './content'
 import { Reveal, Stagger, StaggerItem } from './reveal'
 import { SectionHead } from './sections'
-
-const stage = (key: string) => PIPELINE.find((s) => s.key === key)?.title.toLowerCase() ?? key
-
-/** Las etapas que se nombran: las que el usuario reconoce en su plano. */
-export const NAMED_STAGES = ['walls', 'scale', 'openings', 'rooms'].map(stage)
-
-const STEPS = [
-  { title: 'Toma la foto', text: 'Desde arriba, con la hoja completa. La perspectiva se corrige sola; también sirve un PDF o un DXF.' },
-  {
-    title: 'La app la lee',
-    text: `En ${PIPELINE.length} etapas: ${NAMED_STAGES.slice(0, -1).join(', ')} y ${NAMED_STAGES.at(-1)}. Las ves avanzar en vivo.`,
-  },
-  { title: 'Corrige y recorre', text: 'Ajusta lo que haga falta con el ratón o escribiendo, y camina tu casa en 3D.' },
-] as const
 
 /** Video en bucle y sin sonido: corre solo cuando se ve y se puede pausar. */
 function Loop() {
