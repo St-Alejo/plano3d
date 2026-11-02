@@ -37,6 +37,8 @@ export type ViewerAction =
   | { a: 'overlay'; value: number }
   | { a: 'room'; room: string }
   | { a: 'ask'; topic: QuantityTopic }
+  /** selector de pisos: aislar el piso n (desde 1, de abajo hacia arriba) o volver a verlos todos */
+  | { a: 'level'; n: number | 'all' }
 
 export interface ViewerParse {
   actions: ViewerAction[]
@@ -101,6 +103,8 @@ function hourOf(f: string): number | undefined {
 
 type Rule = (f: string, orig: string) => ViewerAction | ViewerAction[] | null
 
+const ORDINAL: Record<string, number> = { primer: 1, primero: 1, segundo: 2, tercer: 3, tercero: 3, cuarto: 4 }
+
 const RULES: Rule[] = [
   // preguntas de cantidades: "¿cuántos ladrillos?", "cuánto cemento necesito"
   (f) => {
@@ -136,6 +140,15 @@ const RULES: Rule[] = [
     if (!/\b(?:ladrillos?|mamposteria|muros|paredes)\b/.test(f)) return null
     if (OFF.test(f)) return { a: 'masonry', hidden: true }
     if (/\b(?:muestra|muestrame|pon|ensena|vuelve|activa|ver)\b/.test(f)) return { a: 'masonry', hidden: false }
+    return null
+  },
+  // pisos: "ver piso 2", "segundo piso", "muestra todos los pisos"
+  (f) => {
+    if (/\b(?:todos los (?:pisos|niveles)|todo el edificio|edificio completo|ver todo)\b/.test(f)) return { a: 'level', n: 'all' }
+    const n = /\b(?:piso|planta|nivel)\s+(?:numero\s+|n[o°]?\s*)?(\d+)\b/.exec(f)
+    if (n) return { a: 'level', n: Number(n[1]) }
+    const ord = /\b(primer|primero|segundo|tercer|tercero|cuarto)\s+(?:piso|nivel|planta)\b/.exec(f)
+    if (ord) return { a: 'level', n: ORDINAL[ord[1]!] ?? 1 }
     return null
   },
   (f) => (/\b(?:techo|cubierta|teja|tejado)\b/.test(f) ? { a: 'roof', on: !OFF.test(f) } : null),
@@ -223,6 +236,7 @@ export const VIEWER_EXAMPLES = [
   'pon el techo',
   'corte a 1,2 m',
   'usa bloque Nº5',
+  'ver piso 2',
 ]
 
 // ----------------------------------------------------------------------------- respuestas de cantidades
@@ -284,6 +298,7 @@ const ok: Record<ViewerAction['a'], (o: Record<string, unknown>) => boolean> = {
   sun: (o) => typeof o.on === 'boolean' && (o.hour === undefined || typeof o.hour === 'number'),
   overlay: (o) => typeof o.value === 'number' && o.value >= 0 && o.value <= 1,
   room: (o) => typeof o.room === 'string',
+  level: (o) => o.n === 'all' || (typeof o.n === 'number' && o.n >= 1),
   ask: (o) => ['ladrillo', 'cemento', 'arena', 'grava', 'acero', 'concreto', 'area', 'todo'].includes(o.topic as string),
 }
 

@@ -287,7 +287,13 @@ export class SceneBuilder {
 
   withFurniture(): this {
     const factory = new FurnitureFactory(this.materials)
-    for (const lv of this.levels()) for (const f of lv.furniture ?? []) this.furniture.add(factory.create(f, lv.elevation))
+    for (const lv of this.levels())
+      for (const f of lv.furniture ?? []) {
+        const obj = factory.create(f, lv.elevation)
+        // el selector de pisos oculta y resalta por nivel: los muebles también lo llevan
+        obj.userData.levelId = lv.id
+        this.furniture.add(obj)
+      }
     return this
   }
 

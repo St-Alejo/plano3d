@@ -15,7 +15,10 @@ import { Button, ErrorState, Kbd, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
-import { Viewer3D, type Quality, type ViewMode } from './Viewer3D'
+import { Viewer3D, type FlyTarget, type Quality, type ViewMode } from './Viewer3D'
+import { LevelRail } from './LevelRail'
+import { applyLevelFocus, highlightLevel } from './scene/levelFocus'
+import { levelCamera, levelsAbove, levelSummaries } from '@/domain/levels'
 import type { WalkInput, WalkStart } from './WalkControls'
 import { WalkHud } from './WalkHud'
 import { resetDoorProgress } from './doors'
@@ -92,7 +95,10 @@ export function ViewerPage() {
     }, { replace: true })
   }
   const [overlay, setOverlay] = useState(0)
-  const [flyTo, setFlyTo] = useState<Point | null>(null)
+  const [flyTo, setFlyTo] = useState<FlyTarget | null>(null)
+  // selector de pisos: piso aislado y piso resaltado (cursor o foco)
+  const [focusLevel, setFocusLevel] = useState<string | null>(null)
+  const [hoverLevel, setHoverLevel] = useState<string | null>(null)
   const [walkStart, setWalkStart] = useState<WalkStart | undefined>()
   const [exporting, setExporting] = useState(false)
   const scene = useRef<BuiltScene | null>(null)
@@ -148,6 +154,18 @@ export function ViewerPage() {
     return rooms.find((r) => r.id === big?.id) ?? rooms[0]
   }, [project, rooms])
 
+  const levels = useMemo(() => (project?.model ? levelSummaries(project.model) : []), [project])
+  const focusSummary = levels.find((l) => l.id === focusLevel) ?? null
+  useEffect(() => {
+    if (!built || !project?.model) return
+    applyLevelFocus(built.root, new Set(focusLevel ? levelsAbove(project.model, focusLevel) : []))
+  }, [built, focusLevel, project])
+  useEffect(() => {
+    if (!built) return
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#2f6b55'
+    highlightLevel(built.root, hoverLevel && hoverLevel !== focusLevel ? hoverLevel : null, accent)
+  }, [built, hoverLevel, focusLevel])
+
   // puertas cerradas al entrar; en el celular se abren solas al acercarse
   useEffect(() => {
     useWalk.getState().reset()
@@ -200,7 +218,17 @@ export function ViewerPage() {
 
   const goTo = (p: Point, levelId?: string) => {
     if (mode === 'walk') setWalkStart({ ...p, levelId })
-    else setFlyTo({ ...p })
+    else setFlyTo({ ...p, elevation: levels.find((l) => l.id === levelId)?.elevation })
+  }
+
+  /** Aísla un piso (o vuelve al edificio completo con null) y lo encuadra como maqueta. */
+  const focusOn = (id: string | null) => {
+    setFocusLevel(id)
+    setMode('orbit')
+    const summary = levels.find((l) => l.id === id)
+    const cam = summary && levelCamera(summary)
+    if (cam) setFlyTo({ x: cam.look[0], y: cam.look[2], look: cam.look, pos: cam.pos })
+    else setPreset({ name: 'iso', nonce: Date.now() })
   }
 
   /** ids de la estructura derivada, para validar lo que pide el chat ("C-3") */
@@ -288,6 +316,16 @@ export function ViewerPage() {
       }
       case 'ask':
         return quantityAnswer(model, brick, act.topic)
+      case 'level': {
+        if (act.n === 'all') {
+          focusOn(null)
+          return 'Edificio completo'
+        }
+        const l = levels[act.n - 1]
+        if (!l) throw new Error(levels.length > 1 ? `Este plano tiene ${levels.length} pisos` : 'Este plano tiene un solo piso')
+        focusOn(l.id)
+        return `Piso ${l.number}: ${l.name}`
+      }
     }
   }
 
@@ -318,7 +356,7 @@ export function ViewerPage() {
         className="absolute inset-0"
         label={`Modelo 3D de ${project.name}`}
         sun={sun}
-        section={cutOn ? cut : null}
+        section={cutOn ? cut : focusSummary ? focusSummary.elevation + 1.2 : null}
         preset={preset}
         display={display}
         measure={measuring ? { points, onPoint } : null}
@@ -332,6 +370,13 @@ export function ViewerPage() {
       />
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
+
+      {/* pisos: a la izquierda, a media altura (en recorrido, el HUD ya tiene subir/bajar piso) */}
+      {mode === 'orbit' && levels.length > 1 && (
+        <div className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2">
+          <LevelRail levels={levels} focused={focusLevel} onFocus={focusOn} onHover={setHoverLevel} />
+        </div>
+      )}
 
       {/* chat de ajustes: abajo al centro del área libre (a la izquierda del panel); arriba en el celular */}
       <ViewerChat

@@ -18,6 +18,9 @@ import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type Disp
 
 export type ViewMode = 'orbit' | 'walk'
 
+/** A dónde volar en órbita: un punto en planta (a la altura de su piso) o un encuadre exacto. */
+export type FlyTarget = Point & { elevation?: number; pos?: [number, number, number]; look?: [number, number, number] }
+
 /** alta: cielo HDRI, oclusión ambiental y antialias; baja: solo luces (celulares) */
 export type Quality = 'alta' | 'baja'
 
@@ -27,7 +30,7 @@ export interface Viewer3DProps {
   /** imagen del plano original proyectada en el piso (control antes/después) */
   overlayUrl?: string
   overlayOpacity?: number
-  flyTo?: Point | null
+  flyTo?: FlyTarget | null
   walkStart?: WalkStart
   walkInput?: React.RefObject<WalkInput>
   touch?: boolean
@@ -75,7 +78,7 @@ function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: strin
 }
 
 /** Encuadra la cámara al modelo y anima los "vuelos" a un ambiente. */
-function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: Point | null; preset?: { name: CameraPreset; nonce: number } | null }) {
+function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: FlyTarget | null; preset?: { name: CameraPreset; nonce: number } | null }) {
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null)
   const { camera } = useThree()
   const bounds = useMemo(() => modelBounds(model), [model])
@@ -105,8 +108,9 @@ function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: Poin
 
   useEffect(() => {
     if (!flyTo) return
-    const look = new THREE.Vector3(flyTo.x, 0.8, flyTo.y)
-    const pos = new THREE.Vector3(flyTo.x + 2.5, 4.5, flyTo.y + 3.5)
+    const y = flyTo.elevation ?? 0
+    const look = flyTo.look ? new THREE.Vector3(...flyTo.look) : new THREE.Vector3(flyTo.x, y + 0.8, flyTo.y)
+    const pos = flyTo.pos ? new THREE.Vector3(...flyTo.pos) : new THREE.Vector3(flyTo.x + 2.5, y + 4.5, flyTo.y + 3.5)
     if (prefersReducedMotion()) {
       camera.position.copy(pos)
       controls.current?.target.copy(look)
