@@ -44,13 +44,19 @@ export interface ViewerParse {
   actions: ViewerAction[]
   /** fragmentos que no se entendieron (vacío = todo entendido) */
   unknown: string[]
+  /**
+   * fragmentos que encajan en varias reglas distintas ("ver cómo se construye con bloque
+   * Nº5": secuencia y pieza): la lectura local tomaría solo una, así que mejor la IA
+   */
+  ambiguous: string[]
 }
 
 const OFF = /\b(?:quita|quitale|oculta|ocultale|esconde|apaga|desactiva|sin|cierra|saca|retira|elimina)\b/
 const NUM = /(\d+(?:[.,]\d+)?)\s*(cm|centimetros|m|mts|metros)?\b/
 const num = (s: string) => Number(s.replace(',', '.'))
 
-const VERBS = 'muestra|muestrame|ensena|ensename|oculta|esconde|quita|pon|ponle|activa|desactiva|apaga|enciende|cambia|usa|ve|vete|anda|llevame|mira|abre|cierra|sube|baja|haz|corta|reproduce|avanza|retrocede|cuanto|cuantos|cuantas|cuanta'
+const VERBS =
+  'muestra|muestrame|ensena|ensename|oculta|esconde|quita|pon|ponle|activa|desactiva|apaga|enciende|cambia|usa|ve|vete|anda|llevame|mira|abre|cierra|sube|baja|haz|corta|reproduce|avanza|retrocede|cuanto|cuantos|cuantas|cuanta|dime|dame|decime|calcula|calculame|quiero|necesito|cuentame'
 const CUT = new RegExp(`\\s*(?:[;\\n]|,(?!\\d)|\\.(?!\\d)|\\s+y\\s+(?=(?:luego\\s+|despues\\s+)?(?:${VERBS})\\b)|\\s+(?:luego|despues)\\s+)\\s*`)
 
 /** Órdenes de un mensaje, en minúsculas y sin tildes. */
@@ -64,7 +70,7 @@ function clauses(message: string): { orig: string; f: string }[] {
 
 const TOPICS: [RegExp, QuantityTopic][] = [
   [/ladrillo|bloque/, 'ladrillo'],
-  [/cemento/, 'cemento'],
+  [/cemento|bultos/, 'cemento'],
   [/arena/, 'arena'],
   [/grava|triturado/, 'grava'],
   [/acero|hierro|varilla/, 'acero'],
@@ -108,8 +114,11 @@ const ORDINAL: Record<string, number> = { primer: 1, primero: 1, segundo: 2, ter
 const RULES: Rule[] = [
   // preguntas de cantidades: "¿cuántos ladrillos?", "cuánto cemento necesito"
   (f) => {
-    if (!/\b(?:cuant[oa]s?|que cantidad|que (?:material|hay que comprar)|area)\b/.test(f)) return null
-    const hit = TOPICS.find(([re]) => re.test(f))
+    const q = /\b(?:cuant[oa]s?|que cantidad|que (?:material|hay que comprar)|area)\b/.exec(f)
+    if (!q) return null
+    // el tema va después de la pregunta: "con bloque, ¿cuánto cemento?" pregunta por cemento
+    const tail = f.slice(q.index)
+    const hit = TOPICS.find(([re]) => re.test(tail)) ?? TOPICS.find(([re]) => re.test(f))
     return hit ? { a: 'ask', topic: hit[1] } : null
   },
   // secuencia: "paso 7", "siguiente paso", "reproduce la obra"
@@ -218,12 +227,20 @@ const RULES: Rule[] = [
 export function parseViewerChat(message: string): ViewerParse {
   const actions: ViewerAction[] = []
   const unknown: string[] = []
+  const ambiguous: string[] = []
   for (const c of clauses(message)) {
-    const hit = RULES.map((r) => r(c.f, c.orig)).find((x) => x !== null)
+    const hits = RULES.map((r) => r(c.f, c.orig)).filter((x) => x !== null)
+    const hit = hits[0]
     if (hit) actions.push(...(Array.isArray(hit) ? hit : [hit]))
     else unknown.push(c.orig)
+    // varias reglas distintas: la primera sola dejaría parte del pedido sin hacer. No cuentan
+    // "ve a…" (la regla comodín del final) ni el modo cuando ya hay un paso de la secuencia
+    const kinds = new Set(hits.map((h) => (Array.isArray(h) ? h[0]! : h).a))
+    kinds.delete('room')
+    if (kinds.has('step')) kinds.delete('plan_mode')
+    if (kinds.size > 1) ambiguous.push(c.orig)
   }
-  return { actions, unknown }
+  return { actions, unknown, ambiguous }
 }
 
 /** Frases de ejemplo (chips del chat y ayuda cuando no se entiende). */

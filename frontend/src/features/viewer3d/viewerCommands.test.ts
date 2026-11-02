@@ -42,6 +42,20 @@ describe('parseViewerChat: frase → ajuste de la vista', () => {
     const r = parseViewerChat(msg)
     expect(r.unknown).toEqual([])
     expect(r.actions).toEqual(actions)
+    expect(r.ambiguous).toEqual([]) // las frases simples se resuelven sin la IA
+  })
+
+  it('una frase que pide varias cosas a la vez se marca ambigua (va a la IA)', () => {
+    const r = parseViewerChat('quiero ver cómo se construye la casa con bloque número 5 y dime cuántos bultos de cemento necesito')
+    // se parte en "…con bloque número 5" | "dime cuántos bultos de cemento…"
+    expect(r.unknown).toEqual([])
+    expect(r.ambiguous).toEqual(['quiero ver cómo se construye la casa con bloque número 5'])
+    // antes "bloque" hacía que la pregunta fuera por ladrillo en vez de cemento
+    expect(r.actions).toContainEqual({ a: 'ask', topic: 'cemento' })
+  })
+
+  it('el tema de la pregunta es el que va después de «cuánto»', () => {
+    expect(parseViewerChat('con bloque, cuánto cemento lleva').actions).toContainEqual({ a: 'ask', topic: 'cemento' })
   })
 
   it('varias órdenes en un mensaje, sin partir los decimales', () => {

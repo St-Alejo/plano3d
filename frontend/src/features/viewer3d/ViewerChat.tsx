@@ -67,14 +67,16 @@ export function ViewerChat({
     setText('')
     push({ from: 'user', text: msg })
     const local = parseViewerChat(msg)
-    if (local.unknown.length === 0 && local.actions.length > 0) {
+    const understood = local.unknown.length === 0 && local.actions.length > 0
+    const applyLocal = () => {
       try {
         apply(local.actions)
       } catch (e) {
         push({ from: 'bot', text: e instanceof Error ? e.message : 'No se pudo aplicar', error: true })
       }
-      return
     }
+    // lo ambiguo (una frase que pide varias cosas) va a la IA; sin IA, se usa la lectura local
+    if (understood && local.ambiguous.length === 0) return applyLocal()
     setBusy(true)
     try {
       const res = await api.assistant(projectId, msg, context(), 'viewer')
@@ -83,6 +85,7 @@ export function ViewerChat({
       else apply(actions, true, res.reply)
     } catch (e) {
       if (e instanceof ApiError && (e.status === 503 || e.status === 0)) {
+        if (understood) return applyLocal()
         const what = local.unknown.length ? `«${local.unknown.join('», «')}»` : 'eso'
         push({ from: 'bot', text: `No entendí ${what}. Prueba con frases como:`, lines: VIEWER_EXAMPLES.slice(0, 5), error: true })
       } else push({ from: 'bot', text: e instanceof Error ? e.message : 'No se pudo aplicar', error: true, ai: true })
