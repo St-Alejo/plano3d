@@ -6,6 +6,8 @@ import { wall } from '@/test/fixtures'
 import { polygonArea } from '@/domain/model'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { solidSpans } from './drawPlan'
+import { DIM_COLORS } from '@/features/editor2d/PlanElements'
+import { DIM_SAMPLES, FORMATS } from './Formats'
 import { NAMED_STAGES } from './HowItWorks'
 import { LandingPage } from './LandingPage'
 import { sampleApartment } from './sampleApartment'
@@ -121,6 +123,7 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'De la foto al modelo, en minutos.',
       'Todo lo que sale de un plano.',
+      'Foto, PDF o DXF: lo lee.',
       'Del papel al modelo.',
       'Tu plano, en 3D, hoy.',
     ])
@@ -152,6 +155,14 @@ describe('LandingPage', () => {
     const steps = within(screen.getByRole('list', { name: 'Cómo funciona' })).getAllByRole('listitem')
     expect(steps).toHaveLength(3)
     for (const s of NAMED_STAGES) expect(steps[1]).toHaveTextContent(s)
+  })
+
+  it('lista los cuatro formatos y las tres marcas de cota con los colores del editor', () => {
+    renderLanding()
+    const table = screen.getByRole('table', { hidden: true })
+    expect(within(table).getAllByRole('rowheader', { hidden: true }).map((th) => th.textContent)).toEqual(FORMATS.map((f) => f.name))
+    for (const d of DIM_SAMPLES) expect(d.color).toBe(DIM_COLORS[d.status])
+    expect(within(screen.getByRole('list', { name: 'Cómo se marca cada cota' })).getAllByRole('listitem')).toHaveLength(3)
   })
 
   it('cada enlace de la cabecera lleva a una sección que existe', () => {

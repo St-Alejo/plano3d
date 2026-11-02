@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
+import { Formats } from './Formats'
 import { HowItWorks } from './HowItWorks'
 import { EASE } from './ease'
 import { BeforeAfter, Capabilities, Closing, Footer, SectionHead } from './sections'
@@ -18,6 +19,7 @@ import { useSmoothScroll } from './useSmoothScroll'
 const NAV = [
   { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#que-puedes-hacer', label: 'Qué hace' },
+  { href: '#formatos', label: 'Formatos' },
   { href: '#antes-despues', label: 'Antes y después' },
 ]
 
@@ -102,6 +104,8 @@ export function LandingPage() {
             <SectionHead id="que-puedes-hacer" title="Todo lo que sale de un plano." />
             <Capabilities />
           </section>
+
+          <Formats />
 
           <section aria-labelledby="antes-despues" className="frame grid gap-12 py-20 sm:py-32">
             <SectionHead id="antes-despues" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
