@@ -133,6 +133,17 @@ test('secuencia de obra: recorre los pasos y se reproduce sin errores', async ({
   await expect(card).toContainText(/Paso [2-9] de/, { timeout: 15_000 })
   await seq.getByRole('button', { name: 'Pausar' }).click()
   await expect(seq.getByRole('button', { name: 'Reproducir la obra' })).toBeVisible()
+
+  // en pantalla: rótulo de la etapa y barra por etapas, con el mismo reloj que el panel
+  await seq.getByRole('button', { name: 'Ver en pantalla' }).click()
+  const stage = page.getByRole('region', { name: 'Obra en pantalla' })
+  const bar = stage.getByRole('list', { name: 'Etapas de la obra' })
+  await expect(bar.getByRole('listitem').first()).toContainText('Cimentación')
+  await bar.getByRole('button', { name: 'Ir a Muros' }).first().click()
+  await expect(stage.getByRole('heading', { level: 2 })).toHaveText('Muros')
+  await expect(card).toContainText(/Muros|muros/)
+  await page.keyboard.press('Escape')
+  await expect(stage).toHaveCount(0)
   expect(errors).toEqual([])
 })
 

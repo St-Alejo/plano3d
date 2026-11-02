@@ -43,6 +43,7 @@ export function ObraPanel({
   onClose,
   fileBase = 'plano',
   stepCommand,
+  onCinemaChange,
 }: {
   variant: ConstructionPanel
   model: BuildingModel
@@ -58,6 +59,8 @@ export function ObraPanel({
   fileBase?: string
   /** orden del chat para la línea de tiempo de la secuencia */
   stepCommand?: StepCommand | null
+  /** la secuencia se reproduce a pantalla completa: el visor gira la cámara */
+  onCinemaChange?: (rotating: boolean) => void
 }) {
   const structure = useMemo(() => deriveStructure(model, { brick }), [model, brick])
   const bars = useMemo(() => (variant === 'acero' ? rebarSchedule(structure) : []), [variant, structure])
@@ -71,7 +74,7 @@ export function ObraPanel({
 
   return (
     <section aria-label="Obra" className="flex flex-col gap-2 border-b border-line pb-2">
-      {variant === 'secuencia' && <SequencePanel steps={steps} root={root} command={stepCommand} />}
+      {variant === 'secuencia' && <SequencePanel steps={steps} root={root} command={stepCommand} onCinemaChange={onCinemaChange} />}
       {variant === 'obra' && (
         <>
           <label className="flex items-center justify-between gap-2 text-xs">

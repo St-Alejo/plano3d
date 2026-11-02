@@ -86,3 +86,47 @@ export function constructionSchedule(model: BuildingModel, s: Structure, bricks:
   })
   return steps
 }
+
+/** Etapas grandes de la obra (lo que se ve como rótulo en la secuencia a pantalla completa). */
+export type StageId = 'cimentacion' | 'placas' | 'muros' | 'confinamiento'
+
+export const STAGE_LABEL: Record<StageId, string> = {
+  cimentacion: 'Cimentación',
+  placas: 'Placas',
+  muros: 'Muros',
+  confinamiento: 'Confinamiento',
+}
+
+/** Etapa a la que pertenece un paso, por el prefijo de su id. */
+export function stageOf(stepId: string): StageId {
+  const base = stepId.split(':')[0]!
+  if (base === STEP.placa || base === 'losa') return 'placas'
+  if (base === 'muros') return 'muros'
+  if (base === 'columnas' || base === 'vigas' || base === 'acero-columnas' || base === 'acero-vigas') return 'confinamiento'
+  return 'cimentacion'
+}
+
+export interface Stage {
+  id: StageId
+  label: string
+  /** índice del primer paso (desde 0) */
+  from: number
+  /** índice siguiente al último paso */
+  to: number
+  levelId?: string
+}
+
+/**
+ * Tramos consecutivos de pasos de la misma etapa (y del mismo piso): así la barra de
+ * progreso muestra "Cimentación · Placas · Muros · Confinamiento" y se repite por piso.
+ */
+export function stagesOf(steps: Step[]): Stage[] {
+  const out: Stage[] = []
+  steps.forEach((s, i) => {
+    const id = stageOf(s.id)
+    const last = out[out.length - 1]
+    if (last && last.id === id && last.levelId === s.levelId) last.to = i + 1
+    else out.push({ id, label: STAGE_LABEL[id], from: i, to: i + 1, levelId: s.levelId })
+  })
+  return out
+}

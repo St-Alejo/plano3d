@@ -124,6 +124,8 @@ export function ViewerPage() {
   const [hideMasonry, setHideMasonry] = useState(false)
   const [elementId, setElementId] = useState<string | null>(null)
   const [stepCommand, setStepCommand] = useState<StepCommand | null>(null)
+  // la obra a pantalla completa, reproduciéndose: la cámara gira despacio alrededor
+  const [cinemaRotate, setCinemaRotate] = useState(false)
   const [sunOn, setSunOn] = useState(false)
   const [sunDate, setSunDate] = useState(today)
   const [sunHour, setSunHour] = useState(10)
@@ -358,6 +360,7 @@ export function ViewerPage() {
         sun={sun}
         section={cutOn ? cut : focusSummary ? focusSummary.elevation + 1.2 : null}
         preset={preset}
+        autoRotate={cinemaRotate && mode === 'orbit'}
         display={display}
         measure={measuring ? { points, onPoint } : null}
         strategy={strategy}
@@ -383,7 +386,7 @@ export function ViewerPage() {
         projectId={project.id}
         run={runViewerAction}
         context={viewerContext}
-        className="absolute top-16 left-3 z-20 sm:top-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2"
+        className="absolute top-16 left-3 z-20 sm:top-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2 [body:has([data-cinema])_&]:hidden"
       />
 
       {/* barra superior: la única cabecera del visor (el AppShell se oculta aquí) */}
@@ -566,6 +569,7 @@ export function ViewerPage() {
                         onClose={() => setElementId(null)}
                         fileBase={fileBase}
                         stepCommand={stepCommand}
+                        onCinemaChange={setCinemaRotate}
                       />
                     </Tabs.Content>
                   )}

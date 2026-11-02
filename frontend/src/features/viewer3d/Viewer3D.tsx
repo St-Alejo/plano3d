@@ -46,6 +46,8 @@ export interface Viewer3DProps {
   section?: number | null
   /** encuadre pedido; `nonce` permite repetir el mismo encuadre */
   preset?: { name: CameraPreset; nonce: number } | null
+  /** giro lento de la cámara (la secuencia de obra a pantalla completa) */
+  autoRotate?: boolean
   display?: DisplayMode
   /** medir en 3D: puntos marcados y callback al tocar una superficie */
   measure?: { points: [number, number, number][]; onPoint: (p: [number, number, number]) => void } | null
@@ -78,7 +80,17 @@ function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: strin
 }
 
 /** Encuadra la cámara al modelo y anima los "vuelos" a un ambiente. */
-function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: FlyTarget | null; preset?: { name: CameraPreset; nonce: number } | null }) {
+function OrbitRig({
+  model,
+  flyTo,
+  preset,
+  autoRotate = false,
+}: {
+  model: BuildingModel
+  flyTo?: FlyTarget | null
+  preset?: { name: CameraPreset; nonce: number } | null
+  autoRotate?: boolean
+}) {
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null)
   const { camera } = useThree()
   const bounds = useMemo(() => modelBounds(model), [model])
@@ -136,6 +148,8 @@ function OrbitRig({ model, flyTo, preset }: { model: BuildingModel; flyTo?: FlyT
       maxPolarAngle={Math.PI / 2 - 0.05}
       minDistance={1.5}
       maxDistance={bounds.size * 4}
+      autoRotate={autoRotate && !prefersReducedMotion()}
+      autoRotateSpeed={0.5}
     />
   )
 }
@@ -258,6 +272,7 @@ export function Viewer3D({
   sun,
   section = null,
   preset,
+  autoRotate,
   display = 'material',
   measure,
   strategy,
@@ -332,7 +347,7 @@ export function Viewer3D({
           </EffectComposer>
         )}
         {mode === 'orbit' ? (
-          <OrbitRig model={model} flyTo={flyTo} preset={preset} />
+          <OrbitRig model={model} flyTo={flyTo} preset={preset} autoRotate={autoRotate} />
         ) : (
           <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} />
         )}

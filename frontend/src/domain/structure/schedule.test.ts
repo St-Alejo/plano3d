@@ -3,7 +3,7 @@ import type { BuildingModel } from '@/api/types'
 import { sampleModel } from '@/test/fixtures'
 import { deriveStructure } from './derive'
 import { masonryLayout } from './masonryLayout'
-import { constructionSchedule, STEP } from './schedule'
+import { constructionSchedule, STEP, stageOf, stagesOf } from './schedule'
 
 /** Casa de dos pisos: el segundo copia el primero con ids propios. */
 function twoStories(): BuildingModel {
@@ -55,5 +55,26 @@ describe('secuencia constructiva', () => {
     const walls = steps.find((s) => s.id.startsWith('muros:'))!
     expect(walls.detail).toMatch(/\d+ hiladas, [\d.]+ ladrillos/)
     expect(steps.find((s) => s.id === STEP.aceroCimentacion)!.detail).toMatch(/\d+,\d kg/)
+  })
+})
+
+describe('etapas de la obra', () => {
+  it('clasifica cada paso por su prefijo', () => {
+    expect(stageOf(STEP.terreno)).toBe('cimentacion')
+    expect(stageOf(STEP.sobrecimiento)).toBe('cimentacion')
+    expect(stageOf(STEP.placa)).toBe('placas')
+    expect(stageOf(STEP.losa('l1'))).toBe('placas')
+    expect(stageOf(STEP.muros('l1'))).toBe('muros')
+    expect(stageOf(STEP.aceroVigas('l1'))).toBe('confinamiento')
+  })
+
+  it('agrupa pasos seguidos en tramos que cubren toda la secuencia, repetidos por piso', () => {
+    const steps = scheduleOf(twoStories())
+    const stages = stagesOf(steps)
+    expect(stages[0]).toMatchObject({ id: 'cimentacion', from: 0 })
+    expect(stages[stages.length - 1]!.to).toBe(steps.length)
+    // sin huecos ni solapes
+    stages.slice(1).forEach((s, i) => expect(s.from).toBe(stages[i]!.to))
+    expect(stages.filter((s) => s.id === 'muros')).toHaveLength(2)
   })
 })
