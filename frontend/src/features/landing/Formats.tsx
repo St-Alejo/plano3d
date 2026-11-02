@@ -27,7 +27,7 @@ function Dim({ value, color }: { value: string; color: string }) {
 
 export function Formats() {
   return (
-    <section aria-labelledby="formatos" className="frame grid gap-12 py-20 sm:py-32">
+    <section aria-labelledby="formatos" className="frame grid gap-12 py-16 sm:py-24">
       <SectionHead id="formatos" title="Foto, PDF o DXF: lo lee." lead="Cada entrada se lee a su manera, y cada medida dice qué tan segura es." />
       <Reveal>
         <table className="hidden w-full border-collapse text-left md:table">

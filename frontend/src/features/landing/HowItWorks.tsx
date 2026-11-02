@@ -56,8 +56,8 @@ function Loop() {
 
 export function HowItWorks() {
   return (
-    <section aria-labelledby="como-funciona" className="frame grid gap-12 py-20 sm:py-32">
-      <SectionHead id="como-funciona" title="De la foto al modelo, en minutos." lead="Así se ve por dentro: el plano a la izquierda, la casa en 3D a la derecha." />
+    <section aria-labelledby="como-funciona" className="frame grid gap-12 py-16 sm:py-24">
+      <SectionHead id="como-funciona" title="Así se ve por dentro." lead="El tutorial de la app: de la hoja en blanco al plano en 3D, en segundos." />
       <Reveal>
         <Loop />
       </Reveal>

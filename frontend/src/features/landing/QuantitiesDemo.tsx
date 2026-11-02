@@ -69,7 +69,8 @@ export default function QuantitiesDemo() {
         ))}
       </dl>
 
-      <div className="max-h-64 overflow-auto rounded-md border border-black/12 bg-white/60">
+      {/* con scroll propio: enfocable para recorrerla con el teclado */}
+      <div role="region" aria-label="Lista de materiales" tabIndex={0} className="max-h-64 overflow-auto rounded-md border border-black/12 bg-white/60">
         <table className="w-full t-small" aria-label="Todos los materiales">
           <thead className="sticky top-0 bg-(--l-sheet) text-left">
             <tr>

@@ -268,11 +268,10 @@ const FOOTER_LINKS = [
 export function Footer() {
   return (
     <footer className="frame mt-20 grid gap-10 pt-16 pb-10 sm:mt-32">
-      <Reveal>
-        <p className="display text-[clamp(4.5rem,19vw,19rem)] leading-[0.8] tracking-[-0.04em]" aria-hidden>
-          Plano 3D
-        </p>
-      </Reveal>
+      {/* sin animación de entrada: al final de la página el disparador puede no alcanzarse */}
+      <p className="display text-[clamp(3rem,31vw,32rem)] leading-[0.8] whitespace-nowrap tracking-[-0.04em]" aria-hidden>
+        Plano 3D
+      </p>
       <div className="flex flex-col gap-6 t-small text-(--l-dim) md:flex-row md:items-center md:justify-between">
         <nav aria-label="Pie de página" className="flex flex-wrap gap-x-6">
           {FOOTER_LINKS.map((l) =>

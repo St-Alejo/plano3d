@@ -102,14 +102,14 @@ export function LandingPage() {
 
           <HowItWorks />
 
-          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 py-20 sm:py-32">
+          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 py-16 sm:py-24">
             <SectionHead id="que-puedes-hacer" title="Todo lo que sale de un plano." />
             <Capabilities />
           </section>
 
           <Formats />
 
-          <section aria-labelledby="antes-despues" className="frame grid gap-12 py-20 sm:py-32">
+          <section aria-labelledby="antes-despues" className="frame grid gap-12 py-16 sm:py-24">
             <SectionHead id="antes-despues" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
             <BeforeAfter />
           </section>
@@ -118,7 +118,7 @@ export function LandingPage() {
 
           <Faq />
 
-          <section aria-labelledby="empezar" className="py-20 sm:py-32">
+          <section aria-labelledby="empezar" className="py-16 sm:py-24">
             <Closing />
           </section>
         </main>

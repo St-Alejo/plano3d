@@ -122,7 +122,7 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /Ver mis proyectos/ })).toHaveAttribute('href', '/proyectos')
     // una idea por pantalla, en el orden del argumento
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
-      'De la foto al modelo, en minutos.',
+      'Así se ve por dentro.',
       'Todo lo que sale de un plano.',
       'Foto, PDF o DXF: lo lee.',
       'Del papel al modelo.',
