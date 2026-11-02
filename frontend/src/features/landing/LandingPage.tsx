@@ -10,11 +10,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
+import { HowItWorks } from './HowItWorks'
 import { EASE } from './ease'
 import { BeforeAfter, Capabilities, Closing, Footer, SectionHead } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
 const NAV = [
+  { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#que-puedes-hacer', label: 'Qué hace' },
   { href: '#antes-despues', label: 'Antes y después' },
 ]
@@ -93,6 +95,8 @@ export function LandingPage() {
         <Masthead />
         <main id="contenido">
           <HeroStage actions={<HeroActions />} />
+
+          <HowItWorks />
 
           <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 py-20 sm:py-32">
             <SectionHead id="que-puedes-hacer" title="Todo lo que sale de un plano." />

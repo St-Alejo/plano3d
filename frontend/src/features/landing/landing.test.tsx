@@ -6,6 +6,7 @@ import { wall } from '@/test/fixtures'
 import { polygonArea } from '@/domain/model'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { solidSpans } from './drawPlan'
+import { NAMED_STAGES } from './HowItWorks'
 import { LandingPage } from './LandingPage'
 import { sampleApartment } from './sampleApartment'
 import { cameraAt, sceneAt, STAGES, type Pose } from './sequence'
@@ -116,8 +117,13 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('link', { name: /Convertir un plano/ })[0]).toHaveAttribute('href', '/nuevo')
     expect(screen.getByRole('link', { name: /Abrir la app/ })).toHaveAttribute('href', '/proyectos')
     expect(screen.getByRole('link', { name: /Ver mis proyectos/ })).toHaveAttribute('href', '/proyectos')
-    // una idea por pantalla: tres secciones bajo el hero
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Todo lo que sale de un plano.', 'Del papel al modelo.', 'Tu plano, en 3D, hoy.'])
+    // una idea por pantalla, en el orden del argumento
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'De la foto al modelo, en minutos.',
+      'Todo lo que sale de un plano.',
+      'Del papel al modelo.',
+      'Tu plano, en 3D, hoy.',
+    ])
   })
 
   it('sin WebGL cuenta las seis etapas, del plano al hogar', () => {
@@ -134,6 +140,27 @@ describe('LandingPage', () => {
     expect(within(list).getByRole('link', { name: 'Editor de planos' })).toHaveAttribute('href', '/tutoriales/editar.webm')
     expect(within(list).getByRole('link', { name: 'Modo obra' })).toHaveAttribute('href', '/nuevo')
     expect(screen.getAllByRole('img', { name: /editor con el plano en 2D/ }).length).toBeGreaterThan(0)
+  })
+
+  it('cómo funciona: video real sin sonido, con póster y pausa, y las etapas reales del análisis', () => {
+    const { container } = renderLanding()
+    const video = container.querySelector('video')!
+    expect(video).toHaveAttribute('src', '/tutoriales/crear.webm')
+    expect(video).toHaveAttribute('poster', '/landing/crear.jpg')
+    expect(video.muted).toBe(true)
+    expect(screen.getByRole('button', { name: /Pausar|Reproducir/ })).toBeInTheDocument()
+    const steps = within(screen.getByRole('list', { name: 'Cómo funciona' })).getAllByRole('listitem')
+    expect(steps).toHaveLength(3)
+    for (const s of NAMED_STAGES) expect(steps[1]).toHaveTextContent(s)
+  })
+
+  it('cada enlace de la cabecera lleva a una sección que existe', () => {
+    const { container } = renderLanding()
+    const nav = screen.getByRole('navigation', { name: 'Secciones' })
+    for (const a of within(nav).getAllByRole('link')) {
+      const href = a.getAttribute('href')!
+      if (href.startsWith('#')) expect(container.querySelector(href), href).not.toBeNull()
+    }
   })
 
   it('el comparador mueve el divisor entre el plano y el modelo', () => {
