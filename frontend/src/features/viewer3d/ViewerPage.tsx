@@ -1,6 +1,7 @@
 /** Recorrido a pantalla completa: orbitar / caminar, antes-después, ambientes y exportación. */
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
+import * as Tabs from '@radix-ui/react-tabs'
 import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Ruler } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
@@ -10,7 +11,7 @@ import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
 import { fold } from '@/domain/planOps'
 import { sunPosition } from '@/domain/sun'
-import { Button, ErrorState, Kbd, Spinner } from '@/components/ui'
+import { Button, ErrorState, Kbd, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
@@ -36,6 +37,15 @@ const today = () => new Date().toISOString().slice(0, 10)
 const isTouch = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
 const QUALITY_KEY = 'plano3d-calidad'
+
+/** Pestañas del panel del visor: lo frecuente primero; "Obra" solo existe en los modos de obra. */
+type DockTab = 'ambientes' | 'vista' | 'obra' | 'analisis'
+const DOCK_TABS: { id: DockTab; label: string }[] = [
+  { id: 'ambientes', label: 'Ambientes' },
+  { id: 'vista', label: 'Vista' },
+  { id: 'obra', label: 'Obra' },
+  { id: 'analisis', label: 'Análisis' },
+]
 
 /** ¿El navegador dibuja sin tarjeta gráfica (SwiftShader, llvmpipe)? Ahí la calidad alta no fluye. */
 function softwareRenderer(): boolean {
@@ -68,12 +78,19 @@ export function ViewerPage() {
   // el modo del plano vive en la URL (?modo=obra) para poder compartir el enlace
   const [params, setParams] = useSearchParams()
   const strategy = planMode(params.get('modo'))
-  const choosePlanMode = (id: string) =>
+  const [tab, setTabState] = useState<DockTab>(() => (strategy.panel ? 'obra' : 'ambientes'))
+  const setTab = (t: string) => setTabState(t as DockTab)
+  // sin modo de obra no hay pestaña "Obra": se muestra la primera
+  const activeTab: DockTab = tab === 'obra' && !strategy.panel ? 'ambientes' : tab
+  const choosePlanMode = (id: string) => {
+    // al entrar a un modo de obra se muestra su panel
+    if (planMode(id).panel) setTabState('obra')
     setParams((p) => {
       if (id === 'presentacion') p.delete('modo')
       else p.set('modo', id)
       return p
     }, { replace: true })
+  }
   const [overlay, setOverlay] = useState(0)
   const [flyTo, setFlyTo] = useState<Point | null>(null)
   const [walkStart, setWalkStart] = useState<WalkStart | undefined>()
@@ -194,6 +211,7 @@ export function ViewerPage() {
   /** los modos de obra tienen panel; si se pide algo de obra desde la presentación, se entra a Obra */
   const ensureObra = () => {
     if (!strategy.panel) choosePlanMode('obra')
+    setTabState('obra')
     setPanelOpen(true)
   }
 
@@ -208,6 +226,7 @@ export function ViewerPage() {
         setMode(act.mode)
         return act.mode === 'walk' ? 'Modo recorrer: haz clic en el modelo para caminar' : 'Modo orbitar'
       case 'preset':
+        setTabState('vista')
         setMode('orbit')
         setPreset({ name: act.name, nonce: Date.now() })
         return `Vista ${PRESET_LABEL[act.name].toLowerCase()}`
@@ -243,14 +262,17 @@ export function ViewerPage() {
       }
       case 'step':
         if (strategy.id !== 'secuencia') choosePlanMode('secuencia')
+        setTabState('obra')
         setPanelOpen(true)
         setStepCommand({ to: act.to, nonce: Date.now() })
         return act.to === 'play' ? 'Reproduzco la obra' : act.to === 'next' ? 'Siguiente paso' : act.to === 'prev' ? 'Paso anterior' : act.to === 'last' ? 'Último paso: la obra terminada' : `Paso ${act.to} de la secuencia`
       case 'cut':
+        setTabState('analisis')
         setCutOn(act.on)
         if (act.at !== undefined) setCut(Math.min(3, Math.max(0.2, act.at)))
         return act.on ? `Corte horizontal a ${(act.at ?? cut).toFixed(2).replace('.', ',')} m` : 'Quité el corte'
       case 'sun':
+        setTabState('analisis')
         setSunOn(act.on)
         if (act.hour !== undefined) setSunHour(act.hour)
         return act.on ? `Estudio solar${act.hour !== undefined ? ` a las ${Math.floor(act.hour)}:${String(Math.round((act.hour % 1) * 60)).padStart(2, '0')}` : ''}` : 'Apagué el estudio solar'
@@ -311,84 +333,89 @@ export function ViewerPage() {
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
 
-      {/* chat de ajustes: debajo de la barra superior, a la derecha */}
-      <div className="pointer-events-none absolute top-16 right-3 z-20 flex justify-end">
-        <ViewerChat projectId={project.id} run={runViewerAction} context={viewerContext} />
-      </div>
+      {/* chat de ajustes: abajo al centro del área libre (a la izquierda del panel); arriba en el celular */}
+      <ViewerChat
+        projectId={project.id}
+        run={runViewerAction}
+        context={viewerContext}
+        className="absolute top-16 left-3 z-20 sm:top-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2"
+      />
 
-      {/* barra superior: compacta en el celular (solo íconos) */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        <Link
-          to={`/p/${project.id}`}
-          aria-label="Volver al editor"
-          className="pointer-events-auto inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-md border border-line bg-canvas/80 px-3 text-sm backdrop-blur hover:border-accent"
-        >
-          <ArrowLeft className="size-4" aria-hidden /> <span className="hidden sm:inline">Editor</span>
-        </Link>
+      {/* barra superior: la única cabecera del visor (el AppShell se oculta aquí) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 p-3">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <Link
+            to={`/p/${project.id}`}
+            aria-label="Volver al editor"
+            className="inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-md border border-line bg-canvas/85 px-3 text-sm backdrop-blur hover:border-accent"
+          >
+            <ArrowLeft className="size-4" aria-hidden /> <span className="hidden sm:inline">Editor</span>
+          </Link>
+          <p className="hidden max-w-56 truncate text-sm font-medium lg:block">{project.name}</p>
+        </div>
         <ToggleGroup.Root
           type="single"
           value={mode}
           onValueChange={(v) => v && setMode(v as ViewMode)}
           aria-label="Modo de cámara"
-          className="pointer-events-auto flex rounded-md border border-line bg-canvas/80 p-1 backdrop-blur"
+          className="pointer-events-auto flex rounded-md border border-line bg-canvas/85 p-1 backdrop-blur"
         >
-          <ToggleGroup.Item value="orbit" className="inline-flex h-10 pointer-coarse:h-11 items-center gap-1.5 rounded-sm px-3 text-sm text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink">
+          <ToggleGroup.Item value="orbit" className="inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-sm text-muted data-[state=on]:bg-fg data-[state=on]:text-canvas pointer-coarse:h-11">
             <Orbit className="size-4" aria-hidden /> Orbitar
           </ToggleGroup.Item>
-          <ToggleGroup.Item value="walk" className="inline-flex h-10 pointer-coarse:h-11 items-center gap-1.5 rounded-sm px-3 text-sm text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink">
+          <ToggleGroup.Item value="walk" className="inline-flex h-9 items-center gap-1.5 rounded-sm px-3 text-sm text-muted data-[state=on]:bg-fg data-[state=on]:text-canvas pointer-coarse:h-11">
             <Footprints className="size-4" aria-hidden /> Recorrer
           </ToggleGroup.Item>
         </ToggleGroup.Root>
         <div className="pointer-events-auto flex gap-2">
-        <div className="rounded-md bg-canvas/80 backdrop-blur [&>button]:h-11 [&>button]:w-11">
-          <TutorialButton compact initial="recorrer" />
-        </div>
-        {/* en el celular la barra no da para más botones: PNG y OBJ desde pantallas medianas */}
-        <div className="hidden gap-2 sm:flex">
-        <Button className="h-11" aria-label="Guardar imagen PNG" title="Guardar la vista actual como imagen" icon={<Camera className="size-4" aria-hidden />} onClick={doPng}>
-          <span className="hidden sm:inline">PNG</span>
-        </Button>
-        <Button className="h-11" loading={exporting} aria-label="Descargar modelo OBJ" title="Descargar el modelo 3D (.obj) para SketchUp, Revit u otros" icon={<Download className="size-4" aria-hidden />} onClick={() => void doObj()}>
-          <span className="hidden sm:inline">OBJ</span>
-        </Button>
-        </div>
-        <Button
-          className="h-11"
-          loading={exporting}
-          aria-label="Descargar modelo GLB"
-          title="Descargar el modelo 3D (.glb) para Blender u otros visores"
-          icon={<Download className="size-4" aria-hidden />}
-          onClick={() => void doExport()}
-        >
-          <span className="hidden sm:inline">GLB</span>
-        </Button>
+          <div className="rounded-md bg-canvas/85 backdrop-blur [&>button]:h-11 [&>button]:w-11">
+            <TutorialButton compact initial="recorrer" />
+          </div>
+          <Menu
+            items={[
+              { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
+              { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
+              { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },
+            ]}
+            trigger={
+              <Button className="h-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Exportar" title="Imagen PNG o modelo 3D (OBJ, GLB)" icon={<Download className="size-4" aria-hidden />}>
+                <span className="hidden sm:inline">Exportar</span>
+              </Button>
+            }
+          />
         </div>
       </div>
 
-      {/* panel inferior plegable: antes/después + ambientes (plegado por defecto en el celular) */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3">
-        <div className="pointer-events-auto flex max-w-[calc(100%-9rem)] flex-col rounded-md border border-line bg-canvas/85 backdrop-blur sm:w-80 sm:max-w-none">
+      {/* panel: abajo a la izquierda en el celular (plegado); a la derecha, a toda altura, en pantallas medianas */}
+      <aside
+        aria-label="Panel del visor"
+        className="pointer-events-none absolute bottom-3 left-3 z-10 flex max-h-[calc(100%-5.5rem)] max-w-[calc(100%-9rem)] flex-col justify-end sm:top-[4.25rem] sm:right-3 sm:left-auto sm:max-h-none sm:w-80 sm:max-w-none sm:justify-start"
+      >
+        <div className="pointer-events-auto flex min-h-0 flex-col rounded-lg border border-line bg-canvas/90 shadow-lg backdrop-blur">
           <button
             type="button"
             aria-expanded={panelOpen}
             aria-controls="viewer-panel"
             onClick={() => setPanelOpen((o) => !o)}
-            className="flex min-h-11 items-center justify-between gap-2 px-3 text-sm font-medium"
+            className="flex min-h-11 shrink-0 items-center justify-between gap-2 px-3 text-sm font-medium"
           >
             <span className="flex items-center gap-2">
-              <Layers className="size-4 text-accent" aria-hidden /> Ambientes<span className="hidden sm:inline"> y plano</span>
+              <Layers className="size-4 text-accent" aria-hidden />
+              <span>
+                Ambientes<span className="hidden sm:inline"> y vista</span>
+              </span>
             </span>
             <ChevronUp className={`size-4 transition-transform ${panelOpen ? '' : 'rotate-180'}`} aria-hidden />
           </button>
           {panelOpen && (
-            <div id="viewer-panel" className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto border-t border-line p-3">
+            <div id="viewer-panel" className="flex min-h-0 flex-col border-t border-line">
               {PLAN_MODES.length > 1 && (
                 <ToggleGroup.Root
                   type="single"
                   value={strategy.id}
                   onValueChange={(v) => v && choosePlanMode(v)}
                   aria-label="Modo del plano"
-                  className="grid grid-cols-2 gap-1 border-b border-line pb-2"
+                  className="grid shrink-0 grid-cols-2 gap-1 border-b border-line p-2"
                 >
                   {PLAN_MODES.map((m) => (
                     <ToggleGroup.Item key={m.id} value={m.id} title={m.hint} className="min-h-11 rounded-sm px-2 text-xs text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink sm:min-h-8">
@@ -397,161 +424,190 @@ export function ViewerPage() {
                   ))}
                 </ToggleGroup.Root>
               )}
-              {strategy.panel && (
-                <ObraPanel
-                  variant={strategy.panel}
-                  root={built?.root ?? null}
-                  model={model}
-                  brick={brick}
-                  onBrick={setBrick}
-                  hideMasonry={hideMasonry}
-                  onHideMasonry={setHideMasonry}
-                  elementId={elementId}
-                  onElement={setElementId}
-                  onClose={() => setElementId(null)}
-                  fileBase={fileBase}
-                  stepCommand={stepCommand}
-                />
-              )}
-              <label id="overlay-label" className="flex justify-between text-xs text-muted">
-                <span>Plano original sobre el modelo</span>
-                <span className="font-mono">{Math.round(overlay * 100)}%</span>
-              </label>
-              <Slider.Root className="relative flex h-11 touch-none items-center" value={[overlay]} max={1} step={0.01} onValueChange={([v]) => setOverlay(v ?? 0)} aria-labelledby="overlay-label">
-                <Slider.Track className="relative h-1 grow bg-raised">
-                  <Slider.Range className="absolute h-full bg-accent" />
-                </Slider.Track>
-                <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Opacidad del plano original" />
-              </Slider.Root>
-              <nav aria-label="Ambientes" className="flex max-h-40 shrink-0 flex-col overflow-y-auto">
-                {rooms.map((r) => {
-                  const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
-                  return (
-                    <button key={r.id} type="button" onClick={() => goTo(r.at, r.levelId)} className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9">
-                      <span>{r.label}</span>
-                      <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
-                    </button>
-                  )
-                })}
-              </nav>
-
-              <section aria-label="Vista" className="flex flex-col gap-2 border-t border-line pt-2">
-                <div className="grid grid-cols-4 gap-1" role="group" aria-label="Encuadre">
-                  {(Object.keys(PRESET_LABEL) as CameraPreset[]).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => {
-                        setMode('orbit')
-                        setPreset({ name: p, nonce: Date.now() })
-                      }}
-                      className="min-h-11 rounded-sm px-1 text-xs hover:bg-raised sm:min-h-8"
+              <Tabs.Root value={activeTab} onValueChange={setTab} className="flex min-h-0 flex-col">
+                <Tabs.List aria-label="Secciones del visor" className="flex shrink-0 border-b border-line px-1">
+                  {DOCK_TABS.filter((t) => t.id !== 'obra' || strategy.panel).map((t) => (
+                    <Tabs.Trigger
+                      key={t.id}
+                      value={t.id}
+                      className="h-9 flex-1 border-b-2 border-transparent px-1 text-xs text-muted data-[state=active]:border-accent data-[state=active]:font-medium data-[state=active]:text-fg pointer-coarse:h-11"
                     >
-                      {PRESET_LABEL[p]}
-                    </button>
+                      {t.label}
+                    </Tabs.Trigger>
                   ))}
+                </Tabs.List>
+                <div className="max-h-[50vh] min-h-0 overflow-y-auto p-3 sm:max-h-[calc(100dvh-14rem)]">
+                  <Tabs.Content value="ambientes" className="flex flex-col gap-2">
+                    <nav aria-label="Ambientes" className="flex flex-col">
+                      {rooms.map((r) => {
+                        const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
+                        return (
+                          <button key={r.id} type="button" onClick={() => goTo(r.at, r.levelId)} className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9">
+                            <span>{r.label}</span>
+                            <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
+                          </button>
+                        )
+                      })}
+                    </nav>
+                    <div className="border-t border-line pt-2">
+                      <label id="overlay-label" className="flex justify-between text-xs text-muted">
+                        <span>Plano original sobre el modelo</span>
+                        <span className="font-mono">{Math.round(overlay * 100)}%</span>
+                      </label>
+                      <Slider.Root className="relative flex h-11 touch-none items-center" value={[overlay]} max={1} step={0.01} onValueChange={([v]) => setOverlay(v ?? 0)} aria-labelledby="overlay-label">
+                        <Slider.Track className="relative h-1 grow bg-raised">
+                          <Slider.Range className="absolute h-full bg-accent" />
+                        </Slider.Track>
+                        <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Opacidad del plano original" />
+                      </Slider.Root>
+                    </div>
+                  </Tabs.Content>
+
+                  <Tabs.Content value="vista">
+                    <section aria-label="Vista" className="flex flex-col gap-2">
+                      <div className="grid grid-cols-4 gap-1" role="group" aria-label="Encuadre">
+                        {(Object.keys(PRESET_LABEL) as CameraPreset[]).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                              setMode('orbit')
+                              setPreset({ name: p, nonce: Date.now() })
+                            }}
+                            className="min-h-11 rounded-sm border border-line px-1 text-xs hover:border-accent hover:bg-raised sm:min-h-8"
+                          >
+                            {PRESET_LABEL[p]}
+                          </button>
+                        ))}
+                      </div>
+                      <label className="flex items-center justify-between gap-2 text-xs">
+                        <span>Calidad</span>
+                        <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} className={SELECT} title="Alta: cielo, sombras suaves y oclusión ambiental. Baja: más fluida en equipos modestos.">
+                          <option value="alta">Alta (realista)</option>
+                          <option value="baja">Baja (fluida)</option>
+                        </select>
+                      </label>
+                      {!strategy.panel && (
+                        <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                          <span>Cubierta (techo de teja)</span>
+                          <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                        </label>
+                      )}
+                      <label className="flex items-center justify-between gap-2 text-xs">
+                        <span>Visualización</span>
+                        <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>
+                          {(Object.keys(DISPLAY_LABEL) as DisplayMode[]).map((d) => (
+                            <option key={d} value={d}>
+                              {DISPLAY_LABEL[d]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </section>
+                  </Tabs.Content>
+
+                  {strategy.panel && (
+                    <Tabs.Content value="obra">
+                      <ObraPanel
+                        variant={strategy.panel}
+                        root={built?.root ?? null}
+                        model={model}
+                        brick={brick}
+                        onBrick={setBrick}
+                        hideMasonry={hideMasonry}
+                        onHideMasonry={setHideMasonry}
+                        elementId={elementId}
+                        onElement={setElementId}
+                        onClose={() => setElementId(null)}
+                        fileBase={fileBase}
+                        stepCommand={stepCommand}
+                      />
+                    </Tabs.Content>
+                  )}
+
+                  <Tabs.Content value="analisis" className="flex flex-col gap-3">
+                    <section aria-label="Estudio solar" className="flex flex-col gap-2">
+                      <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                        <span>Estudio solar (Bogotá)</span>
+                        <input type="checkbox" checked={sunOn} onChange={(e) => setSunOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                      </label>
+                      {sunOn && (
+                        <>
+                          <label className="flex items-center justify-between gap-2 text-xs">
+                            <span>Fecha</span>
+                            <input type="date" value={sunDate} onChange={(e) => e.target.value && setSunDate(e.target.value)} className={SELECT} />
+                          </label>
+                          <label id="sun-hour-label" className="flex justify-between text-xs text-muted">
+                            <span>Hora</span>
+                            <span className="font-mono">
+                              {String(Math.floor(sunHour)).padStart(2, '0')}:{String(Math.round((sunHour % 1) * 60)).padStart(2, '0')}
+                            </span>
+                          </label>
+                          <Slider.Root className="relative flex h-11 touch-none items-center" value={[sunHour]} min={5} max={19} step={0.25} onValueChange={([v]) => setSunHour(v ?? 12)} aria-labelledby="sun-hour-label">
+                            <Slider.Track className="relative h-1 grow bg-raised">
+                              <Slider.Range className="absolute h-full bg-accent" />
+                            </Slider.Track>
+                            <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Hora del día" />
+                          </Slider.Root>
+                          {sun && (
+                            <p className="font-mono text-[11px] text-subtle" aria-live="polite">
+                              {sun.altitude > 0 ? `altura ${sun.altitude.toFixed(0)}° · azimut ${sun.azimuth.toFixed(0)}°` : 'el sol está bajo el horizonte'}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </section>
+
+                    <section aria-label="Corte de sección" className="flex flex-col gap-2 border-t border-line pt-2">
+                      <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
+                        <span>Corte horizontal</span>
+                        <input type="checkbox" checked={cutOn} onChange={(e) => setCutOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                      </label>
+                      {cutOn && (
+                        <>
+                          <label id="cut-label" className="flex justify-between text-xs text-muted">
+                            <span>Altura del corte</span>
+                            <span className="font-mono">{cut.toFixed(2)} m</span>
+                          </label>
+                          <Slider.Root className="relative flex h-11 touch-none items-center" value={[cut]} min={0.2} max={3} step={0.05} onValueChange={([v]) => setCut(v ?? 1.2)} aria-labelledby="cut-label">
+                            <Slider.Track className="relative h-1 grow bg-raised">
+                              <Slider.Range className="absolute h-full bg-accent" />
+                            </Slider.Track>
+                            <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Altura del corte" />
+                          </Slider.Root>
+                        </>
+                      )}
+                    </section>
+
+                    <section aria-label="Medir en 3D" className="flex flex-col gap-2 border-t border-line pt-2">
+                      <Button
+                        size="sm"
+                        variant={measuring ? 'primary' : 'secondary'}
+                        aria-pressed={measuring}
+                        icon={<Ruler className="size-4" aria-hidden />}
+                        onClick={() => {
+                          setMeasuring((m) => !m)
+                          setPoints([])
+                        }}
+                      >
+                        Medir
+                      </Button>
+                      {measuring && (
+                        <p className="text-xs text-subtle">
+                          {points.length < 2 ? 'Haz clic en dos puntos del modelo.' : 'Un clic más empieza una medición nueva.'}
+                        </p>
+                      )}
+                    </section>
+                  </Tabs.Content>
                 </div>
-                <label className="flex items-center justify-between gap-2 text-xs">
-                  <span>Calidad</span>
-                  <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} className={SELECT} title="Alta: cielo, sombras suaves y oclusión ambiental. Baja: más fluida en equipos modestos.">
-                    <option value="alta">Alta (realista)</option>
-                    <option value="baja">Baja (fluida)</option>
-                  </select>
-                </label>
-                {!strategy.panel && (
-                  <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
-                    <span>Cubierta (techo de teja)</span>
-                    <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
-                  </label>
-                )}
-                <label className="flex items-center justify-between gap-2 text-xs">
-                  <span>Visualización</span>
-                  <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>
-                    {(Object.keys(DISPLAY_LABEL) as DisplayMode[]).map((d) => (
-                      <option key={d} value={d}>
-                        {DISPLAY_LABEL[d]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </section>
-
-              <section aria-label="Estudio solar" className="flex flex-col gap-2 border-t border-line pt-2">
-                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
-                  <span>Estudio solar (Bogotá)</span>
-                  <input type="checkbox" checked={sunOn} onChange={(e) => setSunOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
-                </label>
-                {sunOn && (
-                  <>
-                    <label className="flex items-center justify-between gap-2 text-xs">
-                      <span>Fecha</span>
-                      <input type="date" value={sunDate} onChange={(e) => e.target.value && setSunDate(e.target.value)} className={SELECT} />
-                    </label>
-                    <label id="sun-hour-label" className="flex justify-between text-xs text-muted">
-                      <span>Hora</span>
-                      <span className="font-mono">
-                        {String(Math.floor(sunHour)).padStart(2, '0')}:{String(Math.round((sunHour % 1) * 60)).padStart(2, '0')}
-                      </span>
-                    </label>
-                    <Slider.Root className="relative flex h-11 touch-none items-center" value={[sunHour]} min={5} max={19} step={0.25} onValueChange={([v]) => setSunHour(v ?? 12)} aria-labelledby="sun-hour-label">
-                      <Slider.Track className="relative h-1 grow bg-raised">
-                        <Slider.Range className="absolute h-full bg-accent" />
-                      </Slider.Track>
-                      <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Hora del día" />
-                    </Slider.Root>
-                    {sun && (
-                      <p className="font-mono text-[11px] text-subtle" aria-live="polite">
-                        {sun.altitude > 0 ? `altura ${sun.altitude.toFixed(0)}° · azimut ${sun.azimuth.toFixed(0)}°` : 'el sol está bajo el horizonte'}
-                      </p>
-                    )}
-                  </>
-                )}
-              </section>
-
-              <section aria-label="Corte de sección" className="flex flex-col gap-2 border-t border-line pt-2">
-                <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
-                  <span>Corte horizontal</span>
-                  <input type="checkbox" checked={cutOn} onChange={(e) => setCutOn(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
-                </label>
-                {cutOn && (
-                  <>
-                    <label id="cut-label" className="flex justify-between text-xs text-muted">
-                      <span>Altura del corte</span>
-                      <span className="font-mono">{cut.toFixed(2)} m</span>
-                    </label>
-                    <Slider.Root className="relative flex h-11 touch-none items-center" value={[cut]} min={0.2} max={3} step={0.05} onValueChange={([v]) => setCut(v ?? 1.2)} aria-labelledby="cut-label">
-                      <Slider.Track className="relative h-1 grow bg-raised">
-                        <Slider.Range className="absolute h-full bg-accent" />
-                      </Slider.Track>
-                      <Slider.Thumb className="block size-7 rounded-full border-2 border-accent bg-canvas" aria-label="Altura del corte" />
-                    </Slider.Root>
-                  </>
-                )}
-              </section>
-
-              <section aria-label="Medir en 3D" className="flex flex-col gap-2 border-t border-line pt-2">
-                <Button
-                  size="sm"
-                  variant={measuring ? 'primary' : 'secondary'}
-                  aria-pressed={measuring}
-                  icon={<Ruler className="size-4" aria-hidden />}
-                  onClick={() => {
-                    setMeasuring((m) => !m)
-                    setPoints([])
-                  }}
-                >
-                  Medir
-                </Button>
-                {measuring && (
-                  <p className="text-xs text-subtle">
-                    {points.length < 2 ? 'Haz clic en dos puntos del modelo.' : 'Un clic más empieza una medición nueva.'}
-                  </p>
-                )}
-              </section>
+              </Tabs.Root>
             </div>
           )}
         </div>
+      </aside>
 
+      {/* abajo: joystick (celular, a la derecha) o ayuda de teclado (escritorio, a la izquierda: el panel va a la derecha) */}
+      <div className="pointer-events-none absolute right-0 bottom-0 flex justify-end p-3 sm:right-auto sm:left-0 sm:justify-start">
         {mode === 'walk' &&
           (touch ? (
             <div className="pointer-events-auto">

@@ -60,7 +60,9 @@ test('modo obra: selector, enlace, leyenda y ficha al tocar un elemento', async 
   await expect(page.getByRole('checkbox', { name: 'Cubierta (techo de teja)' })).toHaveCount(0)
 
   // vista en planta: tocar sobre los muros hasta dar con un elemento (ladrillo, viga o columneta)
+  await page.getByRole('tab', { name: 'Vista' }).click()
   await page.getByRole('button', { name: 'Planta', exact: true }).click()
+  await page.getByRole('tab', { name: 'Obra' }).click()
   const canvas = page.locator('canvas').first()
   const box = (await canvas.boundingBox())!
   const card = page.getByRole('article', { name: 'Ficha del elemento' })

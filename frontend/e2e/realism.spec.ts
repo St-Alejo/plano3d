@@ -58,6 +58,7 @@ test('calidad alta con texturas, cielo y cubierta; se recuerda al volver', async
     if (!localStorage.getItem('plano3d-calidad')) localStorage.setItem('plano3d-calidad', 'alta')
   })
   await page.goto(`/p/${projectId}/3d`)
+  await page.getByRole('tab', { name: 'Vista' }).click()
   const quality = page.getByRole('combobox', { name: 'Calidad' })
   await expect(quality).toHaveValue('alta')
 
@@ -71,6 +72,7 @@ test('calidad alta con texturas, cielo y cubierta; se recuerda al volver', async
 
   await quality.selectOption('baja')
   await page.reload()
+  await page.getByRole('tab', { name: 'Vista' }).click()
   await expect(page.getByRole('combobox', { name: 'Calidad' })).toHaveValue('baja')
   expect(errors).toEqual([])
 })

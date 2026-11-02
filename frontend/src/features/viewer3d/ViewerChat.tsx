@@ -5,7 +5,7 @@
  * Primero entiende el intérprete local; lo que no entiende va al asistente con IA del
  * servidor (`scope: 'viewer'`); si no está disponible, se muestran ejemplos.
  */
-import { MessageSquare, SendHorizontal, Sparkles, X } from 'lucide-react'
+import { ChatDock } from '@/components/ChatDock'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, api } from '@/api/client'
 import { asViewerActions, parseViewerChat, VIEWER_EXAMPLES, type ViewerAction } from './viewerCommands'
@@ -24,7 +24,18 @@ interface Msg {
 
 let seq = 0
 
-export function ViewerChat({ projectId, run, context }: { projectId: string; run: (a: ViewerAction) => ViewerReply; context: () => string }) {
+export function ViewerChat({
+  projectId,
+  run,
+  context,
+  className,
+}: {
+  projectId: string
+  run: (a: ViewerAction) => ViewerReply
+  context: () => string
+  /** posición del chat (por defecto, abajo al centro) */
+  className?: string
+}) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -81,86 +92,28 @@ export function ViewerChat({ projectId, run, context }: { projectId: string; run
     }
   }
 
-  if (!open)
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(true)
-          setTimeout(() => input.current?.focus(), 0)
-        }}
-        className="pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full border border-line-strong bg-canvas/85 px-4 text-sm shadow-lg backdrop-blur hover:border-accent"
-      >
-        <MessageSquare className="size-4 text-brand" aria-hidden /> Ajustar escribiendo
-      </button>
-    )
-
   return (
-    <section
-      aria-label="Chat de la vista 3D"
-      className="pointer-events-auto flex max-h-[min(50vh,460px)] w-[min(380px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
-    >
-      <header className="flex items-center gap-2 border-b border-line px-3 py-2">
-        <MessageSquare className="size-4 text-brand" aria-hidden />
-        <h2 className="flex-1 text-sm font-medium">Ajustar escribiendo</h2>
-        <button type="button" aria-label="Cerrar chat" className="inline-flex items-center justify-center rounded p-1 pointer-coarse:size-11 text-muted hover:bg-raised hover:text-fg" onClick={() => setOpen(false)}>
-          <X className="size-4" aria-hidden />
-        </button>
-      </header>
-      <ol ref={list} aria-live="polite" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 text-sm">
-        {msgs.length === 0 && (
-          <li className="text-muted">
-            Escribe qué quieres ver: modos de obra, pasos, elementos o cantidades.
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {VIEWER_EXAMPLES.map((e) => (
-                <button key={e} type="button" className="rounded-full border border-line px-2.5 py-1 text-xs pointer-coarse:min-h-11 text-fg hover:border-accent" onClick={() => void send(e)}>
-                  {e}
-                </button>
-              ))}
-            </div>
-          </li>
-        )}
-        {msgs.map((m) => (
-          <li key={m.id} className={m.from === 'user' ? 'self-end rounded-lg bg-brand/12 px-3 py-1.5' : `self-start ${m.error ? 'text-danger' : ''}`}>
-            {m.ai && <Sparkles className="mr-1 inline size-3.5 text-brand" aria-label="respuesta de la IA" />}
-            {m.text}
-            {m.lines && (
-              <ul className="mt-1 list-disc pl-5 text-xs text-muted">
-                {m.lines.map((l) => (
-                  <li key={l}>{l}</li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-        {busy && <li className="self-start text-muted">Pensando…</li>}
-      </ol>
-      <form
-        className="flex items-center gap-2 border-t border-line p-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void send(text)
-        }}
-      >
-        <input
-          ref={input}
-          aria-label="Mensaje para la vista 3D"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-          placeholder="p. ej. modo obra y oculta el ladrillo"
-          maxLength={1000}
-          className="h-9 min-w-0 flex-1 rounded-md pointer-coarse:h-11 border border-line bg-canvas px-3 text-sm"
-        />
-        <button
-          type="submit"
-          aria-label="Enviar"
-          disabled={busy || !text.trim()}
-          className="inline-flex size-9 pointer-coarse:size-11 items-center justify-center rounded-md bg-accent text-accent-ink disabled:opacity-40"
-        >
-          <SendHorizontal className="size-4" aria-hidden />
-        </button>
-      </form>
-    </section>
+    <ChatDock
+      open={open}
+      onOpen={() => {
+        setOpen(true)
+        setTimeout(() => input.current?.focus(), 0)
+      }}
+      onClose={() => setOpen(false)}
+      regionLabel="Chat de la vista 3D"
+      title="Ajustar escribiendo"
+      intro="Escribe qué quieres ver: modos de obra, pasos, elementos o cantidades."
+      examples={VIEWER_EXAMPLES}
+      messages={msgs}
+      busy={busy}
+      text={text}
+      onText={setText}
+      onSend={(t) => void send(t)}
+      inputRef={input}
+      listRef={list}
+      inputLabel="Mensaje para la vista 3D"
+      placeholder="p. ej. modo obra y oculta el ladrillo"
+      className={className}
+    />
   )
 }

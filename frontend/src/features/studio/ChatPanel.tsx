@@ -5,7 +5,8 @@
  * Primero entiende el intérprete local (gratis, sin red). Lo que no entiende va al
  * asistente con IA del servidor; si no está disponible, se muestran ejemplos.
  */
-import { MessageSquare, SendHorizontal, Sparkles, Undo2, X } from 'lucide-react'
+import { Undo2 } from 'lucide-react'
+import { ChatDock } from '@/components/ChatDock'
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, api } from '@/api/client'
 import { EXAMPLES, parseChat } from '@/domain/chatParser'
@@ -103,91 +104,35 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
     push({ from: 'bot', text: 'Deshice el último cambio del chat.' })
   }
 
-  if (!open)
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(true)
-          setTimeout(() => input.current?.focus(), 0)
-        }}
-        className="absolute bottom-4 left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-2 rounded-full border border-line-strong bg-surface px-4 py-2.5 text-sm shadow-lg hover:border-accent"
-      >
-        <MessageSquare className="size-4 text-brand" aria-hidden /> Dibujar escribiendo
-      </button>
-    )
-
   return (
-    <section
-      aria-label="Chat del plano"
-      className="absolute bottom-4 left-1/2 z-20 flex max-h-[min(60vh,520px)] w-[min(520px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-lg border border-line-strong bg-surface/97 shadow-xl backdrop-blur"
-    >
-      <header className="flex items-center gap-2 border-b border-line px-3 py-2">
-        <MessageSquare className="size-4 text-brand" aria-hidden />
-        <h2 className="flex-1 text-sm font-medium">Dibujar escribiendo</h2>
-        <button type="button" aria-label="Cerrar chat" className="inline-flex items-center justify-center rounded p-1 pointer-coarse:size-11 text-muted hover:bg-raised hover:text-fg" onClick={() => setOpen(false)}>
-          <X className="size-4" aria-hidden />
-        </button>
-      </header>
-      <ol ref={list} aria-live="polite" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3 text-sm">
-        {msgs.length === 0 && (
-          <li className="text-muted">
-            Escribe lo que quieres dibujar o cambiar. Todo se deshace con Ctrl+Z.
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {EXAMPLES.slice(0, 6).map((e) => (
-                <button key={e} type="button" className="rounded-full border border-line px-2.5 py-1 text-xs pointer-coarse:min-h-11 text-fg hover:border-accent" onClick={() => void send(e)}>
-                  {e}
-                </button>
-              ))}
-            </div>
-          </li>
-        )}
-        {msgs.map((m) => (
-          <li key={m.id} className={m.from === 'user' ? 'self-end rounded-lg bg-brand/12 px-3 py-1.5' : `self-start ${m.error ? 'text-danger' : ''}`}>
-            {m.ai && <Sparkles className="mr-1 inline size-3.5 text-brand" aria-label="respuesta de la IA" />}
-            {m.text}
-            {m.lines && (
-              <ul className="mt-1 list-disc pl-5 text-xs text-muted">
-                {m.lines.map((l) => (
-                  <li key={l}>{l}</li>
-                ))}
-              </ul>
-            )}
-            {m.cmd && head === m.cmd && (
-              <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-accent underline" onClick={() => undo(m)}>
-                <Undo2 className="size-3" aria-hidden /> Deshacer
-              </button>
-            )}
-          </li>
-        ))}
-        {busy && <li className="self-start text-muted">Pensando…</li>}
-      </ol>
-      <form
-        className="flex items-center gap-2 border-t border-line p-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void send(text)
-        }}
-      >
-        <input
-          ref={input}
-          aria-label="Mensaje para el plano"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-          placeholder="p. ej. cocina de 3x3 al este de la sala con puerta al sur"
-          maxLength={1000}
-          className="h-9 min-w-0 flex-1 rounded-md pointer-coarse:h-11 border border-line bg-canvas px-3 text-sm"
-        />
-        <button
-          type="submit"
-          aria-label="Enviar"
-          disabled={busy || !text.trim()}
-          className="inline-flex size-9 pointer-coarse:size-11 items-center justify-center rounded-md bg-accent text-accent-ink disabled:opacity-40"
-        >
-          <SendHorizontal className="size-4" aria-hidden />
-        </button>
-      </form>
-    </section>
+    <ChatDock
+      open={open}
+      onOpen={() => {
+        setOpen(true)
+        setTimeout(() => input.current?.focus(), 0)
+      }}
+      onClose={() => setOpen(false)}
+      regionLabel="Chat del plano"
+      title="Dibujar escribiendo"
+      intro="Escribe lo que quieres dibujar o cambiar. Todo se deshace con Ctrl+Z."
+      examples={EXAMPLES.slice(0, 6)}
+      messages={msgs}
+      extra={(m) =>
+        m.cmd && head === m.cmd ? (
+          <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-accent underline" onClick={() => undo(m)}>
+            <Undo2 className="size-3" aria-hidden /> Deshacer
+          </button>
+        ) : null
+      }
+      busy={busy}
+      text={text}
+      onText={setText}
+      onSend={(t) => void send(t)}
+      inputRef={input}
+      listRef={list}
+      inputLabel="Mensaje para el plano"
+      placeholder="p. ej. cocina de 3x3 al este de la sala con puerta al sur"
+      wide
+    />
   )
 }

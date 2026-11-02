@@ -30,6 +30,7 @@ test('sol, corte, vistas, medir y exportar sin errores', async ({ page }) => {
   await page.goto(`/p/${projectId}/3d`)
   await expect(page.getByRole('radio', { name: 'Orbitar' })).toBeVisible()
 
+  await page.getByRole('tab', { name: 'Análisis' }).click()
   const sun = page.getByRole('region', { name: 'Estudio solar' })
   await sun.getByRole('checkbox').check()
   await expect(sun.getByText(/altura \d+° · azimut \d+°/)).toBeVisible()
@@ -41,8 +42,10 @@ test('sol, corte, vistas, medir y exportar sin errores', async ({ page }) => {
   await cut.getByRole('checkbox').check()
   await expect(cut.getByText('1.20 m')).toBeVisible()
 
+  await page.getByRole('tab', { name: 'Vista' }).click()
   await page.getByRole('group', { name: 'Encuadre' }).getByRole('button', { name: 'Planta' }).click()
   await page.getByRole('combobox', { name: 'Visualización' }).selectOption('xray')
+  await page.getByRole('tab', { name: 'Análisis' }).click()
 
   // medir: dos clics sobre el modelo, vistos desde la planta
   await page.getByRole('button', { name: 'Medir' }).click()
@@ -53,11 +56,13 @@ test('sol, corte, vistas, medir y exportar sin errores', async ({ page }) => {
   await expect(page.getByRole('status').filter({ hasText: / m$/ })).toBeVisible()
 
   const png = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Guardar imagen PNG' }).click()
+  await page.getByRole('button', { name: 'Exportar' }).click()
+  await page.getByRole('menuitem', { name: 'Guardar imagen PNG' }).click()
   expect((await png).suggestedFilename()).toBe('Visor_E2E.png')
 
   const obj = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Descargar modelo OBJ' }).click()
+  await page.getByRole('button', { name: 'Exportar' }).click()
+  await page.getByRole('menuitem', { name: 'Descargar modelo OBJ' }).click()
   const file = await obj
   expect(file.suggestedFilename()).toBe('Visor_E2E.obj')
   expect(readFileSync((await file.path())!, 'utf-8')).toMatch(/^v /m)

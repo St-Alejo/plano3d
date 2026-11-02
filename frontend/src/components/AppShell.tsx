@@ -22,18 +22,20 @@ export function AppShell() {
   const [theme, toggleTheme] = useTheme()
   // el editor ocupa exactamente la ventana en escritorio: cada panel hace su propio scroll
   const editor = useMatch('/p/:id')
+  // el visor 3D es a pantalla completa: su barra flotante es la única cabecera
+  const viewer = useMatch('/p/:id/3d')
   // en el editor, la página pone sus migas dentro de la cabecera: una barra menos sobre el lienzo
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   return (
     <HeaderSlotContext.Provider value={editor ? slot : null}>
-    <div className={clsx('flex flex-col', editor ? 'min-h-full lg:h-dvh lg:overflow-hidden' : 'min-h-full')}>
+    <div className={clsx('flex flex-col', editor ? 'min-h-full lg:h-dvh lg:overflow-hidden' : viewer ? 'h-dvh overflow-hidden' : 'min-h-full')}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-ink"
       >
         Saltar al contenido
       </a>
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur-md">
+      <header className={clsx('sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur-md', viewer && 'hidden')}>
         <div className={clsx('mx-auto flex items-center justify-between gap-4 px-4', editor ? 'h-12 max-w-none' : 'h-14 max-w-7xl sm:px-6')}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <Logo compact={!!editor} />

@@ -114,7 +114,7 @@ export function WalkHud({ model, touch }: { model: BuildingModel; touch: boolean
       )}
 
       {/* piso, cambio de piso, puertas automáticas y minimapa */}
-      <div className="pointer-events-auto absolute top-16 right-3 flex flex-col items-end gap-2">
+      <div className="pointer-events-auto absolute top-16 right-3 flex flex-col items-end gap-2 sm:right-auto sm:left-3 sm:items-start">
         {hud && hud.levelCount > 1 && (
           <div className="flex items-center gap-1 rounded-md border border-line bg-canvas/85 p-1 backdrop-blur">
             <button type="button" aria-label="Bajar un piso" title="Bajar un piso (Z)" disabled={hud.levelIndex <= 0} onClick={() => send({ type: 'level', dir: -1 })} className="inline-flex size-11 items-center justify-center rounded-sm hover:bg-raised disabled:opacity-40">
