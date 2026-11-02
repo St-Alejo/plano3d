@@ -48,7 +48,7 @@ describe('chat del estudio', () => {
     render(<ChatPanel projectId="prj_b" defaultOpen />)
     await say('quiero un lugar tranquilo para trabajar')
     expect(await screen.findByText('Te dibujé un estudio.')).toBeInTheDocument()
-    expect(sent).toEqual({ message: 'quiero un lugar tranquilo para trabajar', context: '(vacío)' })
+    expect(sent).toEqual({ message: 'quiero un lugar tranquilo para trabajar', context: '(vacío)', scope: 'plan' })
     expect(level().rooms.map((r) => r.label)).toEqual(['Estudio'])
   })
 
