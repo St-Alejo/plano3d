@@ -15,6 +15,30 @@ import { newId, polygonArea, wallDirection } from './model'
 export const MIN_ROOM_AREA = 0.5 // m²
 const MATCH_IOU = 0.3
 
+/**
+ * Rejillas (m) a las que se ajustan los vértices antes de unir. polygon-clipping falla
+ * con coordenadas casi coincidentes ("Unable to complete output ring", típico de muros
+ * detectados en una foto); ajustarlas a 1 µm lo evita sin cambiar nada visible. Si aun
+ * así falla, se reintenta con rejillas más gruesas.
+ */
+const GRIDS = [1e-6, 1e-4, 1e-3]
+
+const snapPoly = (poly: PCPolygon, g: number): PCPolygon => poly.map((ring) => ring.map(([x, y]): [number, number] => [Math.round(x / g) * g, Math.round(y / g) * g]))
+
+/** Unión robusta: prueba cada rejilla y lanza el último error si ninguna sirve. */
+function safeUnion(polys: PCPolygon[]): MultiPolygon {
+  let error: unknown
+  for (const g of GRIDS) {
+    const [first, ...rest] = polys.map((p) => snapPoly(p, g))
+    try {
+      return polygonClipping.union(first!, ...rest)
+    } catch (e) {
+      error = e
+    }
+  }
+  throw error
+}
+
 function wallRect(w: Wall): PCPolygon {
   if (w.bulge) return curvedFootprint(w)
   const d = wallDirection(w)
@@ -90,17 +114,21 @@ function mpArea(mp: MultiPolygon): number {
 
 export function polygonIoU(a: Point[], b: Point[]): number {
   if (a.length < 3 || b.length < 3) return 0
-  const inter = mpArea(polygonClipping.intersection(toPC(a), toPC(b)))
-  if (inter <= 0) return 0
-  const uni = mpArea(polygonClipping.union(toPC(a), toPC(b)))
-  return uni > 0 ? inter / uni : 0
+  const [pa, pb] = [snapPoly(toPC(a), GRIDS[0]!), snapPoly(toPC(b), GRIDS[0]!)]
+  try {
+    const inter = mpArea(polygonClipping.intersection(pa, pb))
+    if (inter <= 0) return 0
+    const uni = mpArea(polygonClipping.union(pa, pb))
+    return uni > 0 ? inter / uni : 0
+  } catch {
+    return 0 // geometría degenerada: se trata como que no se superponen
+  }
 }
 
 /** Polígonos libres encerrados por los muros (sin nombres). */
 export function enclosedSpaces(walls: Wall[], minArea = MIN_ROOM_AREA): Point[][] {
   if (walls.length === 0) return []
-  const [first, ...rest] = walls.map(wallRect)
-  const union = polygonClipping.union(first!, ...rest)
+  const union = safeUnion(walls.map(wallRect))
   const spaces: Point[][] = []
   for (const poly of union) {
     for (const hole of poly.slice(1)) {
@@ -118,7 +146,14 @@ export function enclosedSpaces(walls: Wall[], minArea = MIN_ROOM_AREA): Point[][
  * siguen existiendo (emparejados por IoU ≥ 0.3). Los nuevos se llaman "Espacio N".
  */
 export function recomputeRooms(level: Level): Room[] {
-  const spaces = enclosedSpaces(level.walls)
+  let spaces: Point[][]
+  try {
+    spaces = enclosedSpaces(level.walls)
+  } catch (e) {
+    // último recurso: una falla de geometría no debe bloquear la edición
+    console.warn('No se pudieron recalcular los ambientes; se conservan los anteriores', e)
+    return level.rooms
+  }
   const pairs: { iou: number; s: number; r: number }[] = []
   spaces.forEach((sp, s) =>
     level.rooms.forEach((room, r) => {
