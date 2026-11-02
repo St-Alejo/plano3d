@@ -75,7 +75,8 @@ correcciones están documentadas en la bitácora.
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
 | **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,73 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
 
-| **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". No cumple el resto: muros F1 0,65 (faltan tabiques interiores), 1/7 ambientes, sin nombres |
+| **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". Ambientes por máscara de bandas: 8/7, **IoU 0,69**, nombres 4/7 (antes 1/7, IoU 0,05). Muros F1 0,65 |
+| **casa4hd** | La misma lámina en foto de 2252×4000 (la que subió el usuario, `prj_42b8db5e82`) | 1 ambiente de 1,1 m² | 🟡 Escala +5,9 %. Ambientes 10/7, **IoU 0,73** (alcobas 0,88–0,95, cocina 0,79), nombres 4/7. Muros F1 0,61 |
 
 **Por qué casa4 no cumple todavía (causa medida):**
 - El OCR lee bien la hoja (COCINA, ALCOBA1-3, SALA-COMEDOR y ~25 cotas). Fallaba la búsqueda de la línea
@@ -89,7 +90,14 @@ correcciones están documentadas en la bitácora.
   queda fuera de la capa fina y de la gruesa (`split_ink` + `_drop_text`), así que falta una cara.
   Probado y descartado (sin mejora o peor): desvío lateral al encadenar (`drift`), cerrar huecos cortos
   (`bridge`), más tolerancia en `connected_only`, conservar tramos cortos alargados en `_drop_text`.
-- Lo que SÍ funcionó en prototipo (no integrado): con la escala ya conocida por las cotas, un cierre
+- **Integrado (2026-11-02, `cv/band_rooms.py`, etapa `BandRoomsStage`)**: con escala por cotas, si los
+  muros no cierran ambientes, salen de la máscara de bandas. Puertas: se etiquetan los centros donde cabe un
+  disco de 0,84 m (la erosión), cada núcleo reconstruye su zona y los sobrantes van al núcleo con más borde
+  compartido; dos piezas que se tocan a lo largo de > 1,2 m se unen (peldaños, rincón del sofá); las bandas
+  sueltas < 0,6 m² (camas, textos) no dividen. casa1/casa2 no cambian (siguen CUMPLIENDO). Pendiente: una
+  cota dibujada sobre el pie de la cama parece un muro con puerta (alcoba 3 queda en dos), baños con
+  sanitarios fragmentados y los muros (las cotas exteriores aún salen como muros).
+- Prototipo previo (antes de integrar): con la escala ya conocida por las cotas, un cierre
   morfológico de 0,15 m + apertura de 0,08 m da una **máscara de bandas** casi igual a los muros reales
   (cotas y muebles desaparecen). Ejes del esqueleto de esa máscara → muros P 0,75 / R 0,79. Ambientes como
   zonas libres de la máscara, sellando vanos con los ejes encadenados, los radios de los arcos de puerta y

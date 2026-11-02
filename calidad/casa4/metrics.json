@@ -3,7 +3,7 @@
   "detector": "raster-vector",
   "metrics": {
     "walls": 63.0,
-    "rooms": 1.0,
+    "rooms": 8.0,
     "dimensions": 6.0,
     "meters_per_pixel": 0.011654305702027301
   },
@@ -27,52 +27,52 @@
       "open_r": 0.286,
       "open_det": 20,
       "open_gt": 14,
-      "rooms_det": 1,
+      "rooms_det": 8,
       "rooms_gt": 7,
-      "room_iou": 0.047,
-      "names_ok": 0,
+      "room_iou": 0.688,
+      "names_ok": 4,
       "rooms": [
         {
           "truth": "punto fijo",
-          "iou": 0.0,
-          "label": "",
+          "iou": 0.772,
+          "label": "Espacio 2",
           "name_ok": false
         },
         {
           "truth": "alcoba 3",
-          "iou": 0.0,
-          "label": "",
-          "name_ok": false
+          "iou": 0.636,
+          "label": "ALCOBA3",
+          "name_ok": true
         },
         {
           "truth": "baño 2",
-          "iou": 0.0,
-          "label": "",
+          "iou": 0.039,
+          "label": "COCINA",
           "name_ok": false
         },
         {
           "truth": "baño 1",
-          "iou": 0.322,
-          "label": "Espacio 1",
+          "iou": 0.673,
+          "label": "Espacio 6",
           "name_ok": false
         },
         {
           "truth": "alcoba 2",
-          "iou": 0.0,
-          "label": "",
-          "name_ok": false
+          "iou": 0.92,
+          "label": "ALCOBA2",
+          "name_ok": true
         },
         {
           "truth": "alcoba 1",
-          "iou": 0.0,
-          "label": "",
-          "name_ok": false
+          "iou": 0.936,
+          "label": "ALCOBA1",
+          "name_ok": true
         },
         {
           "truth": "cocina",
-          "iou": 0.005,
-          "label": "Espacio 1",
-          "name_ok": false
+          "iou": 0.839,
+          "label": "COCINA",
+          "name_ok": true
         }
       ],
       "openings": [
@@ -219,7 +219,7 @@
       ]
     }
   ],
-  "when": "2026-10-09T12:09:11",
+  "when": "2026-11-02T17:26:45",
   "pass": {
     "scale": true,
     "levels": true,

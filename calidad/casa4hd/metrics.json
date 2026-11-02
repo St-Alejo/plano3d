@@ -1,0 +1,224 @@
+{
+  "case": "casa4hd",
+  "detector": "raster-vector",
+  "metrics": {
+    "walls": 96.0,
+    "rooms": 10.0,
+    "dimensions": 6.0,
+    "meters_per_pixel": 0.007201450393689109
+  },
+  "scale": {
+    "mpp": 0.007201450393689109,
+    "source": "dimensions",
+    "error": 0.0593
+  },
+  "levels_det": 1,
+  "levels_gt": 1,
+  "levels": [
+    {
+      "name": "2do piso",
+      "walls_det": 96,
+      "walls_gt": 19,
+      "wall_p": 0.524,
+      "wall_r": 0.731,
+      "wall_f1": 0.611,
+      "wall_f1_ends": 0.052,
+      "open_p": 0.053,
+      "open_r": 0.071,
+      "open_det": 19,
+      "open_gt": 14,
+      "rooms_det": 10,
+      "rooms_gt": 7,
+      "room_iou": 0.734,
+      "names_ok": 4,
+      "rooms": [
+        {
+          "truth": "punto fijo",
+          "iou": 0.741,
+          "label": "Espacio 2",
+          "name_ok": false
+        },
+        {
+          "truth": "alcoba 3",
+          "iou": 0.626,
+          "label": "ALCOBA3",
+          "name_ok": true
+        },
+        {
+          "truth": "baño 2",
+          "iou": 0.347,
+          "label": "Espacio 7",
+          "name_ok": false
+        },
+        {
+          "truth": "baño 1",
+          "iou": 0.765,
+          "label": "Espacio 8",
+          "name_ok": false
+        },
+        {
+          "truth": "alcoba 2",
+          "iou": 0.929,
+          "label": "ALCOBA2",
+          "name_ok": true
+        },
+        {
+          "truth": "alcoba 1",
+          "iou": 0.941,
+          "label": "ALCOBA1",
+          "name_ok": true
+        },
+        {
+          "truth": "cocina",
+          "iou": 0.788,
+          "label": "COCINA",
+          "name_ok": true
+        }
+      ],
+      "openings": [
+        {
+          "at": [
+            3.96,
+            9.23
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.74,
+            10.81
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.86,
+            6.71
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.0,
+            11.89
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.3,
+            1.82
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            -0.14,
+            9.9
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.03,
+            7.13
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            -0.07,
+            3.38
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            -0.26,
+            11.34
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.95,
+            11.48
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.93,
+            12.52
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.63,
+            12.91
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.02,
+            7.48
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.34,
+            12.71
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.95,
+            -0.21
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.36,
+            10.44
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.18,
+            0.19
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            5.79,
+            -0.05
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            1.14,
+            6.22
+          ],
+          "kind": "window"
+        }
+      ]
+    }
+  ],
+  "when": "2026-11-02T17:28:06",
+  "pass": {
+    "scale": false,
+    "levels": true,
+    "2do piso: muros": false,
+    "2do piso: aberturas": false,
+    "2do piso: ambientes": false,
+    "2do piso: nombres": false
+  }
+}

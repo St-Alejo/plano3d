@@ -34,6 +34,7 @@ from plano3d.domain import LabelKind, MeasureSource
 from plano3d.domain.plan_text import classify_label, parse_length
 from plano3d.domain.scale_fit import ScaleFit, ScalePair, fit_scale
 from plano3d.domain.solver import solve_level
+from plano3d.infrastructure.cv.band_rooms import band_rooms
 from plano3d.infrastructure.cv.context import CVContext, as_u8
 from plano3d.infrastructure.cv.dimension_text import TextDimension, read_text_dimensions
 from plano3d.infrastructure.cv.dimensions import (
@@ -68,6 +69,8 @@ from plano3d.infrastructure.vector.walls import Tol, pair_lines
 ASSUMED_WALL_M = 0.18
 MIN_DIM_SUPPORT = 2
 MIN_ROOMS_TO_TRUST = 1
+#: los ambientes de la máscara de bandas reemplazan a los de los muros si cubren más área
+BAND_GAIN = 1.5
 #: cotas "texto primero" (fotos): más apoyo y más tolerancia que las de línea primero,
 #: porque el papel curvado y la perspectiva deforman algunos tramos
 MIN_TEXT_SUPPORT = 3
@@ -285,6 +288,28 @@ class ToDrawingStage(PipelineStage[RasterContext]):
         return ctx
 
 
+class BandRoomsStage(PipelineStage[RasterContext]):
+    """Si los muros no cierran los ambientes (tabiques sin detectar, vanos abiertos), los
+    ambientes salen de la máscara de bandas. Solo con escala por cotas: los grosores del
+    filtro están en metros."""
+
+    key = "band_rooms"
+    title = "Ambientes desde la tinta"
+
+    def run(self, ctx: RasterContext) -> RasterContext:
+        if ctx.scale_source != "dimensions":
+            return ctx
+        cv = ctx.require(ctx.cv, "cv")
+        found = band_rooms(cv.require(cv.ink, "ink"), ctx.mpp)
+        if sum(p.area for p in found) > BAND_GAIN * sum(p.area for p in ctx.rooms):
+            ctx.rooms = found
+            ctx.metrics["band_rooms"] = float(len(found))
+        return ctx
+
+    def metrics(self, ctx: RasterContext) -> dict[str, float]:
+        return {"rooms": float(len(ctx.rooms)), "from_band": float("band_rooms" in ctx.metrics)}
+
+
 class RasterAssembleStage(PipelineStage[RasterContext]):
     key = "assemble"
     title = "Ensamblado del modelo"
@@ -338,6 +363,7 @@ def raster_stages(
         ToDrawingStage(),
         WallsStage(),  # type: ignore[list-item]
         RoomsStage(),  # type: ignore[list-item]
+        BandRoomsStage(),
         RasterAssembleStage(),
         SolveStage(),
     ]
