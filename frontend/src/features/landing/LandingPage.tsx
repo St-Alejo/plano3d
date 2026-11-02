@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
+import { Faq } from './Faq'
 import { Formats } from './Formats'
 import { HowItWorks } from './HowItWorks'
 import { Quantities } from './Quantities'
@@ -21,6 +22,7 @@ const NAV = [
   { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#formatos', label: 'Formatos' },
   { href: '#cantidades', label: 'Cantidades' },
+  { href: '#preguntas', label: 'Preguntas' },
 ]
 
 /**
@@ -113,6 +115,8 @@ export function LandingPage() {
           </section>
 
           <Quantities />
+
+          <Faq />
 
           <section aria-labelledby="empezar" className="py-20 sm:py-32">
             <Closing />

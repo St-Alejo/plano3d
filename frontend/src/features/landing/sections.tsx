@@ -235,8 +235,8 @@ export function Closing() {
             go(e.dataTransfer.files[0])
           }}
           className={clsx(
-            'grid place-items-center gap-4 border border-dashed px-6 py-14 text-center transition-[border-color,background-color] duration-300',
-            over ? 'border-(--l-signal) bg-white/5' : 'border-white/30 hover:border-white/60',
+            'grid place-items-center gap-4 px-6 py-16 text-center transition-[background-color,transform] duration-300',
+            over ? 'scale-[1.01] bg-(--l-signal)/15' : 'bg-(--l-night-2) hover:bg-white/8',
           )}
         >
           <motion.span animate={over ? { y: -6 } : { y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
@@ -258,13 +258,37 @@ export function Closing() {
   )
 }
 
+const FOOTER_LINKS = [
+  { to: '/nuevo', label: 'Convertir un plano' },
+  { to: '/proyectos', label: 'Mis proyectos' },
+  { to: '/tutoriales/recorrer.webm', label: 'Tutorial: recorrer en 3D', file: true },
+] as const
+
+/** Cierre de la página: el nombre vuelve a todo el ancho y, debajo, enlaces y créditos. */
 export function Footer() {
   return (
-    <footer className="frame mt-32 flex flex-col gap-2 py-10 t-small text-(--l-dim) sm:flex-row sm:items-center sm:justify-between">
-      <p>
-        <span className="text-(--l-ink)">Plano 3D</span> · proyecto final de Programación Orientada a Objetos
-      </p>
-      <p>Bogotá, 2026</p>
+    <footer className="frame mt-20 grid gap-10 pt-16 pb-10 sm:mt-32">
+      <Reveal>
+        <p className="display text-[clamp(4.5rem,19vw,19rem)] leading-[0.8] tracking-[-0.04em]" aria-hidden>
+          Plano 3D
+        </p>
+      </Reveal>
+      <div className="flex flex-col gap-6 t-small text-(--l-dim) md:flex-row md:items-center md:justify-between">
+        <nav aria-label="Pie de página" className="flex flex-wrap gap-x-6">
+          {FOOTER_LINKS.map((l) =>
+            'file' in l ? (
+              <a key={l.to} href={l.to} className="inline-flex min-h-11 items-center text-(--l-ink) transition-colors duration-300 hover:text-(--l-signal)">
+                {l.label}
+              </a>
+            ) : (
+              <Link key={l.to} to={l.to} className="inline-flex min-h-11 items-center text-(--l-ink) transition-colors duration-300 hover:text-(--l-signal)">
+                {l.label}
+              </Link>
+            ),
+          )}
+        </nav>
+        <p>Proyecto final de Programación Orientada a Objetos · Bogotá, 2026</p>
+      </div>
     </footer>
   )
 }

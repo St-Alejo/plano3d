@@ -8,7 +8,7 @@ import { polygonArea } from '@/domain/model'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { DIM_COLORS } from '@/features/editor2d/PlanElements'
 import { solidSpans } from './drawPlan'
-import { DIM_SAMPLES, FORMATS, NAMED_STAGES } from './content'
+import { DIM_SAMPLES, FAQ, FORMATS, NAMED_STAGES } from './content'
 import { headline, sampleTotals } from './sampleQuantities'
 import { LandingPage } from './LandingPage'
 import { sampleApartment } from './sampleApartment'
@@ -127,6 +127,7 @@ describe('LandingPage', () => {
       'Foto, PDF o DXF: lo lee.',
       'Del papel al modelo.',
       'Cuánto ladrillo lleva tu casa.',
+      'Preguntas frecuentes.',
       'Tu plano, en 3D, hoy.',
     ])
   })
@@ -178,6 +179,20 @@ describe('LandingPage', () => {
     expect(screen.getByRole('button', { name: 'Bloque Nº5' })).toHaveAttribute('aria-pressed', 'true')
     await waitFor(() => expect(figure()).toHaveTextContent(pieces('bloque5')))
     expect(screen.getByRole('table', { name: 'Todos los materiales' })).toHaveTextContent(BRICKS.bloque5.name)
+  })
+
+  it('preguntas frecuentes: cada una abre su respuesta; el pie repite el nombre y enlaza a la app', () => {
+    renderLanding()
+    const items = within(screen.getByRole('list', { name: 'Preguntas' })).getAllByRole('listitem')
+    expect(items).toHaveLength(FAQ.length)
+    const details = items[0]!.querySelector('details')!
+    expect(details.open).toBe(false)
+    // la pregunta va en el summary y la respuesta dentro del mismo details
+    expect(details.querySelector('summary')).toHaveTextContent(FAQ[0].q)
+    expect(details).toHaveTextContent(FAQ[0].a)
+    const footer = within(screen.getByRole('navigation', { name: 'Pie de página' }))
+    expect(footer.getByRole('link', { name: 'Convertir un plano' })).toHaveAttribute('href', '/nuevo')
+    expect(footer.getByRole('link', { name: 'Mis proyectos' })).toHaveAttribute('href', '/proyectos')
   })
 
   it('cada enlace de la cabecera lleva a una sección que existe', () => {
