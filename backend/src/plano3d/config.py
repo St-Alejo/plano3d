@@ -33,8 +33,37 @@ class Settings(BaseSettings):
     s3_region: str = "us-east-1"
 
 
-#: variables que el SDK de Anthropic y el tope de gasto leen del entorno
-_LOCAL_KEYS = ("ANTHROPIC_API_KEY", "PLANO3D_CLAUDE_BUDGET_USD", "PLANO3D_CLAUDE")
+#: variables de los proveedores de IA que se leen del entorno (Anthropic, Groq y cuál usar)
+_LOCAL_KEYS = (
+    "ANTHROPIC_API_KEY",
+    "PLANO3D_CLAUDE_BUDGET_USD",
+    "PLANO3D_CLAUDE",
+    "GROQ_API_KEY",
+    "PLANO3D_GROQ",
+    "PLANO3D_AI",
+)
+
+
+def ai_provider() -> str | None:
+    """Proveedor de IA a usar: ``claude``, ``groq`` o None (sin IA, solo lo local).
+
+    ``PLANO3D_AI`` lo fija (``claude`` | ``groq`` | ``none``); sin ella se prefiere Claude
+    si tiene credenciales y presupuesto, y si no Groq.
+    """
+    from plano3d.infrastructure.groq.client import groq_available
+    from plano3d.infrastructure.ocr.claude import claude_available
+
+    load_local_env()
+    wanted = os.environ.get("PLANO3D_AI", "").strip().lower()
+    if wanted in ("none", "off", "0"):
+        return None
+    if wanted == "groq":
+        return "groq" if groq_available() else None
+    if wanted == "claude":
+        return "claude" if claude_available() else None
+    if claude_available():
+        return "claude"
+    return "groq" if groq_available() else None
 
 
 def load_local_env(path: Path | None = None) -> None:

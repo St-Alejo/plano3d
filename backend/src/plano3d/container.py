@@ -36,7 +36,7 @@ from plano3d.application.use_cases.projects import (
     SuggestCorners,
     UpdateBuildingModel,
 )
-from plano3d.config import Settings, load_local_env
+from plano3d.config import Settings, ai_provider
 from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
@@ -54,7 +54,7 @@ from plano3d.infrastructure.memory import (
     LocalFileStorage,
 )
 from plano3d.infrastructure.ml.seg_model import WallSegmenter
-from plano3d.infrastructure.ocr.claude import ClaudeTextReader, claude_available
+from plano3d.infrastructure.ocr.claude import ClaudeTextReader
 from plano3d.infrastructure.ocr.consensus import ConsensusReader
 from plano3d.infrastructure.ocr.rapid import RapidOcrReader, RapidOcrSpotter
 from plano3d.infrastructure.ocr.rapid import available as ocr_available
@@ -62,11 +62,16 @@ from plano3d.infrastructure.vector.detectors import DxfDetector, VectorPdfDetect
 
 
 def default_assistant() -> PlanAssistant | None:
-    if not claude_available():
-        return None
-    from plano3d.infrastructure.assistant.claude_assistant import ClaudePlanAssistant
+    provider = ai_provider()
+    if provider == "groq":
+        from plano3d.infrastructure.groq.assistant import GroqPlanAssistant
 
-    return ClaudePlanAssistant()
+        return GroqPlanAssistant()
+    if provider == "claude":
+        from plano3d.infrastructure.assistant.claude_assistant import ClaudePlanAssistant
+
+        return ClaudePlanAssistant()
+    return None
 
 
 @dataclass
@@ -183,13 +188,19 @@ def wall_segmenter() -> WallProbability | None:
 
 
 def text_reader() -> TextReader | None:
-    """OCR local; con credenciales de Anthropic, en consenso con Claude visión."""
-    load_local_env()
+    """OCR local; con un proveedor de IA (Claude o Groq), en consenso con su visión."""
     local = RapidOcrReader() if ocr_available() else None
-    if claude_available():
-        claude = ClaudeTextReader()
-        return ConsensusReader(local, claude) if local else claude
-    return local
+    provider = ai_provider()
+    vision: TextReader | None = None
+    if provider == "claude":
+        vision = ClaudeTextReader()
+    elif provider == "groq":
+        from plano3d.infrastructure.groq.reader import GroqTextReader
+
+        vision = GroqTextReader()
+    if vision is None:
+        return local
+    return ConsensusReader(local, vision) if local else vision
 
 
 def memory_container(storage: FileStorage | None = None) -> Container:
