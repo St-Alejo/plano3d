@@ -3,14 +3,14 @@
  * y duración para que el ritmo sea uniforme; con movimiento reducido el
  * `MotionConfig reducedMotion="user"` de la página las deja solo en fundido.
  */
-import { animate, motion, useInView, useReducedMotion, type Variants } from 'motion/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { motion, type Variants } from 'motion/react'
+import type { ReactNode } from 'react'
 
 import { EASE } from './ease'
 
 const rise: Variants = {
-  hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
-  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.8, ease: EASE } },
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
 }
 
 const VIEWPORT = { once: true, margin: '0px 0px -12% 0px' } as const
@@ -66,25 +66,5 @@ export function StaggerItem({ children, className, as = 'div' }: { children: Rea
     <Tag className={className} variants={rise}>
       {children}
     </Tag>
-  )
-}
-
-/** Número que cuenta hasta su valor la primera vez que se ve. */
-export function CountUp({ value, decimals = 0, className }: { value: number; decimals?: number; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  const seen = useInView(ref, { once: true })
-  const reduce = useReducedMotion()
-  const [shown, setShown] = useState(0)
-  useEffect(() => {
-    if (!seen || reduce) return
-    const ctl = animate(0, value, { duration: 1.4, ease: EASE, onUpdate: setShown })
-    return () => ctl.stop()
-  }, [seen, reduce, value])
-  return (
-    <span ref={ref} className={className}>
-      {/* el valor final queda disponible para lectores de pantalla y pruebas desde el inicio */}
-      <span aria-hidden>{(reduce ? value : shown).toFixed(decimals)}</span>
-      <span className="sr-only">{value.toFixed(decimals)}</span>
-    </span>
   )
 }

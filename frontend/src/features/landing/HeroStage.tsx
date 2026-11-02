@@ -68,7 +68,7 @@ function StaticHero({ model, actions }: { model: BuildingModel; actions: ReactNo
       <ol aria-label="Etapas, del plano al hogar" className="frame mt-20 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {STAGES.map((s) => (
           <li key={s.id}>
-            <p className="display text-4xl">{s.title}</p>
+            <p className="display t-h3">{s.title}</p>
             <p className="mt-2 max-w-sm">{s.text}</p>
           </li>
         ))}

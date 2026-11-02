@@ -116,8 +116,8 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('link', { name: /Convertir un plano/ })[0]).toHaveAttribute('href', '/nuevo')
     expect(screen.getByRole('link', { name: /Abrir la app/ })).toHaveAttribute('href', '/proyectos')
     expect(screen.getByRole('link', { name: /Ver mis proyectos/ })).toHaveAttribute('href', '/proyectos')
-    for (const name of [/Seis maneras/, /Del papel al modelo/, /Camínala/, /Qué le das/, /Cada ambiente/, /Tu plano, en 3D/])
-      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
+    // una idea por pantalla: tres secciones bajo el hero
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Todo lo que sale de un plano.', 'Del papel al modelo.', 'Tu plano, en 3D, hoy.'])
   })
 
   it('sin WebGL cuenta las seis etapas, del plano al hogar', () => {
@@ -130,23 +130,17 @@ describe('LandingPage', () => {
   it('cada capacidad enlaza a su tutorial o a empezar, con su captura', () => {
     renderLanding()
     const list = screen.getByRole('list', { name: 'Qué puedes hacer' })
-    expect(within(list).getAllByRole('listitem')).toHaveLength(6)
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3)
     expect(within(list).getByRole('link', { name: 'Editor de planos' })).toHaveAttribute('href', '/tutoriales/editar.webm')
-    expect(within(list).getByRole('link', { name: 'Secuencia de obra' })).toHaveAttribute('href', '/nuevo')
+    expect(within(list).getByRole('link', { name: 'Modo obra' })).toHaveAttribute('href', '/nuevo')
     expect(screen.getAllByRole('img', { name: /editor con el plano en 2D/ }).length).toBeGreaterThan(0)
   })
 
-  it('el cuadro de áreas suma los ambientes', () => {
+  it('el comparador mueve el divisor entre el plano y el modelo', () => {
     renderLanding()
-    const table = screen.getByRole('table', { name: /Cuadro de áreas/ })
-    const rows = within(table).getAllByRole('row')
-    // encabezado + 5 ambientes + total
-    expect(rows).toHaveLength(7)
-    const total = sampleApartment()
-      .levels.flatMap((l) => l.rooms)
-      .reduce((s, r) => s + polygonArea(r.polygon), 0)
-    // el total visible cuenta hacia arriba; el valor final siempre está para lectores de pantalla
-    expect(within(table).getAllByText(total.toFixed(2)).length).toBeGreaterThan(0)
+    const slider = screen.getByRole('slider', { name: /Comparar el plano con el modelo/ })
+    fireEvent.change(slider, { target: { value: '20' } })
+    expect(slider).toHaveAttribute('aria-valuetext', '20 % plano, 80 % modelo')
   })
 
   it('el archivo elegido en la landing llega a la captura con el nombre sugerido', async () => {

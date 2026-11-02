@@ -11,17 +11,16 @@ import { Link } from 'react-router'
 
 import { HeroStage } from './HeroStage'
 import { EASE } from './ease'
-import { AreaSchedule, BeforeAfter, Capabilities, DropCta, Footer, SectionHead, Specs, WalkFilm } from './sections'
+import { BeforeAfter, Capabilities, Closing, Footer, SectionHead } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
 const NAV = [
   { href: '#que-puedes-hacer', label: 'Qué hace' },
   { href: '#antes-despues', label: 'Antes y después' },
-  { href: '#como-funciona', label: 'Cómo funciona' },
 ]
 
 /**
- * Barra simple: el nombre, tres enlaces y una acción. Sobre la escena del hero va sin fondo;
+ * Barra simple: el nombre, dos enlaces y una acción. Sobre la escena del hero va sin fondo;
  * al salir de ella toma el color de la página (sin vidrio ni sombra).
  */
 function Masthead() {
@@ -40,18 +39,18 @@ function Masthead() {
       className={clsx('fixed inset-x-0 top-0 z-30 transition-colors duration-300', solid ? 'bg-(--l-night)' : 'bg-transparent')}
     >
       <div className="frame flex items-center justify-between gap-6 py-4">
-        <Link to="/" className="display flex min-h-11 items-center text-[1.75rem] leading-none" aria-label="Plano 3D, inicio">
+        <Link to="/" className="display t-h3 flex min-h-11 items-center leading-none" aria-label="Plano 3D, inicio">
           Plano 3D
         </Link>
         <nav aria-label="Secciones" className="flex items-center gap-2">
           {NAV.map((n) => (
-            <a key={n.href} href={n.href} className="hidden min-h-11 items-center px-3 text-[15px] transition-opacity hover:opacity-70 md:inline-flex">
+            <a key={n.href} href={n.href} className="hidden min-h-11 items-center px-3 t-small transition-opacity hover:opacity-70 md:inline-flex">
               {n.label}
             </a>
           ))}
           <Link
             to="/proyectos"
-            className="ml-2 inline-flex min-h-11 items-center rounded-full bg-(--l-ink) px-5 text-[15px] font-medium text-(--l-night) transition-[background-color,color] duration-300 hover:bg-(--l-signal) hover:text-(--l-on-signal)"
+            className="ml-2 inline-flex min-h-11 items-center rounded-full bg-(--l-ink) px-5 t-small font-medium text-(--l-night) transition-[background-color,color] duration-300 hover:bg-(--l-signal) hover:text-(--l-on-signal)"
           >
             Abrir la app
           </Link>
@@ -95,53 +94,18 @@ export function LandingPage() {
         <main id="contenido">
           <HeroStage actions={<HeroActions />} />
 
-          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 pt-36 pb-40">
-            <SectionHead
-              id="que-puedes-hacer"
-              title="Seis maneras de ver tu casa."
-              lead="Del plano corregido a la maqueta, piso por piso, y de ahí a la obra: ladrillo, acero y el orden en que se construye."
-            />
+          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 py-20 sm:py-32">
+            <SectionHead id="que-puedes-hacer" title="Todo lo que sale de un plano." />
             <Capabilities />
           </section>
 
-          <section aria-labelledby="antes-despues" className="bg-(--l-night-2) py-36">
-            <div className="frame grid gap-16">
-              <SectionHead
-                id="antes-despues"
-                title="Del papel al modelo."
-                lead="Arrastra el divisor: a un lado el plano tal como lo subiste, al otro el modelo que sale de él, en la misma escala."
-              />
-              <BeforeAfter />
-            </div>
+          <section aria-labelledby="antes-despues" className="frame grid gap-12 py-20 sm:py-32">
+            <SectionHead id="antes-despues" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
+            <BeforeAfter />
           </section>
 
-          <section aria-labelledby="recorrido" className="frame grid gap-16 py-40">
-            <SectionHead id="recorrido" title="Camínala antes de construirla." />
-            <WalkFilm />
-          </section>
-
-          <section aria-labelledby="como-funciona" className="frame grid gap-20 pb-40">
-            <SectionHead
-              id="como-funciona"
-              title="Qué le das y qué te devuelve."
-              lead="No hace falta saber de CAD. Si el plano tiene cotas, las usa; si no, calibras con una medida que conozcas."
-            />
-            <Specs />
-          </section>
-
-          <section aria-labelledby="areas" className="bg-(--l-night-2) py-36">
-            <div className="frame grid gap-16">
-              <SectionHead
-                id="areas"
-                title="Cada ambiente, medido."
-                lead="Los ambientes se recalculan solos a partir de los muros, así que el cuadro de áreas siempre está al día."
-              />
-              <AreaSchedule />
-            </div>
-          </section>
-
-          <section aria-labelledby="empezar" className="bg-(--l-signal) py-32 text-(--l-on-signal)">
-            <DropCta />
+          <section aria-labelledby="empezar" className="py-20 sm:py-32">
+            <Closing />
           </section>
         </main>
         <Footer />
