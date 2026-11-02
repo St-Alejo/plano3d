@@ -134,6 +134,9 @@ describe('parseChat: ajustes de muros, ambientes, aberturas y pisos', () => {
     ['los muros de la cocina son estructurales', [{ op: 'set_wall', room: 'cocina', side: undefined, structural: true }]],
     ['pinta los muros de la sala de verde', [{ op: 'set_wall', room: 'sala', side: undefined, material: 'verde' }]],
     ['pinta el baño de blanco', [{ op: 'set_wall', room: 'baño', material: 'blanco' }]],
+    // antes caía en "mueble": buscaba un ambiente llamado «ladrillo a la vista»
+    ['pon los muros de la recámara master en ladrillo a la vista', [{ op: 'set_wall', room: 'recámara master', side: undefined, material: 'ladrillo a la vista' }]],
+    ['deja el muro norte de la sala en concreto', [{ op: 'set_wall', room: 'sala', side: 'norte', material: 'concreto' }]],
     ['piso de madera en la sala', [{ op: 'set_floor', room: 'sala', material: 'madera' }]],
     ['cambia el piso de la cocina a porcelanato', [{ op: 'set_floor', room: 'cocina', material: 'porcelanato' }]],
     ['agranda la sala a 5x4', [{ op: 'resize_room', room: 'sala', width: 5, depth: 4 }]],
@@ -152,6 +155,8 @@ describe('parseChat: ajustes de muros, ambientes, aberturas y pisos', () => {
     expect(parseChat('ventana de 1,20 en el norte de alcoba').ops[0]?.op).toBe('add_opening')
     expect(parseChat('pon una puerta en la cocina al este').ops[0]?.op).toBe('add_opening')
     expect(parseChat('pon una cama doble en la alcoba').ops[0]?.op).toBe('add_furniture')
+    // un acabado de muro desconocido no se vuelve un mueble: va al asistente
+    expect(parseChat('pon los muros de la sala en mármol de carrara').unknown).toHaveLength(1)
     expect(parseChat('haz una sala de 4x5').ops[0]?.op).toBe('add_room')
   })
 

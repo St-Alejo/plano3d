@@ -66,14 +66,17 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
     setText('')
     push({ from: 'user', text: msg })
     const local = parseChat(msg)
+    // si la lectura local no se puede aplicar (p. ej. nombra un ambiente que no existe),
+    // probablemente se entendió mal: se le pasa el mensaje al asistente con IA
+    let localError: string | null = null
     if (local.unknown.length === 0 && local.ops.length > 0) {
       try {
         const r = apply(local.ops)
         push({ from: 'bot', text: 'Hecho.', lines: r.summary, cmd: r.command })
+        return
       } catch (e) {
-        push({ from: 'bot', text: e instanceof Error ? e.message : 'No se pudo aplicar', error: true })
+        localError = e instanceof Error ? e.message : 'No se pudo aplicar'
       }
-      return
     }
     // respaldo: el mensaje completo al asistente con IA
     setBusy(true)
@@ -89,6 +92,8 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
       push({ from: 'bot', text: res.reply || 'Hecho.', lines: r.summary, cmd: r.command, ai: true })
     } catch (e) {
       if (e instanceof ApiError && (e.status === 503 || e.status === 0)) {
+        // sin asistente: se muestra el motivo de la lectura local, como antes
+        if (localError) return push({ from: 'bot', text: localError, error: true })
         const what = local.unknown.length ? `«${local.unknown.join('», «')}»` : 'eso'
         push({ from: 'bot', text: `No entendí ${what}. Prueba con frases como:`, lines: EXAMPLES.slice(0, 4), error: true })
       } else push({ from: 'bot', text: e instanceof Error ? e.message : 'No se pudo aplicar', error: true, ai: true })

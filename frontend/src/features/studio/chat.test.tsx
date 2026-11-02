@@ -67,6 +67,21 @@ describe('chat del estudio', () => {
     expect(level().walls).toHaveLength(0)
   })
 
+  it('si la lectura local no se puede aplicar, le pregunta a la IA', async () => {
+    let calls = 0
+    server.use(
+      http.post('/api/projects/:id/assistant', () => {
+        calls++
+        return HttpResponse.json({ ops: [{ op: 'add_room', name: 'Cocina', width: 3, depth: 3 }], reply: 'Dibujé la cocina primero.' })
+      }),
+    )
+    render(<ChatPanel projectId="prj_b" defaultOpen />)
+    await say('puerta al sur de la cocina')
+    expect(await screen.findByText('Dibujé la cocina primero.')).toBeInTheDocument()
+    expect(calls).toBe(1)
+    expect(screen.queryByText(/No encuentro el ambiente/)).not.toBeInTheDocument()
+  })
+
   it('cerrado muestra el botón para abrirlo', async () => {
     render(<ChatPanel projectId="prj_b" />)
     await userEvent.click(screen.getByRole('button', { name: /Dibujar escribiendo/ }))

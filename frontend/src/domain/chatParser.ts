@@ -132,10 +132,11 @@ const RULES: Rule[] = [
       return hit ? { op: 'set_wall', room: wallRoom(g, ctx), side: side(g.side), ...hit[1] } : null
     },
   },
-  // acabado de muros: "pinta los muros de la sala de verde", "enchapa el muro sur del baño en ladrillo"
+  // acabado de muros: "pinta los muros de la sala de verde", "enchapa el muro sur del baño en ladrillo",
+  // "pon los muros de la alcoba en ladrillo a la vista" (si no es un acabado conocido, sigue de largo)
   {
     re: rx(
-      `(?:pinta|pintale|pintales|enchapa|acaba|cambia el acabado de|cambia el color de)\\s+${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:de|en|con|a|color)\\s+(?:color\\s+)?(?<mat>.+)`,
+      `(?:pinta|pintale|pintales|enchapa|acaba|cambia el acabado de|cambia el color de|pon|ponle|ponles|deja|dejale|cambia|cambiale|haz|hazle|vuelve)\\s+${ART}${WALL}${WALL_SIDE}${ROOM_OPT}\\s+(?:de|en|con|a|color)\\s+(?:color\\s+)?(?<mat>.+)`,
     ),
     build: (g, ctx) => {
       const mat = material(WALL_MATERIALS, g.mat)
@@ -252,9 +253,9 @@ const RULES: Rule[] = [
     re: rx(`(?:borra|elimina|quita)\\s+(?:el ambiente\\s+|la habitacion\\s+|el cuarto\\s+)?${ART}(?<room>.+)`),
     build: (g) => ({ op: 'delete_room', room: g.room! }),
   },
-  // mueble: "pon una cama doble en la alcoba 1"
+  // mueble: "pon una cama doble en la alcoba 1" (muros, paredes y pisos no son muebles)
   {
-    re: rx(`(?:agrega|anade|pon|coloca|mete)\\s+${ART}(?<item>.+?)\\s+(?:en|a)\\s+${ART}(?<room>.+)`),
+    re: rx(`(?:agrega|anade|pon|coloca|mete)\\s+(?!${ART}(?:muros?|paredes?|pisos?|acabados?)\\b)${ART}(?<item>.+?)\\s+(?:en|a)\\s+${ART}(?<room>.+)`),
     build: (g) => ({ op: 'add_furniture', item: g.item!, room: g.room! }),
   },
 ]
