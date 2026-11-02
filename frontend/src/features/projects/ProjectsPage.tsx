@@ -1,71 +1,80 @@
-import { ArrowUpRight, Camera, FileImage, Plus, Search, Trash2 } from 'lucide-react'
+import { ArrowRight, Box, Camera, FileImage, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '@/api/client'
 import type { ProjectSummary } from '@/api/types'
-import { Badge, Button, EmptyState, ErrorState, Spinner } from '@/components/ui'
+import { Badge, Button, EmptyState, ErrorState, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
-import { listProjects, SORT_LABEL, totalArea, type ProjectSort } from './listing'
+import { listProjects, relativeTime, SORT_LABEL, totalArea, type ProjectSort } from './listing'
 import { STATUS_LABEL } from './status'
 
 const dateFmt = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' })
 
+/** Tarjeta de proyecto: miniatura grande, nombre, una línea de datos y "Abrir". */
 function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: ProjectSummary) => void }) {
   const status = STATUS_LABEL[p.status]
+  const updated = new Date(p.updated_at)
   return (
-    <li className="group relative flex flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-xs transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-line-strong hover:shadow-[0_18px_40px_-20px_rgb(28_31_29/0.35)]">
-      <Link to={`/p/${p.id}`} className="flex flex-1 flex-col focus-visible:outline-offset-4">
-        <div className="relative m-2 mb-0 aspect-[4/3] overflow-hidden rounded-lg bg-paper">
-          {p.status === 'ready' && p.has_source !== false ? (
-            <img
-              src={api.imageUrl(p.id, 'rectified', p.updated_at)}
-              alt=""
-              loading="lazy"
-              className="size-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="blueprint-grid flex size-full items-center justify-center text-subtle">
-              <FileImage className="size-10" aria-hidden />
-            </div>
-          )}
-          {/* fondo sólido detrás de la insignia: va sobre la miniatura */}
-          <span className="absolute top-3 left-3 rounded-full bg-surface shadow-sm">
-            <Badge tone={status.tone}>{status.text}</Badge>
-          </span>
-        </div>
-        <div className="flex flex-col gap-3 p-4 pt-3.5">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="text-[17px] leading-snug tracking-[-0.02em]">{p.name}</h2>
-            <ArrowUpRight
-              className="mt-0.5 size-4 shrink-0 text-subtle transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent"
-              aria-hidden
-            />
+    <li className="group relative flex flex-col rounded-xl border border-line bg-surface p-2 shadow-xs transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-line-strong hover:shadow-[0_24px_48px_-24px_rgb(28_31_29/0.35)] focus-within:border-line-strong">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-paper">
+        {p.status === 'ready' && p.has_source !== false ? (
+          <img
+            src={api.imageUrl(p.id, 'rectified', p.updated_at)}
+            alt=""
+            loading="lazy"
+            className="size-full object-contain p-5 transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="blueprint-grid flex size-full items-center justify-center text-subtle">
+            <FileImage className="size-10" aria-hidden />
           </div>
-          <dl className="flex items-center gap-3 text-sm text-muted">
-            <div>
-              <dt className="sr-only">Superficie</dt>
-              <dd className="font-mono text-[13px] text-fg">{p.total_area != null ? `${p.total_area.toFixed(1)} m²` : '— m²'}</dd>
-            </div>
-            <span className="size-1 rounded-full bg-line-strong" aria-hidden />
-            <div>
-              <dt className="sr-only">Ambientes</dt>
-              <dd>{p.room_count} amb.</dd>
-            </div>
-            <div className="ml-auto">
-              <dt className="sr-only">Actualizado</dt>
-              <dd className="text-xs text-subtle">{dateFmt.format(new Date(p.updated_at))}</dd>
-            </div>
-          </dl>
-        </div>
-      </Link>
-      <button
-        type="button"
-        onClick={() => onDelete(p)}
-        aria-label={`Eliminar ${p.name}`}
-        className="absolute top-4 right-4 inline-flex size-8 items-center justify-center rounded-full bg-surface/90 text-muted opacity-0 shadow-sm backdrop-blur transition hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:size-11 pointer-coarse:opacity-100"
-      >
-        <Trash2 className="size-4" aria-hidden />
-      </button>
+        )}
+        {/* insignia discreta en la esquina, con fondo sólido porque va sobre la miniatura */}
+        <span className="absolute top-2.5 left-2.5 rounded-full bg-surface/95 shadow-xs">
+          <Badge tone={status.tone}>{status.text}</Badge>
+        </span>
+      </div>
+      <div className="flex flex-col px-2 pt-1.5 pb-2">
+        <h2 className="pr-10 text-lg leading-snug tracking-[-0.02em]">
+          {/* el enlace cubre toda la tarjeta; el menú queda por encima */}
+          <Link
+            to={`/p/${p.id}`}
+            className="inline-flex min-h-11 items-center after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-accent"
+          >
+            {p.name}
+          </Link>
+        </h2>
+        <p className="text-sm text-muted">
+          <span className="font-mono text-[13px] text-fg">{p.total_area != null ? `${p.total_area.toFixed(1)} m²` : '— m²'}</span>
+          <span aria-hidden> · </span>
+          {p.room_count} {p.room_count === 1 ? 'ambiente' : 'ambientes'}
+          <span aria-hidden> · </span>
+          <time dateTime={p.updated_at} title={dateFmt.format(updated)}>
+            {relativeTime(p.updated_at)}
+          </time>
+        </p>
+        <span aria-hidden className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand">
+          Abrir
+          <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+        </span>
+      </div>
+      <div className="absolute right-2 bottom-2.5 z-10">
+        <Menu
+          trigger={
+            <button
+              type="button"
+              aria-label={`Más acciones de ${p.name}`}
+              className="inline-flex size-9 items-center justify-center rounded-full text-muted hover:bg-raised hover:text-fg pointer-coarse:size-11"
+            >
+              <MoreHorizontal className="size-4" aria-hidden />
+            </button>
+          }
+          items={[
+            { label: 'Recorrer en 3D', icon: <Box className="size-4" />, href: `/p/${p.id}/3d` },
+            { label: 'Eliminar', icon: <Trash2 className="size-4" />, danger: true, onSelect: () => onDelete(p) },
+          ]}
+        />
+      </div>
     </li>
   )
 }
@@ -167,7 +176,7 @@ export function ProjectsPage() {
         </p>
       )}
       {shown.length > 0 && (
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Proyectos">
+        <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Proyectos">
           {shown.map((p) => (
             <ProjectCard key={p.id} p={p} onDelete={(x) => void remove(x)} />
           ))}

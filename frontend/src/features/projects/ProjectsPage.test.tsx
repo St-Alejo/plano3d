@@ -58,7 +58,9 @@ describe('ProjectsPage', () => {
     server.use(http.delete('/api/projects/:id', () => new HttpResponse(null, { status: 204 })))
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     renderWithRouter(<ProjectsPage />)
-    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar Depto centro' }))
+    // Eliminar vive en el menú "…" de cada tarjeta
+    await userEvent.click(await screen.findByRole('button', { name: 'Más acciones de Depto centro' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Eliminar' }))
     expect(await screen.findAllByRole('listitem')).toHaveLength(1)
   })
 })

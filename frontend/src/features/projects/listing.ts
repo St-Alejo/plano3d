@@ -28,3 +28,27 @@ export function listProjects(items: ProjectSummary[], query: string, sort: Proje
 export function totalArea(items: ProjectSummary[]): number {
   return items.reduce((s, p) => s + (p.total_area ?? 0), 0)
 }
+
+const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' })
+const STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['minute', 60],
+  ['hour', 60],
+  ['day', 24],
+  ['week', 7],
+  ['month', 4.345],
+  ['year', 12],
+]
+
+/** "hace 5 minutos", "ayer", "hace 3 semanas": cuándo se tocó el plano por última vez. */
+export function relativeTime(iso: string, now = Date.now()): string {
+  const seconds = (new Date(iso).getTime() - now) / 1000
+  if (Math.abs(seconds) < 60) return 'hace un momento'
+  let value = seconds / 60
+  for (let i = 0; i < STEPS.length; i++) {
+    const [unit] = STEPS[i]!
+    const next = STEPS[i + 1]
+    if (!next || Math.abs(value) < next[1]) return rtf.format(Math.round(value), unit)
+    value /= next[1]
+  }
+  return rtf.format(Math.round(value), 'year')
+}
