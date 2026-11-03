@@ -106,6 +106,7 @@ export function WalkControls({
   input,
   touch,
   root,
+  furniture = true,
 }: {
   model: BuildingModel
   start: WalkStart
@@ -113,10 +114,12 @@ export function WalkControls({
   touch: boolean
   /** escena construida (para "mirar y actuar" con un rayo) */
   root?: THREE.Object3D | null
+  /** muebles visibles: solo así son obstáculos */
+  furniture?: boolean
 }) {
   const { camera, gl } = useThree()
   const keys = useKeyboard()
-  const world = useMemo<WalkWorld>(() => buildWalkWorld(model), [model])
+  const world = useMemo<WalkWorld>(() => buildWalkWorld(model, { furniture }), [model, furniture])
   const stairs = useMemo(() => model.levels.flatMap((lv) => (lv.stairs ?? []).map((s) => ({ s, levelId: lv.id, elevation: lv.elevation }))), [model])
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
   const body = useRef<CharacterState>(spawnAt(world, start, start.levelId))

@@ -60,6 +60,8 @@ export interface Viewer3DProps {
   roof?: boolean
   /** fachada del modelo sobre el exterior */
   facade?: boolean
+  /** muebles a la vista (y como obstáculos al recorrer) */
+  furniture?: boolean
   /** modo obra: unidad de mampostería, ocultar el ladrillo y elemento tocado/resaltado */
   brick?: ModeOptions['brick']
   hideMasonry?: boolean
@@ -305,6 +307,7 @@ export function Viewer3D({
   quality = 'baja',
   roof = false,
   facade = false,
+  furniture = true,
   brick,
   hideMasonry,
   highlightElementId,
@@ -347,6 +350,7 @@ export function Viewer3D({
           strategy={strategy}
           roof={roof}
           facade={facade}
+          furniture={furniture}
           textures={quality === 'alta'}
           grow={grow}
           highlightWallId={highlightWallId}
@@ -377,7 +381,7 @@ export function Viewer3D({
           <OrbitRig model={model} flyTo={flyTo} preset={preset} autoRotate={autoRotate} />
         ) : (
           <>
-            <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} />
+            <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} furniture={furniture} />
             <RoomLights model={model} />
           </>
         )}

@@ -169,6 +169,14 @@ export const api = {
     return request<Project>(`/projects/${encodeURIComponent(id)}/facade`, { method: 'PUT', ...init, headers })
   },
 
+  /** Completa los muebles que faltan (de un piso o de todos) según cada ambiente. */
+  furnish: (id: string, levelId?: string, revision?: number) => {
+    const init = json({ level_id: levelId ?? null })
+    const headers = { ...(init.headers as Record<string, string>) }
+    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    return request<Project>(`/projects/${encodeURIComponent(id)}/furnish`, { method: 'POST', ...init, headers })
+  },
+
   quality: (id: string) => request<CorrectionStats>(`/projects/${encodeURIComponent(id)}/quality`),
 
   reanalyze: (id: string, corners?: Corners) =>

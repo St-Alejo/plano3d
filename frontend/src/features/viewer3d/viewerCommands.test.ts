@@ -22,6 +22,9 @@ describe('parseViewerChat: frase → ajuste de la vista', () => {
     ['muéstrame el segundo piso', [{ a: 'level', n: 2 }]],
     ['nivel 1', [{ a: 'level', n: 1 }]],
     ['ver todos los pisos', [{ a: 'level', n: 'all' }]],
+    ['quita los muebles', [{ a: 'furniture', on: false }]],
+    ['sin mobiliario', [{ a: 'furniture', on: false }]],
+    ['muestra los muebles', [{ a: 'furniture', on: true }]],
     ['¿cuántos ladrillos?', [{ a: 'ask', topic: 'ladrillo' }]],
     ['cuánto cemento necesito', [{ a: 'ask', topic: 'cemento' }]],
     ['pon el techo', [{ a: 'roof', on: true }]],
@@ -89,6 +92,7 @@ describe('asViewerActions', () => {
   it('descarta acciones desconocidas o mal formadas', () => {
     const raw = [{ a: 'plan_mode', id: 'acero' }, { a: 'plan_mode', id: 'fantasia' }, { a: 'step', to: 0 }, { a: 'roof', on: 'si' }, { a: 'explotar' }, null, { a: 'step', to: 'next' }]
     expect(asViewerActions(raw)).toEqual([{ a: 'plan_mode', id: 'acero' }, { a: 'step', to: 'next' }])
+    expect(asViewerActions([{ a: 'furniture', on: false }, { a: 'furniture', on: 'no' }])).toEqual([{ a: 'furniture', on: false }])
     expect(asViewerActions('nada')).toEqual([])
   })
 })

@@ -2,11 +2,11 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tabs from '@radix-ui/react-tabs'
-import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Paintbrush, Ruler } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Paintbrush, Ruler, Sofa } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
-import type { Point } from '@/api/types'
+import type { Point, Project } from '@/api/types'
 import { streetEntry } from '@/domain/facadeGeometry'
 import { facadeSpec, nextFacade, type FacadeStyle } from '@/domain/facades'
 import { tourWaypoints } from '@/domain/geometry'
@@ -78,7 +78,14 @@ function initialQuality(): Quality {
 
 export function ViewerPage() {
   const { id = '' } = useParams()
-  const { data: project, error, loading } = useAsync(() => api.getProject(id), [id])
+  const { data: loaded, error, loading } = useAsync(() => api.getProject(id), [id])
+  // lo que se guarda desde el visor (amoblar) reemplaza al proyecto cargado sin recargarlo
+  const [saved, setSaved] = useState<Project | null>(null)
+  const project = saved && saved.id === loaded?.id ? saved : loaded
+  // última revisión guardada desde aquí (fachada, muebles): la siguiente escritura la exige
+  const [savedRevision, setSavedRevision] = useState<{ id: string; n: number } | null>(null)
+  const revision = savedRevision && savedRevision.id === project?.id ? savedRevision.n : project?.revision
+  const setRevision = (p: Project) => setSavedRevision({ id: p.id, n: p.revision })
   const [mode, setMode] = useState<ViewMode>('orbit')
   // el modo del plano vive en la URL (?modo=obra) para poder compartir el enlace
   const [params, setParams] = useSearchParams()
@@ -174,16 +181,44 @@ export function ViewerPage() {
     if (!project) return
     const prev = facade
     const style = nextFacade(facadeStyle)
-    const revision = facade?.revision ?? project.revision
+    const rev = revision ?? project.revision
     setFacadeError(null)
-    setFacadeState({ style, revision })
-    api.setFacade(project.id, style, revision).then(
-      (p) => setFacadeState({ style, revision: p.revision }),
+    setFacadeState({ style, revision: rev })
+    api.setFacade(project.id, style, rev).then(
+      (p) => {
+        setFacadeState({ style, revision: p.revision })
+        setRevision(p)
+      },
       (e: unknown) => {
         setFacadeState(prev)
         setFacadeError(e instanceof Error ? e.message : 'No se pudo guardar la fachada')
       },
     )
+  }
+
+  // muebles: se ocultan sin reconstruir la escena; si el piso no tiene, se amobla según el plano
+  const [showFurniture, setShowFurniture] = useState(true)
+  const [furnishing, setFurnishing] = useState(false)
+  const [furnishError, setFurnishError] = useState<string | null>(null)
+  const furnitureCount = useMemo(
+    () => (project?.model?.levels ?? []).filter((lv) => !focusLevel || lv.id === focusLevel).reduce((n, lv) => n + (lv.furniture?.length ?? 0), 0),
+    [project, focusLevel],
+  )
+  const furnishNow = () => {
+    if (!project) return
+    setFurnishing(true)
+    setFurnishError(null)
+    api
+      .furnish(project.id, focusLevel ?? undefined, revision)
+      .then(
+        (p) => {
+          setSaved(p)
+          setRevision(p)
+          setShowFurniture(true)
+        },
+        (e: unknown) => setFurnishError(e instanceof Error ? e.message : 'No se pudo amoblar'),
+      )
+      .finally(() => setFurnishing(false))
   }
 
   const levels = useMemo(() => (project?.model ? levelSummaries(project.model) : []), [project])
@@ -359,6 +394,13 @@ export function ViewerPage() {
       }
       case 'ask':
         return quantityAnswer(model, brick, act.topic)
+      case 'furniture':
+        if (act.on && furnitureCount === 0) {
+          furnishNow()
+          return 'Amoblo según cada ambiente'
+        }
+        setShowFurniture(act.on)
+        return act.on ? 'Puse los muebles' : 'Quité los muebles de la vista'
       case 'level': {
         if (act.n === 'all') {
           focusOn(null)
@@ -378,7 +420,7 @@ export function ViewerPage() {
     const range = (list: string[]) => (list.length ? `${list[0]}…${list[list.length - 1]}` : 'ninguno')
     return [
       `Modo del plano: ${strategy.id}. Cámara: ${mode === 'walk' ? 'recorrer' : 'orbitar'}. Calidad: ${quality}.`,
-      `Unidad de mampostería: ${brick}. Ladrillo oculto: ${hideMasonry ? 'sí' : 'no'}. Cubierta: ${roof ? 'sí' : 'no'}. Corte: ${cutOn ? `${cut} m` : 'no'}.`,
+      `Unidad de mampostería: ${brick}. Ladrillo oculto: ${hideMasonry ? 'sí' : 'no'}. Cubierta: ${roof ? 'sí' : 'no'}. Muebles: ${showFurniture ? 'sí' : 'no'}. Corte: ${cutOn ? `${cut} m` : 'no'}.`,
       `Ambientes: ${rooms.map((r) => r.label).join(', ') || 'ninguno'}.`,
       `Columnetas ${range(ids[0]!)}; vigas de cimentación ${range(ids[1]!)}; vigas de amarre ${range(ids[3]!)}; dinteles ${range(ids[4]!)}; paños ${range(ids[5]!)}.`,
     ].join('\n')
@@ -408,6 +450,7 @@ export function ViewerPage() {
         quality={quality}
         roof={roof}
         facade={!strategy.panel}
+        furniture={showFurniture}
         brick={brick}
         hideMasonry={hideMasonry}
         highlightElementId={strategy.panel ? elementId : null}
@@ -471,6 +514,35 @@ export function ViewerPage() {
             >
               <span className="hidden sm:inline">Fachada: {facadeSpec(facadeStyle).name}</span>
             </Button>
+          )}
+          {!strategy.panel &&
+            (furnitureCount === 0 ? (
+              <Button
+                className="h-11 bg-canvas/85 backdrop-blur"
+                loading={furnishing}
+                onClick={furnishNow}
+                aria-label="Amoblar según el plano"
+                title="Pone los muebles de cada ambiente (alcoba, baño, cocina, sala)"
+                icon={<Sofa className="size-4" aria-hidden />}
+              >
+                <span className="hidden sm:inline">Amoblar según el plano</span>
+              </Button>
+            ) : (
+              <Button
+                className="h-11 bg-canvas/85 backdrop-blur"
+                onClick={() => setShowFurniture((v) => !v)}
+                aria-pressed={showFurniture}
+                aria-label={`Muebles: ${showFurniture ? 'sí' : 'no'}`}
+                title={showFurniture ? 'Quita los muebles de la vista' : 'Pone los muebles del plano'}
+                icon={<Sofa className="size-4" aria-hidden />}
+              >
+                <span className="hidden sm:inline">Muebles: {showFurniture ? 'sí' : 'no'}</span>
+              </Button>
+            ))}
+          {furnishError && (
+            <p role="alert" className="self-center rounded-sm bg-canvas/85 px-2 py-1 text-xs text-danger backdrop-blur">
+              {furnishError}
+            </p>
           )}
           {facadeError && (
             <p role="alert" className="self-center rounded-sm bg-canvas/85 px-2 py-1 text-xs text-danger backdrop-blur">
@@ -598,6 +670,23 @@ export function ViewerPage() {
                           <span>Fachada</span>
                           <button type="button" onClick={cycleFacade} className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised sm:min-h-8">
                             {facadeSpec(facadeStyle).name} →
+                          </button>
+                        </div>
+                      )}
+                      {!strategy.panel && (
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <label className="flex items-center gap-2 pointer-coarse:min-h-11">
+                            <input type="checkbox" checked={showFurniture} onChange={(e) => setShowFurniture(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
+                            <span>Muebles</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={furnishNow}
+                            disabled={furnishing}
+                            title="Agrega lo que falte en cada ambiente sin mover lo que ya está"
+                            className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised disabled:opacity-50 sm:min-h-8"
+                          >
+                            Completar muebles
                           </button>
                         </div>
                       )}

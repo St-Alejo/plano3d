@@ -42,6 +42,10 @@ export interface Pick {
   id: string
 }
 
+function setVisible(obj: THREE.Object3D, on: boolean): void {
+  obj.visible = on
+}
+
 /**
  * El edificio. Se reconstruye cuando cambia el modelo (el store es inmutable,
  * así que basta comparar referencias). Los muros "crecen" desde el suelo.
@@ -51,6 +55,7 @@ export function BuildingMesh({
   strategy = presentacion,
   roof = false,
   facade = false,
+  furniture = true,
   textures = true,
   grow = true,
   highlightWallId,
@@ -69,6 +74,8 @@ export function BuildingMesh({
   roof?: boolean
   /** fachada del modelo (piel exterior, marcos, franjas, antepecho) */
   facade?: boolean
+  /** muebles a la vista (ocultarlos no reconstruye la escena) */
+  furniture?: boolean
   /** calidad alta: fotos PBR y detalles; sin ellas, la escena liviana de color liso */
   textures?: boolean
   grow?: boolean
@@ -112,6 +119,8 @@ export function BuildingMesh({
   }, [scene, onScene])
 
   useEffect(() => () => materials.dispose(), [materials])
+
+  useEffect(() => setVisible(scene.furniture, furniture), [scene, furniture])
 
   useEffect(() => {
     scene.walls.children.forEach((obj) => {

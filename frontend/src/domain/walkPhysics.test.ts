@@ -80,6 +80,14 @@ describe('física del recorrido', () => {
     expect(s.x).toBeCloseTo(3, 1)
   })
 
+  it('un mueble alto estorba solo si está a la vista', () => {
+    const m = house()
+    m.levels[0]!.furniture = [{ id: 'f1', catalog_id: 'closet', position: { x: 2, y: 3 }, width: 1.2, depth: 0.6, height: 2.2, rotation: 0 }]
+    const from = spawnAt(world, { x: 1, y: 3 })
+    expect(walk(buildWalkWorld(m), from, { x: 3, z: 3 }, 2).x).toBeLessThan(2 - 0.6)
+    expect(walk(buildWalkWorld(m, { furniture: false }), from, { x: 3, z: 3 }, 2).x).toBeCloseTo(3, 1)
+  })
+
   it('las columnas bloquean', () => {
     const s = walk(world, spawnAt(world, { x: 1, y: 1 }), { x: 3, z: 1 }, 2)
     expect(s.x).toBeLessThan(2 - 0.15 - 0.2)

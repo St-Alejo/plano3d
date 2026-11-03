@@ -39,6 +39,8 @@ export type ViewerAction =
   | { a: 'ask'; topic: QuantityTopic }
   /** selector de pisos: aislar el piso n (desde 1, de abajo hacia arriba) o volver a verlos todos */
   | { a: 'level'; n: number | 'all' }
+  /** muebles a la vista o no (no los borra del plano) */
+  | { a: 'furniture'; on: boolean }
 
 export interface ViewerParse {
   actions: ViewerAction[]
@@ -151,6 +153,8 @@ const RULES: Rule[] = [
     if (/\b(?:muestra|muestrame|pon|ensena|vuelve|activa|ver)\b/.test(f)) return { a: 'masonry', hidden: false }
     return null
   },
+  // "quita los muebles", "muestra el mobiliario"
+  (f) => (/\b(?:muebles?|mobiliario|amoblado|amueblado)\b/.test(f) ? { a: 'furniture', on: !OFF.test(f) } : null),
   // pisos: "ver piso 2", "segundo piso", "muestra todos los pisos"
   (f) => {
     if (/\b(?:todos los (?:pisos|niveles)|todo el edificio|edificio completo|ver todo)\b/.test(f)) return { a: 'level', n: 'all' }
@@ -254,6 +258,7 @@ export const VIEWER_EXAMPLES = [
   'corte a 1,2 m',
   'usa bloque Nº5',
   'ver piso 2',
+  'quita los muebles',
 ]
 
 // ----------------------------------------------------------------------------- respuestas de cantidades
@@ -316,6 +321,7 @@ const ok: Record<ViewerAction['a'], (o: Record<string, unknown>) => boolean> = {
   overlay: (o) => typeof o.value === 'number' && o.value >= 0 && o.value <= 1,
   room: (o) => typeof o.room === 'string',
   level: (o) => o.n === 'all' || (typeof o.n === 'number' && o.n >= 1),
+  furniture: (o) => typeof o.on === 'boolean',
   ask: (o) => ['ladrillo', 'cemento', 'arena', 'grava', 'acero', 'concreto', 'area', 'todo'].includes(o.topic as string),
 }
 

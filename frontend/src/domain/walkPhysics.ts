@@ -102,14 +102,15 @@ function doorObstacle(w: Wall, offset: number, width: number): { obstacle: Obsta
   return { obstacle: rectObstacle(center.x, center.y, width, w.thickness, Math.atan2(d.y, d.x)), center }
 }
 
-export function buildWalkWorld(model: BuildingModel): WalkWorld {
+/** `furniture: false`: los muebles están ocultos en el visor y no estorban el paso. */
+export function buildWalkWorld(model: BuildingModel, opts: { furniture?: boolean } = {}): WalkWorld {
   const levels = [...model.levels].sort((a, b) => a.elevation - b.elevation)
   const steps: StepSurface[] = []
   const doors: DoorBody[] = []
   const out: WalkLevel[] = levels.map((lv) => {
     const obstacles: Obstacle[] = lv.walls.flatMap(wallObstacles)
     for (const c of lv.columns ?? []) obstacles.push(rectObstacle(c.center.x, c.center.y, c.width, c.round ? c.width : c.depth, c.rotation ?? 0))
-    for (const f of lv.furniture ?? []) {
+    for (const f of opts.furniture === false ? [] : (lv.furniture ?? [])) {
       if ((f.height ?? 0) > FURNITURE_BLOCKS) obstacles.push(rectObstacle(f.position.x, f.position.y, f.width, f.depth, f.rotation ?? 0))
     }
     for (const w of lv.walls) {
