@@ -297,6 +297,19 @@ export function ViewerPage() {
     }
   }
 
+  // paquete para Blender: GLB por piso y categoría, script de render y datos del proyecto
+  const doBlender = async () => {
+    if (!scene.current) return
+    setExporting(true)
+    try {
+      const { blenderPackage } = await import('./export/blenderPackage')
+      const zip = await blenderPackage(exportRoot(scene.current), model, project.name, sun)
+      downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), `${fileBase}_blender.zip`)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const doPng = () => {
     const canvas = box.current?.querySelector('canvas')
     if (!canvas) return
@@ -577,9 +590,10 @@ export function ViewerPage() {
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
               { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
               { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },
+              { label: 'Exportar para Blender (.zip)', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doBlender() },
             ]}
             trigger={
-              <Button className="h-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Exportar" title="Imagen PNG o modelo 3D (OBJ, GLB)" icon={<Download className="size-4" aria-hidden />}>
+              <Button className="h-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Exportar" title="Imagen PNG, modelo 3D (OBJ, GLB) o paquete para Blender" icon={<Download className="size-4" aria-hidden />}>
                 <span className="hidden sm:inline">Exportar</span>
               </Button>
             }

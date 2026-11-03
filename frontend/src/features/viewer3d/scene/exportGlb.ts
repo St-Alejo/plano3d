@@ -42,10 +42,10 @@ export function prepareForExport(root: THREE.Object3D): THREE.Object3D {
 }
 
 /** Exporta el grupo como GLB binario (formato estándar, se abre en Blender o cualquier visor glTF). */
-export async function exportGlb(root: THREE.Object3D): Promise<Blob> {
+export async function exportGlb(root: THREE.Object3D, opts: { maxTextureSize?: number } = {}): Promise<Blob> {
   const { GLTFExporter } = await import('three/examples/jsm/exporters/GLTFExporter.js')
   const exporter = new GLTFExporter()
-  const result = await exporter.parseAsync(prepareForExport(root), { binary: true, onlyVisible: true })
+  const result = await exporter.parseAsync(prepareForExport(root), { binary: true, onlyVisible: true, ...(opts.maxTextureSize ? { maxTextureSize: opts.maxTextureSize } : {}) })
   if (!(result instanceof ArrayBuffer)) throw new Error('El exportador no devolvió un GLB binario')
   return new Blob([result], { type: 'model/gltf-binary' })
 }
