@@ -595,6 +595,24 @@
         "title": "FacadeDTO",
         "type": "object"
       },
+      "FurnishDTO": {
+        "properties": {
+          "level_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Piso a amoblar (todos si falta)",
+            "title": "Level Id"
+          }
+        },
+        "title": "FurnishDTO",
+        "type": "object"
+      },
       "FurnitureDTO": {
         "description": "Mueble del catálogo (ADR-016): el cliente arma la geometría desde ``catalog_id``.",
         "properties": {
@@ -2199,6 +2217,87 @@
           }
         },
         "summary": "Set Facade",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/furnish": {
+      "post": {
+        "description": "Completa los muebles que faltan según el tipo de cada ambiente (sin mover los que hay).",
+        "operationId": "furnish_api_projects__project_id__furnish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/FurnishDTO"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Otra persona guardó una versión más nueva"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Furnish",
         "tags": [
           "modelo"
         ]

@@ -325,6 +325,10 @@ class CornersDTO(_DTO):
     )
 
 
+class FurnishDTO(_DTO):
+    level_id: str | None = Field(default=None, description="Piso a amoblar (todos si falta)")
+
+
 class DuplicateLevelDTO(_DTO):
     name: str | None = Field(default=None, max_length=80, description="Nombre del piso nuevo")
 

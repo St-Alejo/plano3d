@@ -86,3 +86,33 @@ def test_la_fachada_cambia_solo_la_fachada(client: TestClient) -> None:
     assert client.get(f"/api/projects/{pid}").json()["model"]["facade"] == "moderna_ladrillo"
     bad = client.put(f"/api/projects/{pid}/facade", json={"style": "colonial"})
     assert bad.status_code == 422
+
+
+def test_amoblar_completa_lo_que_falta_sin_mover_lo_dibujado(client: TestClient) -> None:
+    pid = client.post("/api/projects/blank", json={"name": "Casa"}).json()["id"]
+    before = client.post(
+        f"/api/projects/{pid}/levels",
+        files={"file": ("piso2.pdf", PISO2.read_bytes(), "application/pdf")},
+    ).json()
+    lv = before["model"]["levels"][-1]
+    drawn = lv["furniture"]
+    # el plano ya trae las camas, la cocina, el comedor, el sofá y los baños
+    assert sum(f["catalog_id"] == "cama_doble" for f in drawn) == 3
+    r = client.post(
+        f"/api/projects/{pid}/furnish",
+        json={"level_id": lv["id"]},
+        headers={"If-Match": f'"{before["revision"]}"'},
+    )
+    assert r.status_code == 200, r.text
+    after = r.json()
+    assert after["revision"] == before["revision"] + 1
+    furniture = after["model"]["levels"][-1]["furniture"]
+    assert furniture[: len(drawn)] == drawn
+    added = [f["catalog_id"] for f in furniture[len(drawn) :]]
+    assert added.count("closet") == 3 and "nevera" in added
+    revisions = client.get(f"/api/projects/{pid}/revisions").json()
+    assert revisions[0]["summary"].startswith("Amoblado: ")
+    # otra vez: ya no falta nada y no se crea revisión
+    again = client.post(f"/api/projects/{pid}/furnish").json()
+    assert again["revision"] == after["revision"]
+    assert client.post(f"/api/projects/{pid}/furnish", json={"level_id": "nope"}).status_code == 404

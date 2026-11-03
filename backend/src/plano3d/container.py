@@ -19,7 +19,7 @@ from plano3d.application.ports import (
 )
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
 from plano3d.application.use_cases.assistant import InterpretChat
-from plano3d.application.use_cases.levels import AddLevelFromFile, DuplicateLevel
+from plano3d.application.use_cases.levels import AddLevelFromFile, DuplicateLevel, FurnishLevels
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
     CheckCapture,
@@ -150,6 +150,10 @@ class Container:
     @property
     def set_facade(self) -> SetFacade:
         return SetFacade(self.repo)
+
+    @property
+    def furnish(self) -> FurnishLevels:
+        return FurnishLevels(self.repo)
 
     @property
     def add_level(self) -> AddLevelFromFile:

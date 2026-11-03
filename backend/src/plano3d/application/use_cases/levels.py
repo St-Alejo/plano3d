@@ -8,6 +8,7 @@ from plano3d.application.use_cases.analyze import DetectorSelector
 from plano3d.application.use_cases.projects import _check_upload, _load, commit_model
 from plano3d.domain import BuildingModel, Project
 from plano3d.domain.errors import DomainError
+from plano3d.domain.furnish import furnish
 from plano3d.domain.stacking import stack_level
 
 
@@ -54,6 +55,38 @@ class AddLevelFromFile:
         added = stacked.levels[-1]
         return await commit_model(
             self._repo, project, stacked, f"Piso agregado: {added.name}", expected_revision
+        )
+
+
+class FurnishLevels:
+    """Completa los muebles que faltan (de un piso o de todos) según el tipo de ambiente.
+
+    Lo que ya está (lo leído del plano o lo puesto a mano) no se mueve; si no falta nada,
+    no se crea una revisión."""
+
+    def __init__(self, repo: ProjectRepository) -> None:
+        self._repo = repo
+
+    async def execute(
+        self,
+        project_id: str,
+        level_id: str | None = None,
+        expected_revision: int | None = None,
+    ) -> Project:
+        project = await _load(self._repo, project_id)
+        model = _model(project)
+        targets = [model.level(level_id)] if level_id else list(model.levels)
+        changed = model
+        names: list[str] = []
+        for lv in targets:
+            done = furnish(lv)
+            if done is not lv:
+                changed = changed.with_level(done)
+                names.append(lv.name)
+        if not names:
+            return project
+        return await commit_model(
+            self._repo, project, changed, f"Amoblado: {', '.join(names)}", expected_revision
         )
 
 

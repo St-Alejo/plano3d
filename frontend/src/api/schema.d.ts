@@ -157,6 +157,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/furnish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Furnish
+         * @description Completa los muebles que faltan según el tipo de cada ambiente (sin mover los que hay).
+         */
+        post: operations["furnish_api_projects__project_id__furnish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/image": {
         parameters: {
             query?: never;
@@ -663,6 +683,14 @@ export interface components {
              * @enum {string}
              */
             style: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo";
+        };
+        /** FurnishDTO */
+        FurnishDTO: {
+            /**
+             * Level Id
+             * @description Piso a amoblar (todos si falta)
+             */
+            level_id?: string | null;
         };
         /**
          * FurnitureDTO
@@ -1466,6 +1494,51 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["FacadeDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Otra persona guardó una versión más nueva */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    furnish_api_projects__project_id__furnish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FurnishDTO"] | null;
             };
         };
         responses: {

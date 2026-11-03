@@ -39,6 +39,7 @@ from plano3d.application.dto import (
     CorrectionStatsDTO,
     DuplicateLevelDTO,
     FacadeDTO,
+    FurnishDTO,
     ProgressEventDTO,
     ProjectCreatedDTO,
     ProjectDTO,
@@ -333,6 +334,27 @@ async def set_facade(
 ) -> ProjectDTO:
     """Cambia solo el estilo de la fachada (el interior queda igual)."""
     project = await c.set_facade.execute(project_id, body.style, _parse_if_match(if_match))
+    response.headers["ETag"] = _etag(project.revision)
+    return project_to_dto(project)
+
+
+@router.post(
+    "/projects/{project_id}/furnish",
+    response_model=ProjectDTO,
+    responses={409: {"description": "Otra persona guardó una versión más nueva"}},
+    tags=["modelo"],
+)
+async def furnish(
+    project_id: str,
+    c: ContainerDep,
+    response: Response,
+    body: FurnishDTO | None = None,
+    if_match: IfMatch = None,
+) -> ProjectDTO:
+    """Completa los muebles que faltan según el tipo de cada ambiente (sin mover los que hay)."""
+    project = await c.furnish.execute(
+        project_id, body.level_id if body else None, _parse_if_match(if_match)
+    )
     response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
 
