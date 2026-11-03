@@ -100,6 +100,7 @@ export function sampleApartment(): BuildingModel {
   const i = INT / 2
   return {
     project_id: 'muestra',
+    facade: 'moderna_blanca',
     scale: { meters_per_pixel: 0.01, source: 'calibrated', confidence: 1 },
     levels: [
       {

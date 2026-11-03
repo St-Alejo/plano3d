@@ -50,6 +50,7 @@ export function BuildingMesh({
   model,
   strategy = presentacion,
   roof = false,
+  facade = false,
   textures = true,
   grow = true,
   highlightWallId,
@@ -66,6 +67,8 @@ export function BuildingMesh({
   strategy?: ViewModeStrategy
   /** cubierta sobre el último piso */
   roof?: boolean
+  /** fachada del modelo (piel exterior, marcos, franjas, antepecho) */
+  facade?: boolean
   /** calidad alta: fotos PBR y detalles; sin ellas, la escena liviana de color liso */
   textures?: boolean
   grow?: boolean
@@ -84,8 +87,8 @@ export function BuildingMesh({
   // fotos PBR (public/texturas): se cargan en segundo plano, el material se ve liso mientras tanto
   const materials = useMemo(() => new MaterialFactory({ textures, base: import.meta.env.BASE_URL }), [textures])
   const scene = useMemo(
-    () => strategy.build(model, materials, { roof, realism: textures, brick, hideMasonry }),
-    [model, materials, strategy, roof, textures, brick, hideMasonry],
+    () => strategy.build(model, materials, { roof, facade, realism: textures, brick, hideMasonry }),
+    [model, materials, strategy, roof, facade, textures, brick, hideMasonry],
   )
   const progress = useRef(grow && !prefersReducedMotion() ? 0 : 1)
   const grownFor = useRef<string | null>(null)

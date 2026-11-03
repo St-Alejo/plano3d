@@ -20,6 +20,8 @@ export interface ModeOptions {
   roof?: boolean
   /** calidad alta: guardaescobas, marcos, alféizares y terreno */
   realism?: boolean
+  /** vestir el exterior con el estilo de fachada del modelo */
+  facade?: boolean
   /** obra: unidad de mampostería */
   brick?: BrickId
   /** obra: ocultar el ladrillo para ver el esqueleto de concreto */
@@ -47,7 +49,7 @@ export const presentacion: ViewModeStrategy = {
   id: 'presentacion',
   label: 'Presentación',
   hint: 'La casa terminada, con acabados y muebles',
-  build: (model, materials, opts = {}) => buildScene(model, materials, { details: opts.realism, site: opts.realism, roof: opts.roof }),
+  build: (model, materials, opts = {}) => buildScene(model, materials, { details: opts.realism, site: opts.realism, roof: opts.roof, facade: opts.facade }),
 }
 
 export const obra: ViewModeStrategy = {

@@ -5,6 +5,7 @@
  */
 import * as THREE from 'three'
 import type { Tone } from '@/domain/catalog'
+import type { Cladding } from '@/domain/facades'
 import { floorMaterial, TEXTURES, wallMaterial, type MaterialSpec, type Pattern, type TextureId } from '@/domain/materials'
 
 export type WallPart = 'solid' | 'sill' | 'lintel'
@@ -241,6 +242,16 @@ export class MaterialFactory {
   /** alféizar de ventana y andén perimetral */
   sill(): THREE.MeshStandardMaterial {
     return this.cached('sill', () => new THREE.MeshStandardMaterial(this.pbr('concreto', '#e4e2da', 0.5) ?? { color: '#dedcd4', roughness: 0.6 }))
+  }
+
+  /** Revestimiento de fachada (piel exterior, antepecho, portón): uno por color y textura. */
+  cladding(c: Cladding): THREE.MeshStandardMaterial {
+    return this.cached(`facade:${c.texture ?? 'liso'}:${c.color}:${c.tint ?? ''}`, () => new THREE.MeshStandardMaterial(this.pbr(c.texture, c.tint ?? c.color, 0.6) ?? { color: c.color, roughness: c.roughness }))
+  }
+
+  /** Color liso de fachada: perfilería exterior, franjas de losa, losa de cubierta. */
+  facadeColor(color: string, roughness = 0.5, metalness = 0): THREE.MeshStandardMaterial {
+    return this.cached(`facade:color:${color}:${roughness}:${metalness}`, () => new THREE.MeshStandardMaterial({ color, roughness, metalness }))
   }
 
   roof(): THREE.MeshStandardMaterial {

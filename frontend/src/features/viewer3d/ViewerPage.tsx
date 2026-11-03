@@ -2,11 +2,12 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tabs from '@radix-ui/react-tabs'
-import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Ruler } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Paintbrush, Ruler } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point } from '@/api/types'
+import { facadeSpec, nextFacade, type FacadeStyle } from '@/domain/facades'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
 import { fold } from '@/domain/planOps'
@@ -156,6 +157,27 @@ export function ViewerPage() {
     return rooms.find((r) => r.id === big?.id) ?? rooms[0]
   }, [project, rooms])
 
+  // fachada: se ve al instante y se guarda en segundo plano; si falla vuelve a la anterior
+  const [facade, setFacadeState] = useState<{ style: FacadeStyle; revision: number } | null>(null)
+  const [facadeError, setFacadeError] = useState<string | null>(null)
+  const facadeStyle = facade?.style ?? project?.model?.facade
+  const viewModel = useMemo(() => (project?.model && facadeStyle ? { ...project.model, facade: facadeStyle } : project?.model), [project, facadeStyle])
+  const cycleFacade = () => {
+    if (!project) return
+    const prev = facade
+    const style = nextFacade(facadeStyle)
+    const revision = facade?.revision ?? project.revision
+    setFacadeError(null)
+    setFacadeState({ style, revision })
+    api.setFacade(project.id, style, revision).then(
+      (p) => setFacadeState({ style, revision: p.revision }),
+      (e: unknown) => {
+        setFacadeState(prev)
+        setFacadeError(e instanceof Error ? e.message : 'No se pudo guardar la fachada')
+      },
+    )
+  }
+
   const levels = useMemo(() => (project?.model ? levelSummaries(project.model) : []), [project])
   const focusSummary = levels.find((l) => l.id === focusLevel) ?? null
   useEffect(() => {
@@ -183,7 +205,7 @@ export function ViewerPage() {
       </div>
     )
 
-  const model = project.model
+  const model = viewModel ?? project.model
 
   const doExport = async () => {
     if (!scene.current) return
@@ -366,6 +388,7 @@ export function ViewerPage() {
         strategy={strategy}
         quality={quality}
         roof={roof}
+        facade={!strategy.panel}
         brick={brick}
         hideMasonry={hideMasonry}
         highlightElementId={strategy.panel ? elementId : null}
@@ -419,6 +442,22 @@ export function ViewerPage() {
           <div className="rounded-md bg-canvas/85 backdrop-blur [&>button]:h-11 [&>button]:w-11">
             <TutorialButton compact initial="recorrer" />
           </div>
+          {!strategy.panel && (
+            <Button
+              className="h-11 bg-canvas/85 backdrop-blur"
+              onClick={cycleFacade}
+              aria-label={`Fachada: ${facadeSpec(facadeStyle).name}`}
+              title="Cambia el estilo de la fachada (solo el exterior)"
+              icon={<Paintbrush className="size-4" aria-hidden />}
+            >
+              <span className="hidden sm:inline">Fachada: {facadeSpec(facadeStyle).name}</span>
+            </Button>
+          )}
+          {facadeError && (
+            <p role="alert" className="self-center rounded-sm bg-canvas/85 px-2 py-1 text-xs text-danger backdrop-blur">
+              {facadeError}
+            </p>
+          )}
           <Menu
             items={[
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
@@ -536,8 +575,16 @@ export function ViewerPage() {
                         </select>
                       </label>
                       {!strategy.panel && (
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span>Fachada</span>
+                          <button type="button" onClick={cycleFacade} className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised sm:min-h-8">
+                            {facadeSpec(facadeStyle).name} →
+                          </button>
+                        </div>
+                      )}
+                      {!strategy.panel && (
                         <label className="flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11">
-                          <span>Cubierta (techo de teja)</span>
+                          <span>Cubierta (losa o techo)</span>
                           <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
                         </label>
                       )}

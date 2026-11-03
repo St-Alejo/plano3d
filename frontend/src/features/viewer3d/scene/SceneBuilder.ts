@@ -7,7 +7,9 @@
  */
 import * as THREE from 'three'
 import type { BuildingModel, Level } from '@/api/types'
-import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes } from '@/domain/geometry'
+import { frontNormal, isFront, outwardSign, SKIN, skinBoxes } from '@/domain/facadeGeometry'
+import { facadeSpec, type FacadeSpec } from '@/domain/facades'
+import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes, type Box } from '@/domain/geometry'
 import { pointAlong, wallDirection } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
@@ -37,8 +39,10 @@ export interface SceneOptions {
   details?: boolean
   /** terreno con pasto y andén perimetral */
   site?: boolean
-  /** cubierta de teja a dos aguas sobre el último piso */
+  /** cubierta sobre el último piso: teja a dos aguas, o losa con antepecho si hay fachada */
   roof?: boolean
+  /** viste el exterior con el estilo de fachada del modelo (solo la cara de afuera) */
+  facade?: boolean
 }
 
 /** Alto del guardaescobas y cuánto sobresale del muro. */
@@ -53,6 +57,18 @@ const ROOF_EAVE = 0.6
 const ROOF_THICKNESS = 0.06
 /** Ancho del andén perimetral. */
 const SIDEWALK = 0.8
+/** Fachada: franja del borde de losa, antepecho de la cubierta y su remate. */
+const BAND_H = 0.25
+const BAND_OUT = 0.04
+const PARAPET_H = 1.0
+const COPING_H = 0.05
+/** Un vano plegable desde este ancho es el portón del garaje (hojas de panel cerradas). */
+const GATE_M = 1.8
+const GATE_LEAVES = 4
+
+function isGate(o: { operation?: string | null; width: number }): boolean {
+  return o.operation === 'folding' && o.width >= GATE_M
+}
 
 /** Caja envolvente en planta de los muros de un nivel. */
 function levelBox(lv: Level): { x0: number; x1: number; y0: number; y1: number } | null {
@@ -243,7 +259,7 @@ export class SceneBuilder {
     for (const lv of this.levels()) {
       for (const w of lv.walls) {
         if (w.bulge) continue
-        for (const o of w.openings.filter((x) => x.kind === 'door' && x.operation !== 'none')) {
+        for (const o of w.openings.filter((x) => x.kind === 'door' && x.operation !== 'none' && !isGate(x))) {
           const info = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
           const door = new THREE.Group()
           door.name = `door:${o.id}`
@@ -330,23 +346,37 @@ export class SceneBuilder {
     return this
   }
 
-  /** Marcos: perfilería de aluminio y alféizar en ventanas; marco de madera en puertas. */
-  withFrames(): this {
+  /**
+   * Marcos: perfilería de aluminio y alféizar en ventanas; marco de madera en puertas. Con
+   * fachada, la mitad de afuera de los marcos en muros de fachada toma el color del estilo
+   * (la de adentro queda igual).
+   */
+  withFrames(style: FacadeSpec | null = null): this {
     for (const lv of this.levels()) {
       for (const w of lv.walls) {
         if (w.bulge) continue
         const dir = wallDirection(w)
+        const side = style && w.kind === 'exterior' ? outwardSign(w, lv) : 0
+        const outer = style ? this.materials.facadeColor(style.frame, 0.4, 0.3) : null
         for (const o of w.openings) {
+          if (isGate(o)) continue
           const mid = pointAlong(w, o.offset + o.width / 2)
           const g = new THREE.Group()
           g.name = `frame:${o.id}`
           g.position.set(mid.x, lv.elevation + o.sill, mid.y)
           g.rotation.y = -Math.atan2(dir.y, dir.x)
-          const piece = (size: [number, number, number], at: [number, number, number], material: THREE.Material, i: number) => {
-            const mesh = this.detail(new THREE.BoxGeometry(...size), material, `frame:${o.id}:${i}`, { openingId: o.id, wallId: w.id, levelId: lv.id })
+          const one = (size: [number, number, number], at: [number, number, number], material: THREE.Material, name: string, kind?: string) => {
+            const mesh = this.detail(new THREE.BoxGeometry(...size), material, name, { openingId: o.id, wallId: w.id, levelId: lv.id, ...(kind ? { kind } : {}) })
             mesh.position.set(...at)
             worldUv(mesh)
             g.add(mesh)
+          }
+          const piece = (size: [number, number, number], at: [number, number, number], material: THREE.Material, i: number) => {
+            if (!side || !outer) return one(size, at, material, `frame:${o.id}:${i}`)
+            // la +Z local del marco es la normal izquierda del muro: afuera queda hacia `side`
+            const half: [number, number, number] = [size[0], size[1], size[2] / 2]
+            one(half, [at[0], at[1], at[2] - (side * size[2]) / 4], material, `frame:${o.id}:${i}`)
+            one(half, [at[0], at[1], at[2] + (side * size[2]) / 4], outer, `frame:${o.id}:${i}:out`, 'facade')
           }
           if (o.kind === 'window') {
             const f = WINDOW_FRAME
@@ -357,7 +387,7 @@ export class SceneBuilder {
             piece([f, o.height, d], [-o.width / 2 + f / 2, o.height / 2, 0], m, 2)
             piece([f, o.height, d], [o.width / 2 - f / 2, o.height / 2, 0], m, 3)
             // alféizar: sobresale un poco a ambos lados del muro
-            if (o.sill > 0.05) piece([o.width + 0.1, 0.03, w.thickness + 0.08], [0, -0.015, 0], this.materials.sill(), 4)
+            if (o.sill > 0.05) one([o.width + 0.1, 0.03, w.thickness + 0.08], [0, -0.015, 0], this.materials.sill(), `frame:${o.id}:4`)
           } else {
             const f = DOOR_FRAME
             const d = w.thickness + 0.03
@@ -378,7 +408,8 @@ export class SceneBuilder {
    * por el lado largo, los faldones bajan con 22° y vuelan un alero de 0,6 m; los
    * hastiales (triángulos de muro) cierran los extremos.
    */
-  withRoof(): this {
+  withRoof(style: FacadeSpec | null = null): this {
+    if (style) return this.withFlatRoof(style)
     const top = [...this.levels()].sort((a, b) => b.elevation - a.elevation)[0]
     const box = top && levelBox(top)
     if (!top || !box) return this
@@ -414,6 +445,115 @@ export class SceneBuilder {
       roof.add(mesh)
     }
     this.details.add(roof)
+    return this
+  }
+
+  /** Losa de cubierta plana impermeabilizada sobre el último piso, con antepecho y remate. */
+  withFlatRoof(style: FacadeSpec): this {
+    const sorted = [...this.levels()].sort((a, b) => a.elevation - b.elevation)
+    const top = sorted[sorted.length - 1]
+    const box = top && levelBox(top)
+    if (!top || !box) return this
+    const wallTop = top.elevation + Math.max(...top.walls.map((w) => w.height))
+    const t = Math.max(...top.walls.map((w) => w.thickness)) / 2
+    const add = (geo: THREE.BufferGeometry, material: THREE.Material, name: string, at: [number, number, number], rotationY = 0, wallId?: string) => {
+      const mesh = this.detail(geo, material, name, { kind: 'roof', levelId: top.id, ...(wallId ? { wallId } : {}) })
+      mesh.position.set(...at)
+      mesh.rotation.y = rotationY
+      worldUv(mesh)
+      this.details.add(mesh)
+    }
+    add(
+      new THREE.BoxGeometry(box.x1 - box.x0 + 2 * t, SLAB_THICKNESS, box.y1 - box.y0 + 2 * t),
+      this.materials.facadeColor(style.roof, 0.85),
+      `roof:${top.id}:slab`,
+      [(box.x0 + box.x1) / 2, wallTop + SLAB_THICKNESS / 2, (box.y0 + box.y1) / 2],
+    )
+    const front = sorted[0] ? frontNormal(sorted[0]) : null
+    const base = wallTop + SLAB_THICKNESS
+    for (const w of top.walls) {
+      if (w.kind !== 'exterior' || w.bulge) continue
+      const side = outwardSign(w, top)
+      const parapet = { ...w, openings: [], height: PARAPET_H }
+      const cladding = style.front && isFront(w, top, front) ? style.front : style.upper
+      const at = (b: Box, y: number): [number, number, number] => [b.center[0], y, b.center[2]]
+      for (const [i, b] of wallToBoxes(parapet).entries())
+        add(new THREE.BoxGeometry(...b.size), this.materials.cladding(style.upper), `parapet:${w.id}:${i}`, at(b, base + b.center[1]), b.rotationY, w.id)
+      for (const [i, b] of skinBoxes(parapet, side).entries())
+        add(new THREE.BoxGeometry(...b.size), this.materials.cladding(cladding), `parapet:${w.id}:skin:${i}`, at(b, base + b.center[1]), b.rotationY, w.id)
+      // remate: un poco más ancho que el antepecho con su piel
+      for (const [i, b] of wallToBoxes({ ...parapet, thickness: w.thickness + 2 * (SKIN + 0.02) }).entries())
+        add(new THREE.BoxGeometry(b.size[0], COPING_H, b.size[2]), this.materials.facadeColor(style.band, 0.6), `coping:${w.id}:${i}`, at(b, base + PARAPET_H + COPING_H / 2), b.rotationY, w.id)
+    }
+    return this
+  }
+
+  /**
+   * Fachada: piel de revestimiento solo en la cara de afuera de los muros de fachada (con
+   * los mismos vanos) y franjas en el borde de las losas. No toca muros, vanos ni
+   * materiales del interior: todo va en `details` con `kind: 'facade'`.
+   */
+  withFacade(style: FacadeSpec): this {
+    const levels = [...this.levels()].sort((a, b) => a.elevation - b.elevation)
+    const front = levels[0] ? frontNormal(levels[0]) : null
+    levels.forEach((lv, k) => {
+      for (const w of lv.walls) {
+        if (w.kind !== 'exterior' || w.bulge) continue
+        const side = outwardSign(w, lv)
+        const cladding = k === 0 ? style.ground : style.front && isFront(w, lv, front) ? style.front : style.upper
+        const material = this.materials.cladding(cladding)
+        const info = { kind: 'facade', wallId: w.id, levelId: lv.id }
+        for (const [i, b] of skinBoxes(w, side).entries()) {
+          const mesh = this.detail(new THREE.BoxGeometry(...b.size), material, `facade:${w.id}:${i}`, info)
+          mesh.position.set(b.center[0], b.center[1] + lv.elevation, b.center[2])
+          mesh.rotation.y = b.rotationY
+          worldUv(mesh)
+          this.details.add(mesh)
+        }
+        if (k === 0) continue
+        // franja del borde de la losa de este piso, por fuera de la piel
+        const band = skinBoxes({ ...w, openings: [], height: BAND_H }, side, SKIN + BAND_OUT)[0]
+        if (!band) continue
+        const mesh = this.detail(new THREE.BoxGeometry(...band.size), this.materials.facadeColor(style.band, 0.6), `band:${w.id}`, info)
+        mesh.position.set(band.center[0], lv.elevation - FLOOR_THICKNESS - SLAB_THICKNESS - 0.04 + BAND_H / 2, band.center[2])
+        mesh.rotation.y = band.rotationY
+        worldUv(mesh)
+        this.details.add(mesh)
+      }
+    })
+    return this
+  }
+
+  /** Portones de garaje: los vanos plegables anchos, cerrados, en hojas de panel. */
+  withGates(style: FacadeSpec | null = null): this {
+    const material = style ? this.materials.cladding(style.gate) : this.materials.facadeColor('#55595d', 0.45)
+    for (const lv of this.levels()) {
+      for (const w of lv.walls) {
+        if (w.bulge) continue
+        const dir = wallDirection(w)
+        for (const o of w.openings.filter(isGate)) {
+          const info = { kind: 'door', openingId: o.id, wallId: w.id, levelId: lv.id }
+          const g = new THREE.Group()
+          g.name = `gate:${o.id}`
+          g.userData = info
+          const mid = pointAlong(w, o.offset + o.width / 2)
+          g.position.set(mid.x, lv.elevation, mid.y)
+          g.rotation.y = -Math.atan2(dir.y, dir.x)
+          const leaf = o.width / GATE_LEAVES
+          for (let i = 0; i < GATE_LEAVES; i++) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(leaf - 0.012, o.height - 0.01, 0.045), material)
+            // hojas alternadas un poco adelante y atrás: se lee el plegado
+            mesh.position.set(-o.width / 2 + leaf * (i + 0.5), o.height / 2, i % 2 ? 0.012 : -0.012)
+            mesh.castShadow = true
+            mesh.name = `gate:${o.id}:${i}`
+            mesh.userData = info
+            worldUv(mesh)
+            g.add(mesh)
+          }
+          this.elements.add(g)
+        }
+      }
+    }
     return this
   }
 
@@ -480,8 +620,11 @@ export function buildScene(model: BuildingModel, materials?: MaterialFactory, op
     .withStairs()
     .withDoors()
     .withFurniture()
-  if (opts.details) b.withSkirting().withFrames()
-  if (opts.roof) b.withRoof()
+  const style = opts.facade ? facadeSpec(model.facade) : null
+  b.withGates(style)
+  if (style) b.withFacade(style)
+  if (opts.details) b.withSkirting().withFrames(style)
+  if (opts.roof) b.withRoof(style)
   if (opts.site) b.withSite()
   return b.build()
 }

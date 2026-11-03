@@ -56,6 +56,8 @@ export interface Viewer3DProps {
   quality?: Quality
   /** cubierta sobre el último piso */
   roof?: boolean
+  /** fachada del modelo sobre el exterior */
+  facade?: boolean
   /** modo obra: unidad de mampostería, ocultar el ladrillo y elemento tocado/resaltado */
   brick?: ModeOptions['brick']
   hideMasonry?: boolean
@@ -279,6 +281,7 @@ export function Viewer3D({
   // incrustado (editor, vista previa) va liviano; la página 3D pasa la calidad elegida
   quality = 'baja',
   roof = false,
+  facade = false,
   brick,
   hideMasonry,
   highlightElementId,
@@ -320,6 +323,7 @@ export function Viewer3D({
           model={model}
           strategy={strategy}
           roof={roof}
+          facade={facade}
           textures={quality === 'alta'}
           grow={grow}
           highlightWallId={highlightWallId}

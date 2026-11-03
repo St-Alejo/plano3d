@@ -78,6 +78,7 @@ describe('losas y descansos', () => {
   it('el piso alto tiene losa con el hueco de la escalera; la U lleva descanso', () => {
     const m: BuildingModel = {
       project_id: 'p',
+      facade: 'moderna_blanca',
       scale: { meters_per_pixel: 0.01, source: 'vector', confidence: 1 },
       levels: [
         {

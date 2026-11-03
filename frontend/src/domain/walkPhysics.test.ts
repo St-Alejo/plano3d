@@ -33,7 +33,7 @@ function house(): BuildingModel {
     walls: [wall('n2', 0, 0, 8, 0), wall('e2', 8, 0, 8, 4), wall('s2', 8, 4, 0, 4), wall('o2', 0, 4, 0, 0), wall('x2', 2, 0, 2, 4)],
     rooms: [],
   }
-  return { project_id: 'p', scale: { meters_per_pixel: 0.01, source: 'vector', confidence: 1 }, levels: [ground, upper] }
+  return { project_id: 'p', scale: { meters_per_pixel: 0.01, source: 'vector', confidence: 1 }, facade: 'moderna_blanca', levels: [ground, upper] }
 }
 
 /** Camina hacia un punto durante `seconds` a 2,2 m/s (60 cuadros por segundo). */

@@ -9,6 +9,7 @@ import { ChatPanel } from './ChatPanel'
 
 const blank = (): BuildingModel => ({
   project_id: 'prj_b',
+  facade: 'moderna_blanca',
   scale: { meters_per_pixel: 0.01, source: 'vector', confidence: 1 },
   levels: [{ id: 'lvl_0', name: 'Planta 1', elevation: 0, walls: [], rooms: [] }],
 })

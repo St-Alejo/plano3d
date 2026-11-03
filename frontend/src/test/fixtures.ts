@@ -39,6 +39,7 @@ export function rect(id: string, label: string, x0: number, y0: number, x1: numb
 export function sampleModel(): BuildingModel {
   return {
     project_id: 'prj_1',
+    facade: 'moderna_blanca',
     scale: { meters_per_pixel: 0.02, source: 'estimated', confidence: 0.35 },
     source_image: { key: 'rectified/prj_1.png', width_px: 600, height_px: 450 },
     levels: [
