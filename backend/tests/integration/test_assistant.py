@@ -127,6 +127,18 @@ def test_to_viewer_action_normalizes_flat_rows() -> None:
     assert to_viewer_action(row | {"a": "explotar"}) is None
 
 
+def test_to_viewer_action_pisos_y_muebles() -> None:
+    row: dict[str, Any] = {"value": None, "number": None, "on": None}
+    assert to_viewer_action(row | {"a": "level", "number": 2}) == {"a": "level", "n": 2}
+    assert to_viewer_action(row | {"a": "level", "value": "all"}) == {"a": "level", "n": "all"}
+    assert to_viewer_action(row | {"a": "level", "number": 0}) is None
+    assert to_viewer_action(row | {"a": "furniture", "on": False}) == {
+        "a": "furniture",
+        "on": False,
+    }
+    assert to_viewer_action(row | {"a": "furniture"}) is None
+
+
 class _FakeMessages:
     def __init__(self, payload: dict[str, Any]) -> None:
         self.payload = payload

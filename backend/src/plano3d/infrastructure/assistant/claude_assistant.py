@@ -128,6 +128,8 @@ VIEWER_ACTIONS = [
     "overlay",
     "room",
     "ask",
+    "level",
+    "furniture",
 ]
 _VIEWER_VALUES: dict[str, list[str]] = {
     "plan_mode": ["presentacion", "obra", "acero", "secuencia"],
@@ -156,6 +158,8 @@ _VIEWER_SYSTEM = (
     "del ambiente al que ir.\n"
     "- ask: value ladrillo|cemento|arena|grava|acero|concreto|area|todo para preguntas de "
     "cantidades de obra (las calcula el visor).\n"
+    "- level: number (piso desde 1, de abajo hacia arriba) o value all (todos los pisos).\n"
+    "- furniture: on (true = mostrar los muebles, false = quitarlos de la vista).\n"
     "Usa los nombres e ids que te doy en el estado. Si algo no se puede expresar con estas "
     "acciones, deja actions vacío y explícalo en reply. reply es una frase breve en español."
 )
@@ -218,6 +222,13 @@ def to_viewer_action(raw: dict[str, Any]) -> dict[str, object] | None:
         return out
     if a == "overlay" and isinstance(number, int | float) and 0 <= number <= 1:
         return {"a": a, "value": float(number)}
+    if a == "level":
+        if value == "all":
+            return {"a": a, "n": "all"}
+        ok = isinstance(number, int | float) and number >= 1
+        return {"a": a, "n": int(number)} if ok else None  # type: ignore[arg-type]
+    if a == "furniture" and isinstance(on, bool):
+        return {"a": a, "on": on}
     return None
 
 
