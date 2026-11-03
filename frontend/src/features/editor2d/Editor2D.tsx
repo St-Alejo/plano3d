@@ -16,7 +16,7 @@ import { DrawRoom, rectFrom } from '@/domain/drawing'
 import { placeOpening, type Placement } from '@/domain/openings'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
-import { PlanElements } from './PlanElements'
+import { dimensionLine, PlanElements } from './PlanElements'
 import { StructureOverlay } from './StructureOverlay'
 import { contentBounds, parseLength, pointInPolygon, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
@@ -470,7 +470,29 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const tw = (txt.length * 11 * 0.6) / view.scale
     return [{ id: w.id, mid, ang, txt, tw, box: rotatedBox(mid.x, mid.y, tw + 4 / view.scale, 13 / view.scale, ang), priority: len }]
   })
-  const cotaShown = placeLabels(cotas, roomBoxes)
+  // las cotas del plano (las del PDF) mandan: las de los muros las esquivan
+  const planDimItems =
+    showDimensions && !hidden.has('dimensions')
+      ? (level?.dimensions ?? []).map((dim) => {
+          const { a, b } = dimensionLine(dim)
+          const pa = toPx(a)
+          const pb = toPx(b)
+          let deg = (Math.atan2(pb.y - pa.y, pb.x - pa.x) * 180) / Math.PI
+          if (deg > 90 || deg <= -90) deg += 180 // igual que el texto: legible, nunca cabeza abajo
+          const th = (deg * Math.PI) / 180
+          const f = 11 / view.scale
+          const txt = dim.text || dim.value.toFixed(2)
+          // el texto va sobre la línea (offsetY 1,3 letras): su centro queda 0,8 letras hacia la normal
+          const cx = (pa.x + pb.x) / 2 + Math.sin(th) * 0.8 * f
+          const cy = (pa.y + pb.y) / 2 - Math.cos(th) * 0.8 * f
+          return { id: dim.id, box: rotatedBox(cx, cy, txt.length * f * 0.6 + 4 / view.scale, f * 1.2, deg), priority: Math.hypot(pb.x - pa.x, pb.y - pa.y) }
+        })
+      : []
+  // entre ellas también: si dos cotas del plano se pisan, se ve la línea de ambas pero el número de una
+  const planShown = placeLabels(planDimItems)
+  const planDims = planDimItems.filter((_, i) => planShown[i])
+  const hiddenDimLabels = new Set(planDimItems.filter((_, i) => !planShown[i]).map((d) => d.id))
+  const cotaShown = placeLabels(cotas, [...roomBoxes, ...planDims.map((d) => d.box)])
   const cotaOf = new Map(cotas.filter((_, i) => cotaShown[i]).map((c) => [c.id, c]))
 
   return (
@@ -691,6 +713,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               onSelect={select}
               interactive={tool === 'select' && !locked.has('dimensions')}
               showDimensions={showDimensions && !hidden.has('dimensions')}
+              hiddenLabels={hiddenDimLabels}
               editable={tool === 'select' && !lockedWalls}
               isSelected={inGroup}
               onPick={(sel, e) => pick(sel)(e)}
