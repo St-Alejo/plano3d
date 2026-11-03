@@ -65,3 +65,38 @@ def test_piso2_nombres_del_cad_y_paso_al_pasillo(piso2: BuildingModel) -> None:
     # ninguna puerta atraviesa un muro: la más ancha es la de un baño o un paso
     doors = [o for w in lv.walls for o in w.openings if o.kind is OpeningKind.DOOR]
     assert max(o.width for o in doors) < 1.2
+
+
+def _furniture_by_room(model: BuildingModel) -> dict[str, list[str]]:
+    lv = model.levels[0]
+    out: dict[str, list[str]] = {r.label: [] for r in lv.rooms}
+    for f in lv.furniture:
+        room = next(r for r in lv.rooms if f.id.startswith(f"f_{r.id}_"))
+        out[room.label].append(f.catalog_id)
+    return out
+
+
+def test_piso2_muebles_dibujados_en_el_cad(piso2: BuildingModel) -> None:
+    by_room = _furniture_by_room(piso2)
+    for alcoba in ("ALCOBA 1", "ALCOBA 2", "ALCOBA 3"):
+        assert by_room[alcoba] == ["cama_doble"]
+    assert sorted(by_room["SALA-COMEDOR / COCINA"]) == [
+        "cocina_lineal",
+        "cocina_lineal",
+        "comedor_4",
+        "sofa_3",
+    ]
+    for bano in ("Baño 1", "Baño 2"):
+        assert sorted(by_room[bano]) == ["lavamanos", "sanitario"]
+    # cada mueble queda dentro de su ambiente
+    lv = piso2.levels[0]
+    for f in lv.furniture:
+        room = next(r for r in lv.rooms if f.id.startswith(f"f_{r.id}_"))
+        xs, ys = [p.x for p in room.polygon], [p.y for p in room.polygon]
+        assert min(xs) < f.position.x < max(xs) and min(ys) < f.position.y < max(ys)
+
+
+def test_piso1_solo_los_aparatos_de_los_banos(piso1: BuildingModel) -> None:
+    by_room = _furniture_by_room(piso1)
+    assert sorted(by_room["Baño 1"]) == sorted(by_room["Baño 2"]) == ["lavamanos", "sanitario"]
+    assert by_room["Parqueadero 1"] == by_room["Parqueadero 2"] == []

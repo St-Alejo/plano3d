@@ -50,6 +50,7 @@ from plano3d.domain.plan_text import (
     room_type_from_name,
     strip_accents,
 )
+from plano3d.infrastructure.vector.furniture import detect_furniture
 from plano3d.infrastructure.vector.primitives import Drawing, LayerRole, layer_role
 from plano3d.infrastructure.vector.room_hints import hint_label, hinted_type
 from plano3d.infrastructure.vector.stair_flights import flight_stairs
@@ -459,6 +460,12 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
         stairs=tuple(stairs),
         dimensions=tuple(dims),
         labels=tuple(labels),
+        # los muebles dibujados solo se leen de un CAD: en una foto los trazos son ruido
+        furniture=()
+        if ocr
+        else tuple(
+            detect_furniture(rooms, walls, [*d.lines, *d.detail_lines], [*d.arcs, *d.detail_arcs])
+        ),
     )
     preview = ctx.require(ctx.preview, "preview")
     return BuildingModel(
