@@ -220,6 +220,11 @@ export class MaterialFactory {
     return this.cached('stair', () => new THREE.MeshStandardMaterial(this.pbr('madera', '#c9a582') ?? { color: '#a98c6a', roughness: 0.6 }))
   }
 
+  /** Baranda de la escalera: metal oscuro satinado. */
+  railing(): THREE.MeshStandardMaterial {
+    return this.cached('railing', () => new THREE.MeshStandardMaterial({ color: '#2d3236', metalness: 0.6, roughness: 0.35 }))
+  }
+
   door(): THREE.MeshStandardMaterial {
     return this.cached('door', () => new THREE.MeshStandardMaterial(this.pbr('madera', '#b48c66', 0.5) ?? { color: '#8d6e4f', roughness: 0.55 }))
   }

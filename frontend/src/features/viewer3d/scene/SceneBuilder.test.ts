@@ -125,7 +125,9 @@ describe('SceneBuilder: elementos del modelo v2', () => {
     const s = buildScene(m)
     const kinds = s.elements.children.map((c) => c.userData.kind as string)
     expect(kinds.filter((k) => k === 'column')).toHaveLength(2)
-    expect(kinds.filter((k) => k === 'stair')).toHaveLength(12)
+    // el tramo es una sola pieza (losa inclinada con sus 12 peldaños) y lleva baranda
+    expect(kinds.filter((k) => k === 'stair')).toHaveLength(1)
+    expect(kinds.filter((k) => k === 'railing').length).toBeGreaterThan(12)
     expect(kinds.filter((k) => k === 'door').length).toBeGreaterThanOrEqual(1)
     s.root.updateMatrixWorld(true)
     const curved = s.walls.children.filter((c) => c.userData.wallId === 'curva')

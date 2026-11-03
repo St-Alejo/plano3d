@@ -28,6 +28,7 @@ import { useWalk } from './walkStore'
 import { useSim } from './simStore'
 import { SimClock, SimControls } from './SimPanel'
 import { titleCase } from '@/lib/text'
+import { withRealStairs } from '@/domain/stairDesign'
 import { PLAN_MODES, planMode } from './modes'
 import { ObraPanel } from './ObraPanel'
 import { BRICKS, type BrickId } from '@/domain/structure/bricks'
@@ -212,10 +213,11 @@ export function ViewerPage() {
   const loadedFacade = (): FacadeState => ({ style: facadeSpec(project?.model?.facade).id, custom: project?.model?.facade_custom ?? null })
   const facadeView = facade ?? loadedFacade()
   const facadeStyle = facadeView.style
-  const viewModel = useMemo(
-    () => (project?.model && facade ? { ...project.model, facade: facade.style, facade_custom: facade.custom } : project?.model),
-    [project, facade],
-  )
+  // lo que se ve y se camina: con la fachada elegida y solo las escaleras que llevan a algún piso
+  const viewModel = useMemo(() => {
+    const m = project?.model && facade ? { ...project.model, facade: facade.style, facade_custom: facade.custom } : project?.model
+    return m ? withRealStairs(m) : m
+  }, [project, facade])
   const changeFacade = (next: FacadeState) => {
     if (!project) return
     const prev = facadeNow.current ?? facade ?? loadedFacade()

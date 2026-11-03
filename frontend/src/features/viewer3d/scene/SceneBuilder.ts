@@ -9,7 +9,8 @@ import * as THREE from 'three'
 import type { BuildingModel, Level, Wall } from '@/api/types'
 import { frontNormal, isFront, leftNormal, outwardSign, SKIN, skinBoxes } from '@/domain/facadeGeometry'
 import { claddingOf, resolveFacade, type FacadeSpec } from '@/domain/facades'
-import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes, type Box } from '@/domain/geometry'
+import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairWell, swingLeaves, wallToBoxes, type Box } from '@/domain/geometry'
+import { clipWellToRoom, flightProfile, GUARD_HEIGHT, stairRailing, wellGuards, withRealStairs, type Seg3 } from '@/domain/stairDesign'
 import { roomLamps } from '@/domain/levels'
 import { pointAlong, wallDirection, wallLength } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
@@ -99,10 +100,14 @@ export class SceneBuilder {
   private readonly details = new THREE.Group()
   private readonly site = new THREE.Group()
 
+  private readonly model: BuildingModel
+
   constructor(
-    private readonly model: BuildingModel,
+    model: BuildingModel,
     private readonly materials = new MaterialFactory(),
   ) {
+    // la escalera de un último piso que no lleva a ningún lado no se construye
+    this.model = withRealStairs(model)
     this.root.name = `building:${model.project_id}`
     this.walls.name = 'walls'
     this.floors.name = 'floors'
@@ -140,9 +145,15 @@ export class SceneBuilder {
   }
 
   withFloors(): this {
+    const sortedLevels = [...this.levels()].sort((a, b) => a.elevation - b.elevation)
     for (const lv of this.levels()) {
+      // el hueco de la escalera que sube desde abajo: sin baldosa sobre el vacío
+      const below = sortedLevels[sortedLevels.indexOf(lv) - 1]
+      const well = below ? stairWell(below.stairs ?? []) : null
       for (const r of lv.rooms) {
         const shape = new THREE.Shape(roomShapePoints(r).map(([x, y]) => new THREE.Vector2(x, y)))
+        const hole = well ? clipWellToRoom(r.polygon, well) : null
+        if (hole) shape.holes.push(new THREE.Path(hole.map((p) => new THREE.Vector2(p.x, -p.y))))
         const geo = new THREE.ExtrudeGeometry(shape, { depth: FLOOR_THICKNESS, bevelEnabled: false })
         const mesh = new THREE.Mesh(geo, this.materials.floor(r.floor_material, r.label))
         // la forma vive en XY: se acuesta sobre el piso y queda con su cara superior en y=0
@@ -196,21 +207,53 @@ export class SceneBuilder {
     return this
   }
 
+  /** Barra metálica (poste o pasamanos) entre dos puntos; alturas desde el piso del nivel. */
+  private bar(seg: Seg3, radius: number, lv: Level, name: string): void {
+    const a = new THREE.Vector3(seg.a[0], lv.elevation + seg.a[1], seg.a[2])
+    const b = new THREE.Vector3(seg.b[0], lv.elevation + seg.b[1], seg.b[2])
+    const len = a.distanceTo(b)
+    if (len < 1e-3) return
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, 10), this.materials.railing())
+    mesh.position.copy(a).add(b).multiplyScalar(0.5)
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize())
+    mesh.castShadow = true
+    mesh.name = name
+    mesh.userData = { kind: 'railing', levelId: lv.id }
+    this.elements.add(mesh)
+  }
+
   withStairs(): this {
     for (const lv of this.levels()) {
       for (const s of lv.stairs ?? []) {
-        // peldaños como losa (abiertos por debajo), no bloques macizos hasta el piso
-        for (const [i, step] of stairTreads(s).entries()) {
-          const mesh = new THREE.Mesh(new THREE.BoxGeometry(...step.size), this.materials.stair())
-          mesh.position.set(step.center[0], lv.elevation + step.center[1], step.center[2])
-          mesh.rotation.y = step.rotationY
-          mesh.castShadow = true
-          mesh.receiveShadow = true
-          mesh.name = `stair:${s.id}:${i}`
-          mesh.userData = { kind: 'stair', stairId: s.id, levelId: lv.id }
-          worldUv(mesh)
-          this.elements.add(mesh)
+        // el tramo como se construye: peldaños sobre una losa inclinada (perfil lateral extruido al ancho)
+        const shape = new THREE.Shape(flightProfile(s).map((p) => new THREE.Vector2(p.x, p.y)))
+        const geo = new THREE.ExtrudeGeometry(shape, { depth: s.width, bevelEnabled: false })
+        geo.translate(0, 0, -s.width / 2)
+        const mesh = new THREE.Mesh(geo, this.materials.stair())
+        mesh.position.set(s.start.x, lv.elevation + (s.base ?? 0), s.start.y)
+        mesh.rotation.y = -Math.atan2(s.end.y - s.start.y, s.end.x - s.start.x)
+        mesh.castShadow = true
+        mesh.receiveShadow = true
+        mesh.name = `stair:${s.id}`
+        mesh.userData = { kind: 'stair', stairId: s.id, levelId: lv.id }
+        worldUv(mesh)
+        this.elements.add(mesh)
+      }
+      // baranda del lado del ojo, continua por los descansos
+      const rail = stairRailing(lv.stairs ?? [], lv.walls)
+      for (const [i, p] of rail.posts.entries()) this.bar(p, 0.012, lv, `railing:${lv.id}:poste:${i}`)
+      for (const [i, r] of rail.rails.entries()) this.bar(r, 0.022, lv, `railing:${lv.id}:pasamanos:${i}`)
+      // baranda del hueco de la losa: postes cada metro, pasamanos y dos travesaños
+      for (const [i, g] of wellGuards(this.model, lv).entries()) {
+        const len = Math.hypot(g.b.x - g.a.x, g.b.y - g.a.y)
+        const n = Math.max(1, Math.ceil(len / 1))
+        for (let k = 0; k <= n; k++) {
+          const x = g.a.x + ((g.b.x - g.a.x) * k) / n
+          const z = g.a.y + ((g.b.y - g.a.y) * k) / n
+          this.bar({ a: [x, 0, z], b: [x, GUARD_HEIGHT, z] }, 0.015, lv, `railing:${lv.id}:hueco:${i}:poste:${k}`)
         }
+        for (const [j, h] of [GUARD_HEIGHT, GUARD_HEIGHT * 0.55, 0.12].entries())
+          this.bar({ a: [g.a.x, h, g.a.y], b: [g.b.x, h, g.b.y] }, j === 0 ? 0.022 : 0.01, lv, `railing:${lv.id}:hueco:${i}:barra:${j}`)
       }
       // descansos entre tramos (escaleras en L y en U)
       for (const [i, landing] of stairLandings(lv.stairs ?? []).entries()) {

@@ -13,6 +13,7 @@
 import type { BuildingModel, Point, Wall } from '@/api/types'
 import { resolveCollision, type Obstacle } from './collision'
 import { curvedWallBoxes, STAIR_WAIST, stairLandings, stairSteps, stairWell, wallToBoxes, type Box } from './geometry'
+import { realStairsOf, wellGuards, withRealStairs } from './stairDesign'
 import { wallDirection } from './model'
 
 export const EYE_HEIGHT = 1.6
@@ -103,12 +104,18 @@ function doorObstacle(w: Wall, offset: number, width: number): { obstacle: Obsta
 }
 
 /** `furniture: false`: los muebles están ocultos en el visor y no estorban el paso. */
-export function buildWalkWorld(model: BuildingModel, opts: { furniture?: boolean } = {}): WalkWorld {
+export function buildWalkWorld(raw: BuildingModel, opts: { furniture?: boolean } = {}): WalkWorld {
+  // solo las escaleras que se construyen (la del último piso que no lleva a nada no existe)
+  const model = withRealStairs(raw)
   const levels = [...model.levels].sort((a, b) => a.elevation - b.elevation)
   const steps: StepSurface[] = []
   const doors: DoorBody[] = []
   const out: WalkLevel[] = levels.map((lv) => {
     const obstacles: Obstacle[] = lv.walls.flatMap(wallObstacles)
+    // la baranda del hueco de la escalera: no se cae uno por el vacío
+    for (const g of wellGuards(model, lv)) {
+      obstacles.push(rectObstacle((g.a.x + g.b.x) / 2, (g.a.y + g.b.y) / 2, Math.hypot(g.b.x - g.a.x, g.b.y - g.a.y), 0.06, Math.atan2(g.b.y - g.a.y, g.b.x - g.a.x)))
+    }
     for (const c of lv.columns ?? []) obstacles.push(rectObstacle(c.center.x, c.center.y, c.width, c.round ? c.width : c.depth, c.rotation ?? 0))
     for (const f of opts.furniture === false ? [] : (lv.furniture ?? [])) {
       if ((f.height ?? 0) > FURNITURE_BLOCKS) obstacles.push(rectObstacle(f.position.x, f.position.y, f.width, f.depth, f.rotation ?? 0))
@@ -280,8 +287,7 @@ export function stepCharacter(
 // ----------------------------------------------------------------------------- escaleras
 
 function flightsOf(model: BuildingModel, levelId: string) {
-  const lv = model.levels.find((l) => l.id === levelId)
-  return [...(lv?.stairs ?? [])].sort((a, b) => (a.base ?? 0) - (b.base ?? 0))
+  return [...realStairsOf(model, levelId)].sort((a, b) => (a.base ?? 0) - (b.base ?? 0))
 }
 
 function levelNeighbor(model: BuildingModel, levelId: string, dir: 1 | -1) {
