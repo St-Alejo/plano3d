@@ -19,7 +19,7 @@ import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
 import { useWalk } from './walkStore'
 import type { BuiltScene } from './scene/SceneBuilder'
 import type { ModeOptions, ViewModeStrategy } from './modes'
-import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
+import { applyDisplayMode, buildingHeight, cameraPreset, distance3, fitFraming, type CameraPreset, type DisplayMode } from './scene/viewTools'
 
 export type ViewMode = 'orbit' | 'walk'
 
@@ -111,11 +111,13 @@ function OrbitRig({
   useEffect(() => {
     if (framed.current === model.project_id) return
     framed.current = model.project_id
-    const { center, size } = bounds
-    camera.position.set(center.x + size * 0.6, size * 0.9, center.y + size * 1.1)
-    controls.current?.target.set(center.x, 0, center.y)
+    // el encuadre inicial cuenta con la proporción de la pantalla: en el celular vertical se aleja hasta ver toda la casa
+    const aspect = camera instanceof THREE.PerspectiveCamera ? camera.aspect : 1
+    const v = fitFraming(cameraPreset('iso', bounds), bounds, buildingHeight(model), aspect)
+    camera.position.set(...v.position)
+    controls.current?.target.set(...v.target)
     controls.current?.update()
-  }, [bounds, camera, model.project_id])
+  }, [bounds, camera, model])
 
   useEffect(() => {
     if (!preset) return

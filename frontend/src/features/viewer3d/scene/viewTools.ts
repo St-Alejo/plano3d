@@ -3,7 +3,9 @@
  * exportación OBJ. Se prueban en Node con three.
  */
 import * as THREE from 'three'
+import type { BuildingModel } from '@/api/types'
 import type { Bounds } from '@/domain/model'
+import { DEFAULT_STOREY_HEIGHT } from '@/domain/levels'
 
 export type CameraPreset = 'iso' | 'top' | 'front' | 'dollhouse'
 export type DisplayMode = 'material' | 'wire' | 'xray'
@@ -37,6 +39,36 @@ export function cameraPreset(name: CameraPreset, b: Bounds): { position: [number
     default:
       return { position: [center.x + size * 0.6, size * 0.9, center.y + size * 1.1], target }
   }
+}
+
+/** Alto total del edificio: el techo del piso más alto (con sus muros) sobre el suelo. */
+export function buildingHeight(m: BuildingModel): number {
+  const tops = m.levels.map((lv) => lv.elevation + Math.max(lv.height ?? DEFAULT_STOREY_HEIGHT, ...lv.walls.map((w) => w.height)))
+  return Math.max(DEFAULT_STOREY_HEIGHT, ...tops)
+}
+
+/**
+ * Aleja una vista (posición → objetivo) hasta que la caja del edificio (planta + `height` de alto) quepa
+ * en la pantalla con su proporción `aspect`: en un celular vertical el ancho visible es el que manda.
+ * Nunca acerca: en pantallas anchas la vista queda como estaba.
+ */
+export function fitFraming(
+  view: { position: [number, number, number]; target: [number, number, number] },
+  b: Bounds,
+  height: number,
+  aspect: number,
+  fovDeg = 55,
+): { position: [number, number, number]; target: [number, number, number] } {
+  const target: [number, number, number] = [view.target[0], Math.max(view.target[1], height * 0.35), view.target[2]]
+  const dir = new THREE.Vector3(view.position[0] - view.target[0], view.position[1] - view.target[1], view.position[2] - view.target[2])
+  const base = dir.length()
+  dir.normalize()
+  const radius = 0.5 * Math.hypot(b.maxX - b.minX, b.maxY - b.minY, height)
+  const vHalf = ((fovDeg / 2) * Math.PI) / 180
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect)
+  const needed = (radius / Math.sin(Math.min(vHalf, hHalf))) * 1.02
+  const d = Math.max(base, needed)
+  return { position: [target[0] + dir.x * d, target[1] + dir.y * d, target[2] + dir.z * d], target }
 }
 
 interface Saved {

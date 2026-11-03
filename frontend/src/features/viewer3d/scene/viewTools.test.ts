@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { modelBounds } from '@/domain/model'
 import { sampleModel } from '@/test/fixtures'
 import { buildScene, disposeScene } from './SceneBuilder'
-import { applyDisplayMode, cameraPreset, distance3, exportObj } from './viewTools'
+import type { BuildingModel } from '@/api/types'
+import opc3 from '@/test/opc3.json'
+import { applyDisplayMode, buildingHeight, cameraPreset, distance3, exportObj, fitFraming } from './viewTools'
 
 describe('encuadres de cámara', () => {
   const b = modelBounds(sampleModel())
@@ -52,5 +54,38 @@ describe('exportación OBJ', () => {
 
   it('distancia 3D', () => {
     expect(distance3([0, 0, 0], [3, 4, 0])).toBe(5)
+  })
+})
+
+describe('encuadre inicial según la pantalla', () => {
+  const model = opc3 as unknown as BuildingModel
+  const b = modelBounds(model)
+  const h = buildingHeight(model)
+
+  /** ¿Las 8 esquinas de la caja del edificio caen dentro de la pantalla? */
+  function fits(aspect: number) {
+    const v = fitFraming(cameraPreset('iso', b), b, h, aspect)
+    const cam = new THREE.PerspectiveCamera(55, aspect, 0.05, 500)
+    cam.position.set(...v.position)
+    cam.lookAt(...v.target)
+    cam.updateMatrixWorld()
+    const corners = [b.minX, b.maxX].flatMap((x) => [0, h].flatMap((y) => [b.minY, b.maxY].map((z) => new THREE.Vector3(x, y, z).project(cam))))
+    return corners.every((p) => Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1)
+  }
+
+  it('en un celular vertical se aleja hasta ver la casa entera de tres pisos', () => {
+    expect(h).toBeGreaterThan(7)
+    expect(fits(375 / 812)).toBe(true)
+    expect(fits(768 / 1024)).toBe(true)
+    expect(fits(1280 / 800)).toBe(true)
+  })
+
+  it('en pantalla ancha no acerca más que el encuadre de siempre', () => {
+    const iso = cameraPreset('iso', b)
+    const wide = fitFraming(iso, b, h, 16 / 9)
+    const phone = fitFraming(iso, b, h, 375 / 812)
+    const dist = (v: typeof iso) => distance3(v.position, v.target)
+    expect(dist(wide)).toBeGreaterThanOrEqual(distance3(iso.position, iso.target) - 1e-6)
+    expect(dist(phone)).toBeGreaterThan(dist(wide))
   })
 })
