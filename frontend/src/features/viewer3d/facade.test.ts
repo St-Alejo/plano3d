@@ -6,7 +6,8 @@ import { FACADE_STYLES, nextFacade } from '@/domain/facades'
 import { wallToBoxes } from '@/domain/geometry'
 import { door, sampleModel } from '@/test/fixtures'
 import { MaterialFactory } from './scene/MaterialFactory'
-import { buildScene } from './scene/SceneBuilder'
+import { exportGlb } from './scene/exportGlb'
+import { buildScene, exportRoot } from './scene/SceneBuilder'
 
 /** El departamento de prueba con los muros del contorno marcados de fachada y un portón. */
 function house(): BuildingModel {
@@ -75,6 +76,29 @@ describe('fachada', () => {
     expect(names.some((n) => n.startsWith('parapet:w_top'))).toBe(true)
     expect(names.some((n) => n.startsWith('coping:'))).toBe(true)
     expect(names.some((n) => n.startsWith('gable:'))).toBe(false)
+  })
+
+  it('el GLB exportado lleva la fachada, los portones y la losa de cubierta', async () => {
+    const gltf = async (style: BuildingModel['facade']) => {
+      const s = buildScene({ ...house(), facade: style }, new MaterialFactory(), { facade: true, roof: true, details: true, site: true })
+      const bytes = new Uint8Array(await (await exportGlb(exportRoot(s))).arrayBuffer())
+      // GLB: cabecera de 12 bytes y luego el trozo JSON (largo en el byte 12)
+      const len = new DataView(bytes.buffer).getUint32(12, true)
+      return JSON.parse(new TextDecoder().decode(bytes.slice(20, 20 + len))) as { nodes: { name?: string; mesh?: number }[]; materials: { pbrMetallicRoughness?: { baseColorFactor?: number[] } }[] }
+    }
+    const docs = await Promise.all(FACADE_STYLES.map(gltf))
+    for (const doc of docs) {
+      const names = doc.nodes.map((n) => n.name ?? '')
+      expect(names.filter((n) => n.startsWith('facade:w_')).length).toBeGreaterThan(4)
+      expect(names.some((n) => n.startsWith('gate:gate:'))).toBe(true)
+      expect(names).toContain('roof:lvl_0:slab')
+      expect(names.some((n) => n.startsWith('parapet:'))).toBe(true)
+      // el terreno es ambientación del visor: no se exporta
+      expect(names.some((n) => n.startsWith('site:'))).toBe(false)
+    }
+    // los tres estilos salen con colores distintos en el archivo
+    const colors = docs.map((d) => JSON.stringify(d.materials.map((m) => m.pbrMetallicRoughness?.baseColorFactor).sort()))
+    expect(new Set(colors).size).toBe(3)
   })
 
   it('los marcos de fachada se parten: la mitad de afuera toma el color del estilo', () => {
