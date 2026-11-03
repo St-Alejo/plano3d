@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { sampleModel } from '@/test/fixtures'
 import { MaterialFactory } from './MaterialFactory'
 import { FLOOR_THICKNESS, SceneBuilder, buildScene, disposeScene } from './SceneBuilder'
-import { exportGlb } from './exportGlb'
+import { exportGlb, prepareForExport } from './exportGlb'
 
 describe('SceneBuilder', () => {
   it('arma muros, pisos y vidrios a partir del modelo', () => {
@@ -70,6 +70,33 @@ describe('exportGlb', () => {
     const blob = await exportGlb(s.root)
     const header = new Uint8Array(await blob.arrayBuffer()).slice(0, 4)
     expect(new TextDecoder().decode(header)).toBe('glTF')
+  })
+
+  it('prepara una copia liviana: fotos en JPEG y un solo mapa de rugosidad por foto, sin tocar el visor', () => {
+    const rough = new THREE.Texture()
+    const color = new THREE.Texture()
+    const a = new THREE.MeshStandardMaterial({ map: color, roughnessMap: rough })
+    const b = new THREE.MeshStandardMaterial({ roughnessMap: rough })
+    const glass = new THREE.MeshStandardMaterial({ map: new THREE.Texture(), transparent: true })
+    const metal = new THREE.MeshStandardMaterial({ roughnessMap: new THREE.Texture(), metalness: 0.3 })
+    const root = new THREE.Group()
+    for (const m of [a, a, b, glass, metal]) root.add(new THREE.Mesh(new THREE.BoxGeometry(), m))
+    const copy = prepareForExport(root)
+    const out = copy.children.map((o) => (o as THREE.Mesh).material as THREE.MeshStandardMaterial)
+    // el exportador reutiliza el mapa si metalness y rugosidad son la misma textura
+    expect(out[0]!.metalnessMap).toBe(rough)
+    expect(out[2]!.metalnessMap).toBe(rough)
+    // un mismo material sigue siendo uno solo en la copia
+    expect(out[0]).toBe(out[1])
+    // con metal de verdad no se inventa un mapa de metalness
+    expect(out[4]!.metalnessMap).toBeNull()
+    expect(color.userData.mimeType).toBe('image/jpeg')
+    expect(rough.userData.mimeType).toBe('image/jpeg')
+    // el vidrio necesita el alfa: su color queda en PNG
+    expect(glass.map!.userData.mimeType).toBeUndefined()
+    // la escena del visor no cambia
+    expect(a.metalnessMap).toBeNull()
+    expect((root.children[0] as THREE.Mesh).material).toBe(a)
   })
 })
 
