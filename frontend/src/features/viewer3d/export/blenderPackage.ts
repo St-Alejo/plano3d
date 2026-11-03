@@ -9,12 +9,15 @@
  */
 import * as THREE from 'three'
 import { strToU8, zipSync } from 'fflate'
-import type { BuildingModel } from '@/api/types'
+import type { BuildingModel, Point } from '@/api/types'
 import { frontNormal } from '@/domain/facadeGeometry'
 import { levelSummaries, roomLamps } from '@/domain/levels'
-import { modelBounds } from '@/domain/model'
+import { modelBounds, roomArea } from '@/domain/model'
+import { titleCase } from '@/lib/text'
 import { sunDirection, type SunPosition } from '@/domain/sun'
 import { exportGlb } from '../scene/exportGlb'
+import { MaterialFactory } from '../scene/MaterialFactory'
+import { buildScene, disposeScene, exportRoot } from '../scene/SceneBuilder'
 import blenderScript from './blender/arquitectura.py?raw'
 
 /** Categoría (colección de Blender) de cada tipo de malla del visor. */
@@ -122,6 +125,25 @@ export interface BlenderCamera {
   ortho_scale?: number
   /** planta de un piso: se ocultan los de arriba al renderizarla */
   floor?: number
+  /** vista dentro de un ambiente (sin corrección de altura de la fachada, más exposición) */
+  interior?: boolean
+  /** dibujo técnico: se renderiza con líneas (Freestyle) */
+  lines?: boolean
+}
+
+/** La calle, el andén y la entrada al garaje frente a la fachada, en coordenadas de Blender. */
+export interface BlenderSite {
+  center: [number, number]
+  /** unitario, de la casa hacia la calle */
+  front: [number, number]
+  /** unitario, a lo largo de la fachada */
+  side: [number, number]
+  /** del centro a la cara de la fachada (m) */
+  depth: number
+  /** ancho de la casa a lo largo de la fachada (m) */
+  width: number
+  /** los portones de garaje: desplazamiento desde el centro a lo largo de `side` y su ancho */
+  gates: { offset: number; width: number }[]
 }
 
 export interface BlenderProject {
@@ -134,8 +156,71 @@ export interface BlenderProject {
   cameras: BlenderCamera[]
   /** dirección hacia el sol (unitaria), su altura y azimut en grados */
   sun: { direction: Vec3; altitude: number; azimuth: number }
-  lamps: { room: string; collection: string; location: Vec3 }[]
+  /** un plafón por ambiente; `area` (m²) para darle la potencia que el ambiente necesita */
+  lamps: { room: string; collection: string; location: Vec3; area: number }[]
   facade: { style: string; custom: boolean }
+  site: BlenderSite
+}
+
+/** ambientes que no merecen una vista interior: de paso, de servicio o muy chicos */
+const NO_INTERIOR = /ba[ñn]o|escalera|pasillo|hall|parqueadero|garaje|ropas|patio|dep[oó]sito|closet|vest[ií]er/i
+const MAX_INTERIORS_PER_FLOOR = 2
+
+function inside(p: Point, poly: Point[]): boolean {
+  let hit = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]!
+    const b = poly[j]!
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) hit = !hit
+  }
+  return hit
+}
+
+/**
+ * Una vista a la altura de los ojos en los ambientes principales de cada piso (los más grandes):
+ * desde una esquina, metida 0,6 m hacia adentro, mirando a la esquina opuesta.
+ */
+function interiorCameras(model: BuildingModel): BlenderCamera[] {
+  return levelSummaries(model).flatMap((l) => {
+    const lv = model.levels.find((x) => x.id === l.id)!
+    return lv.rooms
+      .filter((r) => r.polygon.length >= 3 && roomArea(r) >= 9 && !NO_INTERIOR.test(r.label))
+      .sort((a, b) => roomArea(b) - roomArea(a))
+      .slice(0, MAX_INTERIORS_PER_FLOOR)
+      .flatMap((r) => {
+        const xs = r.polygon.map((p) => p.x)
+        const ys = r.polygon.map((p) => p.y)
+        const box = { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) }
+        const c = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
+        const corners = [
+          { x: box.minX, y: box.minY },
+          { x: box.maxX, y: box.minY },
+          { x: box.maxX, y: box.maxY },
+          { x: box.minX, y: box.maxY },
+        ]
+        // la esquina más despejada (lejos de los muebles), que quede adentro del ambiente
+        let best: { at: Point; far: Point; free: number } | null = null
+        for (const k of corners) {
+          const len = Math.hypot(c.x - k.x, c.y - k.y)
+          const at = { x: k.x + ((c.x - k.x) / len) * 0.6, y: k.y + ((c.y - k.y) / len) * 0.6 }
+          if (!inside(at, r.polygon)) continue
+          const free = Math.min(10, ...(lv.furniture ?? []).map((f) => Math.hypot(f.position.x - at.x, f.position.y - at.y) - Math.hypot(f.width, f.depth) / 2))
+          if (!best || free > best.free) best = { at, far: { x: 2 * c.x - k.x, y: 2 * c.y - k.y }, free }
+        }
+        if (best) {
+          const { at, far } = best
+          return [{
+            name: `Interior ${titleCase(r.label)} (Piso ${l.number})`,
+            location: bl(at.x, at.y, l.elevation + 1.45),
+            target: bl(far.x, far.y, l.elevation + 1.2),
+            lens: 16,
+            level: true,
+            interior: true,
+          }]
+        }
+        return []
+      })
+  })
 }
 
 /** Sol por defecto: 10 de la mañana de un día de marzo en Bogotá (luz lateral, sombras cortas). */
@@ -166,6 +251,7 @@ export function blenderProject(model: BuildingModel, name: string, sun: SunPosit
   })
   // de la mitad de la casa a la cara del frente (el fondo de la planta visto desde la calle)
   const half = Math.abs(f.x) * ((b.maxX - b.minX) / 2) + Math.abs(f.y) * ((b.maxY - b.minY) / 2)
+  const width = Math.abs(side.x) * (b.maxX - b.minX) + Math.abs(side.y) * (b.maxY - b.minY)
   // a 28 mm el cuadro 16:9 abre ~40° en vertical: a 2× la altura cabe la casa entera con aire
   const fachada = at(half + Math.max(10, height * 2), 0)
   const calle = at(half + Math.max(7, height * 1.4), s * 0.45)
@@ -183,7 +269,15 @@ export function blenderProject(model: BuildingModel, name: string, sun: SunPosit
       // el ancho ortográfico es el lado largo del cuadro 16:9: que quepa también el fondo
       ortho_scale: r3(Math.max(b.maxX - b.minX, ((b.maxY - b.minY) * 16) / 9) * 1.12),
       floor: l.number,
+      lines: true,
     })),
+    {
+      // alzado: ortográfica de frente, como el plano de fachada de un proyecto
+      ...cam('Alzado frontal', at(half + 40, 0), height / 2, c, height / 2, 0, false),
+      ortho_scale: r3(Math.max(width, (height * 16) / 9) * 1.2),
+      lines: true,
+    },
+    ...interiorCameras(model),
   ]
   const sp = sun && sun.altitude > 2 ? sun : DEFAULT_SUN
   const [dx, dy, dz] = sunDirection(sp)
@@ -196,35 +290,73 @@ export function blenderProject(model: BuildingModel, name: string, sun: SunPosit
     floors: levels.map((l) => ({ number: l.number, name: l.name, collection: `Piso ${l.number}`, elevation: r3(l.elevation), height: r3(l.height) })),
     cameras,
     sun: { direction: [r3(dx), r3(-dz), r3(dy)], altitude: r3(sp.altitude), azimuth: r3(sp.azimuth) },
-    lamps: roomLamps(model).map((l) => ({ room: l.label, collection: floorOf.get(l.levelId) ?? 'General', location: bl(l.x, l.y, l.ceiling - 0.12) })),
+    lamps: roomLamps(model).map((l) => {
+      const room = model.levels.find((lv) => lv.id === l.levelId)?.rooms.find((r) => r.id === l.roomId)
+      return { room: l.label, collection: floorOf.get(l.levelId) ?? 'General', location: bl(l.x, l.y, l.ceiling - 0.12), area: r3(room ? roomArea(room) : 10) }
+    }),
     facade: { style: model.facade ?? 'moderna_blanca', custom: Boolean(model.facade_custom) },
+    site: {
+      center: [r3(c.x), r3(-c.y)],
+      front: [r3(f.x), r3(-f.y)],
+      side: [r3(side.x), r3(-side.y)],
+      depth: r3(half),
+      width: r3(width),
+      gates: ground ? gatesOf(ground, c, side) : [],
+    },
   }
+}
+
+/** Los portones del garaje del primer piso, medidos a lo largo de la fachada. */
+function gatesOf(ground: BuildingModel['levels'][number], c: Point, side: Point): BlenderSite['gates'] {
+  return ground.walls
+    .filter((w) => w.kind === 'exterior')
+    .flatMap((w) => {
+      const len = Math.hypot(w.end.x - w.start.x, w.end.y - w.start.y) || 1
+      const d = { x: (w.end.x - w.start.x) / len, y: (w.end.y - w.start.y) / len }
+      return w.openings
+        .filter((o) => o.operation === 'folding')
+        .map((o) => {
+          const p = { x: w.start.x + d.x * (o.offset + o.width / 2), y: w.start.y + d.y * (o.offset + o.width / 2) }
+          return { offset: r3((p.x - c.x) * side.x + (p.y - c.y) * side.y), width: r3(o.width) }
+        })
+    })
 }
 
 export const README = `PLANO 3D — PAQUETE PARA BLENDER
 ================================
 
 Contenido
-  casa.glb               el modelo (un nodo por piso y categoría, con fotos PBR)
-  proyecto.json          cámaras, sol y luces del proyecto
+  casa.glb                 el modelo completo (cubierta, fachada y muebles), un nodo por
+                           piso y categoría
+  proyecto.json            cámaras, sol, luces y la calle frente a la fachada
   blender/arquitectura.py  el script que deja la escena lista para render
 
-Cómo abrirlo (Blender 4.x)
+Cómo abrirlo (Blender 4.x o 5.x)
   1. Descomprima el .zip en una carpeta (no lo abra desde adentro del .zip).
   2. Abra Blender, vaya a la pestaña "Scripting", pulse "Abrir" y elija
-     blender/arquitectura.py; luego pulse el botón ▶ (Ejecutar).
-  3. En la vista 3D pulse N: en la pestaña "Plano 3D" puede cambiar de cámara,
-     prender o apagar cada piso y los muebles, y renderizar todas las cámaras
-     (las imágenes quedan en la carpeta renders/ junto al paquete).
+     blender/arquitectura.py; luego pulse el botón ▶ (Ejecutar). Queda guardado
+     como casa.blend junto al paquete.
+  3. En la vista 3D pulse N: en la pestaña "Plano 3D" elige la cámara, la hora
+     (día, atardecer o noche), la calidad (borrador, final o 4K), prende o apaga
+     cada piso y los muebles, y renderiza todas las cámaras (las imágenes quedan
+     en la carpeta renders/ junto al paquete).
 
 Sin abrir la interfaz:
   blender -b -P blender/arquitectura.py -- casa.glb --render
+  opciones: --calidad borrador|final|alta  --hora dia|atardecer|noche
+            --camara "Interior"  (sólo las cámaras con ese texto en el nombre)
 
-La escena usa Cycles (128 muestras, con eliminación de ruido), cielo físico
-(Nishita) y un sol a la hora del estudio solar del visor. El vidrio es de
-transmisión real; muros y losas llevan un bisel de 3 mm para que las aristas
-reciban luz. Ajuste muestras y resolución en Propiedades > Render si quiere
-más calidad o más velocidad.
+Qué arma el script
+  - Materiales fotorrealistas a escala real: pañete con grano, concreto con poros,
+    madera con veta, porcelanato o piso de tablas, telas, metal pintado y vidrio.
+  - Entorno: prado, entrada al garaje, andén con sardinel, calle con su línea
+    central y árboles.
+  - Luz: cielo físico, el sol a la hora del estudio solar del visor, un plafón por
+    ambiente con la potencia según su área y portales de luz en las ventanas.
+  - Cámaras: fachada, calle, aérea, vistas interiores a la altura de los ojos y
+    los dibujos técnicos (una planta por piso y el alzado frontal) con líneas.
+  - Cycles en la tarjeta de video si la hay (OptiX, CUDA, HIP, Metal), muestreo
+    adaptativo, eliminación de ruido y color AgX.
 `
 
 // TextEncoder puede dar un Uint8Array de otro "realm" (jsdom) y fflate lo tomaría por carpeta
@@ -241,4 +373,17 @@ export async function blenderPackage(root: THREE.Object3D, model: BuildingModel,
     'blender/arquitectura.py': text(blenderScript),
     'LEEME.txt': text(README.replace(/\n/g, '\r\n')),
   })
+}
+
+/**
+ * El paquete de la casa completa, sin importar qué tenga prendido el visor: con cubierta,
+ * fachada, detalles y muebles (en Blender cada cosa se apaga por colección).
+ */
+export async function blenderPackageFor(model: BuildingModel, name: string, sun: SunPosition | null = null): Promise<Uint8Array> {
+  const scene = buildScene(model, new MaterialFactory(), { facade: true, roof: true, details: true })
+  try {
+    return await blenderPackage(exportRoot(scene), model, name, sun)
+  } finally {
+    disposeScene(scene)
+  }
 }

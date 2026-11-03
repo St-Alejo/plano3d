@@ -5,7 +5,7 @@ import type { BuildingModel, Level, Wall } from '@/api/types'
 import { door, sampleModel, windowOp } from '@/test/fixtures'
 import { MaterialFactory } from '../scene/MaterialFactory'
 import { buildScene, exportRoot } from '../scene/SceneBuilder'
-import { blenderPackage, blenderProject, blenderRoot, type BlenderProject } from './blenderPackage'
+import { blenderPackage, blenderPackageFor, blenderProject, blenderRoot, type BlenderProject } from './blenderPackage'
 import script from './blender/arquitectura.py?raw'
 
 /** Dos pisos con portón al frente (+y), una cama arriba y la fachada contemporánea. */
@@ -52,14 +52,25 @@ describe('paquete para Blender', () => {
 
   it('las cámaras miran la casa: la fachada desde la calle, una planta por piso', () => {
     const p = blenderProject(house(), 'Casa', null)
-    expect(p.cameras.map((c) => c.name)).toEqual(['Fachada principal', 'Calle (altura de ojos)', 'Aérea 3/4', 'Planta Planta baja', 'Planta Piso 2'])
+    expect(p.cameras.map((c) => c.name)).toEqual([
+      'Fachada principal',
+      'Calle (altura de ojos)',
+      'Aérea 3/4',
+      'Planta Planta baja',
+      'Planta Piso 2',
+      'Alzado frontal',
+      'Interior Sala (Piso 1)',
+      'Interior Espacio 2 (Piso 1)',
+      'Interior Sala (Piso 2)',
+      'Interior Espacio 2 (Piso 2)',
+    ])
     const front = p.cameras[0]!
     // el frente es +y en planta = −y en Blender: la cámara queda más allá de y=−7
     expect(front.location[1]).toBeLessThan(-7)
     expect(front.location[2]).toBeCloseTo(1.6)
     expect(front.level).toBe(true)
-    const plan2 = p.cameras.at(-1)!
-    expect(plan2).toMatchObject({ lens: 0, floor: 2 })
+    const plan2 = p.cameras.find((c) => c.name === 'Planta Piso 2')!
+    expect(plan2).toMatchObject({ lens: 0, floor: 2, lines: true })
     expect(plan2.location[2]).toBeGreaterThan(2.6)
     // sol por defecto arriba del horizonte y unitario
     const [x, y, z] = p.sun.direction
@@ -68,6 +79,32 @@ describe('paquete para Blender', () => {
     expect(p.lamps.length).toBe(4)
     expect(p.lamps.every((l) => l.collection === 'Piso 1' || l.collection === 'Piso 2')).toBe(true)
     expect(p.facade).toEqual({ style: 'moderna_contemporanea', custom: false })
+  })
+
+  it('las vistas interiores quedan adentro, a la altura de los ojos y lejos de los muebles', () => {
+    const p = blenderProject(house(), 'Casa', null)
+    const sala2 = p.cameras.find((c) => c.name === 'Interior Sala (Piso 2)')!
+    expect(sala2).toMatchObject({ interior: true, level: true, lens: 16 })
+    // la sala va de (0.1, 0.1) a (5.9, 6.9) en planta: en Blender y = −planta
+    const [x, y, z] = sala2.location
+    expect(x).toBeGreaterThan(0.1)
+    expect(x).toBeLessThan(5.9)
+    expect(-y).toBeGreaterThan(0.1)
+    expect(-y).toBeLessThan(6.9)
+    expect(z).toBeCloseTo(2.6 + 1.45)
+    // la cama del piso 2 está en (2, 2): la cámara no queda encima de ella
+    expect(Math.hypot(x - 2, -y - 2)).toBeGreaterThan(Math.hypot(1.4, 1.95) / 2)
+    // y mira hacia el otro lado del ambiente
+    expect(Math.hypot(sala2.target[0] - x, sala2.target[1] - y)).toBeGreaterThan(4)
+  })
+
+  it('la calle va frente al portón y cada plafón sabe el área de su ambiente', () => {
+    const p = blenderProject(house(), 'Casa', null)
+    expect(p.site.front).toEqual([0, -1])
+    expect(p.site.depth).toBeCloseTo(3.5, 1)
+    expect(p.site.gates).toHaveLength(1)
+    expect(p.site.gates[0]!.width).toBe(2)
+    expect(p.lamps.find((l) => l.room === 'Sala')!.area).toBeCloseTo(5.8 * 6.8, 1)
   })
 
   it('el .zip trae el GLB, el script, los datos y el LÉEME', async () => {
@@ -84,13 +121,22 @@ describe('paquete para Blender', () => {
     expect(wall.extras).toMatchObject({ category: 'Muros', level: 'Piso 1', levelId: 'lvl_0' })
     const project = JSON.parse(strFromU8(zip['proyecto.json']!)) as BlenderProject
     expect(project.sun.altitude).toBe(30)
-    expect(project.cameras).toHaveLength(5)
+    expect(project.cameras).toHaveLength(10)
     expect(strFromU8(zip['blender/arquitectura.py']!)).toBe(script)
     expect(strFromU8(zip['LEEME.txt']!)).toContain('Scripting')
   })
 
+  it('la casa va completa aunque el visor tenga la cubierta y los muebles apagados', async () => {
+    const zip = unzipSync(await blenderPackageFor(house(), 'Casa'))
+    const glb = zip['casa.glb']!
+    const len = new DataView(glb.buffer, glb.byteOffset).getUint32(12, true)
+    const doc = JSON.parse(strFromU8(glb.slice(20, 20 + len))) as { nodes: { name?: string }[] }
+    const names = doc.nodes.map((n) => n.name ?? '')
+    expect(names).toEqual(expect.arrayContaining(['Piso 2 · Cubierta', 'Piso 2 · Muebles', 'Piso 1 · Fachada']))
+  })
+
   it('el script lee lo que el paquete escribe', () => {
-    for (const key of ['"cameras"', '"sun"', '"lamps"', '"height"', '"level"', '"category"', '"floor"', 'casa.glb', 'proyecto.json'])
+    for (const key of ['"cameras"', '"sun"', '"lamps"', '"height"', '"level"', '"category"', '"floor"', '"site"', '"gates"', '"interior"', '"lines"', '"area"', 'casa.glb', 'proyecto.json'])
       expect(script).toContain(key)
   })
 })

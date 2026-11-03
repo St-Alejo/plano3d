@@ -331,11 +331,10 @@ export function ViewerPage() {
 
   // paquete para Blender: GLB por piso y categoría, script de render y datos del proyecto
   const doBlender = async () => {
-    if (!scene.current) return
     setExporting(true)
     try {
-      const { blenderPackage } = await import('./export/blenderPackage')
-      const zip = await blenderPackage(exportRoot(scene.current), model, project.name, sun)
+      const { blenderPackageFor } = await import('./export/blenderPackage')
+      const zip = await blenderPackageFor(model, project.name, sun)
       downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), `${fileBase}_blender.zip`)
     } finally {
       setExporting(false)
