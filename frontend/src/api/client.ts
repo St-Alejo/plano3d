@@ -1,4 +1,4 @@
-import type { AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck } from './types'
+import type { AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
 
 export class ApiError extends Error {
   constructor(
@@ -162,8 +162,8 @@ export const api = {
   },
 
   /** Estilo de fachada: solo cambia el exterior; el plano queda igual. */
-  setFacade: (id: string, style: string, revision?: number) => {
-    const init = json({ style })
+  setFacade: (id: string, style: string, revision?: number, custom?: FacadeCustom | null) => {
+    const init = json({ style, custom: custom ?? null })
     const headers = { ...(init.headers as Record<string, string>) }
     if (revision !== undefined) headers['If-Match'] = `"${revision}"`
     return request<Project>(`/projects/${encodeURIComponent(id)}/facade`, { method: 'PUT', ...init, headers })

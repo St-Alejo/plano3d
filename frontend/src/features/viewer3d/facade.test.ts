@@ -61,8 +61,9 @@ describe('fachada', () => {
     const materials = new MaterialFactory()
     const skinMaterial = (style: BuildingModel['facade']) =>
       (meshes(buildScene({ ...house(), facade: style }, materials, { facade: true }).details).find((m) => m.name.startsWith('facade:w_top'))!.material as THREE.Material).uuid
-    expect(new Set(FACADE_STYLES.map(skinMaterial)).size).toBe(3)
-    expect(nextFacade('moderna_ladrillo')).toBe('moderna_blanca')
+    expect(new Set(FACADE_STYLES.map(skinMaterial)).size).toBe(FACADE_STYLES.length)
+    expect(nextFacade('moderna_ladrillo')).toBe('moderna_contemporanea')
+    expect(nextFacade('moderna_contemporanea')).toBe('moderna_blanca')
   })
 
   it('el vano plegable ancho es un portón cerrado de 4 hojas, no una puerta batiente', () => {
@@ -133,7 +134,7 @@ describe('fachada', () => {
     }
     // los tres estilos salen con colores distintos en el archivo
     const colors = docs.map((d) => JSON.stringify(d.materials.map((m) => m.pbrMetallicRoughness?.baseColorFactor).sort()))
-    expect(new Set(colors).size).toBe(3)
+    expect(new Set(colors).size).toBe(FACADE_STYLES.length)
   })
 
   it('los marcos de fachada se parten: la mitad de afuera toma el color del estilo', () => {

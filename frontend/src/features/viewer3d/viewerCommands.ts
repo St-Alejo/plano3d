@@ -8,6 +8,7 @@
  */
 import type { BuildingModel } from '@/api/types'
 import { roomArea } from '@/domain/model'
+import { isFacadeEdit, type FacadeEdit, type FacadeFeature, type FacadeMaterial, type FacadePart } from '@/domain/facades'
 import { fold } from '@/domain/planOps'
 import type { BrickId } from '@/domain/structure/bricks'
 import { deriveStructure } from '@/domain/structure/derive'
@@ -41,6 +42,8 @@ export type ViewerAction =
   | { a: 'level'; n: number | 'all' }
   /** muebles a la vista o no (no los borra del plano) */
   | { a: 'furniture'; on: boolean }
+  /** un cambio de la fachada paramétrica (estilo, revestimiento de una parte, color, detalle) */
+  | { a: 'facade'; edit: FacadeEdit }
 
 export interface ViewerParse {
   actions: ViewerAction[]
@@ -113,6 +116,59 @@ type Rule = (f: string, orig: string) => ViewerAction | ViewerAction[] | null
 
 const ORDINAL: Record<string, number> = { primer: 1, primero: 1, segundo: 2, tercer: 3, tercero: 3, cuarto: 4 }
 
+/** Colores con nombre del chat de fachada (los demás van a la IA). */
+const COLOR_NAMES: [RegExp, string][] = [
+  [/\bnegros\b|\bnegras\b|\bnegra\b|\bnegro\b/, '#1c1d1f'],
+  [/\bblancos\b|\bblancas\b|\bblanca\b|\bblanco\b/, '#f2f1ec'],
+  [/\bgrafito\b|\bgris oscuro\b/, '#3b3e42'],
+  [/\bgris\b|\bgrises\b/, '#7b7f83'],
+]
+const colorOf = (f: string) => COLOR_NAMES.find(([re]) => re.test(f))?.[1]
+
+const MATERIALS: [RegExp, FacadeMaterial][] = [
+  [/\bpanete\b|\bestuco\b/, 'panete'],
+  [/\bconcreto\b|\bcemento\b/, 'concreto'],
+  [/\bladrillos\b|\bladrillo\b/, 'ladrillo'],
+  [/\bmadera\b/, 'madera'],
+  [/\bporcelanato\b|\benchape\b/, 'porcelanato'],
+]
+
+const FEATURES: [RegExp, FacadeFeature][] = [
+  [/\blistones\b|\bcelosia\b|\bquiebrasoles\b/, 'listones'],
+  [/\bjardinera\b|\bmatera\b/, 'jardinera'],
+  [/\bmarco saliente\b|\brecuadro\b/, 'marco_ventana'],
+  [/\balero\b/, 'alero'],
+  [/\bapliques\b|\bluces de (?:la )?fachada\b/, 'luces'],
+]
+
+/** Parte de la fachada nombrada en la frase: "primer piso", "segundo piso", "el portón". */
+function facadePart(f: string): FacadePart | null {
+  if (/\bporton\b/.test(f)) return 'gate'
+  if (/\bfrente de arriba\b|\bfrente del voladizo\b/.test(f)) return 'front'
+  if (/\b(?:primer|primero)\s+(?:piso|nivel)\b|\b(?:piso|nivel)\s+1\b|\babajo\b|\bgarajes\b|\bgaraje\b/.test(f)) return 'ground'
+  if (/\b(?:segundo|tercer|tercero)\s+(?:piso|nivel)\b|\b(?:piso|nivel)\s+[23]\b|\bpisos de arriba\b|\barriba\b|\bvoladizo\b/.test(f)) return 'upper'
+  return null
+}
+
+/** La fachada paramétrica: estilo, revestimiento de una parte, colores y detalles. */
+function facadeRule(f: string): ViewerAction | null {
+  if (/\bcontemporanea\b|\bcontemporaneo\b/.test(f)) return { a: 'facade', edit: { style: 'moderna_contemporanea' } }
+  if (/\bfachada (?:moderna )?blanca\b/.test(f)) return { a: 'facade', edit: { style: 'moderna_blanca' } }
+  if (/\bfachada (?:de )?ladrillo y blanco\b/.test(f)) return { a: 'facade', edit: { style: 'moderna_ladrillo' } }
+  if (/\bfachada gris y madera\b/.test(f)) return { a: 'facade', edit: { style: 'moderna_madera' } }
+  const feature = FEATURES.find(([re]) => re.test(f))
+  if (feature) return { a: 'facade', edit: { feature: feature[1], on: !OFF.test(f) } }
+  const color = colorOf(f)
+  if (color && /\bmarcos?\b|\bperfileria\b|\bventaneria\b/.test(f)) return { a: 'facade', edit: { paint: 'frame', color } }
+  if (color && /\bfranja\b|\bborde de (?:la )?losa\b|\bremate\b/.test(f)) return { a: 'facade', edit: { paint: 'band', color } }
+  if (OFF.test(f)) return null
+  const part = facadePart(f)
+  if (!part) return null
+  const material = MATERIALS.find(([re]) => re.test(f))?.[1]
+  if (material) return { a: 'facade', edit: color ? { part, material, color } : { part, material } }
+  return color ? { a: 'facade', edit: { part, color } } : null
+}
+
 const RULES: Rule[] = [
   // preguntas de cantidades: "¿cuántos ladrillos?", "cuánto cemento necesito"
   (f) => {
@@ -134,6 +190,8 @@ const RULES: Rule[] = [
     if (/\b(?:reproduce|anima|play)\b/.test(f)) return { a: 'step', to: 'play' }
     return null
   },
+  // fachada antes que el ladrillo y los pisos: "el primer piso en ladrillo" es la piel
+  facadeRule,
   (f) => {
     const id = elementId(f)
     return id ? { a: 'element', id } : null
@@ -242,6 +300,8 @@ export function parseViewerChat(message: string): ViewerParse {
     const kinds = new Set(hits.map((h) => (Array.isArray(h) ? h[0]! : h).a))
     kinds.delete('room')
     if (kinds.has('step')) kinds.delete('plan_mode')
+    // un cambio de fachada nombra pisos, materiales o "fachada": esas otras lecturas sobran
+    if (kinds.has('facade')) for (const k of [...kinds]) if (k !== 'facade') kinds.delete(k)
     if (kinds.size > 1) ambiguous.push(c.orig)
   }
   return { actions, unknown, ambiguous }
@@ -259,6 +319,8 @@ export const VIEWER_EXAMPLES = [
   'usa bloque Nº5',
   'ver piso 2',
   'quita los muebles',
+  'fachada contemporánea',
+  'madera en el segundo piso',
 ]
 
 // ----------------------------------------------------------------------------- respuestas de cantidades
@@ -322,6 +384,7 @@ const ok: Record<ViewerAction['a'], (o: Record<string, unknown>) => boolean> = {
   room: (o) => typeof o.room === 'string',
   level: (o) => o.n === 'all' || (typeof o.n === 'number' && o.n >= 1),
   furniture: (o) => typeof o.on === 'boolean',
+  facade: (o) => isFacadeEdit(o.edit),
   ask: (o) => ['ladrillo', 'cemento', 'arena', 'grava', 'acero', 'concreto', 'area', 'todo'].includes(o.topic as string),
 }
 

@@ -8,7 +8,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point, Project } from '@/api/types'
 import { streetEntry } from '@/domain/facadeGeometry'
-import { facadeSpec, nextFacade, type FacadeStyle } from '@/domain/facades'
+import { applyFacadeEdit, describeFacadeEdit, facadeSpec, nextFacade, resolveFacade, type FacadeEdit, type FacadeState } from '@/domain/facades'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
 import { fold } from '@/domain/planOps'
@@ -85,7 +85,10 @@ export function ViewerPage() {
   // última revisión guardada desde aquí (fachada, muebles): la siguiente escritura la exige
   const [savedRevision, setSavedRevision] = useState<{ id: string; n: number } | null>(null)
   const revision = savedRevision && savedRevision.id === project?.id ? savedRevision.n : project?.revision
-  const setRevision = (p: Project) => setSavedRevision({ id: p.id, n: p.revision })
+  const setRevision = (p: Project) => {
+    lastRevision.current = { id: p.id, n: p.revision }
+    setSavedRevision({ id: p.id, n: p.revision })
+  }
   const [mode, setMode] = useState<ViewMode>('orbit')
   // el modo del plano vive en la URL (?modo=obra) para poder compartir el enlace
   const [params, setParams] = useSearchParams()
@@ -172,29 +175,46 @@ export function ViewerPage() {
     return streetEntry(ground) ?? undefined
   }, [project])
 
-  // fachada: se ve al instante y se guarda en segundo plano; si falla vuelve a la anterior
-  const [facade, setFacadeState] = useState<{ style: FacadeStyle; revision: number } | null>(null)
+  // fachada: se ve al instante y se guarda en segundo plano; si falla vuelve a la anterior.
+  // Los cambios seguidos (varios en un mensaje del chat) se encadenan: cada guardado sale
+  // con la revisión que dejó el anterior, y si ya hay uno más nuevo en cola se lo salta.
+  const [facade, setFacadeState] = useState<FacadeState | null>(null)
   const [facadeError, setFacadeError] = useState<string | null>(null)
-  const facadeStyle = facade?.style ?? project?.model?.facade
-  const viewModel = useMemo(() => (project?.model && facadeStyle ? { ...project.model, facade: facadeStyle } : project?.model), [project, facadeStyle])
-  const cycleFacade = () => {
+  const facadeNow = useRef<FacadeState | null>(null)
+  const facadeQueue = useRef<Promise<void>>(Promise.resolve())
+  const lastRevision = useRef<{ id: string; n: number } | null>(null)
+  const loadedFacade = (): FacadeState => ({ style: facadeSpec(project?.model?.facade).id, custom: project?.model?.facade_custom ?? null })
+  const facadeView = facade ?? loadedFacade()
+  const facadeStyle = facadeView.style
+  const viewModel = useMemo(
+    () => (project?.model && facade ? { ...project.model, facade: facade.style, facade_custom: facade.custom } : project?.model),
+    [project, facade],
+  )
+  const changeFacade = (next: FacadeState) => {
     if (!project) return
-    const prev = facade
-    const style = nextFacade(facadeStyle)
-    const rev = revision ?? project.revision
+    const prev = facadeNow.current ?? facade ?? loadedFacade()
+    facadeNow.current = next
     setFacadeError(null)
-    setFacadeState({ style, revision: rev })
-    api.setFacade(project.id, style, rev).then(
-      (p) => {
-        setFacadeState({ style, revision: p.revision })
+    setFacadeState(next)
+    facadeQueue.current = facadeQueue.current.then(async () => {
+      if (facadeNow.current !== next) return
+      const last = lastRevision.current
+      const rev = last && last.id === project.id ? last.n : (revision ?? project.revision)
+      try {
+        const p = await api.setFacade(project.id, next.style, rev, next.custom)
+        lastRevision.current = { id: p.id, n: p.revision }
         setRevision(p)
-      },
-      (e: unknown) => {
-        setFacadeState(prev)
+      } catch (e) {
+        if (facadeNow.current === next) {
+          facadeNow.current = prev
+          setFacadeState(prev)
+        }
         setFacadeError(e instanceof Error ? e.message : 'No se pudo guardar la fachada')
-      },
-    )
+      }
+    })
   }
+  const editFacade = (edit: FacadeEdit) => changeFacade(applyFacadeEdit(facadeNow.current ?? facade ?? loadedFacade(), edit))
+  const cycleFacade = () => editFacade({ style: nextFacade(facadeStyle) })
 
   // muebles: se ocultan sin reconstruir la escena; si el piso no tiene, se amobla según el plano
   const [showFurniture, setShowFurniture] = useState(true)
@@ -394,6 +414,9 @@ export function ViewerPage() {
       }
       case 'ask':
         return quantityAnswer(model, brick, act.topic)
+      case 'facade':
+        editFacade(act.edit)
+        return describeFacadeEdit(act.edit)
       case 'furniture':
         if (act.on && furnitureCount === 0) {
           furnishNow()
@@ -508,11 +531,11 @@ export function ViewerPage() {
             <Button
               className="h-11 bg-canvas/85 backdrop-blur"
               onClick={cycleFacade}
-              aria-label={`Fachada: ${facadeSpec(facadeStyle).name}`}
+              aria-label={`Fachada: ${resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')}`}
               title="Cambia el estilo de la fachada (solo el exterior)"
               icon={<Paintbrush className="size-4" aria-hidden />}
             >
-              <span className="hidden sm:inline">Fachada: {facadeSpec(facadeStyle).name}</span>
+              <span className="hidden sm:inline">Fachada: {resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')}</span>
             </Button>
           )}
           {!strategy.panel &&
@@ -669,7 +692,7 @@ export function ViewerPage() {
                         <div className="flex items-center justify-between gap-2 text-xs">
                           <span>Fachada</span>
                           <button type="button" onClick={cycleFacade} className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised sm:min-h-8">
-                            {facadeSpec(facadeStyle).name} →
+                            {resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')} →
                           </button>
                         </div>
                       )}

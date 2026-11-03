@@ -6,12 +6,12 @@
  * serializa tal cual. Sin React ni WebGL: se puede probar en Node.
  */
 import * as THREE from 'three'
-import type { BuildingModel, Level } from '@/api/types'
-import { frontNormal, isFront, outwardSign, SKIN, skinBoxes } from '@/domain/facadeGeometry'
-import { facadeSpec, type FacadeSpec } from '@/domain/facades'
+import type { BuildingModel, Level, Wall } from '@/api/types'
+import { frontNormal, isFront, leftNormal, outwardSign, SKIN, skinBoxes } from '@/domain/facadeGeometry'
+import { claddingOf, resolveFacade, type FacadeSpec } from '@/domain/facades'
 import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes, type Box } from '@/domain/geometry'
 import { roomLamps } from '@/domain/levels'
-import { pointAlong, wallDirection } from '@/domain/model'
+import { pointAlong, wallDirection, wallLength } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
 import { worldUv } from './uv'
@@ -66,6 +66,13 @@ const COPING_H = 0.05
 /** Un vano plegable desde este ancho es el portón del garaje (hojas de panel cerradas). */
 const GATE_M = 1.8
 const GATE_LEAVES = 4
+/** fachada paramétrica: recuadro saliente de ventana (grosor y vuelo), listones, jardinera y alero (m) */
+const FRAME_T = 0.1
+const FRAME_OUT = 0.25
+const SLAT_GAP = 0.16
+const SLAT_OUT = 0.12
+const PLANTER_D = 0.45
+const FLAT_EAVE = 0.4
 
 function isGate(o: { operation?: string | null; width: number }): boolean {
   return o.operation === 'folding' && o.width >= GATE_M
@@ -464,8 +471,10 @@ export class SceneBuilder {
       worldUv(mesh)
       this.details.add(mesh)
     }
+    // con alero la losa vuela por fuera del antepecho
+    const eave = style.features.includes('alero') ? FLAT_EAVE : 0
     add(
-      new THREE.BoxGeometry(box.x1 - box.x0 + 2 * t, SLAB_THICKNESS, box.y1 - box.y0 + 2 * t),
+      new THREE.BoxGeometry(box.x1 - box.x0 + 2 * (t + eave), SLAB_THICKNESS, box.y1 - box.y0 + 2 * (t + eave)),
       this.materials.facadeColor(style.roof, 0.85),
       `roof:${top.id}:slab`,
       [(box.x0 + box.x1) / 2, wallTop + SLAB_THICKNESS / 2, (box.y0 + box.y1) / 2],
@@ -520,6 +529,70 @@ export class SceneBuilder {
         mesh.rotation.y = band.rotationY
         worldUv(mesh)
         this.details.add(mesh)
+      }
+    })
+    return this
+  }
+
+  /**
+   * Detalles de la fachada paramétrica, sobre la piel y solo por fuera (kind 'facade'):
+   * recuadro saliente y celosía de listones en las ventanas del frente de los pisos de
+   * arriba, jardinera al pie de las ventanas del piso 2 y apliques junto a los accesos del
+   * piso 1. El alero va en la losa de cubierta (withFlatRoof).
+   */
+  withFacadeFeatures(style: FacadeSpec): this {
+    const on = new Set(style.features)
+    if (!on.size) return this
+    const levels = [...this.levels()].sort((a, b) => a.elevation - b.elevation)
+    const front = levels[0] ? frontNormal(levels[0]) : null
+    const wood = this.materials.cladding(claddingOf('madera'))
+    const accent = this.materials.facadeColor(style.accent, 0.55)
+    const planter = this.materials.facadeColor('#8d8f91', 0.9)
+    const leaves = this.materials.facadeColor('#4f7a3a', 1)
+    const add = (w: Wall, lv: Level, side: 1 | -1, along: number, y: number, size: [number, number, number], out: number, material: THREE.Material, name: string) => {
+      const d = wallDirection(w)
+      const n = leftNormal(w)
+      const off = (w.thickness / 2 + SKIN + out) * side
+      const mesh = this.detail(new THREE.BoxGeometry(...size), material, name, { kind: 'facade', wallId: w.id, levelId: lv.id })
+      mesh.position.set(w.start.x + d.x * along + n.x * off, y, w.start.y + d.y * along + n.y * off)
+      mesh.rotation.y = -Math.atan2(d.y, d.x)
+      worldUv(mesh)
+      this.details.add(mesh)
+    }
+    levels.forEach((lv, k) => {
+      for (const w of lv.walls) {
+        if (w.bulge || !isFront(w, lv, front)) continue
+        const side = outwardSign(w, lv)
+        if (k === 0) {
+          if (!on.has('luces')) continue
+          // un aplique a cada lado de los portones y las puertas de la calle
+          for (const o of w.openings.filter((x) => x.kind === 'door'))
+            for (const s of [-1, 1])
+              add(w, lv, side, o.offset + o.width / 2 + s * (o.width / 2 + 0.25), lv.elevation + Math.min(o.height + 0.3, 2.5), [0.12, 0.26, 0.08], 0.04, this.materials.lamp(), `sconce:${o.id}:${s}`)
+          continue
+        }
+        for (const o of w.openings.filter((x) => x.kind === 'window')) {
+          const y0 = lv.elevation + o.sill
+          const mid = o.offset + o.width / 2
+          if (on.has('marco_ventana')) {
+            const t = FRAME_T
+            const dp = FRAME_OUT
+            add(w, lv, side, mid, y0 + o.height + t / 2, [o.width + 2 * t, t, dp], dp / 2, accent, `surround:${o.id}:0`)
+            add(w, lv, side, mid, y0 - t / 2, [o.width + 2 * t, t, dp], dp / 2, accent, `surround:${o.id}:1`)
+            add(w, lv, side, o.offset - t / 2, y0 + o.height / 2, [t, o.height, dp], dp / 2, accent, `surround:${o.id}:2`)
+            add(w, lv, side, o.offset + o.width + t / 2, y0 + o.height / 2, [t, o.height, dp], dp / 2, accent, `surround:${o.id}:3`)
+          }
+          if (on.has('listones')) {
+            const count = Math.max(3, Math.round(o.width / SLAT_GAP))
+            for (let i = 0; i < count; i++)
+              add(w, lv, side, o.offset + ((i + 0.5) * o.width) / count, y0 + o.height / 2, [0.045, o.height, 0.06], SLAT_OUT, wood, `slat:${o.id}:${i}`)
+          }
+        }
+        if (k === 1 && on.has('jardinera')) {
+          const len = wallLength(w)
+          add(w, lv, side, len / 2, lv.elevation + 0.075, [len, 0.45, PLANTER_D], PLANTER_D / 2, planter, `planter:${w.id}`)
+          add(w, lv, side, len / 2, lv.elevation + 0.42, [len - 0.1, 0.24, PLANTER_D - 0.1], PLANTER_D / 2, leaves, `planter:${w.id}:plants`)
+        }
       }
     })
     return this
@@ -650,9 +723,9 @@ export function buildScene(model: BuildingModel, materials?: MaterialFactory, op
     .withStairs()
     .withDoors()
     .withFurniture()
-  const style = opts.facade ? facadeSpec(model.facade) : null
+  const style = opts.facade ? resolveFacade(model.facade, model.facade_custom) : null
   b.withGates(style)
-  if (style) b.withFacade(style)
+  if (style) b.withFacade(style).withFacadeFeatures(style)
   if (opts.details) b.withSkirting().withFrames(style).withLamps(opts.roof)
   if (opts.roof) b.withRoof(style)
   if (opts.site) b.withSite()

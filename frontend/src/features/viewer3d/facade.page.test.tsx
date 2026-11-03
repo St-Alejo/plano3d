@@ -56,4 +56,30 @@ describe('botón de fachada del visor', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Otra persona guardó antes')
     expect(screen.getByTestId('viewer')).toHaveAttribute('data-facade', 'moderna_blanca')
   })
+
+  it('el chat cambia partes de la fachada y encadena los guardados', async () => {
+    const sent: { style: string; custom: unknown; ifMatch: string | null }[] = []
+    let revision = 1
+    server.use(
+      http.get('/api/projects/:id', () => HttpResponse.json(sampleProject())),
+      http.put('/api/projects/:id/facade', async ({ request }) => {
+        const body = (await request.json()) as { style: string; custom: unknown }
+        sent.push({ ...body, ifMatch: request.headers.get('If-Match') })
+        revision += 1
+        return HttpResponse.json(sampleProject({ revision }))
+      }),
+    )
+    renderViewer()
+    await userEvent.click(await screen.findByRole('button', { name: /Ajustar escribiendo/ }))
+    const box = screen.getByRole('textbox', { name: 'Mensaje para la vista 3D' })
+    // dos cambios en un mensaje: se ven los dos y se guarda una sola vez lo combinado
+    await userEvent.type(box, 'madera en el segundo piso; marcos negros{Enter}')
+    await waitFor(() => expect(sent).toHaveLength(1))
+    expect(sent[0]).toEqual({ style: 'moderna_blanca', custom: { upper: { material: 'madera', color: null }, frame: '#1c1d1f' }, ifMatch: '"1"' })
+    // el siguiente sale con la revisión que dejó el anterior
+    await userEvent.type(box, 'pon la jardinera{Enter}')
+    await waitFor(() => expect(sent).toHaveLength(2))
+    expect(sent[1]).toEqual({ style: 'moderna_blanca', custom: { upper: { material: 'madera', color: null }, frame: '#1c1d1f', features: ['jardinera'] }, ifMatch: '"2"' })
+    expect(await screen.findByRole('button', { name: 'Fachada: Moderna blanca *' })).toBeInTheDocument()
+  })
 })
