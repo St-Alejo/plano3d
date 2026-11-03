@@ -13,15 +13,17 @@ import { PointerLockControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import type { BuildingModel, Point, Stair } from '@/api/types'
+import type { BuildingModel, Point } from '@/api/types'
 import { bestViewAngle } from '@/domain/collision'
 import { pointAlong, wallDirection } from '@/domain/model'
 import {
   buildWalkWorld,
   EYE_HEIGHT as EYE,
+  levelArrival,
   nearestDoor,
   obstaclesFor,
   spawnAt,
+  stairRoute,
   stepCharacter,
   type CharacterState,
   type WalkWorld,
@@ -35,7 +37,7 @@ const SPEED = 2.2 // m/s
 const RUN = 1.8
 const LOOK_SPEED = 0.005
 const REACH = 2.4 // m: hasta dónde alcanza el "mirar y actuar"
-const DECOR = new Set(['detail', 'roof', 'site'])
+const DECOR = new Set(['detail', 'roof', 'site', 'lamp', 'facade'])
 const AUTO_DOOR = 1.3 // m: las puertas automáticas abren a esta distancia
 // vectores de trabajo reutilizados en cada frame (sin crear basura para el GC)
 const forward = new THREE.Vector3()
@@ -49,7 +51,7 @@ export interface WalkInput {
 }
 
 /** Punto de partida: en planta y (opcional) en qué nivel. */
-export type WalkStart = Point & { levelId?: string }
+export type WalkStart = Point & { levelId?: string; facing?: Point }
 
 const KEYS: Record<string, [number, number]> = {
   KeyW: [0, 1],
@@ -131,16 +133,22 @@ export function WalkControls({
   }
 
   const { x: sx, y: sy, levelId: sl } = start
+  const fx = start.facing?.x
+  const fy = start.facing?.y
   useEffect(() => {
     body.current = spawnAt(world, { x: sx, y: sy }, sl)
     auto.current = null
     const b = body.current
     camera.position.set(b.x, b.y + EYE, b.z)
-    // se empieza mirando hacia donde hay más espacio libre, no contra un muro
-    const a = bestViewAngle({ x: sx, y: sy }, obstaclesFor(world, b.levelId, () => true))
-    euler.current.set(0, Math.atan2(-Math.cos(a), -Math.sin(a)), 0)
+    // se empieza mirando hacia lo pedido (el portón desde la calle) o hacia donde hay más
+    // espacio libre, no contra un muro
+    if (fx !== undefined && fy !== undefined) euler.current.set(0, yawToward(fx, fy), 0)
+    else {
+      const a = bestViewAngle({ x: sx, y: sy }, obstaclesFor(world, b.levelId, () => true))
+      euler.current.set(0, Math.atan2(-Math.cos(a), -Math.sin(a)), 0)
+    }
     camera.quaternion.setFromEuler(euler.current)
-  }, [camera, sx, sy, sl, world])
+  }, [camera, sx, sy, sl, fx, fy, world])
 
   useEffect(() => () => useWalk.getState().setFocus(null), [])
 
@@ -177,18 +185,23 @@ export function WalkControls({
     }
   }, [touch, gl, camera])
 
-  /** Recorrido de una escalera: del pie a la llegada (o al revés si se está arriba). */
-  const stairPath = (s: Stair, elevation: number): Autopilot => {
-    const dx = s.end.x - s.start.x
-    const dy = s.end.y - s.start.y
-    const len = Math.hypot(dx, dy) || 1
-    const ux = dx / len
-    const uy = dy / len
-    const top = elevation + (s.base ?? 0) + s.riser * s.steps
-    const up = body.current.y < top - 0.5
-    const foot = { x: s.start.x - ux * 0.45, y: s.start.y - uy * 0.45 }
-    const head = { x: s.end.x + ux * 0.6, y: s.end.y + uy * 0.6 }
-    return { points: up ? [foot, head] : [{ x: s.end.x + ux * 0.25, y: s.end.y + uy * 0.25 }, foot], stuck: 0 }
+  /**
+   * Recorrido de la escalera completa (todos los tramos y descansos hasta el otro piso): sube
+   * si se está más cerca del pie, baja si se está arriba; desde la mitad sigue desde ahí.
+   */
+  const stairPath = (levelId: string, elevation: number): Autopilot | null => {
+    const route = stairRoute(model, levelId, 1)
+    if (!route) return null
+    const flights = model.levels.find((l) => l.id === levelId)?.stairs ?? []
+    const top = elevation + Math.max(...flights.map((f) => (f.base ?? 0) + f.riser * f.steps))
+    const b = body.current
+    const up = b.y < (elevation + top) / 2
+    const points = up ? route : [...route].reverse()
+    let k = 0
+    points.forEach((p, i) => {
+      if (Math.hypot(p.x - b.x, p.y - b.z) < Math.hypot(points[k]!.x - b.x, points[k]!.y - b.z)) k = i
+    })
+    return { points: points.slice(k), stuck: 0 }
   }
 
   const act = (focus: Focus) => {
@@ -197,7 +210,7 @@ export function WalkControls({
     if (focus.kind === 'door') st.toggleDoor(focus.id)
     else if (focus.kind === 'stair') {
       const found = stairs.find((x) => x.s.id === focus.id)
-      if (found) auto.current = stairPath(found.s, found.elevation)
+      if (found) auto.current = stairPath(found.levelId, found.elevation)
     } else if (focus.kind === 'window') {
       for (const lv of model.levels)
         for (const w of lv.walls) {
@@ -220,18 +233,11 @@ export function WalkControls({
     const idx = world.levels.findIndex((l) => l.id === b.levelId)
     const target = world.levels[idx + dir]
     if (!target) return
-    const cur = world.levels[idx]!
-    const link = stairs.find((x) =>
-      dir === 1 ? Math.abs(x.elevation - cur.elevation) < 0.05 : Math.abs(x.elevation - target.elevation) < 0.05,
-    )
-    if (link) {
-      const s = link.s
-      const len = Math.hypot(s.end.x - s.start.x, s.end.y - s.start.y) || 1
-      const ux = (s.end.x - s.start.x) / len
-      const uy = (s.end.y - s.start.y) / len
-      const at = dir === 1 ? { x: s.end.x + ux * 0.7, y: s.end.y + uy * 0.7 } : { x: s.start.x - ux * 0.7, y: s.start.y - uy * 0.7 }
-      body.current = spawnAt(world, at, target.id)
-      setYaw(dir === 1 ? yawToward(ux, uy) : yawToward(-ux, -uy))
+    // arriba de la escalera (o al pie al bajar), no en un descanso
+    const arrival = levelArrival(model, b.levelId, dir)
+    if (arrival) {
+      body.current = spawnAt(world, arrival.point, arrival.levelId)
+      setYaw(yawToward(arrival.facing.x, arrival.facing.y))
     } else body.current = spawnAt(world, { x: b.x, y: b.z }, target.id)
     auto.current = null
   }

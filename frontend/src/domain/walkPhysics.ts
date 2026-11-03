@@ -12,7 +12,7 @@
  */
 import type { BuildingModel, Point, Wall } from '@/api/types'
 import { resolveCollision, type Obstacle } from './collision'
-import { curvedWallBoxes, stairLandings, stairSteps, stairWell, wallToBoxes, type Box } from './geometry'
+import { curvedWallBoxes, STAIR_WAIST, stairLandings, stairSteps, stairWell, wallToBoxes, type Box } from './geometry'
 import { wallDirection } from './model'
 
 export const EYE_HEIGHT = 1.6
@@ -20,6 +20,8 @@ export const RADIUS = 0.25
 /** peldaño más alto que se sube caminando (la contrahuella típica es 0,175 m) */
 export const STEP_UP = 0.24
 export const GRAVITY = 9.8
+/** coronilla sobre los pies: debajo de una losa más baja no se cabe */
+const HEAD = EYE_HEIGHT + 0.15
 const BLOCKING_HEIGHT = 1.0
 const FURNITURE_BLOCKS = 0.5
 
@@ -35,6 +37,8 @@ export interface StepSurface {
   flightTop: number
   /** piso del nivel de la escalera: el peldaño es macizo desde ahí */
   floor: number
+  /** cara inferior de la losa del peldaño: desde un piso de abajo se pasa por debajo */
+  under: number
 }
 
 export interface DoorBody {
@@ -121,12 +125,12 @@ export function buildWalkWorld(model: BuildingModel): WalkWorld {
       const base = lv.elevation + (s.base ?? 0)
       const flightTop = base + s.riser * s.steps
       boxes.forEach((b, i) =>
-        steps.push({ levelId: lv.id, stairId: s.id, top: base + s.riser * (i + 1), rect: boxToObstacle(b), bottom: base, flightTop, floor: lv.elevation }),
+        steps.push({ levelId: lv.id, stairId: s.id, top: base + s.riser * (i + 1), rect: boxToObstacle(b), bottom: base, flightTop, floor: lv.elevation, under: base + s.riser * i - STAIR_WAIST }),
       )
     }
     for (const l of stairLandings(lv.stairs ?? [])) {
       const top = lv.elevation + l.top
-      steps.push({ levelId: lv.id, stairId: 'descanso', top, rect: boxToObstacle(l.box), bottom: top, flightTop: top, floor: lv.elevation })
+      steps.push({ levelId: lv.id, stairId: 'descanso', top, rect: boxToObstacle(l.box), bottom: top, flightTop: top, floor: lv.elevation, under: top - STAIR_WAIST * 1.5 })
     }
     const xs = lv.walls.flatMap((w) => [w.start.x, w.end.x])
     const ys = lv.walls.flatMap((w) => [w.start.y, w.end.y])
@@ -227,9 +231,10 @@ export function stepCharacter(
   const tryMove = (nx: number, nz: number): boolean => {
     const p = resolveCollision({ x: nx, y: nz }, obstacles, RADIUS)
     const g = groundAt(world, p.x, p.y, y)
-    // la tapa de un peldaño alto delante bloquea aunque el piso actual siga debajo
-    // (los peldaños son macizos desde el piso de su nivel: solo cuentan si ese piso no está sobre la cabeza)
-    const tooHigh = world.steps.some((s) => s.top > y + STEP_UP && s.floor <= y + EYE_HEIGHT && inRect(s.rect, p.x, p.y, RADIUS * 0.6))
+    // la tapa de un peldaño alto delante bloquea aunque el piso actual siga debajo. Los peldaños
+    // son losas (como se dibujan): por debajo de uno alto se pasa si su cara inferior queda sobre
+    // la cabeza, como bajo la escalera del piso de arriba en una U apilada
+    const tooHigh = world.steps.some((s) => s.top > y + STEP_UP && s.under < y + HEAD && inRect(s.rect, p.x, p.y, RADIUS * 0.6))
     if (tooHigh || g > y + STEP_UP) return false
     x = p.x
     z = p.y
@@ -260,6 +265,56 @@ export function stepCharacter(
     }
   }
   return { x, z, y, vy, levelId: levelAt(world, y).id }
+}
+
+// ----------------------------------------------------------------------------- escaleras
+
+function flightsOf(model: BuildingModel, levelId: string) {
+  const lv = model.levels.find((l) => l.id === levelId)
+  return [...(lv?.stairs ?? [])].sort((a, b) => (a.base ?? 0) - (b.base ?? 0))
+}
+
+function levelNeighbor(model: BuildingModel, levelId: string, dir: 1 | -1) {
+  const sorted = [...model.levels].sort((a, b) => a.elevation - b.elevation)
+  const i = sorted.findIndex((l) => l.id === levelId)
+  return i < 0 ? undefined : sorted[i + dir]
+}
+
+function unit(s: { start: Point; end: Point }): Point {
+  const len = Math.hypot(s.end.x - s.start.x, s.end.y - s.start.y) || 1
+  return { x: (s.end.x - s.start.x) / len, y: (s.end.y - s.start.y) / len }
+}
+
+/**
+ * Puntos en planta para subir (`dir` 1) o bajar (-1) desde el nivel `levelId` por toda la
+ * escalera, tramo por tramo y por los descansos: del pie del primer tramo a la llegada del
+ * último (o al revés). `null` si no hay escalera entre esos pisos.
+ */
+export function stairRoute(model: BuildingModel, levelId: string, dir: 1 | -1): Point[] | null {
+  const from = dir === 1 ? levelId : levelNeighbor(model, levelId, -1)?.id
+  const flights = from ? flightsOf(model, from) : []
+  if (flights.length === 0) return null
+  const first = flights[0]!
+  const last = flights[flights.length - 1]!
+  const u0 = unit(first)
+  const u1 = unit(last)
+  const points: Point[] = [{ x: first.start.x - u0.x * 0.45, y: first.start.y - u0.y * 0.45 }]
+  for (const f of flights) points.push(f.start, f.end)
+  points.push({ x: last.end.x + u1.x * 0.6, y: last.end.y + u1.y * 0.6 })
+  return dir === 1 ? points : points.reverse()
+}
+
+/** Dónde aparecer al saltar al piso de arriba (llegada de la escalera) o al de abajo (su pie). */
+export function levelArrival(model: BuildingModel, levelId: string, dir: 1 | -1): { point: Point; levelId: string; facing: Point } | null {
+  const target = levelNeighbor(model, levelId, dir)
+  const route = stairRoute(model, levelId, dir)
+  if (!target || !route) return null
+  const end = route[route.length - 1]!
+  const prev = route[route.length - 2]!
+  const len = Math.hypot(end.x - prev.x, end.y - prev.y) || 1
+  const facing = { x: (end.x - prev.x) / len, y: (end.y - prev.y) / len }
+  // un paso más allá de la escalera, mirando en el sentido en que se venía
+  return { point: { x: end.x + facing.x * 0.1, y: end.y + facing.y * 0.1 }, levelId: target.id, facing }
 }
 
 /** Puerta más cercana a un punto (para abrir al acercarse), si está a menos de `maxDist`. */
