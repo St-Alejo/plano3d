@@ -308,6 +308,11 @@ export class MaterialFactory {
     )
   }
 
+  /** difusor de un plafón encendido (brilla aunque no le llegue luz) */
+  lamp(): THREE.MeshStandardMaterial {
+    return this.cached('lamp', () => new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#fff3dc', emissiveIntensity: 1.6, roughness: 0.4 }))
+  }
+
   highlight(): THREE.MeshStandardMaterial {
     return this.cached('highlight', () => new THREE.MeshStandardMaterial({ color: '#5fd4e8', emissive: '#1b6f80' }))
   }

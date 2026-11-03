@@ -6,6 +6,8 @@ import { FACADE_STYLES, nextFacade } from '@/domain/facades'
 import { wallToBoxes } from '@/domain/geometry'
 import { door, sampleModel } from '@/test/fixtures'
 import { MaterialFactory } from './scene/MaterialFactory'
+import { buildWalkWorld, spawnAt, stepCharacter } from '@/domain/walkPhysics'
+import { DOOR_SECONDS, doorPassable, doorProgress, resetDoorProgress, stepDoors } from './doors'
 import { exportGlb } from './scene/exportGlb'
 import { buildScene, exportRoot } from './scene/SceneBuilder'
 
@@ -67,6 +69,39 @@ describe('fachada', () => {
     const s = buildScene(house(), undefined, { facade: true })
     expect(s.root.getObjectByName('door:gate')).toBeUndefined()
     expect(s.root.getObjectByName('gate:gate')!.children).toHaveLength(4)
+  })
+
+  it('el portón se abre plegando las hojas contra las jambas y hacia adentro, y deja pasar', () => {
+    resetDoorProgress()
+    const m = house()
+    const s = buildScene(m)
+    const gate = s.root.getObjectByName('gate:gate')!
+    const leaves = gate.children as THREE.Mesh[]
+    const closedX = leaves.map((l) => l.position.x)
+    stepDoors(s.root, { gate: true }, DOOR_SECONDS / 2)
+    // las 4 hojas avanzan juntas: el vano cuenta una sola vez
+    expect(doorProgress('gate')).toBeCloseTo(0.5)
+    stepDoors(s.root, { gate: true }, DOOR_SECONDS)
+    expect(doorPassable('gate')).toBe(true)
+    for (const [i, l] of leaves.entries()) {
+      expect(Math.abs(l.position.x)).toBeGreaterThan(Math.abs(closedX[i]!) - 1e-6)
+      expect(l.rotation.y).toBeCloseTo(Math.PI / 2)
+    }
+    // w_bottom va de (10,7) a (0,7): la normal izquierda apunta a -y, que es adentro (los ambientes)
+    gate.updateMatrixWorld(true)
+    for (const l of leaves) expect(l.getWorldPosition(new THREE.Vector3()).z).toBeLessThan(7)
+    // el personaje cruza el vano solo con el portón abierto (1,0 m dentro del vano de 2 m)
+    const world = buildWalkWorld(m)
+    const from = spawnAt(world, { x: 8, y: 7.8 })
+    const cross = (open: boolean) => {
+      let st = from
+      for (let i = 0; i < 120; i++) st = stepCharacter(st, { dx: 0, dz: -2.2 / 60 }, 1 / 60, world, () => open)
+      return st.z
+    }
+    expect(cross(false)).toBeGreaterThan(7)
+    expect(cross(true)).toBeLessThan(6.5)
+    stepDoors(s.root, { gate: false }, DOOR_SECONDS * 2)
+    expect(leaves.map((l) => l.position.x)).toEqual(closedX.map((x) => expect.closeTo(x, 6)))
   })
 
   it('con fachada la cubierta es losa plana con antepecho, sin teja', () => {

@@ -93,6 +93,35 @@ export function frontNormal(ground: Level): Point | null {
   return null
 }
 
+/**
+ * Punto en la calle frente al portón del garaje (o la puerta exterior más ancha del primer
+ * piso), a `distance` m de la fachada y mirando hacia ella: el inicio del recorrido.
+ */
+export function streetEntry(ground: Level, distance = 2.5): { x: number; y: number; levelId: string; facing: Point } | null {
+  let best: { w: Wall; offset: number; width: number; score: number } | null = null
+  for (const w of ground.walls) {
+    if (w.kind !== 'exterior' || w.bulge) continue
+    for (const o of w.openings) {
+      if (o.kind !== 'door') continue
+      const score = o.width + (o.operation === 'folding' ? 10 : 0)
+      if (!best || score > best.score) best = { w, offset: o.offset, width: o.width, score }
+    }
+  }
+  if (!best) return null
+  const { w } = best
+  const d = wallDirection(w)
+  const n = leftNormal(w)
+  const s = outwardSign(w, ground)
+  const along = best.offset + best.width / 2
+  const out = { x: n.x * s, y: n.y * s }
+  return {
+    x: w.start.x + d.x * along + out.x * distance,
+    y: w.start.y + d.y * along + out.y * distance,
+    levelId: ground.id,
+    facing: { x: -out.x, y: -out.y },
+  }
+}
+
 /** ¿El muro es de la fachada principal (mira a la calle y es el más adelantado)? */
 export function isFront(w: Wall, lv: Level, front: Point | null): boolean {
   if (!front || w.kind !== 'exterior' || w.bulge) return false

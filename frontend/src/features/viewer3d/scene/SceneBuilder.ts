@@ -10,6 +10,7 @@ import type { BuildingModel, Level } from '@/api/types'
 import { frontNormal, isFront, outwardSign, SKIN, skinBoxes } from '@/domain/facadeGeometry'
 import { facadeSpec, type FacadeSpec } from '@/domain/facades'
 import { curvedWallBoxes, roomShapePoints, slabOf, slidingTracks, STAIR_WAIST, stairLandings, stairTreads, stairWell, swingLeaves, wallToBoxes, type Box } from '@/domain/geometry'
+import { roomLamps } from '@/domain/levels'
 import { pointAlong, wallDirection } from '@/domain/model'
 import { FurnitureFactory } from './FurnitureFactory'
 import { MaterialFactory } from './MaterialFactory'
@@ -524,7 +525,11 @@ export class SceneBuilder {
     return this
   }
 
-  /** Portones de garaje: los vanos plegables anchos, cerrados, en hojas de panel. */
+  /**
+   * Portones de garaje: los vanos plegables anchos, en 4 hojas de panel. Cada hoja es animable
+   * (`anim: pose`): al abrir, las dos de cada lado se pliegan en acordeón contra su jamba,
+   * hacia adentro del garaje, y dejan el vano libre.
+   */
   withGates(style: FacadeSpec | null = null): this {
     const material = style ? this.materials.cladding(style.gate) : this.materials.facadeColor('#55595d', 0.45)
     for (const lv of this.levels()) {
@@ -540,19 +545,44 @@ export class SceneBuilder {
           g.position.set(mid.x, lv.elevation, mid.y)
           g.rotation.y = -Math.atan2(dir.y, dir.x)
           const leaf = o.width / GATE_LEAVES
+          // la +Z local es la normal izquierda del muro: adentro es el lado opuesto a la calle
+          const inside = w.kind === 'exterior' ? -outwardSign(w, lv) : 1
           for (let i = 0; i < GATE_LEAVES; i++) {
             const mesh = new THREE.Mesh(new THREE.BoxGeometry(leaf - 0.012, o.height - 0.01, 0.045), material)
             // hojas alternadas un poco adelante y atrás: se lee el plegado
-            mesh.position.set(-o.width / 2 + leaf * (i + 0.5), o.height / 2, i % 2 ? 0.012 : -0.012)
+            const closed: [number, number, number] = [-o.width / 2 + leaf * (i + 0.5), i % 2 ? 0.012 : -0.012, 0]
+            // abiertas: perpendiculares al muro, apiladas junto a su jamba (dos por lado)
+            const left = i < GATE_LEAVES / 2
+            const k = left ? i : GATE_LEAVES - 1 - i
+            const x = (left ? -1 : 1) * (o.width / 2 - 0.05 - k * 0.055)
+            const open: [number, number, number] = [x, inside * (leaf / 2 + 0.04), Math.PI / 2]
+            mesh.position.set(closed[0], o.height / 2, closed[1])
             mesh.castShadow = true
             mesh.name = `gate:${o.id}:${i}`
-            mesh.userData = info
+            mesh.userData = { ...info, anim: { type: 'pose', closed, open } }
             worldUv(mesh)
             g.add(mesh)
           }
           this.elements.add(g)
         }
       }
+    }
+    return this
+  }
+
+  /**
+   * Plafones: un disco luminoso en el cielo raso de cada ambiente (el visor pone la luz). El
+   * último piso solo tiene cielo raso si hay cubierta: sin ella no quedan lámparas flotando.
+   */
+  withLamps(roofed = false): this {
+    const top = Math.max(...this.levels().map((l) => l.elevation))
+    const open = new Set(roofed ? [] : this.levels().filter((l) => l.elevation === top).map((l) => l.id))
+    for (const l of roomLamps(this.model)) {
+      if (open.has(l.levelId)) continue
+      const mesh = this.detail(new THREE.CylinderGeometry(0.17, 0.19, 0.05, 24), this.materials.lamp(), `lamp:${l.roomId}`, { kind: 'lamp', roomId: l.roomId, levelId: l.levelId })
+      mesh.position.set(l.x, l.ceiling - 0.025, l.y)
+      mesh.castShadow = false
+      this.details.add(mesh)
     }
     return this
   }
@@ -623,7 +653,7 @@ export function buildScene(model: BuildingModel, materials?: MaterialFactory, op
   const style = opts.facade ? facadeSpec(model.facade) : null
   b.withGates(style)
   if (style) b.withFacade(style)
-  if (opts.details) b.withSkirting().withFrames(style)
+  if (opts.details) b.withSkirting().withFrames(style).withLamps(opts.roof)
   if (opts.roof) b.withRoof(style)
   if (opts.site) b.withSite()
   return b.build()

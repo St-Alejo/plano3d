@@ -3,7 +3,7 @@
  * nombre, número de piso, altura, área útil, ambientes y caja en planta. Puro: sin three.
  */
 import type { BuildingModel, Level } from '@/api/types'
-import { roomArea } from './model'
+import { polygonCentroid, roomArea } from './model'
 
 /** Altura de entrepiso si el nivel no trae la suya. */
 export const DEFAULT_STOREY_HEIGHT = 2.5
@@ -68,4 +68,30 @@ export function levelCamera(summary: LevelSummary): { look: [number, number, num
   const size = Math.max(b.x1 - b.x0, b.y1 - b.y0, 4)
   const y = summary.elevation
   return { look: [cx, y + 0.5, cz], pos: [cx + size * 0.55, y + size * 0.95, cz + size * 0.85] }
+}
+
+export interface RoomLamp {
+  roomId: string
+  levelId: string
+  label: string
+  x: number
+  y: number
+  /** altura absoluta del cielo raso donde cuelga el plafón */
+  ceiling: number
+}
+
+/**
+ * Un plafón en el centro de cada ambiente, pegado al cielo raso (el alto de los muros del
+ * piso). Lo usan la escena (la lámpara) y el visor (la luz del piso donde se camina).
+ */
+export function roomLamps(model: BuildingModel): RoomLamp[] {
+  return model.levels.flatMap((lv) => {
+    const ceiling = lv.elevation + (lv.walls.length ? Math.max(...lv.walls.map((w) => w.height)) : (lv.height ?? DEFAULT_STOREY_HEIGHT))
+    return lv.rooms
+      .filter((r) => r.polygon.length >= 3 && roomArea(r) >= 1.5)
+      .map((r) => {
+        const c = polygonCentroid(r.polygon)
+        return { roomId: r.id, levelId: lv.id, label: r.label, x: c.x, y: c.y, ceiling }
+      })
+  })
 }

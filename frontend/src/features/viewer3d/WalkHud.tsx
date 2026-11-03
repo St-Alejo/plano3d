@@ -8,6 +8,8 @@
 import { ArrowDown, ArrowUp, DoorOpen, Eye, Footprints, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { BuildingModel } from '@/api/types'
+import { tourWaypoints } from '@/domain/geometry'
+import { roomArea } from '@/domain/model'
 import clsx from 'clsx'
 import { useWalk, type Focus } from './walkStore'
 
@@ -26,6 +28,13 @@ function helpSeen(): boolean {
   } catch {
     return false
   }
+}
+
+/** Ambiente más grande de un piso: adonde se llega al saltar a ese piso desde el minimapa. */
+function levelLanding(model: BuildingModel, levelId: string) {
+  const lv = model.levels.find((l) => l.id === levelId)
+  const big = lv?.rooms.reduce<(typeof lv.rooms)[number] | undefined>((b, r) => (!b || roomArea(r) > roomArea(b) ? r : b), undefined)
+  return big ? tourWaypoints([big])[0]!.at : null
 }
 
 function MiniMap({ model, levelId, x, z, heading, onGo }: { model: BuildingModel; levelId: string; x: number; z: number; heading: number; onGo: (x: number, z: number) => void }) {
@@ -59,6 +68,25 @@ function MiniMap({ model, levelId, x, z, heading, onGo }: { model: BuildingModel
       ))}
       {lv.walls.map((w) => (
         <line key={w.id} x1={px(w.start.x, box.x0)} y1={px(w.start.y, box.y0)} x2={px(w.end.x, box.x0)} y2={px(w.end.y, box.y0)} className="stroke-fg" strokeWidth={Math.max(1.5, w.thickness * k)} />
+      ))}
+      {/* nombre de cada ambiente: tocarlo lleva a su centro */}
+      {tourWaypoints(lv.rooms).map((r) => (
+        <text
+          key={r.id}
+          role="button"
+          aria-label={`Ir a ${r.label}`}
+          x={px(r.at.x, box.x0)}
+          y={px(r.at.y, box.y0)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="cursor-pointer fill-muted text-[7px] hover:fill-accent"
+          onClick={(e) => {
+            e.stopPropagation()
+            onGo(r.at.x, r.at.y)
+          }}
+        >
+          {r.label.length > 14 ? `${r.label.slice(0, 13)}…` : r.label}
+        </text>
       ))}
       <g transform={`translate(${px(x, box.x0)} ${px(z, box.y0)}) rotate(${(heading * 180) / Math.PI})`}>
         <path d="M9 0 L-5 -6 L-2 0 L-5 6 Z" className="fill-accent stroke-canvas" strokeWidth={1.2} />
@@ -141,6 +169,27 @@ export function WalkHud({ model, touch }: { model: BuildingModel; touch: boolean
             <button type="button" aria-expanded={mapOpen} onClick={() => setMapOpen((o) => !o)} className="flex min-h-11 w-full items-center justify-between gap-3 px-1.5 text-xs text-muted">
               Minimapa <span className="text-fg">{hud.levelName}</span>
             </button>
+            {mapOpen && hud.levelCount > 1 && (
+              <div role="group" aria-label="Ir a un piso" className="mb-1 flex gap-1">
+                {[...model.levels]
+                  .sort((a, b) => a.elevation - b.elevation)
+                  .map((l, i) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      aria-pressed={l.id === hud.levelId}
+                      title={`Ir a ${l.name}`}
+                      onClick={() => {
+                        const at = levelLanding(model, l.id)
+                        if (at) send({ type: 'teleport', x: at.x, z: at.y, levelId: l.id })
+                      }}
+                      className={clsx('min-h-9 flex-1 rounded-sm border px-1.5 font-mono text-xs pointer-coarse:min-h-11', l.id === hud.levelId ? 'border-transparent bg-fg text-canvas' : 'border-line hover:border-accent')}
+                    >
+                      P{i + 1}
+                    </button>
+                  ))}
+              </div>
+            )}
             {mapOpen && <MiniMap model={model} levelId={hud.levelId} x={hud.x} z={hud.z} heading={hud.heading} onGo={(x, z) => send({ type: 'teleport', x, z })} />}
           </div>
         )}

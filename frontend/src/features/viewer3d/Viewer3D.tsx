@@ -6,12 +6,14 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import * as THREE from 'three'
 
 import type { BuildingModel, Point } from '@/api/types'
+import { roomLamps } from '@/domain/levels'
 import { modelBounds } from '@/domain/model'
 import { sunDirection, type SunPosition } from '@/domain/sun'
 import { BuildingMesh, type Pick } from './BuildingMesh'
 import { prefersReducedMotion } from './motion'
 import { DoorAnimator } from './doors'
 import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
+import { useWalk } from './walkStore'
 import type { BuiltScene } from './scene/SceneBuilder'
 import type { ModeOptions, ViewModeStrategy } from './modes'
 import { applyDisplayMode, cameraPreset, distance3, type CameraPreset, type DisplayMode } from './scene/viewTools'
@@ -153,6 +155,27 @@ function OrbitRig({
       autoRotate={autoRotate && !prefersReducedMotion()}
       autoRotateSpeed={0.5}
     />
+  )
+}
+
+/**
+ * Luz de los plafones del piso donde se camina (y del de arriba, que se ve por la escalera).
+ * Sin sombras: una luz puntual con sombra por ambiente costaría demasiado en el celular.
+ */
+function RoomLights({ model }: { model: BuildingModel }) {
+  const levelId = useWalk((s) => s.hud?.levelId)
+  const lamps = useMemo(() => roomLamps(model), [model])
+  const order = useMemo(() => [...model.levels].sort((a, b) => a.elevation - b.elevation).map((l) => l.id), [model])
+  const i = order.indexOf(levelId ?? order[0] ?? '')
+  const lit = new Set([order[i], order[i + 1]])
+  return (
+    <>
+      {lamps
+        .filter((l) => lit.has(l.levelId))
+        .map((l) => (
+          <pointLight key={l.roomId} position={[l.x, l.ceiling - 0.12, l.y]} color="#ffe9c9" intensity={l.levelId === order[i] ? 6 : 3} distance={7} decay={2} />
+        ))}
+    </>
   )
 }
 
@@ -353,7 +376,10 @@ export function Viewer3D({
         {mode === 'orbit' ? (
           <OrbitRig model={model} flyTo={flyTo} preset={preset} autoRotate={autoRotate} />
         ) : (
-          <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} />
+          <>
+            <WalkControls model={model} start={start} input={walkInput ?? fallbackInput} touch={touch} root={built?.root ?? null} />
+            <RoomLights model={model} />
+          </>
         )}
       </Canvas>
     </div>

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
 import type { Point } from '@/api/types'
+import { streetEntry } from '@/domain/facadeGeometry'
 import { facadeSpec, nextFacade, type FacadeStyle } from '@/domain/facades'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
@@ -156,6 +157,13 @@ export function ViewerPage() {
     const big = all.reduce<(typeof all)[number] | undefined>((best, r) => (!best || roomArea(r) > roomArea(best) ? r : best), undefined)
     return rooms.find((r) => r.id === big?.id) ?? rooms[0]
   }, [project, rooms])
+  // una casa de varios pisos se recorre desde la calle, frente al portón o la puerta de entrada
+  const entry = useMemo(() => {
+    const m = project?.model
+    if (!m || m.levels.length < 2) return undefined
+    const ground = [...m.levels].sort((a, b) => a.elevation - b.elevation)[0]!
+    return streetEntry(ground) ?? undefined
+  }, [project])
 
   // fachada: se ve al instante y se guarda en segundo plano; si falla vuelve a la anterior
   const [facade, setFacadeState] = useState<{ style: FacadeStyle; revision: number } | null>(null)
@@ -243,6 +251,17 @@ export function ViewerPage() {
   const goTo = (p: Point, levelId?: string) => {
     if (mode === 'walk') setWalkStart({ ...p, levelId })
     else setFlyTo({ ...p, elevation: levels.find((l) => l.id === levelId)?.elevation })
+  }
+
+  /** Recorrer un piso: aparece en su ambiente más grande, con la casa completa a la vista. */
+  const walkLevel = (id: string) => {
+    const lv = model.levels.find((l) => l.id === id)
+    const big = lv?.rooms.reduce<(typeof lv.rooms)[number] | undefined>((b, r) => (!b || roomArea(r) > roomArea(b) ? r : b), undefined)
+    const at = rooms.find((r) => r.id === big?.id)?.at
+    setFocusLevel(null)
+    setCutOn(false)
+    if (at) setWalkStart({ ...at, levelId: id })
+    setMode('walk')
   }
 
   /** Aísla un piso (o vuelve al edificio completo con null) y lo encuadra como maqueta. */
@@ -373,14 +392,14 @@ export function ViewerPage() {
         overlayUrl={project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)}
         overlayOpacity={overlay}
         flyTo={flyTo}
-        walkStart={walkStart ?? (firstRoom ? { ...firstRoom.at, levelId: firstRoom.levelId } : undefined)}
+        walkStart={walkStart ?? entry ?? (firstRoom ? { ...firstRoom.at, levelId: firstRoom.levelId } : undefined)}
         walkInput={walkInput}
         touch={touch}
         onScene={onScene}
         className="absolute inset-0"
         label={`Modelo 3D de ${project.name}`}
         sun={sun}
-        section={cutOn ? cut : focusSummary ? focusSummary.elevation + 1.2 : null}
+        section={mode === 'walk' ? null : cutOn ? (focusSummary?.elevation ?? 0) + cut : focusSummary ? focusSummary.elevation + 1.2 : null}
         preset={preset}
         autoRotate={cinemaRotate && mode === 'orbit'}
         display={display}
@@ -400,7 +419,7 @@ export function ViewerPage() {
       {/* pisos: a la izquierda, a media altura (en recorrido, el HUD ya tiene subir/bajar piso) */}
       {mode === 'orbit' && levels.length > 1 && (
         <div className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2">
-          <LevelRail levels={levels} focused={focusLevel} onFocus={focusOn} onHover={setHoverLevel} />
+          <LevelRail levels={levels} focused={focusLevel} onFocus={focusOn} onHover={setHoverLevel} onWalk={walkLevel} />
         </div>
       )}
 
@@ -662,7 +681,7 @@ export function ViewerPage() {
                       {cutOn && (
                         <>
                           <label id="cut-label" className="flex justify-between text-xs text-muted">
-                            <span>Altura del corte</span>
+                            <span>Altura del corte{focusSummary ? ` sobre ${focusSummary.name}` : ''}</span>
                             <span className="font-mono">{cut.toFixed(2)} m</span>
                           </label>
                           <Slider.Root className="relative flex h-11 touch-none items-center" value={[cut]} min={0.2} max={3} step={0.05} onValueChange={([v]) => setCut(v ?? 1.2)} aria-labelledby="cut-label">

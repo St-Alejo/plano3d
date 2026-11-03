@@ -4,7 +4,7 @@
  * elegirlo se aísla (los de encima se ocultan y se corta como maqueta).
  */
 import clsx from 'clsx'
-import { Building2, Eye } from 'lucide-react'
+import { Building2, Eye, Footprints } from 'lucide-react'
 import { useState } from 'react'
 import type { LevelSummary } from '@/domain/levels'
 
@@ -15,6 +15,7 @@ export function LevelRail({
   focused,
   onFocus,
   onHover,
+  onWalk,
 }: {
   /** de abajo hacia arriba (como los entrega `levelSummaries`) */
   levels: LevelSummary[]
@@ -23,6 +24,8 @@ export function LevelRail({
   onFocus: (id: string | null) => void
   /** piso bajo el cursor o con foco (para resaltarlo en la escena) */
   onHover: (id: string | null) => void
+  /** entrar a recorrer ese piso en primera persona */
+  onWalk?: (id: string) => void
 }) {
   const [peek, setPeek] = useState<string | null>(null)
   const show = (id: string | null) => {
@@ -89,6 +92,15 @@ export function LevelRail({
                   >
                     <Eye className="size-4" aria-hidden /> {active ? 'Ver todo el edificio' : 'Ver este piso'}
                   </button>
+                  {onWalk && (
+                    <button
+                      type="button"
+                      onClick={() => onWalk(l.id)}
+                      className="mt-1.5 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-line text-sm font-medium hover:border-accent pointer-coarse:h-11"
+                    >
+                      <Footprints className="size-4" aria-hidden /> Recorrer este piso
+                    </button>
+                  )}
                 </div>
               )}
             </li>
