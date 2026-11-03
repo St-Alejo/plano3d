@@ -78,7 +78,7 @@ class Project:
         project.model = BuildingModel(
             project_id=project.id,
             scale=Scale(BLANK_METERS_PER_PIXEL, "vector", 1.0),
-            levels=(Level(id="lvl_0", name="Planta 1"),),
+            levels=(Level(id="lvl_0", name="Piso 1"),),
         )
         project.revision = 1
         return project

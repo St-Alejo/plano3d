@@ -451,7 +451,7 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
 
     level = Level(
         id="lvl_0",
-        name="Planta 1",
+        name="Piso 1",
         elevation=elevation,
         walls=tuple(walls),
         rooms=tuple(rooms),
