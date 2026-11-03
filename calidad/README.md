@@ -139,6 +139,16 @@ correcciones están documentadas en la bitácora.
   escala y un origen no alcanzan con perspectiva; se genera con `tests/real/casa4/make_truth.py` desde el
   modelo levantado a mano (`scripts/modelos/planta_2do_piso_opc3.py`).
 
+**Muebles leídos del PDF vectorial (opc3, 2026-11-03).** `infrastructure/vector/furniture.py` une los
+trazos colineales de detalle, busca rectángulos dentro de cada ambiente y los clasifica por tamaño y tipo de
+ambiente; los aparatos de baño salen de los arcos. Resultado medido (prueba `tests/vector/test_pdf_opc3.py`):
+- opc3p2: cama doble en las 3 alcobas; cocina en L (2 mesones), comedor de 4 y sofá en la sala-comedor;
+  sanitario y lavamanos en los 2 baños.
+- opc3p1: solo los aparatos de los baños (los parqueaderos no tienen muebles dibujados).
+- `domain/furnish.py` completa lo que falta por tipo de ambiente (closet y mesa de noche por alcoba, nevera
+  junto a la cocina) sin tapar puertas ni ventanas: la casa de 3 pisos queda con 4 + 18 + 18 muebles
+  (`backend/scripts/demo_opc3.py` la recrea con la fachada contemporánea).
+
 **Por qué casa3 no cumple todavía (causa medida):**
 - A esa resolución, autos, mesas y sofás están dibujados con la misma línea blanca que los muros.
 - Los textos son ilegibles para el OCR local, así que no hay nombres de ambientes ni de niveles.
