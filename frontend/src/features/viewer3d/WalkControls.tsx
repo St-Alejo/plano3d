@@ -30,6 +30,7 @@ import {
 } from '@/domain/walkPhysics'
 import { doorPassable, kindOf } from './doors'
 import { prefersReducedMotion } from './motion'
+import { simObstacles } from './simObstacles'
 import { useWalk, type Focus } from './walkStore'
 
 export const EYE_HEIGHT = EYE
@@ -312,7 +313,7 @@ export function WalkControls({
     }
 
     const before = body.current
-    body.current = stepCharacter(before, move, dt, world, doorPassable)
+    body.current = stepCharacter(before, move, dt, world, doorPassable, { extra: simObstacles(before.levelId) })
     const b = body.current
     const moved = Math.hypot(b.x - before.x, b.z - before.z)
     if (auto.current && (move.dx !== 0 || move.dz !== 0)) {

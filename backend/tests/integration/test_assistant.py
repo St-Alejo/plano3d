@@ -234,3 +234,30 @@ def test_to_viewer_action_fachada_valida_contra_el_catalogo() -> None:
         to_viewer_action(row | {"a": "facade_color", "value": "techo", "color": "#000000"}) is None
     )
     assert to_viewer_action(row | {"a": "facade_feature", "value": "luces"}) is None
+
+
+def test_to_viewer_action_simulacion() -> None:
+    row: dict[str, Any] = {"value": None, "number": None, "on": None}
+    sim = to_viewer_action(row | {"a": "simulation", "on": True, "number": 4})
+    assert sim == {"a": "simulation", "on": True, "people": 4}
+    off = to_viewer_action(row | {"a": "simulation", "on": False})
+    assert off == {"a": "simulation", "on": False}
+    assert to_viewer_action(row | {"a": "simulation", "on": True, "number": 40}) == {
+        "a": "simulation",
+        "on": True,
+    }
+    assert to_viewer_action(row | {"a": "sim_car", "on": True}) == {
+        "a": "simulation",
+        "on": True,
+        "car": True,
+        "call": True,
+    }
+    no_car = to_viewer_action(row | {"a": "sim_car", "on": False})
+    assert no_car == {"a": "simulation", "car": False}
+    assert to_viewer_action(row | {"a": "sim_hour", "number": 21}) == {
+        "a": "simulation",
+        "on": True,
+        "hour": 21.0,
+    }
+    assert to_viewer_action(row | {"a": "sim_hour", "number": 30}) is None
+    assert to_viewer_action(row | {"a": "simulation"}) is None

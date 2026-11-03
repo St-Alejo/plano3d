@@ -2,7 +2,7 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tabs from '@radix-ui/react-tabs'
-import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, Orbit, Paintbrush, Ruler, Sofa } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, MoreHorizontal, Orbit, Paintbrush, Ruler, Sofa, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
@@ -25,6 +25,9 @@ import type { WalkInput, WalkStart } from './WalkControls'
 import { WalkHud } from './WalkHud'
 import { resetDoorProgress } from './doors'
 import { useWalk } from './walkStore'
+import { useSim } from './simStore'
+import { SimClock, SimControls } from './SimPanel'
+import { titleCase } from '@/lib/text'
 import { PLAN_MODES, planMode } from './modes'
 import { ObraPanel } from './ObraPanel'
 import { BRICKS, type BrickId } from '@/domain/structure/bricks'
@@ -76,6 +79,19 @@ function initialQuality(): Quality {
   return isTouch() || softwareRenderer() ? 'baja' : 'alta'
 }
 
+/** ¿La pantalla es más angosta que `px`? (se actualiza al girar o cambiar el tamaño) */
+function useNarrow(px: number): boolean {
+  const query = `(max-width: ${px - 1}px)`
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const on = () => setNarrow(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [query])
+  return narrow
+}
+
 export function ViewerPage() {
   const { id = '' } = useParams()
   const { data: loaded, error, loading } = useAsync(() => api.getProject(id), [id])
@@ -116,8 +132,18 @@ export function ViewerPage() {
   const scene = useRef<BuiltScene | null>(null)
   const walkInput = useRef<WalkInput>({ x: 0, y: 0 })
   const [touch] = useState(isTouch)
+  // la barra completa no cabe en tablet ni celular: lo secundario va al menú "Más"
+  const narrow = useNarrow(1024)
+  const simOn = useSim((s) => s.on)
+  const toggleSim = useSim((s) => s.toggle)
   // en pantallas chicas el panel arranca plegado para no tapar el modelo
   const [panelOpen, setPanelOpen] = useState(() => window.matchMedia('(min-width: 640px)').matches)
+  // al entrar a recorrer, el panel se pliega para dejar ver (se puede volver a abrir)
+  const [panelMode, setPanelMode] = useState(mode)
+  if (panelMode !== mode) {
+    setPanelMode(mode)
+    if (mode === 'walk') setPanelOpen(false)
+  }
   // herramientas de análisis
   const [preset, setPreset] = useState<{ name: CameraPreset; nonce: number } | null>(null)
   const [display, setDisplay] = useState<DisplayMode>('material')
@@ -245,8 +271,11 @@ export function ViewerPage() {
   const focusSummary = levels.find((l) => l.id === focusLevel) ?? null
   useEffect(() => {
     if (!built || !project?.model) return
-    applyLevelFocus(built.root, new Set(focusLevel ? levelsAbove(project.model, focusLevel) : []))
+    const hidden = focusLevel ? levelsAbove(project.model, focusLevel) : []
+    applyLevelFocus(built.root, new Set(hidden))
+    useSim.getState().setHidden(hidden)
   }, [built, focusLevel, project])
+
   useEffect(() => {
     if (!built) return
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#2f6b55'
@@ -269,6 +298,7 @@ export function ViewerPage() {
     )
 
   const model = viewModel ?? project.model
+  const facadeName = resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')
 
   const doExport = async () => {
     if (!scene.current) return
@@ -437,6 +467,32 @@ export function ViewerPage() {
         }
         setShowFurniture(act.on)
         return act.on ? 'Puse los muebles' : 'Quité los muebles de la vista'
+      case 'simulation': {
+        const sim = useSim.getState()
+        if (act.on === false) {
+          sim.setOn(false)
+          return 'Detuve la simulación'
+        }
+        if (act.on) sim.setOn(true)
+        const done: string[] = []
+        if (act.people !== undefined) {
+          sim.setPeople(act.people)
+          done.push(`${act.people} ${act.people === 1 ? 'persona' : 'personas'}`)
+        }
+        if (act.car === false) {
+          sim.setCar(false)
+          done.push('sin carro')
+        } else if (act.call) {
+          sim.callCar()
+          done.push('el carro viene al garaje')
+        }
+        if (act.hour !== undefined) {
+          sim.setDayNight(true)
+          sim.setHour(act.hour, act.hour >= 18.5 || act.hour < 5.8)
+          done.push(act.hour >= 18 || act.hour < 6 ? 'de noche' : 'de día')
+        }
+        return done.length ? `Simulación: ${done.join(', ')}` : 'Simulación en marcha: las personas se mueven solas y el carro llega al garaje'
+      }
       case 'level': {
         if (act.n === 'all') {
           focusOn(null)
@@ -457,6 +513,7 @@ export function ViewerPage() {
     return [
       `Modo del plano: ${strategy.id}. Cámara: ${mode === 'walk' ? 'recorrer' : 'orbitar'}. Calidad: ${quality}.`,
       `Unidad de mampostería: ${brick}. Ladrillo oculto: ${hideMasonry ? 'sí' : 'no'}. Cubierta: ${roof ? 'sí' : 'no'}. Muebles: ${showFurniture ? 'sí' : 'no'}. Corte: ${cutOn ? `${cut} m` : 'no'}.`,
+      `Simulación: ${useSim.getState().on ? `sí, ${useSim.getState().people} personas` : 'no'}.`,
       `Ambientes: ${rooms.map((r) => r.label).join(', ') || 'ninguno'}.`,
       `Columnetas ${range(ids[0]!)}; vigas de cimentación ${range(ids[1]!)}; vigas de amarre ${range(ids[3]!)}; dinteles ${range(ids[4]!)}; paños ${range(ids[5]!)}.`,
     ].join('\n')
@@ -491,7 +548,13 @@ export function ViewerPage() {
         hideMasonry={hideMasonry}
         highlightElementId={strategy.panel ? elementId : null}
         onElement={strategy.panel && !measuring ? setElementId : undefined}
+        simulation={!strategy.panel}
       />
+
+      {/* reloj de la simulación: arriba al centro, bajo la barra */}
+      <div className="pointer-events-none absolute top-[4.25rem] left-1/2 z-20 -translate-x-1/2">
+        <SimClock />
+      </div>
 
       {mode === 'walk' && <WalkHud model={model} touch={touch} />}
 
@@ -507,7 +570,7 @@ export function ViewerPage() {
         projectId={project.id}
         run={runViewerAction}
         context={viewerContext}
-        className="absolute top-16 left-3 z-20 sm:top-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2 [body:has([data-cinema])_&]:hidden"
+        className="absolute right-3 bottom-3 z-20 sm:right-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2 [body:has([data-cinema])_&]:hidden"
       />
 
       {/* barra superior: la única cabecera del visor (el AppShell se oculta aquí) */}
@@ -520,7 +583,7 @@ export function ViewerPage() {
           >
             <ArrowLeft className="size-4" aria-hidden /> <span className="hidden sm:inline">Editor</span>
           </Link>
-          <p className="hidden max-w-56 truncate text-sm font-medium lg:block">{project.name}</p>
+          <p className="hidden max-w-56 truncate text-sm font-medium 2xl:block">{project.name}</p>
         </div>
         <ToggleGroup.Root
           type="single"
@@ -540,18 +603,20 @@ export function ViewerPage() {
           <div className="rounded-md bg-canvas/85 backdrop-blur [&>button]:h-11 [&>button]:w-11">
             <TutorialButton compact initial="recorrer" />
           </div>
-          {!strategy.panel && (
+          {!narrow && !strategy.panel && (
             <Button
               className="h-11 bg-canvas/85 backdrop-blur"
               onClick={cycleFacade}
-              aria-label={`Fachada: ${resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')}`}
+              aria-label={`Fachada: ${facadeName}`}
               title="Cambia el estilo de la fachada (solo el exterior)"
               icon={<Paintbrush className="size-4" aria-hidden />}
             >
-              <span className="hidden sm:inline">Fachada: {resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')}</span>
+              <span className="hidden xl:inline">Fachada: {facadeName}</span>
+              <span className="xl:hidden">Fachada</span>
             </Button>
           )}
-          {!strategy.panel &&
+          {!narrow &&
+            !strategy.panel &&
             (furnitureCount === 0 ? (
               <Button
                 className="h-11 bg-canvas/85 backdrop-blur"
@@ -561,7 +626,7 @@ export function ViewerPage() {
                 title="Pone los muebles de cada ambiente (alcoba, baño, cocina, sala)"
                 icon={<Sofa className="size-4" aria-hidden />}
               >
-                <span className="hidden sm:inline">Amoblar según el plano</span>
+                Amoblar
               </Button>
             ) : (
               <Button
@@ -572,9 +637,22 @@ export function ViewerPage() {
                 title={showFurniture ? 'Quita los muebles de la vista' : 'Pone los muebles del plano'}
                 icon={<Sofa className="size-4" aria-hidden />}
               >
-                <span className="hidden sm:inline">Muebles: {showFurniture ? 'sí' : 'no'}</span>
+                Muebles: {showFurniture ? 'sí' : 'no'}
               </Button>
             ))}
+          {!narrow && !strategy.panel && (
+            <Button
+              className="h-11 bg-canvas/85 backdrop-blur"
+              variant={simOn ? 'primary' : undefined}
+              onClick={toggleSim}
+              aria-pressed={simOn}
+              aria-label={simOn ? 'Detener la simulación' : 'Simulación: personas y carro'}
+              title="Personas que se mueven solas, el carro que entra al garaje, día y noche"
+              icon={<Users className="size-4" aria-hidden />}
+            >
+              Simulación
+            </Button>
+          )}
           {furnishError && (
             <p role="alert" className="self-center rounded-sm bg-canvas/85 px-2 py-1 text-xs text-danger backdrop-blur">
               {furnishError}
@@ -587,15 +665,28 @@ export function ViewerPage() {
           )}
           <Menu
             items={[
+              ...(narrow && !strategy.panel
+                ? [
+                    { label: simOn ? 'Detener la simulación' : 'Simulación: personas y carro', icon: <Users className="size-4" aria-hidden />, onSelect: toggleSim },
+                    { label: `Fachada: ${facadeName}`, icon: <Paintbrush className="size-4" aria-hidden />, onSelect: cycleFacade },
+                    furnitureCount === 0
+                      ? { label: 'Amoblar según el plano', icon: <Sofa className="size-4" aria-hidden />, onSelect: furnishNow, disabled: furnishing }
+                      : { label: showFurniture ? 'Quitar los muebles' : 'Poner los muebles', icon: <Sofa className="size-4" aria-hidden />, onSelect: () => setShowFurniture((v) => !v) },
+                  ]
+                : []),
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
               { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
               { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },
               { label: 'Exportar para Blender (.zip)', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doBlender() },
             ]}
             trigger={
-              <Button className="h-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Exportar" title="Imagen PNG, modelo 3D (OBJ, GLB) o paquete para Blender" icon={<Download className="size-4" aria-hidden />}>
-                <span className="hidden sm:inline">Exportar</span>
-              </Button>
+              narrow ? (
+                <Button className="h-11 w-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Más opciones" title="Fachada, muebles, simulación y exportar" icon={<MoreHorizontal className="size-4" aria-hidden />} />
+              ) : (
+                <Button className="h-11 bg-canvas/85 backdrop-blur" loading={exporting} aria-label="Exportar" title="Imagen PNG, modelo 3D (OBJ, GLB) o paquete para Blender" icon={<Download className="size-4" aria-hidden />}>
+                  Exportar
+                </Button>
+              )
             }
           />
         </div>
@@ -654,13 +745,34 @@ export function ViewerPage() {
                 <div className="max-h-[50vh] min-h-0 overflow-y-auto p-3 sm:max-h-[calc(100dvh-14rem)]">
                   <Tabs.Content value="ambientes" className="flex flex-col gap-2">
                     <nav aria-label="Ambientes" className="flex flex-col">
-                      {rooms.map((r) => {
-                        const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
+                      {/* por piso: en una casa de varios pisos los nombres se repiten (Alcoba 1 en el 2 y en el 3) */}
+                      {levels.map((lv) => {
+                        const list = rooms.filter((r) => r.levelId === lv.id)
+                        if (!list.length) return null
                         return (
-                          <button key={r.id} type="button" onClick={() => goTo(r.at, r.levelId)} className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9">
-                            <span>{r.label}</span>
-                            <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
-                          </button>
+                          <div key={lv.id} role="group" aria-label={lv.name} className="flex flex-col">
+                            {levels.length > 1 && (
+                              <h3 className="mt-1 flex justify-between px-2 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-subtle uppercase">
+                                <span>{lv.name}</span>
+                                <span className="font-mono normal-case">{list.length} ambientes</span>
+                              </h3>
+                            )}
+                            {list.map((r) => {
+                              const room = model.levels.flatMap((l) => l.rooms).find((x) => x.id === r.id)
+                              return (
+                                <button
+                                  key={r.id}
+                                  type="button"
+                                  onClick={() => goTo(r.at, r.levelId)}
+                                  aria-label={levels.length > 1 ? `${titleCase(r.label)}, ${lv.name}` : undefined}
+                                  className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9"
+                                >
+                                  <span>{titleCase(r.label)}</span>
+                                  <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
+                                </button>
+                              )
+                            })}
+                          </div>
                         )
                       })}
                     </nav>
@@ -733,6 +845,7 @@ export function ViewerPage() {
                           <input type="checkbox" checked={roof} onChange={(e) => setRoof(e.target.checked)} className="size-4 accent-[var(--color-accent)]" />
                         </label>
                       )}
+                      {!strategy.panel && <SimControls />}
                       <label className="flex items-center justify-between gap-2 text-xs">
                         <span>Visualización</span>
                         <select value={display} onChange={(e) => setDisplay(e.target.value as DisplayMode)} className={SELECT}>

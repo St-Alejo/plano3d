@@ -44,6 +44,8 @@ export type ViewerAction =
   | { a: 'furniture'; on: boolean }
   /** un cambio de la fachada paramétrica (estilo, revestimiento de una parte, color, detalle) */
   | { a: 'facade'; edit: FacadeEdit }
+  /** simulación: prenderla o apagarla, cuántas personas, el carro, la hora (noche = 21) */
+  | { a: 'simulation'; on?: boolean; people?: number; car?: boolean; call?: boolean; hour?: number }
 
 export interface ViewerParse {
   actions: ViewerAction[]
@@ -169,6 +171,28 @@ function facadeRule(f: string): ViewerAction | null {
   return color ? { a: 'facade', edit: { part, color } } : null
 }
 
+const COUNT: Record<string, number> = { una: 1, un: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8 }
+
+/** "pon la simulación", "que entre el carro", "hazlo de noche", "5 personas", "detén la simulación" */
+function simulationRule(f: string): ViewerAction | null {
+  const count = /\b(\d+|una|un|dos|tres|cuatro|cinco|seis|siete|ocho)\s+(?:personas?|habitantes)\b/.exec(f)
+  const sim = /\b(?:simulacion|simula|simular|personas|gente|habitantes|que se muevan|vida)\b/.test(f)
+  const car = /\b(?:carro|auto|automovil|coche|vehiculo)\b/.test(f)
+  const night = /\b(?:de noche|la noche|anochecer|nocturna)\b/.test(f)
+  const day = /\b(?:de dia|amanecer|mediodia|en el dia)\b/.test(f)
+  if (!sim && !car && !night && !day && !count) return null
+  if (OFF.test(f) || /\b(?:deten|detener|detenla|apaga)\b/.test(f)) return car && !sim ? { a: 'simulation', car: false } : { a: 'simulation', on: false }
+  const act: Extract<ViewerAction, { a: 'simulation' }> = { a: 'simulation', on: true }
+  if (count) act.people = Math.min(8, Number(count[1]) || COUNT[count[1]!] || 1)
+  if (car) {
+    act.car = true
+    act.call = true
+  }
+  if (night) act.hour = 21
+  else if (day) act.hour = 10
+  return act
+}
+
 const RULES: Rule[] = [
   // preguntas de cantidades: "¿cuántos ladrillos?", "cuánto cemento necesito"
   (f) => {
@@ -192,6 +216,7 @@ const RULES: Rule[] = [
   },
   // fachada antes que el ladrillo y los pisos: "el primer piso en ladrillo" es la piel
   facadeRule,
+  simulationRule,
   (f) => {
     const id = elementId(f)
     return id ? { a: 'element', id } : null
@@ -302,6 +327,8 @@ export function parseViewerChat(message: string): ViewerParse {
     if (kinds.has('step')) kinds.delete('plan_mode')
     // un cambio de fachada nombra pisos, materiales o "fachada": esas otras lecturas sobran
     if (kinds.has('facade')) for (const k of [...kinds]) if (k !== 'facade') kinds.delete(k)
+    // "5 personas en el segundo piso" sigue siendo la simulación
+    if (kinds.has('simulation')) for (const k of [...kinds]) if (k !== 'simulation' && k !== 'facade') kinds.delete(k)
     if (kinds.size > 1) ambiguous.push(c.orig)
   }
   return { actions, unknown, ambiguous }
@@ -321,6 +348,9 @@ export const VIEWER_EXAMPLES = [
   'quita los muebles',
   'fachada contemporánea',
   'madera en el segundo piso',
+  'pon la simulación',
+  'que entre el carro',
+  'hazlo de noche',
 ]
 
 // ----------------------------------------------------------------------------- respuestas de cantidades
@@ -385,6 +415,12 @@ const ok: Record<ViewerAction['a'], (o: Record<string, unknown>) => boolean> = {
   level: (o) => o.n === 'all' || (typeof o.n === 'number' && o.n >= 1),
   furniture: (o) => typeof o.on === 'boolean',
   facade: (o) => isFacadeEdit(o.edit),
+  simulation: (o) =>
+    (o.on === undefined || typeof o.on === 'boolean') &&
+    (o.people === undefined || (typeof o.people === 'number' && o.people >= 0 && o.people <= 8)) &&
+    (o.car === undefined || typeof o.car === 'boolean') &&
+    (o.call === undefined || typeof o.call === 'boolean') &&
+    (o.hour === undefined || (typeof o.hour === 'number' && o.hour >= 0 && o.hour < 24)),
   ask: (o) => ['ladrillo', 'cemento', 'arena', 'grava', 'acero', 'concreto', 'area', 'todo'].includes(o.topic as string),
 }
 

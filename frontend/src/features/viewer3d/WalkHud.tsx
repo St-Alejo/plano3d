@@ -11,6 +11,7 @@ import type { BuildingModel } from '@/api/types'
 import { tourWaypoints } from '@/domain/geometry'
 import { roomArea } from '@/domain/model'
 import clsx from 'clsx'
+import { useSim } from './simStore'
 import { useWalk, type Focus } from './walkStore'
 
 const HELP_KEY = 'plano3d-ayuda-recorrido'
@@ -39,6 +40,10 @@ function levelLanding(model: BuildingModel, levelId: string) {
 
 function MiniMap({ model, levelId, x, z, heading, onGo }: { model: BuildingModel; levelId: string; x: number; z: number; heading: number; onGo: (x: number, z: number) => void }) {
   const lv = model.levels.find((l) => l.id === levelId) ?? model.levels[0]
+  // la simulación: personas del piso (un punto del color de su ropa) y el carro en el primero
+  const simOn = useSim((s) => s.on)
+  const marks = useSim((s) => s.marks)
+  const ground = useMemo(() => [...model.levels].sort((a, b) => a.elevation - b.elevation)[0]?.id, [model])
   const box = useMemo(() => {
     const pts = (lv?.walls ?? []).flatMap((w) => [w.start, w.end])
     if (pts.length === 0) return null
@@ -88,6 +93,27 @@ function MiniMap({ model, levelId, x, z, heading, onGo }: { model: BuildingModel
           {r.label.length > 14 ? `${r.label.slice(0, 13)}…` : r.label}
         </text>
       ))}
+      {simOn &&
+        lv.id === ground &&
+        marks.cars
+          .filter((c) => c.visible)
+          .map((c) => (
+            <rect
+              key={`car-${c.id}`}
+              data-testid="minimapa-carro"
+              x={-2.1 * k}
+              y={-0.9 * k}
+              width={4.2 * k}
+              height={1.8 * k}
+              rx={0.3 * k}
+              transform={`translate(${px(c.x, box.x0)} ${px(c.z, box.y0)}) rotate(${(c.yaw * 180) / Math.PI})`}
+              className="fill-fg/60"
+            />
+          ))}
+      {simOn &&
+        marks.people
+          .filter((p) => p.levelId === lv.id)
+          .map((p) => <circle key={`p-${p.id}`} data-testid="minimapa-persona" cx={px(p.x, box.x0)} cy={px(p.z, box.y0)} r={3} fill={p.color} className="stroke-canvas" strokeWidth={1} />)}
       <g transform={`translate(${px(x, box.x0)} ${px(z, box.y0)}) rotate(${(heading * 180) / Math.PI})`}>
         <path d="M9 0 L-5 -6 L-2 0 L-5 6 Z" className="fill-accent stroke-canvas" strokeWidth={1.2} />
       </g>

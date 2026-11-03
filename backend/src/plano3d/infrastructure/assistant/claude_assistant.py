@@ -137,6 +137,9 @@ VIEWER_ACTIONS = [
     "facade_part",
     "facade_color",
     "facade_feature",
+    "simulation",
+    "sim_car",
+    "sim_hour",
 ]
 _VIEWER_VALUES: dict[str, list[str]] = {
     "plan_mode": ["presentacion", "obra", "acero", "secuencia"],
@@ -167,6 +170,10 @@ _VIEWER_SYSTEM = (
     "cantidades de obra (las calcula el visor).\n"
     "- level: number (piso desde 1, de abajo hacia arriba) o value all (todos los pisos).\n"
     "- furniture: on (true = mostrar los muebles, false = quitarlos de la vista).\n"
+    "Simulación (personas que se mueven solas, carro que entra al garaje, día y noche):\n"
+    "- simulation: on (prenderla o apagarla) y number opcional (cuántas personas, 0 a 8).\n"
+    "- sim_car: on (true = que llegue o salga el carro ya; false = sin carro).\n"
+    "- sim_hour: number (hora del día de 0 a 23.9; noche = 21, día = 10).\n"
     "Fachada (solo el exterior; se puede cambiar por partes sin elegir otro estilo):\n"
     "- facade_style: value moderna_blanca|moderna_madera|moderna_ladrillo|"
     "moderna_contemporanea (empieza limpio desde ese estilo).\n"
@@ -256,9 +263,29 @@ def to_viewer_action(raw: dict[str, Any]) -> dict[str, object] | None:
         return {"a": a, "n": int(number)} if ok else None  # type: ignore[arg-type]
     if a == "furniture" and isinstance(on, bool):
         return {"a": a, "on": on}
+    if a in ("simulation", "sim_car", "sim_hour"):
+        return _simulation(a, number, on)
     if isinstance(a, str) and a.startswith("facade_"):
         edit = _facade_edit(a, value, on, raw.get("material"), raw.get("color"))
         return {"a": "facade", "edit": edit} if edit else None
+    return None
+
+
+def _simulation(a: str, number: object, on: object) -> dict[str, object] | None:
+    """La simulación del visor: prenderla, cuántas personas, el carro o la hora."""
+    is_num = isinstance(number, int | float) and not isinstance(number, bool)
+    num = float(number) if is_num else None  # type: ignore[arg-type]
+    if a == "simulation" and isinstance(on, bool):
+        out: dict[str, object] = {"a": "simulation", "on": on}
+        if on and num is not None and 0 <= num <= 8:
+            out["people"] = int(num)
+        return out
+    if a == "sim_car" and isinstance(on, bool):
+        if on:
+            return {"a": "simulation", "on": True, "car": True, "call": True}
+        return {"a": "simulation", "car": False}
+    if a == "sim_hour" and num is not None and 0 <= num < 24:
+        return {"a": "simulation", "on": True, "hour": num}
     return None
 
 

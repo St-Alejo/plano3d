@@ -12,6 +12,9 @@ import { sunDirection, type SunPosition } from '@/domain/sun'
 import { BuildingMesh, type Pick } from './BuildingMesh'
 import { prefersReducedMotion } from './motion'
 import { DoorAnimator } from './doors'
+import { Simulation } from './Simulation'
+import { useSim } from './simStore'
+import { NIGHT_ALTITUDE, sunAt } from '@/domain/simulation/clock'
 import { WalkControls, type WalkInput, type WalkStart } from './WalkControls'
 import { useWalk } from './walkStore'
 import type { BuiltScene } from './scene/SceneBuilder'
@@ -67,6 +70,8 @@ export interface Viewer3DProps {
   hideMasonry?: boolean
   highlightElementId?: string | null
   onElement?: (id: string) => void
+  /** personas, carro y día/noche (solo la página 3D; el editor no la muestra) */
+  simulation?: boolean
 }
 
 function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: string; opacity: number }) {
@@ -181,8 +186,34 @@ function RoomLights({ model }: { model: BuildingModel }) {
   )
 }
 
-function Lights({ model, ground, sun, quality, groundY = -0.06 }: { model: BuildingModel; ground: string; sun?: SunPosition | null; quality: Quality; groundY?: number }) {
+/** De noche (simulación): todos los plafones de los pisos a la vista, sin sombras. */
+function NightLights({ model }: { model: BuildingModel }) {
+  const hidden = useSim((s) => s.hidden)
+  const lamps = useMemo(() => roomLamps(model), [model])
+  return (
+    <>
+      {lamps
+        .filter((l) => !hidden.includes(l.levelId))
+        .map((l) => (
+          <pointLight key={l.roomId} position={[l.x, l.ceiling - 0.12, l.y]} color="#ffdcae" intensity={5} distance={6} decay={2} />
+        ))}
+    </>
+  )
+}
+
+/** Hora de la simulación (redondeada a 6 minutos para no mover las luces en cada cuadro). */
+function useSimSun(enabled: boolean): SunPosition | null {
+  const key = useSim((s) => (enabled && s.on && s.dayNight ? Math.round(s.hour * 10) / 10 : null))
+  return useMemo(() => (key === null ? null : sunAt(key)), [key])
+}
+
+function Lights({ model, ground, sun: studySun, quality, groundY = -0.06, simulation = false }: { model: BuildingModel; ground: string; sun?: SunPosition | null; quality: Quality; groundY?: number; simulation?: boolean }) {
   const { center, size } = useMemo(() => modelBounds(model), [model])
+  const simSun = useSimSun(simulation)
+  const sun = simSun ?? studySun
+  const night = !!sun && sun.altitude < NIGHT_ALTITUDE
+  // al amanecer y al atardecer la luz baja de a poco
+  const daylight = sun ? Math.max(0, Math.min(1, sun.altitude / 12)) : 1
   // con estudio solar, la luz principal sale de la dirección real del sol
   const dir = sun ? sunDirection(sun) : null
   const day = !sun || sun.altitude > 0
@@ -207,12 +238,13 @@ function Lights({ model, ground, sun, quality, groundY = -0.06 }: { model: Build
   return (
     <>
       {/* el cielo HDRI ya ilumina de todos lados: las luces de relleno bajan para no lavar los colores */}
-      <ambientLight intensity={hdri ? 0.12 : 0.55} />
-      <hemisphereLight args={['#eaf4ff', '#3a3f4a', hdri ? 0.35 : 1.4]} />
+      <ambientLight intensity={(hdri ? 0.12 : 0.55) * (night ? 0.3 : 1)} color={night ? '#8fa3d6' : '#ffffff'} />
+      <hemisphereLight args={[night ? '#3b4a72' : '#eaf4ff', '#3a3f4a', (hdri ? 0.35 : 1.4) * (night ? 0.25 : 1)]} />
       <directionalLight
         ref={light}
-        position={sunPos}
-        intensity={day ? (hdri ? 2.6 : 2.0) : 0.05}
+        position={night ? [center.x + size, size * 2, center.y - size] : sunPos}
+        color={night ? '#a9bcff' : '#ffffff'}
+        intensity={night ? 0.25 : day ? (hdri ? 2.6 : 2.0) * (0.35 + 0.65 * daylight) : 0.05}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
@@ -221,7 +253,7 @@ function Lights({ model, ground, sun, quality, groundY = -0.06 }: { model: Build
       />
       {hdri && (
         <Suspense fallback={null}>
-          <Environment files={`${import.meta.env.BASE_URL}hdri/cielo_1k.hdr`} background backgroundBlurriness={0.02} environmentIntensity={0.8} />
+          <Environment files={`${import.meta.env.BASE_URL}hdri/cielo_1k.hdr`} background={!night} backgroundBlurriness={0.02} environmentIntensity={night ? 0.06 : 0.8 * (0.4 + 0.6 * daylight)} />
         </Suspense>
       )}
       <mesh rotation-x={-Math.PI / 2} position={[center.x, groundY, center.y]} receiveShadow>
@@ -312,6 +344,7 @@ export function Viewer3D({
   hideMasonry,
   highlightElementId,
   onElement,
+  simulation = false,
 }: Viewer3DProps) {
   const [built, setBuilt] = useState<BuiltScene | null>(null)
   // estable: BuildingMesh libera la escena anterior cuando cambia este callback
@@ -327,7 +360,9 @@ export function Viewer3D({
   }, [built, display])
   const fallbackInput = useRef<WalkInput>({ x: 0, y: 0 })
   const start = walkStart ?? modelBounds(model).center
-  const sky = useThemeSky()
+  const themeSky = useThemeSky()
+  const night = useSim((st) => simulation && st.on && st.night)
+  const sky = night ? '#0b1220' : themeSky
   return (
     <div className={className} role="img" aria-label={label}>
       <Canvas
@@ -342,8 +377,8 @@ export function Viewer3D({
       >
         <color attach="background" args={[sky]} />
         {/* con cielo HDRI la niebla toma el tono del horizonte: el terreno se funde sin borde */}
-        <fog attach="fog" args={quality === 'alta' ? ['#c5cdd2', 35, 170] : [sky, 30, 120]} />
-        <Lights model={model} ground={quality === 'baja' ? (sky === '#151816' ? '#202421' : '#d5d6cd') : sky === '#151816' ? '#3d4733' : '#8c9a72'} sun={sun} quality={quality} groundY={strategy?.groundY} />
+        <fog attach="fog" args={night ? [sky, 25, 110] : quality === 'alta' ? ['#c5cdd2', 35, 170] : [sky, 30, 120]} />
+        <Lights model={model} ground={quality === 'baja' ? (themeSky === '#151816' ? '#202421' : '#d5d6cd') : themeSky === '#151816' ? '#3d4733' : '#8c9a72'} sun={sun} quality={quality} groundY={strategy?.groundY} simulation={simulation} />
         <SectionClip height={section} />
         <BuildingMesh
           model={model}
@@ -363,6 +398,8 @@ export function Viewer3D({
           onPoint={measure?.onPoint}
         />
         <DoorAnimator root={built?.root ?? null} />
+        {simulation && <Simulation model={model} furniture={furniture} walking={mode === 'walk'} />}
+        {night && mode === 'orbit' && <NightLights model={model} />}
         {measure && <MeasureMarks points={measure.points} />}
         {overlayUrl && overlayOpacity > 0 && (
           <Suspense fallback={null}>
