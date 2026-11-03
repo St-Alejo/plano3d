@@ -337,7 +337,7 @@ class RasterAssembleStage(PipelineStage[RasterContext]):
     def run(self, ctx: RasterContext) -> RasterContext:
         cv = ctx.require(ctx.cv, "cv")
         ctx.preview = cv.require(cv.rectified, "rectified")
-        ctx.model = assemble_model(ctx, ctx.require(ctx.drawing, "drawing"))
+        ctx.model = assemble_model(ctx, ctx.require(ctx.drawing, "drawing"), ocr=True)
         return ctx
 
     def metrics(self, ctx: RasterContext) -> dict[str, float]:

@@ -30,48 +30,48 @@
       "rooms_det": 7,
       "rooms_gt": 7,
       "room_iou": 0.905,
-      "names_ok": 4,
+      "names_ok": 7,
       "rooms": [
         {
           "truth": "punto fijo",
           "iou": 0.924,
-          "label": "Espacio 1",
-          "name_ok": false
+          "label": "Escalera",
+          "name_ok": true
         },
         {
           "truth": "alcoba 3",
           "iou": 0.938,
-          "label": "ALCOBA3",
+          "label": "Alcoba 3",
           "name_ok": true
         },
         {
           "truth": "baño 2",
           "iou": 0.832,
-          "label": "Espacio 4",
-          "name_ok": false
+          "label": "Baño 1",
+          "name_ok": true
         },
         {
           "truth": "baño 1",
           "iou": 0.811,
-          "label": "Espacio 5",
-          "name_ok": false
+          "label": "Baño 2",
+          "name_ok": true
         },
         {
           "truth": "alcoba 2",
           "iou": 0.946,
-          "label": "ALCOBA2",
+          "label": "Alcoba 2",
           "name_ok": true
         },
         {
           "truth": "alcoba 1",
           "iou": 0.953,
-          "label": "ALCOBA1",
+          "label": "Alcoba 1",
           "name_ok": true
         },
         {
           "truth": "cocina",
           "iou": 0.932,
-          "label": "COCINA",
+          "label": "Cocina / Sala / Comedor",
           "name_ok": true
         }
       ],
@@ -177,13 +177,13 @@
       ]
     }
   ],
-  "when": "2026-11-02T19:06:45",
+  "when": "2026-11-02T19:24:08",
   "pass": {
     "scale": false,
     "levels": true,
     "2do piso: muros": false,
     "2do piso: aberturas": true,
     "2do piso: ambientes": true,
-    "2do piso: nombres": false
+    "2do piso: nombres": true
   }
 }

@@ -46,10 +46,12 @@ from plano3d.domain.plan_text import (
     parse_area,
     parse_level,
     parse_scale,
+    room_name_from_texts,
     room_type_from_name,
     strip_accents,
 )
 from plano3d.infrastructure.vector.primitives import Drawing, LayerRole, layer_role
+from plano3d.infrastructure.vector.room_hints import HINT_LABELS, hinted_type
 from plano3d.infrastructure.vector.walls import (
     CAD,
     T_MAX,
@@ -233,7 +235,9 @@ def _opening(o: OpeningCand, wall_len: float) -> Opening | None:
     )
 
 
-def assemble_model(ctx: VectorContext, d: Drawing) -> BuildingModel:
+def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> BuildingModel:
+    """``ocr``: los textos vienen de leer una foto; los nombres se rearman ("ALCOBA3" →
+    Alcoba 3). En un DXF o PDF el rótulo del dibujante queda tal cual."""
     exact = d.exact_scale
 
     def measure_for(length: float) -> Measure:
@@ -281,20 +285,29 @@ def assemble_model(ctx: VectorContext, d: Drawing) -> BuildingModel:
     # textos: nombres y áreas de ambientes, niveles, escala
     consumed: set[int] = set()
     rooms: list[Room] = []
+    hinted: dict[str, list[int]] = {}
     for k, poly in enumerate(ctx.rooms):
         inside = [
             (i, t)
             for i, t in enumerate(d.texts)
             if i not in consumed and poly.contains(Point(t.x, t.y))
         ]
-        name = next(
-            ((i, t) for i, t in inside if classify_label(t.text) is LabelKind.ROOM_NAME), None
-        )
+        names = [(i, t) for i, t in inside if classify_label(t.text) is LabelKind.ROOM_NAME]
         area = next(((i, t) for i, t in inside if parse_area(t.text) is not None), None)
-        label = name[1].text if name else f"Espacio {k + 1}"
-        for hit in (name, area):
-            if hit:
-                consumed.add(hit[0])
+        # "ALCOBA3" → Alcoba 3; "COCINA" + "SALA-COMEDOR" → un solo ambiente abierto
+        parsed = room_name_from_texts([t.text for _, t in names]) if ocr else None
+        hint = None if names else hinted_type(poly, d.lines, [*d.arcs, *d.detail_arcs])
+        if parsed:
+            label, room_type = parsed.label, parsed.room_type
+        elif names:
+            label = names[0][1].text
+            room_type = room_type_from_name(label)
+        elif hint:
+            label, room_type = HINT_LABELS[hint], hint
+        else:
+            label, room_type = f"Espacio {k + 1}", RoomType.OTHER
+        used = names if parsed else names[:1]
+        consumed.update(i for i, _ in (*used, *([area] if area else [])))
         coords = list(poly.exterior.coords)[:-1]
         try:
             rooms.append(
@@ -303,12 +316,19 @@ def assemble_model(ctx: VectorContext, d: Drawing) -> BuildingModel:
                     label=label,
                     polygon=tuple(Point2D(float(x), float(y)) for x, y in coords),
                     confidence=0.95,
-                    room_type=room_type_from_name(label) if name else RoomType.OTHER,
+                    room_type=room_type,
                     declared_area=parse_area(area[1].text) if area else None,
                 )
             )
         except DomainError:
             continue
+        if hint:
+            hinted.setdefault(label, []).append(len(rooms) - 1)
+    # dos baños sin rótulo: Baño 1, Baño 2 (en el orden de los ambientes)
+    for label, idx in hinted.items():
+        if len(idx) > 1:
+            for n, j in enumerate(idx, 1):
+                rooms[j] = replace(rooms[j], label=f"{label} {n}")
 
     labels: list[TextLabel] = []
     elevation = 0.0
