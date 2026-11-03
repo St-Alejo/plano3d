@@ -23,9 +23,9 @@
       "wall_r": 0.866,
       "wall_f1": 0.895,
       "wall_f1_ends": 0.311,
-      "open_p": 0.5,
-      "open_r": 0.214,
-      "open_det": 6,
+      "open_p": 0.6,
+      "open_r": 0.643,
+      "open_det": 15,
       "open_gt": 14,
       "rooms_det": 8,
       "rooms_gt": 7,
@@ -78,50 +78,113 @@
       "openings": [
         {
           "at": [
-            3.11,
-            0.1
+            0.99,
+            6.19
           ],
-          "kind": "door"
+          "kind": "window"
         },
         {
           "at": [
-            4.62,
+            2.08,
+            6.19
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            1.08,
+            12.53
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.04,
             12.52
           ],
           "kind": "window"
         },
         {
           "at": [
-            3.26,
-            1.56
+            4.1,
+            12.52
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.21,
+            2.88
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.17,
+            3.97
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.13,
+            5.18
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.51,
+            2.19
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.45,
+            4.94
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.99,
+            7.88
           ],
           "kind": "door"
         },
         {
           "at": [
             3.96,
-            9.26
+            9.25
           ],
           "kind": "door"
         },
         {
           "at": [
             6.5,
-            9.43
+            7.87
           ],
           "kind": "window"
         },
         {
           "at": [
             6.5,
-            11.17
+            9.3
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.07,
+            9.2
           ],
           "kind": "door"
         }
       ]
     }
   ],
-  "when": "2026-11-02T18:19:50",
+  "when": "2026-11-02T19:06:31",
   "pass": {
     "scale": true,
     "levels": true,

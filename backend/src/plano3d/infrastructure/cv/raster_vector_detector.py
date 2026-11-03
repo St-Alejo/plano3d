@@ -34,6 +34,7 @@ from plano3d.domain import LabelKind, MeasureSource
 from plano3d.domain.plan_text import classify_label, parse_length
 from plano3d.domain.scale_fit import ScaleFit, ScalePair, fit_scale
 from plano3d.domain.solver import solve_level
+from plano3d.infrastructure.cv.band_openings import band_openings
 from plano3d.infrastructure.cv.band_rooms import band_rooms, wall_band
 from plano3d.infrastructure.cv.band_walls import band_walls
 from plano3d.infrastructure.cv.context import CVContext, as_u8
@@ -291,11 +292,11 @@ class ToDrawingStage(PipelineStage[RasterContext]):
 
 class BandRoomsStage(PipelineStage[RasterContext]):
     """Si los muros no cierran los ambientes (tabiques sin detectar, vanos abiertos), los
-    ambientes y los muros salen de la máscara de bandas. Solo con escala por cotas: los
+    ambientes, los muros y sus vanos salen de la máscara de bandas. Solo con escala por cotas: los
     grosores del filtro están en metros."""
 
     key = "band_rooms"
-    title = "Ambientes y muros desde la tinta"
+    title = "Ambientes, muros y vanos desde la tinta"
 
     def run(self, ctx: RasterContext) -> RasterContext:
         if ctx.scale_source != "dimensions":
@@ -318,6 +319,11 @@ class BandRoomsStage(PipelineStage[RasterContext]):
             walls = band_walls(band, found, ctx.mpp, ctx.walls)
             if walls:
                 ctx.walls = walls
+                # los vanos también: el trazo grueso del muro se corta donde hay uno
+                read = band_openings(ink, walls, ctx.mpp, v.arcs)
+                if any(read):
+                    for w, ops in zip(walls, read, strict=True):
+                        w.openings = ops
         return ctx
 
     def metrics(self, ctx: RasterContext) -> dict[str, float]:

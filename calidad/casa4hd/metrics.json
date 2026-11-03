@@ -23,9 +23,9 @@
       "wall_r": 0.949,
       "wall_f1": 0.949,
       "wall_f1_ends": 0.4,
-      "open_p": 0.143,
-      "open_r": 0.071,
-      "open_det": 7,
+      "open_p": 1.0,
+      "open_r": 1.0,
+      "open_det": 14,
       "open_gt": 14,
       "rooms_det": 7,
       "rooms_gt": 7,
@@ -78,62 +78,111 @@
       "openings": [
         {
           "at": [
-            4.96,
-            12.51
+            2.5,
+            7.48
           ],
           "kind": "door"
         },
         {
           "at": [
-            5.79,
-            0.11
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            0.05,
-            3.35
-          ],
-          "kind": "door"
-        },
-        {
-          "at": [
-            3.3,
-            1.88
+            1.61,
+            12.52
           ],
           "kind": "window"
         },
         {
           "at": [
-            3.07,
-            7.1
+            4.66,
+            12.51
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.28,
+            2.88
           ],
           "kind": "door"
         },
         {
           "at": [
-            3.99,
+            6.5,
+            1.98
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.41,
+            5.44
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.09,
+            3.95
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.08,
+            5.48
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.06,
             9.23
           ],
           "kind": "door"
         },
         {
           "at": [
-            3.0,
-            11.89
+            4.0,
+            7.85
           ],
           "kind": "door"
+        },
+        {
+          "at": [
+            3.99,
+            9.22
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            0.64,
+            8.11
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.52,
+            7.84
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.53,
+            9.41
+          ],
+          "kind": "window"
         }
       ]
     }
   ],
-  "when": "2026-11-02T18:20:04",
+  "when": "2026-11-02T19:06:45",
   "pass": {
     "scale": false,
     "levels": true,
     "2do piso: muros": false,
-    "2do piso: aberturas": false,
+    "2do piso: aberturas": true,
     "2do piso: ambientes": true,
     "2do piso: nombres": false
   }
