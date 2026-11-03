@@ -16,10 +16,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from typing import Any
 
 from plano3d.application.ports import AssistantReply, PlanAssistant
 from plano3d.application.use_cases.errors import AssistantUnavailableError
+from plano3d.domain.building import FACADE_STYLES
+from plano3d.domain.facade import FACADE_COLORS, FACADE_FEATURES, FACADE_MATERIALS, FACADE_PARTS
 from plano3d.infrastructure.ocr.budget import PRICES, ClaudeBudget, ResponseCache
 
 log = logging.getLogger(__name__)
@@ -130,6 +133,10 @@ VIEWER_ACTIONS = [
     "ask",
     "level",
     "furniture",
+    "facade_style",
+    "facade_part",
+    "facade_color",
+    "facade_feature",
 ]
 _VIEWER_VALUES: dict[str, list[str]] = {
     "plan_mode": ["presentacion", "obra", "acero", "secuencia"],
@@ -160,6 +167,24 @@ _VIEWER_SYSTEM = (
     "cantidades de obra (las calcula el visor).\n"
     "- level: number (piso desde 1, de abajo hacia arriba) o value all (todos los pisos).\n"
     "- furniture: on (true = mostrar los muebles, false = quitarlos de la vista).\n"
+    "Fachada (solo el exterior; se puede cambiar por partes sin elegir otro estilo):\n"
+    "- facade_style: value moderna_blanca|moderna_madera|moderna_ladrillo|"
+    "moderna_contemporanea (empieza limpio desde ese estilo).\n"
+    "- facade_part: value ground (piso 1, garajes)|upper (pisos de arriba)|front (frente de "
+    "los pisos de arriba)|gate (portón), con material panete|concreto|ladrillo|madera|"
+    "porcelanato y/o color (#rrggbb).\n"
+    "- facade_color: value frame (marcos de ventana)|band (franja de losa y remate)|accent "
+    "(marco saliente del voladizo) y color (#rrggbb).\n"
+    "- facade_feature: value listones (celosía de madera en las ventanas del frente)|"
+    "jardinera (en el borde de la losa)|marco_ventana (recuadro saliente)|alero (losa de "
+    "cubierta volada)|luces (apliques junto al acceso) y on.\n"
+    "Si piden un material (madera, ladrillo, concreto, panete, porcelanato) o un color para "
+    "un piso o para la fachada, es facade_part: el piso 1 es ground y los de arriba upper. "
+    "masonry y brick son solo del modo obra (los bloques de la construcción).\n"
+    "Ejemplos: 'madera en el segundo piso' → facade_part upper material madera; 'marcos "
+    "negros' → facade_color frame #1c1d1f; 'quita la jardinera' → facade_feature "
+    "jardinera on false; 'el piso 1 en concreto' → facade_part ground material concreto; "
+    "'más moderna con concreto' → facade_style moderna_contemporanea.\n"
     "Usa los nombres e ids que te doy en el estado. Si algo no se puede expresar con estas "
     "acciones, deja actions vacío y explícalo en reply. reply es una frase breve en español."
 )
@@ -169,6 +194,8 @@ _VIEWER_ROW: dict[str, Any] = {
     "value": _NULLABLE_STR,
     "number": _NULLABLE_NUM,
     "on": {"type": ["boolean", "null"]},
+    "material": {"type": ["string", "null"], "enum": [*FACADE_MATERIALS, None]},
+    "color": _NULLABLE_STR,
 }
 VIEWER_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -229,6 +256,33 @@ def to_viewer_action(raw: dict[str, Any]) -> dict[str, object] | None:
         return {"a": a, "n": int(number)} if ok else None  # type: ignore[arg-type]
     if a == "furniture" and isinstance(on, bool):
         return {"a": a, "on": on}
+    if isinstance(a, str) and a.startswith("facade_"):
+        edit = _facade_edit(a, value, on, raw.get("material"), raw.get("color"))
+        return {"a": "facade", "edit": edit} if edit else None
+    return None
+
+
+_HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _facade_edit(
+    a: str, value: object, on: object, material: object, color: object
+) -> dict[str, object] | None:
+    """Un cambio de fachada validado contra lo que el visor sabe pintar."""
+    hex_color = color.lower() if isinstance(color, str) and _HEX.match(color) else None
+    if a == "facade_style":
+        return {"style": value} if value in FACADE_STYLES else None
+    if a == "facade_part" and value in FACADE_PARTS:
+        out: dict[str, object] = {"part": value}
+        if material in FACADE_MATERIALS:
+            out["material"] = material
+        if hex_color:
+            out["color"] = hex_color
+        return out if len(out) > 1 else None
+    if a == "facade_color" and value in FACADE_COLORS and hex_color:
+        return {"paint": value, "color": hex_color}
+    if a == "facade_feature" and value in FACADE_FEATURES and isinstance(on, bool):
+        return {"feature": value, "on": on}
     return None
 
 

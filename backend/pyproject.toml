@@ -58,8 +58,9 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
   "integration: requiere servicios externos (Postgres, Redis, MinIO)",
+  "groq: llama a la API real de Groq (gasta cuota; requiere GROQ_API_KEY)",
 ]
-addopts = "-m 'not integration'"
+addopts = "-m 'not integration and not groq'"
 
 [tool.coverage.run]
 source = ["src/plano3d"]

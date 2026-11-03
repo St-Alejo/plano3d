@@ -210,3 +210,27 @@ def test_claude_adapter_viewer_scope_uses_its_own_schema(tmp_path: Path) -> None
     r = asyncio.run(bot.interpret("enséñame cómo se construye", "Modo: presentacion", "viewer"))
     assert r.ops == [{"a": "plan_mode", "id": "obra"}]  # la fila mal formada se descarta
     assert r.reply == "Te muestro la obra."
+
+
+def test_to_viewer_action_fachada_valida_contra_el_catalogo() -> None:
+    row: dict[str, Any] = {
+        "value": None,
+        "number": None,
+        "on": None,
+        "material": None,
+        "color": None,
+    }
+    style = row | {"a": "facade_style", "value": "moderna_contemporanea"}
+    assert to_viewer_action(style) == {"a": "facade", "edit": {"style": "moderna_contemporanea"}}
+    assert to_viewer_action(row | {"a": "facade_style", "value": "colonial"}) is None
+    part = row | {"a": "facade_part", "value": "ground", "material": "ladrillo", "color": "#B4603A"}
+    assert to_viewer_action(part) == {
+        "a": "facade",
+        "edit": {"part": "ground", "material": "ladrillo", "color": "#b4603a"},
+    }
+    # sin nada válido que cambiar no hay acción
+    assert to_viewer_action(row | {"a": "facade_part", "value": "ground", "color": "rojo"}) is None
+    assert (
+        to_viewer_action(row | {"a": "facade_color", "value": "techo", "color": "#000000"}) is None
+    )
+    assert to_viewer_action(row | {"a": "facade_feature", "value": "luces"}) is None

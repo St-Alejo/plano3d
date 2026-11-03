@@ -150,3 +150,27 @@ def test_eleccion_de_proveedor(
     monkeypatch.setattr("plano3d.infrastructure.ocr.claude.claude_available", lambda: claude)
     monkeypatch.setattr("plano3d.infrastructure.groq.client.groq_available", lambda: groq)
     assert config.ai_provider() == expected
+
+
+def test_asistente_vista_cambia_la_fachada_por_partes(tmp_path: Any) -> None:
+    row = {"value": None, "number": None, "on": None, "material": None, "color": None}
+    payload = {
+        "actions": [
+            row | {"a": "facade_part", "value": "upper", "material": "madera"},
+            row | {"a": "facade_color", "value": "frame", "color": "#1C1D1F"},
+            row | {"a": "facade_feature", "value": "jardinera", "on": False},
+            row | {"a": "facade_part", "value": "upper", "material": "marmol"},
+        ],
+        "reply": "Listo",
+    }
+    http = _FakeHttp(payload)
+    out = asyncio.run(_assistant(tmp_path, http).interpret("madera arriba", "", scope="viewer"))
+    assert out.ops == [
+        {"a": "facade", "edit": {"part": "upper", "material": "madera"}},
+        {"a": "facade", "edit": {"paint": "frame", "color": "#1c1d1f"}},
+        {"a": "facade", "edit": {"feature": "jardinera", "on": False}},
+    ]
+    # el esquema estricto que recibe Groq ya trae los campos de la fachada
+    schema = http.bodies[0]["response_format"]["json_schema"]["schema"]
+    fields = schema["properties"]["actions"]["items"]["properties"]
+    assert {"material", "color"} <= set(fields)
