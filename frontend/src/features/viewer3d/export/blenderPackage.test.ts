@@ -90,7 +90,7 @@ describe('paquete para Blender', () => {
   })
 
   it('el script lee lo que el paquete escribe', () => {
-    for (const key of ['"cameras"', '"sun"', '"lamps"', '"floors"', '"level"', '"category"', '"floor"', 'casa.glb', 'proyecto.json'])
+    for (const key of ['"cameras"', '"sun"', '"lamps"', '"height"', '"level"', '"category"', '"floor"', 'casa.glb', 'proyecto.json'])
       expect(script).toContain(key)
   })
 })

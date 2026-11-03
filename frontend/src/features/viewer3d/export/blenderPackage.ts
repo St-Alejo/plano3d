@@ -128,6 +128,8 @@ export interface BlenderProject {
   version: 1
   name: string
   units: 'm'
+  /** altura total de la casa (m), para encuadrar las cámaras de fachada */
+  height: number
   floors: { number: number; name: string; collection: string; elevation: number; height: number }[]
   cameras: BlenderCamera[]
   /** dirección hacia el sol (unitaria), su altura y azimut en grados */
@@ -139,12 +141,15 @@ export interface BlenderProject {
 /** Sol por defecto: 10 de la mañana de un día de marzo en Bogotá (luz lateral, sombras cortas). */
 const DEFAULT_SUN: SunPosition = { altitude: 52, azimuth: 105 }
 
-/** Cámaras, sol y lámparas para el script, a partir del modelo. */
-export function blenderProject(model: BuildingModel, name: string, sun: SunPosition | null = null): BlenderProject {
+/**
+ * Cámaras, sol y lámparas para el script, a partir del modelo. `top` es la altura real de la
+ * escena (muros, antepecho, cubierta); sin ella se estima con el entrepiso del último piso.
+ */
+export function blenderProject(model: BuildingModel, name: string, sun: SunPosition | null = null, top?: number): BlenderProject {
   const levels = levelSummaries(model)
   const b = modelBounds(model)
-  const top = levels.at(-1)
-  const height = top ? top.elevation + top.height : 2.5
+  const last = levels.at(-1)
+  const height = top ?? (last ? last.elevation + last.height : 2.5)
   const ground = [...model.levels].sort((a, c) => a.elevation - c.elevation)[0]
   // hacia la calle: del lado del portón; si no hay, el frente es el lado +y de la planta
   const f = (ground && frontNormal(ground)) ?? { x: 0, y: 1 }
@@ -159,8 +164,11 @@ export function blenderProject(model: BuildingModel, name: string, sun: SunPosit
     lens,
     level,
   })
-  const fachada = at(s / 2 + Math.max(8, height * 1.6), 0)
-  const calle = at(s / 2 + Math.max(7, height * 1.3), s * 0.45)
+  // de la mitad de la casa a la cara del frente (el fondo de la planta visto desde la calle)
+  const half = Math.abs(f.x) * ((b.maxX - b.minX) / 2) + Math.abs(f.y) * ((b.maxY - b.minY) / 2)
+  // a 28 mm el cuadro 16:9 abre ~40° en vertical: a 2× la altura cabe la casa entera con aire
+  const fachada = at(half + Math.max(10, height * 2), 0)
+  const calle = at(half + Math.max(7, height * 1.4), s * 0.45)
   const aerea = at(s * 1.25, s * 1.05)
   const cameras: BlenderCamera[] = [
     cam('Fachada principal', fachada, 1.6, c, 1.6, 28, true),
@@ -184,6 +192,7 @@ export function blenderProject(model: BuildingModel, name: string, sun: SunPosit
     version: 1,
     name,
     units: 'm',
+    height: r3(height),
     floors: levels.map((l) => ({ number: l.number, name: l.name, collection: `Piso ${l.number}`, elevation: r3(l.elevation), height: r3(l.height) })),
     cameras,
     sun: { direction: [r3(dx), r3(-dz), r3(dy)], altitude: r3(sp.altitude), azimuth: r3(sp.azimuth) },
@@ -224,7 +233,7 @@ const text = (s: string) => new Uint8Array(strToU8(s))
 /** El .zip completo, listo para descargar. */
 export async function blenderPackage(root: THREE.Object3D, model: BuildingModel, name: string, sun: SunPosition | null = null): Promise<Uint8Array> {
   const glb = await exportGlb(blenderRoot(root, model), { maxTextureSize: 2048 })
-  const project = blenderProject(model, name, sun)
+  const project = blenderProject(model, name, sun, new THREE.Box3().setFromObject(root).max.y)
   return zipSync({
     // el GLB ya trae las fotos en JPEG: comprimirlo otra vez casi no gana y tarda
     'casa.glb': [new Uint8Array(await glb.arrayBuffer()), { level: 0 }],

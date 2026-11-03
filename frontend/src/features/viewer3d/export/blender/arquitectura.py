@@ -294,8 +294,7 @@ def cameras(project: dict) -> list[bpy.types.Object]:
                 # cámara horizontal: el centro de la fachada se sube con shift, sin fugas verticales
                 flat = Vector((target.x - loc.x, target.y - loc.y, 0.0))
                 obj.rotation_euler = flat.to_track_quat("-Z", "Y").to_euler()
-                floors = project["floors"]
-                height = max(f["elevation"] + f["height"] for f in floors) if floors else 3
+                height = project.get("height") or 3
                 dist = max(flat.length, 1.0)
                 cam.shift_y = min(0.45, ((height / 2 - loc.z) / dist) * cam.lens / cam.sensor_width)
             else:
