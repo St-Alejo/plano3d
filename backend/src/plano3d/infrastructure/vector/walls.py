@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import numpy as np
 from shapely.geometry import LineString, MultiPoint, Point, Polygon
@@ -155,6 +155,8 @@ class StairCand:
     end: Pt
     width: float
     steps: int
+    riser: float = 0.175
+    base: float = 0.0  # altura de arranque: los tramos de una escalera en L o en U
 
 
 # ----------------------------------------------------------------------------- escaleras
@@ -675,6 +677,24 @@ def _touches_cross(p: Pt, pieces: Sequence[WallCand], ref: WallCand, t: float) -
     return False
 
 
+def _crossed_inside(a: Pt, b: Pt, pieces: Sequence[WallCand], ref: WallCand) -> bool:
+    """¿Un muro transversal atraviesa el hueco [a, b] lejos de sus bordes? Entonces no es
+    un vano: una puerta no cruza un muro (son dos tramos a lado y lado del transversal)."""
+    gap = LineString([a, b])
+    if gap.length <= 0.3:
+        return False
+    inner = LineString(
+        [gap.interpolate(0.15).coords[0], gap.interpolate(gap.length - 0.15).coords[0]]
+    )
+    for o in pieces:
+        # un trazo del largo del espesor es la jamba del propio vano, no un muro que lo cruza
+        if _angle_diff(o.angle, ref.angle) < 20 or o.chord <= 1.5 * ref.thickness + 0.1:
+            continue
+        if inner.intersects(LineString([o.p1, o.p2])):
+            return True
+    return False
+
+
 def _emit(chain: list[_Item], openings: list[OpeningCand], u: Pt, n: Pt) -> WallCand:
     """Un muro desde una cadena de tramos colineales (s0, s1, espesor, offset, tramo)."""
     s0 = chain[0][0]
@@ -787,7 +807,9 @@ def chain_walls(
                     )
                     # sin evidencia y con muros transversales en los bordes: son dos muros
                     # distintos (p. ej. tabiques alineados a lado y lado de un corredor)
-                    if not (op.confidence <= 0.5 and crossed):
+                    if not (op.confidence <= 0.5 and crossed) and not _crossed_inside(
+                        p_end, p_next, straight, ref
+                    ):
                         openings.append(op)
                         chain.append(it)
                         continue
@@ -1002,12 +1024,64 @@ def snap(walls: list[WallCand], factor: float = 1.25) -> list[WallCand]:
     kept = []
     for w in walls:
         length = w.chord
+        # un vano que llegaba a la cara del muro vecino sobresale medio espesor del eje
+        # del encuentro: se recorta, no se pierde
+        for op in w.openings:
+            if -w.thickness < op.offset < 0:
+                op.width += op.offset
+                op.offset = 0.0
+            if length < op.offset + op.width < length + w.thickness:
+                op.width = length - op.offset
         w.openings = [
-            o for o in w.openings if o.offset >= -1e-6 and o.offset + o.width <= length + 1e-6
+            o
+            for o in w.openings
+            if o.offset >= -1e-6
+            and o.offset + o.width <= length + 1e-6
+            and o.width >= 0.8 * MIN_OPENING
         ]
         if length >= max(0.05, 0.5 * w.thickness) or w.openings:
             kept.append(w)
     return kept
+
+
+def split_crossed_openings(walls: list[WallCand]) -> list[WallCand]:
+    """Un vano que un muro transversal atraviesa son dos vanos, uno a cada lado.
+
+    La hoja de giro se queda con el trozo de su bisagra; el otro es un paso sin hoja."""
+    for w in walls:
+        if w.curved or not w.openings:
+            continue
+        u = w.direction
+        cuts: list[tuple[float, float]] = []
+        for o in walls:
+            if o is w or o.curved or _angle_diff(o.angle, w.angle) < 20:
+                continue
+            q = _intersect(w.p1, w.p2, o.p1, o.p2)
+            if q is None:
+                continue
+            # el transversal llega al eje de ``w`` (lo toca o lo cruza)
+            t = _dot(_sub(q, o.p1), o.direction)
+            if not -0.02 <= t <= o.chord + 0.02:
+                continue
+            cuts.append((_dot(_sub(q, w.p1), u), o.thickness / 2))
+        out: list[OpeningCand] = []
+        for op in w.openings:
+            inner = [(s, h) for s, h in cuts if op.offset + 0.15 < s < op.offset + op.width - 0.15]
+            if not inner:
+                out.append(op)
+                continue
+            s, h = inner[0]
+            pieces = [(op.offset, s - h), (s + h, op.offset + op.width)]
+            hinge = 1 if op.hinge_at_end else 0
+            for k, (a, b) in enumerate(pieces):
+                if b - a < MIN_OPENING:
+                    continue
+                if op.kind == "door" and op.operation and k != hinge:
+                    out.append(OpeningCand(a, b - a, "door", 0.6, "none"))
+                else:
+                    out.append(replace(op, offset=a, width=b - a))
+        w.openings = out
+    return walls
 
 
 def connected_only(walls: list[WallCand], keep_ratio: float = 0.15) -> list[WallCand]:
@@ -1120,6 +1194,23 @@ def columns_from_closed(closed: Iterable[Closed], column_layer: bool = False) ->
         else:
             out.append(ColumnCand((ctr.x, ctr.y), e1, e2, False, rot % (math.pi / 2)))
     return out
+
+
+#: columnas de una retícula: a partir de cuántas se exige que cada una esté en un eje
+GRID_MIN = 6
+GRID_TOL_M = 0.15
+
+
+def grid_columns(columns: list[ColumnCand]) -> list[ColumnCand]:
+    """En una retícula de columnas, la que no comparte eje (x ni y) con ninguna otra es un
+    aparato relleno (lavamanos, poceta), no una columna."""
+    if len(columns) < GRID_MIN:
+        return columns
+
+    def shares(c: ColumnCand, k: int) -> bool:
+        return any(abs(c.center[k] - o.center[k]) <= GRID_TOL_M for o in columns if o is not c)
+
+    return [c for c in columns if shares(c, 0) or shares(c, 1)]
 
 
 def bridge_columns(walls: list[WallCand], columns: Sequence[ColumnCand]) -> list[WallCand]:
@@ -1278,6 +1369,168 @@ def door_walls(walls: list[WallCand], arcs: Sequence[ArcPrim]) -> list[WallCand]
             new.append(w)
             break
     return walls + new
+
+
+#: hueco máximo de un vano compuesto (puerta + ventana corrida) entre dos jambas
+MAX_COMPOSITE = 4.5
+#: fracción del hueco que deben explicar la hoja y las líneas de ventana
+COVERED = 0.8
+#: paso abierto (vano sin hoja) entre una columna y el muro siguiente de su eje
+MAX_PASSAGE = 1.5
+
+
+def _merge_intervals(iv: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    out: list[tuple[float, float]] = []
+    for a, b in sorted(iv):
+        if out and a <= out[-1][1] + 0.05:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
+def _gap_openings(
+    p: Pt, out: Pt, t: float, lo: float, hi: float, ev: _Evidence
+) -> list[OpeningCand] | None:
+    """Puertas (por su arco) y ventanas (por sus líneas finas) del hueco [lo, hi] medido
+    desde ``p`` hacia ``out``. ``None`` si la evidencia no explica el hueco."""
+    n = (-out[1], out[0])
+    ang = math.degrees(math.atan2(out[1], out[0])) % 180
+
+    def local(q: Pt) -> tuple[float, float]:
+        r = _sub(q, p)
+        return _dot(r, out), _dot(r, n)
+
+    doors: list[tuple[float, float, bool, bool]] = []  # a, b, bisagra al final, izquierda
+    for arc in ev.arcs:
+        if not 0.5 <= arc.r <= 1.3 or not 1.2 <= abs(arc.sweep) <= 1.95:
+            continue
+        s, off = local((arc.cx, arc.cy))
+        if abs(off) > t / 2 + 0.1 or not lo - 0.15 <= s <= hi + 0.15:
+            continue
+        # la hoja cerrada va del lado del hueco en que cae uno de los extremos del arco
+        ends = [local(e) for e in (arc.p1, arc.p2)]
+        tip = next((e for e in ends if abs(e[1]) <= t / 2 + 0.1 and abs(e[0] - s) > 0.3), None)
+        if tip is None:
+            continue
+        a, b = sorted(
+            (max(lo, s), min(hi, tip[0])) if tip[0] > s else (max(lo, tip[0]), min(hi, s))
+        )
+        if b - a < MIN_OPENING * 0.8:
+            continue
+        side = _dot(_sub(arc.point(0.5), (arc.cx, arc.cy)), n)
+        doors.append((a, b, tip[0] < s, side > 0))
+    lines: list[tuple[float, float]] = []
+    for ln in ev.lines:
+        if _angle_diff(ln.angle, ang) > 3:
+            continue
+        (s1, o1), (s2, o2) = local(ln.p1), local(ln.p2)
+        if max(abs(o1), abs(o2)) > t / 2 + 0.03:
+            continue
+        a, b = max(lo, min(s1, s2)), min(hi, max(s1, s2))
+        if b - a > 0.2:
+            lines.append((a, b))
+    windows = [iv for iv in _merge_intervals(lines) if iv[1] - iv[0] >= MIN_OPENING]
+    covered = _merge_intervals([(a, b) for a, b, _, _ in doors] + windows)
+    if sum(b - a for a, b in covered) < COVERED * (hi - lo):
+        return None
+    ops: list[OpeningCand] = []
+    taken: list[tuple[float, float]] = []
+    for a, b, at_end, left in doors:
+        ops.append(OpeningCand(a, b - a, "door", 0.9, "swing", at_end, left))
+        taken.append((a, b))
+    for a, b in windows:
+        for d0, d1 in taken:  # la ventana no se monta sobre la puerta
+            if d0 <= a < d1:
+                a = d1
+            if d0 < b <= d1:
+                b = d0
+        if b - a >= MIN_OPENING:
+            ops.append(OpeningCand(a, b - a, "window", 0.85))
+    return sorted(ops, key=lambda o: o.offset)
+
+
+def fill_evidence_gaps(
+    walls: list[WallCand], columns: Sequence[ColumnCand], ev: _Evidence
+) -> list[WallCand]:
+    """Cierra el vano que va de un muro a la columna (o al muro) siguiente en su recta
+    cuando no hay ningún trazo de muro, solo la hoja de una puerta y las líneas de una
+    ventana. Pasa con el acceso + ventana entre dos columnas de fachada y con un tabique
+    que es puerta + ventana corrida: más largo que una abertura simple, sin cara de muro.
+    """
+    for w in walls:
+        if w.curved:
+            continue
+        for end in (0, 1):
+            u = w.direction
+            out = (-u[0], -u[1]) if end == 0 else u
+            n = (-out[1], out[0])
+            p = w.p1 if end == 0 else w.p2
+            t = w.thickness
+            # el destino más cercano sobre la recta: extremo de un muro colineal o columna
+            best: tuple[float, float] | None = None  # distancia al destino, a su cara
+            for o in walls:
+                if o is w or o.curved or _angle_diff(o.angle, w.angle) > 2:
+                    continue
+                for q in (o.p1, o.p2):
+                    d, off = _dot(_sub(q, p), out), _dot(_sub(q, p), n)
+                    near = abs(off) <= 0.5 * max(t, o.thickness) and d > 0.3
+                    if near and (best is None or d < best[0]):
+                        best = (d, d)
+            for c in columns:
+                d, off = _dot(_sub(c.center, p), out), _dot(_sub(c.center, p), n)
+                half = max(c.width, c.depth) / 2
+                if abs(off) <= half and d > half + 0.3 and (best is None or d < best[0]):
+                    best = (d, d - half)
+            if best is None:
+                continue
+            dist, face = best
+            if not MIN_OPENING <= face <= MAX_COMPOSITE:
+                continue
+            q = (p[0] + out[0] * dist, p[1] + out[1] * dist)
+            if _crossed_inside(p, q, walls, w):
+                continue
+            seg = LineString([p, (p[0] + out[0] * face, p[1] + out[1] * face)])
+            if any(
+                o is not w
+                and _angle_diff(o.angle, w.angle) <= 2
+                and LineString([o.p1, o.p2]).buffer(t / 2).intersection(seg).length > 0.2
+                for o in walls
+            ):
+                continue  # ya hay un muro en ese tramo
+            ops = _gap_openings(p, out, t, 0.0, face, ev)
+            host = next(
+                (
+                    c
+                    for c in columns
+                    if abs(p[0] - c.center[0]) <= c.width / 2
+                    and abs(p[1] - c.center[1]) <= c.depth / 2
+                ),
+                None,
+            )
+            if not ops and host is not None and face <= MAX_PASSAGE:
+                # el muro sigue el eje de la columna hasta el siguiente tramo: el hueco es un
+                # paso (hall a parqueadero, pasillo a sala); separa ambientes sin hoja
+                start = max(host.width, host.depth) / 2
+                ops = [OpeningCand(start, face - start, "door", 0.6, "none")]
+            if not ops:
+                continue
+            chord0 = w.chord
+            if end == 0:
+                # el muro crece hacia atrás: las aberturas viejas se corren
+                for op in w.openings:
+                    op.offset += dist
+                for op in ops:
+                    op.offset, op.hinge_at_end = dist - (op.offset + op.width), not op.hinge_at_end
+                    op.opens_left = not op.opens_left
+                w.x1, w.y1 = q
+            else:
+                for op in ops:
+                    op.offset += chord0
+                w.x2, w.y2 = q
+            # el muro de llegada queda a tope: ``snap`` une los extremos
+            w.openings = sorted([*w.openings, *ops], key=lambda op: op.offset)
+    return walls
 
 
 def plausible_columns(cands: list[ColumnCand], walls: Sequence[WallCand]) -> list[ColumnCand]:

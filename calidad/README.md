@@ -73,10 +73,11 @@ correcciones están documentadas en la bitácora.
 |---|---|---|---|
 | **casa1** | Planta técnica con cotas | 1 de 3 ambientes, sin nombres, puertas mal ubicadas | ✅ **CUMPLE**: muros 1,00 · aberturas P/R 1,00 · ambientes 3/3, IoU 0,95 · nombres 3/3 · escala 0,0 % |
 | **casa2** | Render a color + foto de fachada, sin cotas | Muros inventados en la foto, 1 ambiente | ✅ **CUMPLE**: muros F1 0,96 · aberturas 0,92/0,92 · ambientes 6/6, IoU 0,93 · nombres 6/6 · escala −6,9 % |
-| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,73 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
+| **casa3** | Lámina CAD oscura de 720×480 con planta baja, alta y azotea, ejes rojos y cajetín | Falla total | 🟡 **3/3 niveles** separados, alineados y apilados (azotea con antepechos). **Escala −8 % (cumple)**. No cumple el resto: muros F1 0,71 / 0,72 / 0,66 por planta (sin red 0,42 / 0,54 / 0,59), ambientes 1/3 y 3/4, nombres ilegibles |
 
 | **casa4** | Foto de celular (WhatsApp, 900×1600) de la lámina "2do piso opc 3": perspectiva, papel curvado, cotas dobles | Escala −26 % (0 cotas leídas), 258 muros, 2/7 ambientes | 🟡 **Escala −1,9 % (CUMPLE)** con 6 cotas leídas "texto primero". Ambientes por máscara de bandas: 8/7, **IoU 0,73**, nombres 6/7 (antes 1/7, IoU 0,05; el baño 2 sale partido). **Muros F1 0,90** (antes 0,65). Aberturas P 0,60 R 0,64 (antes 0,50/0,21) |
 | **casa4hd** | La misma lámina en foto de 2252×4000 (la que subió el usuario, `prj_42b8db5e82`) | 1 ambiente de 1,1 m² | 🟡 Escala +5,9 %. ✅ **Ambientes 7/7, IoU 0,91** (alcobas 0,95, cocina 0,93, punto fijo 0,92, baños 0,86/0,83), ✅ **nombres 7/7** (antes 4/7: los baños y la escalera no tienen rótulo; ahora se nombran por lo dibujado). ✅ **Muros F1 0,95** (P 0,95 R 0,95; antes 0,61, 96 muros → 26). ✅ **Aberturas 14/14, P 1,00 R 1,00** (antes 0,14/0,07) |
+| **opc3p2** | PDF vectorial (CAD 1:50) de la misma lámina "2do piso opc 3"; su piso 1 (`opc3p1`, sin verdad anotada) tiene parqueaderos y ningún rótulo | Alcobas con doble espacio, cocina sin ambiente, escalera sin detectar, una puerta de 1,8 m que cruzaba un muro | ✅ **CUMPLE**: muros F1 0,99 · aberturas P 0,93 R 1,00 · ambientes 8/8, IoU 0,99 · nombres 8/8 · escala 0,0 % |
 
 **Por qué casa4 no cumple todavía (causa medida):**
 - El OCR lee bien la hoja (COCINA, ALCOBA1-3, SALA-COMEDOR y ~25 cotas). Fallaba la búsqueda de la línea
@@ -112,6 +113,14 @@ correcciones están documentadas en la bitácora.
   PDF el rótulo queda tal cual. Un ambiente sin rótulo con ≥ 4 huellas parejas (paso 18–40 cm) es Escalera; uno
   de ≤ 6 m² con un aparato (arco de 10–45 cm con barrido ≥ 1 rad) es Baño (numerados si hay varios).
   casa4hd nombres 4/7 → 7/7; casa4 4/7 → 6/7.
+- **PDF de la casa opción 3 (2026-11-02)**: escalera en U de pluma fina (`vector/stair_flights.py`): tramos
+  de ≥ 3 huellas iguales (paso 20–40 cm), vecinos a ≤ 1 m, salen como `Stair` encadenados con `base` y una
+  contrahuella que reparte 2,6 m. Sin rótulo: la caja de la escalera ≥ 45 % del ambiente es Escalera y si no
+  Hall; ≥ 12 m² con un portón de fachada es Parqueadero; angosto (≤ 1,3 m) y alargado es Pasillo. Un vano de
+  fachada ≥ 1,8 m sin hoja es portón plegable. En CAD se quitan los dobles espacios y varios rótulos de un
+  mismo ambiente se juntan ("SALA-COMEDOR / COCINA"). Columnas: en una retícula de ≥ 6, la que no comparte eje
+  es un aparato. Un vano que un muro transversal atraviesa se parte en dos; `snap` recorta (no borra) el vano
+  que sobresale medio espesor. Los PDF se evalúan llevando la esquina exterior del modelo al origen.
 - **Aberturas (2026-11-02, `cv/band_openings.py`)**: sobre cada eje de la banda se lee el peso del trazo. La
   tinta abierta con un disco de 3,4 cm deja solo el trazo grueso del muro; donde falta (≥ 0,45 m) hay un vano.
   Cada hoja de puerta (arco de 0,5–1,1 m) con la bisagra en una jamba da una puerta del ancho de su radio,

@@ -112,7 +112,7 @@ _LEVEL_RE = re.compile(
     r"^\s*(?:N\.?\s*P\.?\s*T\.?|NPT|NIVEL|N)\s*\.?\s*:?\s*(?P<sign>[+-]?)\s*(?P<num>\d[\d.,]*)\s*$",
     re.IGNORECASE,
 )
-_SCALE_RE = re.compile(r"ESC(?:ALA)?\.?\s*:?\s*1\s*[:/]\s*(?P<den>\d+)", re.IGNORECASE)
+_SCALE_RE = re.compile(r"ESC(?:ALA)?\.?\s*:?\s*1\s*[:/-]\s*(?P<den>\d+)", re.IGNORECASE)
 
 
 def parse_area(text: str) -> float | None:

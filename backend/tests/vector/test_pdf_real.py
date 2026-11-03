@@ -40,8 +40,10 @@ def test_muros_sin_mobiliario_ni_escalones(model) -> None:  # type: ignore[no-un
 
 def test_ambientes_con_nombre_y_area(model) -> None:  # type: ignore[no-untyped-def]
     rooms = {r.label: r for r in model.levels[0].rooms}
-    for name in ("ALCOBA  1", "ALCOBA  2", "ALCOBA  3", "SALA-COMEDOR"):
+    # el rótulo del CAD sin los espacios dobles ("ALCOBA  1")
+    for name in ("ALCOBA 1", "ALCOBA 2", "ALCOBA 3"):
         assert name in rooms
+    sala = next(label for label in rooms if "SALA-COMEDOR" in label)
     assert len(rooms) >= 7  # + hall de escalera y dos baños
 
     def size(label: str) -> tuple[float, float]:
@@ -50,9 +52,9 @@ def test_ambientes_con_nombre_y_area(model) -> None:  # type: ignore[no-untyped-
         return max(xs) - min(xs), max(ys) - min(ys)
 
     # medidas de las cotas: alcoba (2,84) + nicho del clóset (0,55) por 3,40
-    assert size("ALCOBA  2") == pytest.approx((2.84 + 0.55, 3.40), abs=0.03)
-    assert size("ALCOBA  3") == pytest.approx((2.91, 3.09 + 0.55), abs=0.03)
-    assert size("SALA-COMEDOR")[0] == pytest.approx(3.33, abs=0.03)
+    assert size("ALCOBA 2") == pytest.approx((2.84 + 0.55, 3.40), abs=0.03)
+    assert size("ALCOBA 3") == pytest.approx((2.91, 3.09 + 0.55), abs=0.03)
+    assert size(sala)[0] == pytest.approx(3.33, abs=0.03)
 
 
 def test_puertas_ventanas_y_columnas(model) -> None:  # type: ignore[no-untyped-def]

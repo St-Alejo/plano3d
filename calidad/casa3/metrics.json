@@ -259,12 +259,12 @@
     },
     {
       "name": "Azotea",
-      "walls_det": 10,
+      "walls_det": 16,
       "walls_gt": 10,
-      "wall_p": 1.0,
+      "wall_p": 0.76,
       "wall_r": 0.575,
-      "wall_f1": 0.73,
-      "wall_f1_ends": 0.4,
+      "wall_f1": 0.655,
+      "wall_f1_ends": 0.308,
       "open_p": 1.0,
       "open_r": 1.0,
       "open_det": 0,
@@ -277,7 +277,7 @@
       "openings": []
     }
   ],
-  "when": "2026-11-02T19:22:54",
+  "when": "2026-11-02T21:16:02",
   "pass": {
     "scale": true,
     "levels": true,

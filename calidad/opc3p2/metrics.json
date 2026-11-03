@@ -1,0 +1,203 @@
+{
+  "case": "opc3p2",
+  "detector": "vector-pdf",
+  "metrics": {
+    "walls": 27.0,
+    "rooms": 8.0,
+    "dimensions": 24.0,
+    "meters_per_pixel": 0.007178492080441489,
+    "scale_denominator": 50.0
+  },
+  "scale": {
+    "mpp": 0.007178492080441489,
+    "source": "vector",
+    "error": 0.0002
+  },
+  "levels_det": 1,
+  "levels_gt": 1,
+  "levels": [
+    {
+      "name": "2do piso",
+      "walls_det": 27,
+      "walls_gt": 19,
+      "wall_p": 0.984,
+      "wall_r": 1.0,
+      "wall_f1": 0.992,
+      "wall_f1_ends": 0.522,
+      "open_p": 0.933,
+      "open_r": 1.0,
+      "open_det": 15,
+      "open_gt": 14,
+      "rooms_det": 8,
+      "rooms_gt": 8,
+      "room_iou": 0.986,
+      "names_ok": 8,
+      "rooms": [
+        {
+          "truth": "escalera",
+          "iou": 1.0,
+          "label": "Escalera",
+          "name_ok": true
+        },
+        {
+          "truth": "alcoba 3",
+          "iou": 0.988,
+          "label": "ALCOBA 3",
+          "name_ok": true
+        },
+        {
+          "truth": "baño 2",
+          "iou": 0.983,
+          "label": "Baño 2",
+          "name_ok": true
+        },
+        {
+          "truth": "baño 1",
+          "iou": 1.0,
+          "label": "Baño 1",
+          "name_ok": true
+        },
+        {
+          "truth": "pasillo",
+          "iou": 0.929,
+          "label": "Pasillo",
+          "name_ok": true
+        },
+        {
+          "truth": "alcoba 2",
+          "iou": 0.994,
+          "label": "ALCOBA 2",
+          "name_ok": true
+        },
+        {
+          "truth": "alcoba 1",
+          "iou": 0.995,
+          "label": "ALCOBA 1",
+          "name_ok": true
+        },
+        {
+          "truth": "sala-comedor / cocina",
+          "iou": 0.997,
+          "label": "SALA-COMEDOR / COCINA",
+          "name_ok": true
+        }
+      ],
+      "openings": [
+        {
+          "at": [
+            1.58,
+            12.54
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.63,
+            12.54
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            2.59,
+            7.46
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.55,
+            7.46
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            6.54,
+            9.38
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.54,
+            7.81
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.54,
+            5.52
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            6.54,
+            2.02
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.31,
+            2.71
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.09,
+            9.26
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            3.09,
+            5.47
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            3.09,
+            3.84
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            0.62,
+            8.05
+          ],
+          "kind": "window"
+        },
+        {
+          "at": [
+            4.01,
+            9.26
+          ],
+          "kind": "door"
+        },
+        {
+          "at": [
+            4.01,
+            7.89
+          ],
+          "kind": "door"
+        }
+      ]
+    }
+  ],
+  "when": "2026-11-02T21:15:12",
+  "pass": {
+    "scale": true,
+    "levels": true,
+    "2do piso: muros": true,
+    "2do piso: aberturas": true,
+    "2do piso: ambientes": true,
+    "2do piso: nombres": true
+  }
+}

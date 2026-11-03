@@ -12,7 +12,7 @@ from dataclasses import dataclass, field, replace
 
 import cv2
 import numpy as np
-from shapely.geometry import Point, Polygon
+from shapely.geometry import LineString, Point, Polygon
 
 from plano3d.application.pipeline import PipelineStage
 from plano3d.domain import (
@@ -51,7 +51,8 @@ from plano3d.domain.plan_text import (
     strip_accents,
 )
 from plano3d.infrastructure.vector.primitives import Drawing, LayerRole, layer_role
-from plano3d.infrastructure.vector.room_hints import HINT_LABELS, hinted_type
+from plano3d.infrastructure.vector.room_hints import hint_label, hinted_type
+from plano3d.infrastructure.vector.stair_flights import flight_stairs
 from plano3d.infrastructure.vector.walls import (
     CAD,
     T_MAX,
@@ -69,13 +70,16 @@ from plano3d.infrastructure.vector.walls import (
     door_walls,
     extend_to_doors,
     exterior_walls,
+    fill_evidence_gaps,
     find_stairs,
+    grid_columns,
     object_rectangles,
     pair_arcs,
     pair_lines,
     plausible_columns,
     rooms_from_walls,
     snap,
+    split_crossed_openings,
 )
 
 MARGIN_M = 1.0
@@ -84,6 +88,8 @@ WALL_HEIGHT = 2.6
 DOOR_HEIGHT = 2.1
 WINDOW_SILL = 0.9
 WINDOW_HEIGHT = 1.2
+#: un vano de fachada sin hoja más ancho que esto es el portón del garaje
+GATE_M = 1.8
 
 
 @dataclass
@@ -144,24 +150,31 @@ class WallsStage(PipelineStage[VectorContext]):
         objects = object_rectangles(d.lines, ctx.tol)
         lines = [ln for i, ln in enumerate(d.lines) if i not in objects]
         stairs, stair_lines = find_stairs(lines, ctx.tol)
+        detail = d.detail_lines
+        if not stairs:  # el punto fijo de una casa: tramos cortos de pluma fina
+            stairs, flight_lines = flight_stairs(detail)
+            detail = [ln for i, ln in enumerate(detail) if i not in flight_lines]
         rest = [ln for i, ln in enumerate(lines) if i not in stair_lines]
         wall_lines = [ln for ln in rest if layer_role(ln.layer) is not LayerRole.STAIR]
         pieces, used_lines = pair_lines(wall_lines, ctx.t_min, ctx.t_max, tol=ctx.tol)
         curved, used_arcs = pair_arcs(d.arcs, ctx.t_min, ctx.t_max, tol=ctx.tol)
         evidence = _Evidence(
-            [*d.detail_lines, *(ln for i, ln in enumerate(wall_lines) if i not in used_lines)],
+            [*detail, *(ln for i, ln in enumerate(wall_lines) if i not in used_lines)],
             [*d.detail_arcs, *(a for i, a in enumerate(d.arcs) if i not in used_arcs)],
             d.inserts,
         )
-        columns = columns_from_closed(
-            [c for c in d.closed if c.filled or layer_role(c.layer) is LayerRole.COLUMN],
-            column_layer=True,
+        columns = grid_columns(
+            columns_from_closed(
+                [c for c in d.closed if c.filled or layer_role(c.layer) is LayerRole.COLUMN],
+                column_layer=True,
+            )
         )
         walls = chain_walls([*pieces, *curved], evidence, ctx.tol)
         walls = extend_to_doors(walls, evidence.arcs)
         walls = bridge_columns(walls, columns)
+        walls = fill_evidence_gaps(walls, columns, evidence)
         walls = door_walls(walls, evidence.arcs)
-        walls = connected_only(snap(walls, ctx.tol.snap))
+        walls = split_crossed_openings(connected_only(snap(walls, ctx.tol.snap)))
         ctx.walls = walls
         ctx.stairs = stairs
         ctx.columns = columns
@@ -235,6 +248,12 @@ def _opening(o: OpeningCand, wall_len: float) -> Opening | None:
     )
 
 
+def _flight_box(s: StairCand) -> Polygon:
+    """Huella en planta de un tramo de escalera."""
+    line = LineString([s.start, s.end])
+    return line.buffer(s.width / 2, cap_style="flat")
+
+
 def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> BuildingModel:
     """``ocr``: los textos vienen de leer una foto; los nombres se rearman ("ALCOBA3" →
     Alcoba 3). En un DXF o PDF el rótulo del dibujante queda tal cual."""
@@ -271,6 +290,14 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
         except DomainError:
             continue
         ops = [op for o in w.openings if (op := _opening(o, probe.length)) is not None]
+        if kind is WallKind.EXTERIOR:
+            # un vano de fachada de portón sin hoja de giro: las hojas plegables del garaje
+            ops = [
+                replace(op, operation=OpeningOperation.FOLDING)
+                if op.kind is OpeningKind.DOOR and op.width >= GATE_M and op.operation is None
+                else op
+                for op in ops
+            ]
         ops.sort(key=lambda o: o.offset)
         clean: list[Opening] = []
         for op in ops:
@@ -286,6 +313,14 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
     consumed: set[int] = set()
     rooms: list[Room] = []
     hinted: dict[str, list[int]] = {}
+    gates = [
+        LineString([(p.x, p.y) for p in (w.point_at(op.offset), w.point_at(op.end))])
+        for w in walls
+        if w.kind is WallKind.EXTERIOR
+        for op in w.openings
+        if op.operation is OpeningOperation.FOLDING
+    ]
+    flights = [_flight_box(s) for s in ctx.stairs]
     for k, poly in enumerate(ctx.rooms):
         inside = [
             (i, t)
@@ -296,17 +331,21 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
         area = next(((i, t) for i, t in inside if parse_area(t.text) is not None), None)
         # "ALCOBA3" → Alcoba 3; "COCINA" + "SALA-COMEDOR" → un solo ambiente abierto
         parsed = room_name_from_texts([t.text for _, t in names]) if ocr else None
-        hint = None if names else hinted_type(poly, d.lines, [*d.arcs, *d.detail_arcs])
+        hint = (
+            None if names else hinted_type(poly, d.lines, [*d.arcs, *d.detail_arcs], flights, gates)
+        )
         if parsed:
             label, room_type = parsed.label, parsed.room_type
         elif names:
-            label = names[0][1].text
-            room_type = room_type_from_name(label)
+            # el rótulo del dibujante, sin los espacios dobles; varios nombres en un mismo
+            # ambiente abierto van juntos ("COCINA / SALA-COMEDOR")
+            label = " / ".join(dict.fromkeys(" ".join(t.text.split()) for _, t in names))
+            room_type = room_type_from_name(" ".join(names[0][1].text.split()))
         elif hint:
-            label, room_type = HINT_LABELS[hint], hint
+            label, room_type = hint_label(hint, poly), hint
         else:
             label, room_type = f"Espacio {k + 1}", RoomType.OTHER
-        used = names if parsed else names[:1]
+        used = names
         consumed.update(i for i, _ in (*used, *([area] if area else [])))
         coords = list(poly.exterior.coords)[:-1]
         try:
@@ -395,7 +434,17 @@ def assemble_model(ctx: VectorContext, d: Drawing, ocr: bool = False) -> Buildin
     stairs = []
     for s in ctx.stairs:
         try:
-            stairs.append(Stair(new_id("s"), Point2D(*s.start), Point2D(*s.end), s.width, s.steps))
+            stairs.append(
+                Stair(
+                    new_id("s"),
+                    Point2D(*s.start),
+                    Point2D(*s.end),
+                    s.width,
+                    s.steps,
+                    riser=s.riser,
+                    base=s.base,
+                )
+            )
         except DomainError:
             continue
 

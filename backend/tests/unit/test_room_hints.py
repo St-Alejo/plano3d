@@ -2,12 +2,12 @@
 
 import math
 
-from shapely.geometry import box
+from shapely.geometry import LineString, box
 
 from plano3d.domain import RoomType
 from plano3d.domain.plan_text import room_name_from_texts
 from plano3d.infrastructure.vector.primitives import ArcPrim, Line
-from plano3d.infrastructure.vector.room_hints import hinted_type, tread_count
+from plano3d.infrastructure.vector.room_hints import hint_label, hinted_type, tread_count
 
 
 def treads(n: int, step: float = 0.28, x0: float = 1.0) -> list[Line]:
@@ -58,3 +58,27 @@ def test_el_numero_pegado_y_el_espacio_abierto() -> None:
     open_plan = room_name_from_texts(["COCINA", "SALA-COMEDOR"])
     assert open_plan is not None and open_plan.room_type is RoomType.KITCHEN
     assert open_plan.label.startswith("Cocina / Sala")
+
+
+def test_el_portón_de_fachada_hace_el_parqueadero() -> None:
+    garage = box(0, 0, 2.8, 7.3)
+    gate = LineString([(0.4, 7.3), (2.4, 7.3)])
+    assert hinted_type(garage, [], [], gates=[gate]) is RoomType.GARAGE
+    assert (
+        hinted_type(box(0, 0, 2.8, 3.0), [], [], gates=[LineString([(0.4, 3), (2.4, 3)])]) is None
+    )
+
+
+def test_la_escalera_ocupa_el_punto_fijo_o_queda_en_un_hall() -> None:
+    flights = [box(1.0, 1.0, 2.0, 3.5), box(2.2, 1.0, 3.2, 3.5)]
+    stair_room = box(0.8, 0.8, 3.4, 4.5)
+    hall = box(0.8, 0.8, 6.5, 4.5)
+    assert hinted_type(stair_room, [], [], flights) is RoomType.STAIRS
+    assert hinted_type(hall, [], [], flights) is RoomType.CIRCULATION
+    assert hint_label(RoomType.CIRCULATION, hall) == "Hall"
+
+
+def test_un_ambiente_angosto_sin_aparatos_es_pasillo() -> None:
+    corridor = box(0, 0, 1.0, 1.7)
+    assert hinted_type(corridor, [], []) is RoomType.CIRCULATION
+    assert hint_label(RoomType.CIRCULATION, corridor) == "Pasillo"

@@ -271,7 +271,10 @@ async def evaluate(case: str) -> dict[str, Any]:
     truth = json.loads((folder / "truth.json").read_text(encoding="utf-8"))
     image_path = folder / truth["image"]
     data = image_path.read_bytes()
-    ctype = "image/png" if image_path.suffix.lower() == ".png" else "image/jpeg"
+    suffix = image_path.suffix.lower()
+    if suffix == ".pdf":
+        return await evaluate_pdf(case, truth, data)
+    ctype = "image/png" if suffix == ".png" else "image/jpeg"
     selector = default_selector()
     detector = selector.choose(data, ctype)
     result = await detector.detect(DetectionRequest(case, data, ctype, None), _Quiet())
@@ -310,6 +313,67 @@ async def evaluate(case: str) -> dict[str, Any]:
     img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
     overlay(img, truth, dets, OUT / case / "overlay.png")
 
+    report = {
+        "case": case,
+        "detector": detector.name,
+        "metrics": result.metrics,
+        "scale": {
+            "mpp": model.scale.meters_per_pixel,
+            "source": model.scale.source,
+            "error": round(scale_err, 4),
+        },
+        "levels_det": len(model.levels),
+        "levels_gt": len(truth["levels"]),
+        "levels": levels,
+        "when": datetime.now().isoformat(timespec="seconds"),
+    }
+    report["pass"] = passes(report, truth)
+    (OUT / case).mkdir(parents=True, exist_ok=True)
+    (OUT / case / "metrics.json").write_text(
+        json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    return report
+
+
+@dataclass
+class ShiftFrame:
+    """PDF vectorial: el modelo ya está en metros; solo se lleva la esquina exterior del
+    edificio al origen de la verdad."""
+
+    dx: float
+    dy: float
+
+    def to_truth(self, p: Pt) -> Pt:
+        return (p[0] - self.dx, p[1] - self.dy)
+
+
+def outer_corner(model: BuildingModel, k: int = 0) -> Pt:
+    """Esquina exterior superior izquierda: el mínimo de las caras de las fachadas."""
+    walls = [w for w in model.levels[k].walls if w.kind.value == "exterior"]
+    xs = [min(w.start.x, w.end.x) - w.thickness / 2 for w in walls]
+    ys = [min(w.start.y, w.end.y) - w.thickness / 2 for w in walls]
+    return (min(xs), min(ys))
+
+
+async def evaluate_pdf(case: str, truth: dict[str, Any], data: bytes) -> dict[str, Any]:
+    ctype = "application/pdf"
+    detector = default_selector().choose(data, ctype)
+    result = await detector.detect(DetectionRequest(case, data, ctype, None), _Quiet())
+    model = result.model
+    dets = [
+        detected_level(model, k, ShiftFrame(*outer_corner(model, k)))  # type: ignore[arg-type]
+        for k in range(len(model.levels))
+    ]
+    levels = []
+    for k, gt in enumerate(truth["levels"]):
+        if k < len(dets):
+            levels.append({"name": gt["name"], **score_level(dets[k], gt)})
+        else:
+            levels.append({"name": gt["name"], "missing": True})
+    # escala: ancho entre ejes de fachada detectado contra el acotado
+    xs = [p for w in dets[0]["walls"] for p in (w["a"][0], w["b"][0])]
+    gx = [p for w in truth["levels"][0]["walls"] for p in (w["a"][0], w["b"][0])]
+    scale_err = (max(xs) - min(xs)) / (max(gx) - min(gx)) - 1.0
     report = {
         "case": case,
         "detector": detector.name,
