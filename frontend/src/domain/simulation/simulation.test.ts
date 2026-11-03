@@ -104,7 +104,7 @@ function run(agents: Agent[], seconds: number, opts: { player?: Body; seed?: num
   for (let t = 0; t < seconds; t += dt) {
     doors.step(dt)
     agents.forEach((a, i) => {
-      const others: Body[] = agents.filter((b) => b !== a).map((b) => ({ x: b.body.x, z: b.body.z, levelId: b.body.levelId }))
+      const others: Body[] = agents.filter((b) => b !== a).map((b) => ({ x: b.body.x, z: b.body.z, levelId: b.body.levelId, y: b.body.y }))
       if (opts.player) others.push(opts.player)
       stepAgent(a, dt, { nav, spots, doors, rng, others })
       visited[i]!.add(a.body.levelId)

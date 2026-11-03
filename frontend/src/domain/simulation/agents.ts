@@ -53,6 +53,8 @@ export interface Body {
   x: number
   z: number
   levelId: string
+  /** altura de los pies (si se conoce): en un tramo queda entre los dos pisos */
+  y?: number
 }
 
 export const WALK_SPEED = 1.1
@@ -228,6 +230,12 @@ export function stepAgent(a: Agent, dt: number, ctx: StepContext): void {
       return
     }
   }
+  // la escalera es de una persona de ancho: si alguien va por el tramo, se espera al pie (o arriba)
+  if (wp.stair && !a.path[a.index - 1]?.stair && flightBusy(a, wp, ctx)) {
+    a.speed = 0
+    a.check = { x: a.body.x, z: a.body.z, t: 0 }
+    return
+  }
   if (dist < (wp.stair ? 0.14 : 0.18)) {
     a.index++
     if (a.index >= a.path.length) arrive(a, ctx.rng)
@@ -274,6 +282,32 @@ export function stepAgent(a: Agent, dt: number, ctx: StepContext): void {
       }
     }
   }
+}
+
+/** ¿Hay otra persona en medio del tramo de escalera al que `a` va a entrar? */
+function flightBusy(a: Agent, wp: Waypoint, ctx: StepContext): boolean {
+  const link = ctx.nav.links.find((l) => (l.lower === a.body.levelId || l.upper === a.body.levelId) && (l.lower === wp.levelId || l.upper === wp.levelId))
+  if (!link) return false
+  const [foot, top] = [link.route[0]!, link.route[link.route.length - 1]!]
+  const elev = (id: string) => ctx.nav.world.levels.find((l) => l.id === id)?.elevation ?? 0
+  const [lo, hi] = [elev(link.lower), elev(link.upper)]
+  return ctx.others.some((o) => {
+    if (o.levelId !== link.lower && o.levelId !== link.upper) return false
+    // con la altura se sabe si está en el tramo (entre los dos pisos) y no parado en uno de ellos
+    if (o.y !== undefined && (o.y < lo + 0.08 || o.y > hi - 0.08)) return false
+    const p = { x: o.x, y: o.z }
+    // en los extremos se está esperando turno, no en el tramo
+    if (Math.hypot(p.x - foot.x, p.y - foot.y) < 0.45 || Math.hypot(p.x - top.x, p.y - top.y) < 0.45) return false
+    return link.route.some((q, i) => i > 0 && segDist(p, link.route[i - 1]!, q) < 0.45)
+  })
+}
+
+function segDist(p: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const l2 = dx * dx + dy * dy || 1
+  const k = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2))
+  return Math.hypot(p.x - (a.x + dx * k), p.y - (a.y + dy * k))
 }
 
 function arrive(a: Agent, rng: Rng): void {

@@ -88,7 +88,7 @@ export function Simulation({ model, furniture, walking }: { model: BuildingModel
     }
 
     const hud = walk.hud
-    const player: Body | null = walking && hud ? { x: hud.x, z: hud.z, levelId: hud.levelId } : null
+    const player: Body | null = walking && hud ? { x: hud.x, z: hud.z, levelId: hud.levelId, y: hud.y } : null
     const carBoxes = carOn ? s.cars.map(carObstacle).filter((o): o is Obstacle => o !== null) : []
     const groundId = ground?.id ?? ''
 
@@ -97,7 +97,7 @@ export function Simulation({ model, furniture, walking }: { model: BuildingModel
       s.cars.forEach(callCar)
     }
 
-    const bodies: Body[] = s.agents.map((a) => ({ x: a.body.x, z: a.body.z, levelId: a.body.levelId }))
+    const bodies: Body[] = s.agents.map((a) => ({ x: a.body.x, z: a.body.z, levelId: a.body.levelId, y: a.body.y }))
     s.agents.forEach((a, i) => {
       const others = bodies.filter((_, j) => j !== i)
       if (player) others.push(player)
