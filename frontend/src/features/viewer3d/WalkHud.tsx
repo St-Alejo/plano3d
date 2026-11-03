@@ -209,7 +209,7 @@ export function WalkHud({ model, touch }: { model: BuildingModel; touch: boolean
                         const at = levelLanding(model, l.id)
                         if (at) send({ type: 'teleport', x: at.x, z: at.y, levelId: l.id })
                       }}
-                      className={clsx('min-h-9 flex-1 rounded-sm border px-1.5 font-mono text-xs pointer-coarse:min-h-11', l.id === hud.levelId ? 'border-transparent bg-fg text-canvas' : 'border-line hover:border-accent')}
+                      className={clsx('min-h-9 flex-1 rounded-sm border px-1.5 font-mono text-xs pointer-coarse:min-h-11 pointer-coarse:min-w-11', l.id === hud.levelId ? 'border-transparent bg-fg text-canvas' : 'border-line hover:border-accent')}
                     >
                       P{i + 1}
                     </button>
