@@ -154,6 +154,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Level
+         * @description Otro plano del mismo edificio, como un piso más encima del último (alineado por la
+         *     retícula de columnas).
+         */
+        post: operations["add_level_api_projects__project_id__levels_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/levels/{level_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duplicate Level
+         * @description Copia del piso encima del último (un piso tipo igual a otro).
+         */
+        post: operations["duplicate_level_api_projects__project_id__levels__level_id__duplicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/model": {
         parameters: {
             query?: never;
@@ -351,6 +392,16 @@ export interface components {
              * @default Plano nuevo
              */
             name: string;
+        };
+        /** Body_add_level_api_projects__project_id__levels_post */
+        Body_add_level_api_projects__project_id__levels_post: {
+            /**
+             * File
+             * @description Plano del piso: foto, PDF o DXF
+             */
+            file: string;
+            /** Name */
+            name?: string | null;
         };
         /** Body_check_capture_api_capture_check_post */
         Body_check_capture_api_capture_check_post: {
@@ -569,6 +620,14 @@ export interface components {
              * @default []
              */
             wall_ids: string[];
+        };
+        /** DuplicateLevelDTO */
+        DuplicateLevelDTO: {
+            /**
+             * Name
+             * @description Nombre del piso nuevo
+             */
+            name?: string | null;
         };
         /**
          * FurnitureDTO
@@ -1379,6 +1438,97 @@ export interface operations {
                     "image/jpeg": unknown;
                     "image/png": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_level_api_projects__project_id__levels_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_add_level_api_projects__project_id__levels_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Otra persona guardó una versión más nueva */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    duplicate_level_api_projects__project_id__levels__level_id__duplicate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+                level_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DuplicateLevelDTO"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Otra persona guardó una versión más nueva */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

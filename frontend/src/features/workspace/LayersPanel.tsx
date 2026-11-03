@@ -1,8 +1,10 @@
 /** Panel de capas: ver/ocultar y bloquear cada capa del plano, con su número de elementos. */
 import clsx from 'clsx'
-import { PanelSection } from '@/components/ui'
-import { Eye, EyeOff, Lock, LockOpen } from 'lucide-react'
-import { selectLevel, useEditor, type LayerKey } from '@/store/editorStore'
+import { useRef, useState } from 'react'
+import { api } from '@/api/client'
+import { Button, PanelSection } from '@/components/ui'
+import { Copy, Eye, EyeOff, FilePlus2, Lock, LockOpen } from 'lucide-react'
+import { selectIsDirty, selectLevel, useEditor, type LayerKey } from '@/store/editorStore'
 
 const LAYERS: { key: LayerKey; label: string; lockable: boolean }[] = [
   { key: 'image', label: 'Plano original', lockable: false },
@@ -13,7 +15,73 @@ const LAYERS: { key: LayerKey; label: string; lockable: boolean }[] = [
   { key: 'furniture', label: 'Mobiliario', lockable: true },
 ]
 
-export function LayersPanel() {
+/** Pisos: otro plano del mismo edificio (foto, PDF o DXF) o una copia del piso actual. */
+function LevelActions({ onReload }: { onReload: () => void }) {
+  const projectId = useEditor((s) => s.projectId)
+  const revision = useEditor((s) => s.revision)
+  const dirty = useEditor(selectIsDirty)
+  const level = useEditor(selectLevel)
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState<'add' | 'dup' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  if (!projectId) return null
+
+  const run = async (kind: 'add' | 'dup', call: () => Promise<unknown>) => {
+    if (dirty) {
+      setError('Guarda los cambios antes de agregar un piso')
+      return
+    }
+    setBusy(kind)
+    setError(null)
+    try {
+      await call()
+      onReload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo agregar el piso')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <div className="mb-2 flex flex-col gap-1">
+      <div className="flex flex-wrap gap-1">
+        <Button size="sm" icon={<FilePlus2 className="size-3.5" aria-hidden />} loading={busy === 'add'} onClick={() => input.current?.click()} title="Detecta otro plano del mismo edificio y lo pone encima, alineado por las columnas">
+          Agregar piso
+        </Button>
+        <Button
+          size="sm"
+          icon={<Copy className="size-3.5" aria-hidden />}
+          loading={busy === 'dup'}
+          disabled={!level}
+          onClick={() => level && void run('dup', () => api.duplicateLevel(projectId, level.id, undefined, revision))}
+          title="Copia este piso encima del último (pisos iguales)"
+        >
+          Duplicar piso
+        </Button>
+      </div>
+      <input
+        ref={input}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,application/pdf,.dxf"
+        className="hidden"
+        aria-label="Plano del piso nuevo"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) void run('add', () => api.addLevel(projectId, file, undefined, revision))
+        }}
+      />
+      {error && (
+        <p role="alert" className="text-xs text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+export function LayersPanel({ onReload }: { onReload?: () => void }) {
   const level = useEditor(selectLevel)
   const hidden = useEditor((s) => s.hiddenLayers)
   const locked = useEditor((s) => s.lockedLayers)
@@ -34,6 +102,7 @@ export function LayersPanel() {
 
   return (
     <PanelSection title="Capas" storageKey="capas">
+      {onReload && <LevelActions onReload={onReload} />}
       {levels.length > 1 && (
         <label className="mb-2 flex flex-col gap-1 text-sm">
           <span className="text-xs text-muted">Nivel</span>

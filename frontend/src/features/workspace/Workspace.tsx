@@ -313,7 +313,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
 
   const leftPanel = (
     <div className="flex flex-col gap-4">
-      <LayersPanel />
+      <LayersPanel onReload={onReload} />
       <CatalogPanel />
     </div>
   )

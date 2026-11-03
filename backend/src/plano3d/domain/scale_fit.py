@@ -4,6 +4,10 @@ Cada cota leída aporta un par (longitud medida en el dibujo, valor escrito en m
 Una sola cota mal leída no puede decidir la escala: gana la razón metros/unidad que
 explica MÁS cotas a la vez dentro de una tolerancia relativa. Las que no encajan son
 lecturas erróneas o cotas que no corresponden a esa línea.
+
+Se cuentan primero los VALORES distintos que explica: en CAD la línea de cota sobresale
+unos puntos de las marcas, y esa línea larga da una razón falsa que solo cuadra en un
+rango corto de cotas (todas de 2,5 a 3 m, p. ej.); la razón buena vale para todas.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ class ScaleFit:
 def fit_scale(pairs: Sequence[ScalePair], rel_tol: float = 0.005) -> ScaleFit | None:
     """La razón con más pares coincidentes (uno por texto y por línea). None si no hay pares."""
     best: ScaleFit | None = None
+    best_score = (0, 0)
     for cand in pairs:
         if cand.measured <= 0 or cand.meters <= 0:
             continue
@@ -55,7 +60,8 @@ def fit_scale(pairs: Sequence[ScalePair], rel_tol: float = 0.005) -> ScaleFit | 
             seen_t.add(tk)
             seen_l.add(lk)
             chosen.append(i)
-        if best is None or len(chosen) > best.support:
+        score = (len({round(pairs[i].meters, 3) for i in chosen}), len(chosen))
+        if best is None or score > best_score:
             ratio = statistics.median(pairs[i].meters / pairs[i].measured for i in chosen)
-            best = ScaleFit(ratio, tuple(chosen))
+            best, best_score = ScaleFit(ratio, tuple(chosen)), score
     return best

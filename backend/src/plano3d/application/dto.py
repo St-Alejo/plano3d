@@ -317,6 +317,10 @@ class CornersDTO(_DTO):
     )
 
 
+class DuplicateLevelDTO(_DTO):
+    name: str | None = Field(default=None, max_length=80, description="Nombre del piso nuevo")
+
+
 class ReanalyzeDTO(_DTO):
     corners: list[tuple[float, float]] | None = Field(
         default=None, description="4 esquinas [x,y] normalizadas 0..1 (TL, TR, BR, BL)"

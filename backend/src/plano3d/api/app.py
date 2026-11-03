@@ -37,6 +37,7 @@ from plano3d.application.dto import (
     CaptureCheckDTO,
     CornersDTO,
     CorrectionStatsDTO,
+    DuplicateLevelDTO,
     ProgressEventDTO,
     ProjectCreatedDTO,
     ProjectDTO,
@@ -313,6 +314,57 @@ async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: Container
     project = await c.calibrate_scale.execute(
         project_id, Point2D(body.a.x, body.a.y), Point2D(body.b.x, body.b.y), body.meters
     )
+    return project_to_dto(project)
+
+
+@router.post(
+    "/projects/{project_id}/levels",
+    response_model=ProjectDTO,
+    status_code=status.HTTP_201_CREATED,
+    responses={409: {"description": "Otra persona guardó una versión más nueva"}},
+    tags=["modelo"],
+)
+async def add_level(
+    project_id: str,
+    c: ContainerDep,
+    response: Response,
+    file: Annotated[UploadFile, File(description="Plano del piso: foto, PDF o DXF")],
+    name: Annotated[str | None, Form(max_length=80)] = None,
+    if_match: IfMatch = None,
+) -> ProjectDTO:
+    """Otro plano del mismo edificio, como un piso más encima del último (alineado por la
+    retícula de columnas)."""
+    project = await c.add_level.execute(
+        project_id,
+        await file.read(),
+        normalize_content_type(file.content_type or "", file.filename),
+        name,
+        _parse_if_match(if_match),
+    )
+    response.headers["ETag"] = _etag(project.revision)
+    return project_to_dto(project)
+
+
+@router.post(
+    "/projects/{project_id}/levels/{level_id}/duplicate",
+    response_model=ProjectDTO,
+    status_code=status.HTTP_201_CREATED,
+    responses={409: {"description": "Otra persona guardó una versión más nueva"}},
+    tags=["modelo"],
+)
+async def duplicate_level(
+    project_id: str,
+    level_id: str,
+    c: ContainerDep,
+    response: Response,
+    body: DuplicateLevelDTO | None = None,
+    if_match: IfMatch = None,
+) -> ProjectDTO:
+    """Copia del piso encima del último (un piso tipo igual a otro)."""
+    project = await c.duplicate_level.execute(
+        project_id, level_id, body.name if body else None, _parse_if_match(if_match)
+    )
+    response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
 
 

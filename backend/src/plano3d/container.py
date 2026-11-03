@@ -19,6 +19,7 @@ from plano3d.application.ports import (
 )
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
 from plano3d.application.use_cases.assistant import InterpretChat
+from plano3d.application.use_cases.levels import AddLevelFromFile, DuplicateLevel
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
     CheckCapture,
@@ -144,6 +145,14 @@ class Container:
     @property
     def reanalyze(self) -> ReanalyzeProject:
         return ReanalyzeProject(self.repo, self.queue, self.progress)
+
+    @property
+    def add_level(self) -> AddLevelFromFile:
+        return AddLevelFromFile(self.repo, self.selector)
+
+    @property
+    def duplicate_level(self) -> DuplicateLevel:
+        return DuplicateLevel(self.repo)
 
     @property
     def suggest_corners(self) -> SuggestCorners:

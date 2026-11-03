@@ -137,6 +137,30 @@ export const api = {
       headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
     }),
 
+  /** Otro plano del mismo edificio como un piso más, encima del último (alineado por columnas). */
+  addLevel: (id: string, file: File, name?: string, revision?: number) => {
+    const form = new FormData()
+    form.append('file', file)
+    if (name) form.append('name', name)
+    return request<Project>(`/projects/${encodeURIComponent(id)}/levels`, {
+      method: 'POST',
+      body: form,
+      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+    })
+  },
+
+  /** Copia de un piso encima del último (un piso tipo igual a otro). */
+  duplicateLevel: (id: string, levelId: string, name?: string, revision?: number) => {
+    const init = json({ name: name ?? null })
+    const headers = { ...(init.headers as Record<string, string>) }
+    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    return request<Project>(`/projects/${encodeURIComponent(id)}/levels/${encodeURIComponent(levelId)}/duplicate`, {
+      method: 'POST',
+      ...init,
+      headers,
+    })
+  },
+
   quality: (id: string) => request<CorrectionStats>(`/projects/${encodeURIComponent(id)}/quality`),
 
   reanalyze: (id: string, corners?: Corners) =>

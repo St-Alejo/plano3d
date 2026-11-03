@@ -69,6 +69,33 @@
         "title": "BlankProjectDTO",
         "type": "object"
       },
+      "Body_add_level_api_projects__project_id__levels_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "Plano del piso: foto, PDF o DXF",
+            "title": "File",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_add_level_api_projects__project_id__levels_post",
+        "type": "object"
+      },
       "Body_check_capture_api_capture_check_post": {
         "properties": {
           "file": {
@@ -518,6 +545,25 @@
           "value"
         ],
         "title": "DimensionDTO",
+        "type": "object"
+      },
+      "DuplicateLevelDTO": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Nombre del piso nuevo",
+            "title": "Name"
+          }
+        },
+        "title": "DuplicateLevelDTO",
         "type": "object"
       },
       "FurnitureDTO": {
@@ -2102,6 +2148,170 @@
         "summary": "Get Image",
         "tags": [
           "proyectos"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/levels": {
+      "post": {
+        "description": "Otro plano del mismo edificio, como un piso más encima del último (alineado por la\nretícula de columnas).",
+        "operationId": "add_level_api_projects__project_id__levels_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_add_level_api_projects__project_id__levels_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Otra persona guardó una versión más nueva"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Level",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/levels/{level_id}/duplicate": {
+      "post": {
+        "description": "Copia del piso encima del último (un piso tipo igual a otro).",
+        "operationId": "duplicate_level_api_projects__project_id__levels__level_id__duplicate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "level_id",
+            "required": true,
+            "schema": {
+              "title": "Level Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DuplicateLevelDTO"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Otra persona guardó una versión más nueva"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Duplicate Level",
+        "tags": [
+          "modelo"
         ]
       }
     },
