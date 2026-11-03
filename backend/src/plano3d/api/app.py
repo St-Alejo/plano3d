@@ -48,6 +48,7 @@ from plano3d.application.dto import (
     RevisionDTO,
     SolveReportDTO,
     SolveResultDTO,
+    custom_from_dto,
     model_from_dto,
     model_to_dto,
     project_to_dto,
@@ -333,7 +334,9 @@ async def set_facade(
     if_match: IfMatch = None,
 ) -> ProjectDTO:
     """Cambia solo el estilo de la fachada (el interior queda igual)."""
-    project = await c.set_facade.execute(project_id, body.style, _parse_if_match(if_match))
+    project = await c.set_facade.execute(
+        project_id, body.style, _parse_if_match(if_match), custom_from_dto(body.custom)
+    )
     response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
 

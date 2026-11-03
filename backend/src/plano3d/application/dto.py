@@ -46,6 +46,7 @@ from plano3d.domain import (
     Wall,
     WallKind,
 )
+from plano3d.domain.facade import FacadeCustom, FacadeSurface
 from plano3d.domain.quality import CorrectionStats
 
 
@@ -199,7 +200,34 @@ class SourceImageDTO(_DTO):
     height_px: int
 
 
-FacadeStyle = Literal["moderna_blanca", "moderna_madera", "moderna_ladrillo"]
+FacadeStyle = Literal[
+    "moderna_blanca", "moderna_madera", "moderna_ladrillo", "moderna_contemporanea"
+]
+FacadeMaterial = Literal["panete", "concreto", "ladrillo", "madera", "porcelanato"]
+FacadeFeature = Literal["listones", "jardinera", "marco_ventana", "alero", "luces"]
+_HEX = r"^#[0-9a-fA-F]{6}$"
+
+
+class FacadeSurfaceDTO(_DTO):
+    material: FacadeMaterial | None = None
+    color: str | None = Field(default=None, pattern=_HEX)
+
+
+class FacadeCustomDTO(_DTO):
+    """Lo que se le cambia al estilo; lo que quede en null se toma del estilo."""
+
+    ground: FacadeSurfaceDTO | None = Field(default=None, description="Piso 1 (garajes, acceso)")
+    upper: FacadeSurfaceDTO | None = Field(default=None, description="Pisos de arriba")
+    front: FacadeSurfaceDTO | None = Field(
+        default=None, description="Frente de los pisos de arriba (el lado de los portones)"
+    )
+    gate: FacadeSurfaceDTO | None = Field(default=None, description="Portón del garaje")
+    frame: str | None = Field(default=None, pattern=_HEX, description="Perfilería de ventanas")
+    band: str | None = Field(default=None, pattern=_HEX, description="Franja de losa y remate")
+    accent: str | None = Field(default=None, pattern=_HEX, description="Marco saliente")
+    features: list[FacadeFeature] | None = Field(
+        default=None, description="Detalles a la vista (null = los del estilo)"
+    )
 
 
 class BuildingModelDTO(_DTO):
@@ -210,10 +238,16 @@ class BuildingModelDTO(_DTO):
     total_area: float | None = Field(default=None, description="solo salida, m²")
     schema_version: int | None = Field(default=None, description="null = 1 (se actualiza a 2)")
     facade: FacadeStyle = Field(default="moderna_blanca", description="Estilo de la fachada")
+    facade_custom: FacadeCustomDTO | None = Field(
+        default=None, description="Cambios sobre el estilo (null = el estilo tal cual)"
+    )
 
 
 class FacadeDTO(_DTO):
     style: FacadeStyle
+    custom: FacadeCustomDTO | None = Field(
+        default=None, description="Cambios sobre el estilo; null lo deja limpio"
+    )
 
 
 class ProjectSummaryDTO(_DTO):
@@ -518,6 +552,7 @@ def model_to_dto(m: BuildingModel) -> BuildingModelDTO:
         total_area=m.total_area,
         schema_version=m.schema_version,
         facade=m.facade,
+        facade_custom=custom_to_dto(m.facade_custom),
         levels=[_level_to_dto(lv) for lv in m.levels],
     )
 
@@ -666,6 +701,7 @@ def model_from_dto(d: BuildingModelDTO) -> BuildingModel:
         levels=tuple(_level_from_dto(lv) for lv in d.levels),
         schema_version=MODEL_SCHEMA_VERSION,
         facade=d.facade,
+        facade_custom=custom_from_dto(d.facade_custom),
     )
 
 
@@ -703,3 +739,46 @@ def revision_to_dto(r: ModelRevision) -> RevisionDTO:
 
 def stats_to_dto(s: CorrectionStats) -> CorrectionStatsDTO:
     return CorrectionStatsDTO(**asdict(s), correction_rate=round(s.correction_rate, 4))
+
+
+def _surface_to_dto(s: FacadeSurface | None) -> FacadeSurfaceDTO | None:
+    return (
+        FacadeSurfaceDTO.model_validate({"material": s.material, "color": s.color}) if s else None
+    )
+
+
+def custom_to_dto(c: FacadeCustom | None) -> FacadeCustomDTO | None:
+    if c is None:
+        return None
+    return FacadeCustomDTO.model_validate(
+        {
+            "ground": _surface_to_dto(c.ground),
+            "upper": _surface_to_dto(c.upper),
+            "front": _surface_to_dto(c.front),
+            "gate": _surface_to_dto(c.gate),
+            "frame": c.frame,
+            "band": c.band,
+            "accent": c.accent,
+            "features": list(c.features) if c.features is not None else None,
+        }
+    )
+
+
+def _surface_from_dto(s: FacadeSurfaceDTO | None) -> FacadeSurface | None:
+    return FacadeSurface(s.material, s.color) if s else None
+
+
+def custom_from_dto(d: FacadeCustomDTO | None) -> FacadeCustom | None:
+    if d is None:
+        return None
+    custom = FacadeCustom(
+        ground=_surface_from_dto(d.ground),
+        upper=_surface_from_dto(d.upper),
+        front=_surface_from_dto(d.front),
+        gate=_surface_from_dto(d.gate),
+        frame=d.frame,
+        band=d.band,
+        accent=d.accent,
+        features=tuple(d.features) if d.features is not None else None,
+    )
+    return None if custom.is_empty else custom

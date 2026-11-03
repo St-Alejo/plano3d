@@ -23,6 +23,7 @@ from plano3d.application.use_cases.errors import (
 )
 from plano3d.domain import BuildingModel, ModelRevision, Point2D, Project, ProjectStatus, new_id
 from plano3d.domain.errors import DomainError, EntityNotFoundError, InvalidStateTransitionError
+from plano3d.domain.facade import FacadeCustom
 from plano3d.domain.quality import CorrectionStats, correction_stats
 from plano3d.domain.solver import SolveReport, solve_level
 
@@ -250,18 +251,24 @@ class SetFacade:
         self._repo = repo
 
     async def execute(
-        self, project_id: str, style: str, expected_revision: int | None = None
+        self,
+        project_id: str,
+        style: str,
+        expected_revision: int | None = None,
+        custom: FacadeCustom | None = None,
     ) -> Project:
         project = await _load(self._repo, project_id)
         if project.model is None:
             raise DomainError("El proyecto aún no tiene modelo")
-        if project.model.facade == style:
+        changed = project.model.with_facade(style, custom)
+        if changed == project.model:
             return project
+        label = style.replace("_", " ")
         return await commit_model(
             self._repo,
             project,
-            project.model.with_facade(style),
-            f"Fachada: {style.replace('_', ' ')}",
+            changed,
+            f"Fachada: {label}" + (" (personalizada)" if changed.facade_custom else ""),
             expected_revision,
         )
 

@@ -182,10 +182,22 @@
             "enum": [
               "moderna_blanca",
               "moderna_madera",
-              "moderna_ladrillo"
+              "moderna_ladrillo",
+              "moderna_contemporanea"
             ],
             "title": "Facade",
             "type": "string"
+          },
+          "facade_custom": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeCustomDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cambios sobre el estilo (null = el estilo tal cual)"
           },
           "levels": {
             "default": [],
@@ -577,13 +589,137 @@
         "title": "DuplicateLevelDTO",
         "type": "object"
       },
+      "FacadeCustomDTO": {
+        "description": "Lo que se le cambia al estilo; lo que quede en null se toma del estilo.",
+        "properties": {
+          "accent": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Marco saliente",
+            "title": "Accent"
+          },
+          "band": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Franja de losa y remate",
+            "title": "Band"
+          },
+          "features": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "listones",
+                    "jardinera",
+                    "marco_ventana",
+                    "alero",
+                    "luces"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Detalles a la vista (null = los del estilo)",
+            "title": "Features"
+          },
+          "frame": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Perfilería de ventanas",
+            "title": "Frame"
+          },
+          "front": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeSurfaceDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Frente de los pisos de arriba (el lado de los portones)"
+          },
+          "gate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeSurfaceDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Portón del garaje"
+          },
+          "ground": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeSurfaceDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Piso 1 (garajes, acceso)"
+          },
+          "upper": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeSurfaceDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pisos de arriba"
+          }
+        },
+        "title": "FacadeCustomDTO",
+        "type": "object"
+      },
       "FacadeDTO": {
         "properties": {
+          "custom": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FacadeCustomDTO"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cambios sobre el estilo; null lo deja limpio"
+          },
           "style": {
             "enum": [
               "moderna_blanca",
               "moderna_madera",
-              "moderna_ladrillo"
+              "moderna_ladrillo",
+              "moderna_contemporanea"
             ],
             "title": "Style",
             "type": "string"
@@ -593,6 +729,42 @@
           "style"
         ],
         "title": "FacadeDTO",
+        "type": "object"
+      },
+      "FacadeSurfaceDTO": {
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9a-fA-F]{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "enum": [
+                  "panete",
+                  "concreto",
+                  "ladrillo",
+                  "madera",
+                  "porcelanato"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material"
+          }
+        },
+        "title": "FacadeSurfaceDTO",
         "type": "object"
       },
       "FurnishDTO": {

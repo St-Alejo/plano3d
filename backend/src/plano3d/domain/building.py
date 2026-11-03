@@ -41,6 +41,7 @@ from plano3d.domain.errors import (
     InvalidGeometryError,
     OpeningDoesNotFitError,
 )
+from plano3d.domain.facade import FacadeCustom
 from plano3d.domain.geometry import Arc, Point2D, polygon_area, polygon_centroid
 
 MODEL_SCHEMA_VERSION = 2
@@ -392,7 +393,7 @@ class SourceImage:
 
 
 #: fachadas propuestas: solo cambian el exterior (revestimiento, marcos, antepecho, portón)
-FACADE_STYLES = ("moderna_blanca", "moderna_madera", "moderna_ladrillo")
+FACADE_STYLES = ("moderna_blanca", "moderna_madera", "moderna_ladrillo", "moderna_contemporanea")
 DEFAULT_FACADE = FACADE_STYLES[0]
 
 
@@ -405,6 +406,8 @@ class BuildingModel:
     schema_version: int = MODEL_SCHEMA_VERSION
     #: estilo de fachada (``FACADE_STYLES``); no toca nada del interior
     facade: str = DEFAULT_FACADE
+    #: lo que se le cambió al estilo (revestimientos, colores, detalles); None = el estilo tal cual
+    facade_custom: FacadeCustom | None = None
 
     def __post_init__(self) -> None:
         if self.facade not in FACADE_STYLES:
@@ -424,8 +427,9 @@ class BuildingModel:
                 return lv
         raise EntityNotFoundError(f"Nivel {level_id} no existe")
 
-    def with_facade(self, style: str) -> BuildingModel:
-        return replace(self, facade=style)
+    def with_facade(self, style: str, custom: FacadeCustom | None = None) -> BuildingModel:
+        keep = custom if custom is not None and not custom.is_empty else None
+        return replace(self, facade=style, facade_custom=keep)
 
     def with_level(self, level: Level) -> BuildingModel:
         if any(lv.id == level.id for lv in self.levels):

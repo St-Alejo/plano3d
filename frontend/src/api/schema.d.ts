@@ -490,7 +490,9 @@ export interface components {
              * @default moderna_blanca
              * @enum {string}
              */
-            facade: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo";
+            facade: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo" | "moderna_contemporanea";
+            /** @description Cambios sobre el estilo (null = el estilo tal cual) */
+            facade_custom?: components["schemas"]["FacadeCustomDTO"] | null;
             /**
              * Levels
              * @default []
@@ -676,13 +678,56 @@ export interface components {
              */
             name?: string | null;
         };
+        /**
+         * FacadeCustomDTO
+         * @description Lo que se le cambia al estilo; lo que quede en null se toma del estilo.
+         */
+        FacadeCustomDTO: {
+            /**
+             * Accent
+             * @description Marco saliente
+             */
+            accent?: string | null;
+            /**
+             * Band
+             * @description Franja de losa y remate
+             */
+            band?: string | null;
+            /**
+             * Features
+             * @description Detalles a la vista (null = los del estilo)
+             */
+            features?: ("listones" | "jardinera" | "marco_ventana" | "alero" | "luces")[] | null;
+            /**
+             * Frame
+             * @description Perfilería de ventanas
+             */
+            frame?: string | null;
+            /** @description Frente de los pisos de arriba (el lado de los portones) */
+            front?: components["schemas"]["FacadeSurfaceDTO"] | null;
+            /** @description Portón del garaje */
+            gate?: components["schemas"]["FacadeSurfaceDTO"] | null;
+            /** @description Piso 1 (garajes, acceso) */
+            ground?: components["schemas"]["FacadeSurfaceDTO"] | null;
+            /** @description Pisos de arriba */
+            upper?: components["schemas"]["FacadeSurfaceDTO"] | null;
+        };
         /** FacadeDTO */
         FacadeDTO: {
+            /** @description Cambios sobre el estilo; null lo deja limpio */
+            custom?: components["schemas"]["FacadeCustomDTO"] | null;
             /**
              * Style
              * @enum {string}
              */
-            style: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo";
+            style: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo" | "moderna_contemporanea";
+        };
+        /** FacadeSurfaceDTO */
+        FacadeSurfaceDTO: {
+            /** Color */
+            color?: string | null;
+            /** Material */
+            material?: ("panete" | "concreto" | "ladrillo" | "madera" | "porcelanato") | null;
         };
         /** FurnishDTO */
         FurnishDTO: {

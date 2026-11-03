@@ -116,3 +116,30 @@ def test_amoblar_completa_lo_que_falta_sin_mover_lo_dibujado(client: TestClient)
     again = client.post(f"/api/projects/{pid}/furnish").json()
     assert again["revision"] == after["revision"]
     assert client.post(f"/api/projects/{pid}/furnish", json={"level_id": "nope"}).status_code == 404
+
+
+def test_la_fachada_se_personaliza_sobre_el_estilo(client: TestClient) -> None:
+    pid = client.post("/api/projects/blank", json={"name": "Casa"}).json()["id"]
+    before = client.post(
+        f"/api/projects/{pid}/levels",
+        files={"file": ("piso2.pdf", PISO2.read_bytes(), "application/pdf")},
+    ).json()
+    custom = {"upper": {"material": "madera"}, "frame": "#111111", "features": ["jardinera"]}
+    r = client.put(
+        f"/api/projects/{pid}/facade",
+        json={"style": "moderna_contemporanea", "custom": custom},
+        headers={"If-Match": f'"{before["revision"]}"'},
+    )
+    assert r.status_code == 200, r.text
+    after = r.json()["model"]
+    assert after["facade"] == "moderna_contemporanea"
+    assert after["facade_custom"]["upper"] == {"material": "madera", "color": None}
+    assert after["facade_custom"]["features"] == ["jardinera"]
+    assert after["levels"] == before["model"]["levels"]
+    summary = client.get(f"/api/projects/{pid}/revisions").json()[0]["summary"]
+    assert summary == "Fachada: moderna contemporanea (personalizada)"
+    # elegir el estilo sin cambios lo deja limpio
+    clean = client.put(f"/api/projects/{pid}/facade", json={"style": "moderna_contemporanea"})
+    assert clean.json()["model"]["facade_custom"] is None
+    bad = {"style": "moderna_blanca", "custom": {"features": ["piscina"]}}
+    assert client.put(f"/api/projects/{pid}/facade", json=bad).status_code == 422
