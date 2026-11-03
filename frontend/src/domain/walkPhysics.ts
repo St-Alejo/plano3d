@@ -147,7 +147,7 @@ export function buildWalkWorld(model: BuildingModel, opts: { furniture?: boolean
 
 // ----------------------------------------------------------------------------- consultas
 
-function inRect(o: Obstacle, x: number, y: number, margin = 0): boolean {
+export function inRect(o: Obstacle, x: number, y: number, margin = 0): boolean {
   const dx = x - o.cx
   const dy = y - o.cy
   const lx = dx * o.cos + dy * o.sin
@@ -155,7 +155,7 @@ function inRect(o: Obstacle, x: number, y: number, margin = 0): boolean {
   return Math.abs(lx) <= o.halfLen + margin && Math.abs(ly) <= o.halfThick + margin
 }
 
-function inPolygon(p: Point, poly: Point[]): boolean {
+export function inPolygon(p: Point, poly: Point[]): boolean {
   let inside = false
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     const a = poly[i]!
@@ -215,6 +215,13 @@ export function spawnAt(world: WalkWorld, at: Point, levelId?: string): Characte
 
 // ----------------------------------------------------------------------------- paso de simulación
 
+export interface StepOptions {
+  /** obstáculos que se mueven (el carro, otras personas) en el nivel de quien camina */
+  extra?: Obstacle[]
+  /** radio del cuerpo (por defecto RADIUS) */
+  radius?: number
+}
+
 /**
  * Avanza la simulación `dt` segundos con un desplazamiento horizontal deseado (m).
  * Un peldaño demasiado alto frena como una pared (se intenta deslizar por cada eje).
@@ -225,12 +232,14 @@ export function stepCharacter(
   dt: number,
   world: WalkWorld,
   isOpen: (openingId: string) => boolean = () => false,
+  opts: StepOptions = {},
 ): CharacterState {
   const t = Math.min(dt, 0.1)
   let { x, z, y, vy } = state
-  const obstacles = obstaclesFor(world, state.levelId, isOpen)
+  const obstacles = opts.extra?.length ? [...obstaclesFor(world, state.levelId, isOpen), ...opts.extra] : obstaclesFor(world, state.levelId, isOpen)
+  const radius = opts.radius ?? RADIUS
   const tryMove = (nx: number, nz: number): boolean => {
-    const p = resolveCollision({ x: nx, y: nz }, obstacles, RADIUS)
+    const p = resolveCollision({ x: nx, y: nz }, obstacles, radius)
     const g = groundAt(world, p.x, p.y, y)
     // la tapa de un peldaño alto delante bloquea aunque el piso actual siga debajo. Los peldaños
     // son losas (como se dibujan): por debajo de uno alto se pasa si su cara inferior queda sobre
