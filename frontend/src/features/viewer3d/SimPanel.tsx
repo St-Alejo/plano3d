@@ -5,7 +5,7 @@ import { clockLabel } from '@/domain/simulation/clock'
 import { MAX_PEOPLE, useSim } from './simStore'
 
 const ROW = 'flex items-center justify-between gap-2 text-xs pointer-coarse:min-h-11'
-const SMALL_BTN = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-line hover:border-accent hover:bg-raised disabled:opacity-40 sm:min-h-8 sm:min-w-8'
+const SMALL_BTN = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-line hover:border-accent hover:bg-raised disabled:opacity-40 pointer-fine:min-h-8 pointer-fine:min-w-8'
 const SPEEDS = [0.5, 1, 2, 4]
 
 export function SimControls() {

@@ -44,7 +44,7 @@ export function ProjectPage() {
   const crumbs = (
     <nav aria-label="Migas" className="flex min-w-0 items-center gap-2">
       <span className="h-5 w-px shrink-0 bg-line-strong" aria-hidden />
-      <Link to="/proyectos" className="inline-flex min-h-11 shrink-0 items-center text-sm text-muted hover:text-fg sm:min-h-0">
+      <Link to="/proyectos" className="inline-flex min-h-11 shrink-0 items-center text-sm text-muted hover:text-fg pointer-fine:min-h-0">
         Proyectos
       </Link>
       <span className="text-subtle" aria-hidden>/</span>

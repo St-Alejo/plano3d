@@ -48,7 +48,7 @@ export function AppShell() {
               end
               className={({ isActive }) =>
                 clsx(
-                  'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm transition-colors sm:min-h-9',
+                  'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm transition-colors pointer-fine:min-h-9',
                   isActive ? 'bg-raised text-fg' : 'text-muted hover:text-fg',
                 )
               }
@@ -59,7 +59,7 @@ export function AppShell() {
             {!editor && (
             <Link
               to="/nuevo"
-              className="ml-1 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-medium text-brand-ink shadow-sm transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-110 sm:h-9"
+              className="ml-1 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-medium text-brand-ink shadow-sm transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-110 pointer-fine:h-9"
             >
               <Plus className="size-4" aria-hidden />
               <span className="hidden sm:inline">Nuevo plano</span>
@@ -70,7 +70,7 @@ export function AppShell() {
               type="button"
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema oscuro'}
-              className="ml-1 inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-raised hover:text-fg sm:size-9"
+              className="ml-1 inline-flex size-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-raised hover:text-fg pointer-fine:size-9"
             >
               {theme === 'dark' ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
             </button>

@@ -551,8 +551,8 @@ export function ViewerPage() {
         simulation={!strategy.panel}
       />
 
-      {/* reloj de la simulación: arriba al centro, bajo la barra */}
-      <div className="pointer-events-none absolute top-[4.25rem] left-1/2 z-20 -translate-x-1/2">
+      {/* reloj de la simulación: bajo la barra; a la izquierda en el celular (a la derecha va el HUD del recorrido) */}
+      <div data-testid="sim-clock-slot" className="pointer-events-none absolute top-[4.25rem] left-3 z-20 sm:left-1/2 sm:-translate-x-1/2">
         <SimClock />
       </div>
 
@@ -565,12 +565,17 @@ export function ViewerPage() {
         </div>
       )}
 
-      {/* chat de ajustes: abajo al centro del área libre (a la izquierda del panel); arriba en el celular */}
+      {/* chat de ajustes: abajo al centro del área libre (a la izquierda del panel); abajo a la derecha en el celular.
+          Al recorrer, a la derecha: a la izquierda va la ayuda de teclas y, en táctil, sube sobre el joystick. */}
       <ViewerChat
         projectId={project.id}
         run={runViewerAction}
         context={viewerContext}
-        className="absolute right-3 bottom-3 z-20 sm:right-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2 [body:has([data-cinema])_&]:hidden"
+        className={
+          mode === 'walk'
+            ? `absolute right-3 z-20 ${touch ? 'bottom-[10.5rem]' : 'bottom-3 sm:bottom-4'} [body:has([data-cinema])_&]:hidden`
+            : 'absolute right-3 bottom-3 z-20 sm:right-auto sm:bottom-4 sm:left-[calc((100%-21rem)/2)] sm:-translate-x-1/2 [body:has([data-cinema])_&]:hidden'
+        }
       />
 
       {/* barra superior: la única cabecera del visor (el AppShell se oculta aquí) */}
@@ -642,7 +647,7 @@ export function ViewerPage() {
             ))}
           {!narrow && !strategy.panel && (
             <Button
-              className="h-11 bg-canvas/85 backdrop-blur"
+              className={simOn ? 'h-11' : 'h-11 bg-canvas/85 backdrop-blur'}
               variant={simOn ? 'primary' : undefined}
               onClick={toggleSim}
               aria-pressed={simOn}
@@ -724,7 +729,7 @@ export function ViewerPage() {
                   className="grid shrink-0 grid-cols-2 gap-1 border-b border-line p-2"
                 >
                   {PLAN_MODES.map((m) => (
-                    <ToggleGroup.Item key={m.id} value={m.id} title={m.hint} className="min-h-11 rounded-sm px-2 text-xs text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink sm:min-h-8">
+                    <ToggleGroup.Item key={m.id} value={m.id} title={m.hint} className="min-h-11 rounded-sm px-2 text-xs text-muted data-[state=on]:bg-accent data-[state=on]:text-accent-ink pointer-fine:min-h-8">
                       {m.label}
                     </ToggleGroup.Item>
                   ))}
@@ -765,7 +770,7 @@ export function ViewerPage() {
                                   type="button"
                                   onClick={() => goTo(r.at, r.levelId)}
                                   aria-label={levels.length > 1 ? `${titleCase(r.label)}, ${lv.name}` : undefined}
-                                  className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised sm:min-h-9"
+                                  className="flex min-h-11 items-center justify-between gap-3 rounded-sm px-2 text-left text-sm hover:bg-raised pointer-fine:min-h-9"
                                 >
                                   <span>{titleCase(r.label)}</span>
                                   <span className="font-mono text-xs text-subtle">{room ? roomArea(room).toFixed(1) : ''} m²</span>
@@ -801,7 +806,7 @@ export function ViewerPage() {
                               setMode('orbit')
                               setPreset({ name: p, nonce: Date.now() })
                             }}
-                            className="min-h-11 rounded-sm border border-line px-1 text-xs hover:border-accent hover:bg-raised sm:min-h-8"
+                            className="min-h-11 rounded-sm border border-line px-1 text-xs hover:border-accent hover:bg-raised pointer-fine:min-h-8"
                           >
                             {PRESET_LABEL[p]}
                           </button>
@@ -817,7 +822,7 @@ export function ViewerPage() {
                       {!strategy.panel && (
                         <div className="flex items-center justify-between gap-2 text-xs">
                           <span>Fachada</span>
-                          <button type="button" onClick={cycleFacade} className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised sm:min-h-8">
+                          <button type="button" onClick={cycleFacade} className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised pointer-fine:min-h-8">
                             {resolveFacade(facadeView.style, facadeView.custom).name + (facadeView.custom ? ' *' : '')} →
                           </button>
                         </div>
@@ -833,7 +838,7 @@ export function ViewerPage() {
                             onClick={furnishNow}
                             disabled={furnishing}
                             title="Agrega lo que falte en cada ambiente sin mover lo que ya está"
-                            className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised disabled:opacity-50 sm:min-h-8"
+                            className="min-h-11 rounded-sm border border-line px-2 hover:border-accent hover:bg-raised disabled:opacity-50 pointer-fine:min-h-8"
                           >
                             Completar muebles
                           </button>

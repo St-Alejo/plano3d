@@ -186,9 +186,9 @@ export function WalkHud({ model, touch }: { model: BuildingModel; touch: boolean
           type="button"
           aria-pressed={auto}
           onClick={() => setAuto(!auto)}
-          className={clsx('inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm backdrop-blur', auto ? 'border-accent bg-accent/15' : 'border-line bg-canvas/85')}
+          className={clsx('inline-flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm backdrop-blur', auto ? 'border-accent bg-canvas/90 font-medium text-fg' : 'border-line bg-canvas/85 text-muted')}
         >
-          <DoorOpen className="size-4" aria-hidden /> Puertas automáticas
+          <DoorOpen className={clsx('size-4', auto && 'text-accent')} aria-hidden /> Puertas automáticas
         </button>
         {hud && (
           <div className="rounded-md border border-line bg-canvas/85 p-1.5 backdrop-blur">

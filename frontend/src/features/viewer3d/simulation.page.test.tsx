@@ -109,6 +109,22 @@ describe('simulación en la página 3D', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
   })
 
+  it('encendida se ve encendida (no gris) y, al recorrer, ni el reloj ni el chat tapan el HUD', async () => {
+    screenWidth(1280)
+    renderViewer()
+    await userEvent.click(await screen.findByRole('button', { name: 'Simulación: personas y carro' }))
+    // el fondo translúcido claro tapaba el color del botón activo: texto blanco sobre gris
+    expect(screen.getByRole('button', { name: 'Detener la simulación' }).className).not.toContain('bg-canvas')
+    // reloj: a la izquierda en el celular (a la derecha va «Piso 1 de 3»), al centro desde sm
+    expect(screen.getByTestId('sim-clock-slot').className).toMatch(/left-3 .*sm:left-1\/2/)
+    const chat = () => screen.getByRole('button', { name: /Ajustar escribiendo/ }).closest('[class*="z-20"]')!
+    expect(chat().className).toContain('sm:left-[calc(')
+    await userEvent.click(screen.getByRole('radio', { name: 'Recorrer' }))
+    // al recorrer, abajo a la izquierda va la ayuda de teclas: el chat se corre a la derecha
+    expect(chat().className).not.toContain('sm:left-[calc(')
+    expect(chat().className).toContain('right-3')
+  })
+
   it('la lista de ambientes va por piso y sin MAYÚSCULAS sostenidas', async () => {
     screenWidth(1280)
     renderViewer(opc3Model)
