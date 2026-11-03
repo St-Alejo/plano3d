@@ -20,6 +20,7 @@ import { PlanElements } from './PlanElements'
 import { StructureOverlay } from './StructureOverlay'
 import { contentBounds, parseLength, pointInPolygon, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
+import { fitRoomLabel, LINE_HEIGHT, placeLabels, rotatedBox, type Box, type RoomLabelFit } from './labels'
 
 const LOW_CONFIDENCE = 0.6
 const C = {
@@ -116,10 +117,16 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   }, [])
   // pedido externo de reencuadre (chat): se atiende al renderizar, como el cambio de proyecto
   const fitRequest = useEditor((s) => s.fitRequest)
+  const fitBox = useEditor((s) => s.fitBox)
   const [fitSeen, setFitSeen] = useState(fitRequest)
   if (fitSeen !== fitRequest) {
     setFitSeen(fitRequest)
-    setBounds(contentBounds(model))
+    // una zona pedida (p. ej. el muro de un aviso de la revisión) o todo el plano
+    setBounds(
+      fitBox
+        ? { ...fitBox, center: { x: (fitBox.minX + fitBox.maxX) / 2, y: (fitBox.minY + fitBox.maxY) / 2 }, size: Math.max(fitBox.maxX - fitBox.minX, fitBox.maxY - fitBox.minY) }
+        : contentBounds(model),
+    )
     setView(null)
   }
   useEffect(() => setPointer(null, view.scale / autoView.scale), [view.scale, autoView.scale, setPointer])
@@ -436,6 +443,36 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const measureArea = measureM.length >= 3 ? polygonArea(measureM) : 0
   const fontPx = 13 / view.scale
 
+  // rótulos que no se encimen: cada ambiente ajusta el suyo a su ancho y las cotas que chocan se omiten
+  const roomFits = new Map<string, RoomLabelFit>()
+  const roomBoxes: Box[] = []
+  if (level && !hidden.has('rooms'))
+    for (const r of level.rooms) {
+      const xs = r.polygon.map((p) => p.x)
+      const ys = r.polygon.map((p) => p.y)
+      const fit = fitRoomLabel(r.label, `${roomArea(r).toFixed(1)} m²`, (Math.max(...xs) - Math.min(...xs)) / mpp, (Math.max(...ys) - Math.min(...ys)) / mpp, fontPx)
+      if (!fit) continue
+      roomFits.set(r.id, fit)
+      const c = toPx(polygonCentroid(r.polygon))
+      roomBoxes.push({ x: c.x - fit.width / 2, y: c.y - fit.height / 2, w: fit.width, h: fit.height })
+    }
+  const cotas = (level?.walls ?? []).flatMap((w) => {
+    const len = wallLength(w)
+    if (!showDimensions || len * (1 / mpp) * view.scale < 40) return [] // muy corto en pantalla: se omite
+    const a = toPx(w.start)
+    const b = toPx(w.end)
+    const d = wallDirection(w)
+    let ang = (Math.atan2(d.y, d.x) * 180) / Math.PI
+    if (ang > 90 || ang <= -90) ang += 180 // legible: nunca cabeza abajo
+    const off = w.thickness / mpp / 2 + 10 / view.scale
+    const mid = { x: (a.x + b.x) / 2 - d.y * off, y: (a.y + b.y) / 2 + d.x * off }
+    const txt = len.toFixed(2)
+    const tw = (txt.length * 11 * 0.6) / view.scale
+    return [{ id: w.id, mid, ang, txt, tw, box: rotatedBox(mid.x, mid.y, tw + 4 / view.scale, 13 / view.scale, ang), priority: len }]
+  })
+  const cotaShown = placeLabels(cotas, roomBoxes)
+  const cotaOf = new Map(cotas.filter((_, i) => cotaShown[i]).map((c) => [c.id, c]))
+
   return (
     <div
       ref={container}
@@ -493,21 +530,26 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
             const c = toPx(polygonCentroid(r.polygon))
             const sel = inGroup('room', r.id)
             const low = r.confidence < LOW_CONFIDENCE
+            const fit = roomFits.get(r.id)
             return (
               <Group key={r.id} listening={!locked.has('rooms')} onClick={pick({ kind: 'room', id: r.id })} onTap={pick({ kind: 'room', id: r.id })}>
                 <Line points={pts} closed fill={sel ? C.roomSel : low ? C.roomLow : C.roomOk} stroke={low ? C.door : undefined} strokeWidth={low ? 1.5 / view.scale : 0} dash={[6 / view.scale, 4 / view.scale]} />
-                <Label x={c.x} y={c.y} offsetX={fontPx * 3.2} offsetY={fontPx * 1.4} listening={false}>
-                  <Tag fill="rgba(238,240,230,0.92)" stroke={low ? C.door : 'rgba(18,32,54,0.25)'} strokeWidth={1 / view.scale} cornerRadius={3 / view.scale} />
-                  <Text
-                    text={`${r.label}\n${roomArea(r).toFixed(1)} m²`}
-                    fontSize={fontPx}
-                    fontFamily="Geist"
-                    fill={C.text}
-                    align="center"
-                    padding={4 / view.scale}
-                    width={fontPx * 6.4}
-                  />
-                </Label>
+                {fit && (
+                  <Label x={c.x} y={c.y} offsetX={fit.width / 2} offsetY={fit.height / 2} listening={false}>
+                    <Tag fill="rgba(238,240,230,0.92)" stroke={low ? C.door : 'rgba(18,32,54,0.25)'} strokeWidth={1 / view.scale} cornerRadius={3 / view.scale} />
+                    <Text
+                      text={fit.showArea ? `${r.label}\n${roomArea(r).toFixed(1)} m²` : r.label}
+                      fontSize={fit.fontSize}
+                      lineHeight={LINE_HEIGHT}
+                      fontFamily="Geist"
+                      fill={C.text}
+                      align="center"
+                      wrap="word"
+                      padding={fontPx * 0.3}
+                      width={fit.width}
+                    />
+                  </Label>
+                )}
               </Group>
             )
           })}
@@ -531,25 +573,20 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   onTap={pick({ kind: 'wall', id: w.id })}
                   onContextMenu={pickForMenu({ kind: 'wall', id: w.id })}
                 />
-                {showDimensions && (() => {
-                  // cota: largo del muro sobre su línea, desplazada hacia afuera y legible (nunca cabeza abajo)
-                  const len = wallLength(w)
-                  if (len * (1 / mpp) * view.scale < 40) return null // muy corto en pantalla: se omite
-                  let ang = (Math.atan2(d.y, d.x) * 180) / Math.PI
-                  if (ang > 90 || ang <= -90) ang += 180
-                  const off = w.thickness / mpp / 2 + 10 / view.scale
-                  const mid = { x: (a.x + b.x) / 2 - d.y * off, y: (a.y + b.y) / 2 + d.x * off }
-                  const txt = `${len.toFixed(2)}`
+                {(() => {
+                  // cota: largo del muro sobre su línea, desplazada hacia afuera (solo si no choca con otra)
+                  const cota = cotaOf.get(w.id)
+                  if (!cota) return null
                   return (
                     <Text
-                      x={mid.x}
-                      y={mid.y}
-                      text={txt}
-                      rotation={ang}
+                      x={cota.mid.x}
+                      y={cota.mid.y}
+                      text={cota.txt}
+                      rotation={cota.ang}
                       fontSize={11 / view.scale}
                       fontFamily="Geist Mono"
                       fill="#2f6b55"
-                      offsetX={(txt.length * 11 * 0.6) / view.scale / 2}
+                      offsetX={cota.tw / 2}
                       offsetY={11 / view.scale / 2}
                       listening={false}
                     />

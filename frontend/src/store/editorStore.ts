@@ -98,7 +98,9 @@ interface EditorState {
   setError: (message: string) => void
   /** sube cada vez que se pide reencuadrar el plano (p. ej. tras dibujar con el chat) */
   fitRequest: number
-  requestFit: () => void
+  /** si se pide encuadrar una zona (en metros) en vez de todo el plano */
+  fitBox: { minX: number; minY: number; maxX: number; maxY: number } | null
+  requestFit: (box?: { minX: number; minY: number; maxX: number; maxY: number }) => void
   reset: () => void
 }
 
@@ -231,7 +233,8 @@ export const useEditor = create<EditorState>()((set, get) => {
     clearError: () => set({ error: null }),
     setError: (message) => set({ error: message }),
     fitRequest: 0,
-    requestFit: () => set((s) => ({ fitRequest: s.fitRequest + 1 })),
+    fitBox: null,
+    requestFit: (box) => set((s) => ({ fitRequest: s.fitRequest + 1, fitBox: box ?? null })),
     reset: () => {
       history.clear()
       roomMemory.clear()

@@ -81,6 +81,33 @@ function LevelActions({ onReload }: { onReload: () => void }) {
   )
 }
 
+/** Selector compacto de piso para tablet y celular (allí no se ve el panel de capas). */
+export function LevelPicker() {
+  const level = useEditor(selectLevel)
+  const levels = useEditor((s) => s.model?.levels ?? [])
+  const setLevel = useEditor((s) => s.setLevel)
+  if (levels.length < 2) return null
+  return (
+    <label className="flex min-h-11 items-center gap-2 border-b border-line bg-surface px-3 text-sm">
+      <span className="text-xs text-muted">Piso que editas</span>
+      <select
+        value={level?.id ?? ''}
+        onChange={(e) => setLevel(e.target.value)}
+        aria-label="Piso que editas"
+        className="h-9 min-w-0 flex-1 rounded-sm border border-line bg-canvas px-2 pointer-coarse:h-11"
+      >
+        {[...levels]
+          .sort((a, b) => a.elevation - b.elevation)
+          .map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+      </select>
+    </label>
+  )
+}
+
 export function LayersPanel({ onReload }: { onReload?: () => void }) {
   const level = useEditor(selectLevel)
   const hidden = useEditor((s) => s.hiddenLayers)

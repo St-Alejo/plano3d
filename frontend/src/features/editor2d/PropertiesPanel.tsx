@@ -17,7 +17,7 @@ import {
 } from '@/domain/commands'
 import { roomArea, wallDirection, wallLength } from '@/domain/model'
 import { centeredOffset, placeOpening } from '@/domain/openings'
-import { modelQA, type QAIssue } from '@/domain/qa'
+import { groupIssues, issueBox, modelQA, type QAIssue } from '@/domain/qa'
 import { GRID_STEPS, type Selection } from '@/store/editorStore'
 import { FurnitureInspector, MaterialSelect } from './FurnitureInspector'
 import { ColumnInspector, StairInspector } from './ItemInspector'
@@ -103,7 +103,7 @@ export function PropertiesPanel({ onSolve, solving = false }: SolveProps = {}) {
           <dd>{SCALE_SOURCE[model.scale.source ?? 'estimated'] ?? 'estimada'}</dd>
         </dl>
         <DimensionsSummary dims={level.dimensions ?? []} onSolve={onSolve} solving={solving} onSelect={select} />
-        <QAList issues={modelQA(model)} onSelect={select} />
+        <QAList issues={modelQA(model)} />
         {low.length > 0 && (
           <p className="border-l-2 border-warn pl-3 text-xs text-muted">
             Los ambientes dudosos se resaltan en ámbar en el plano.
@@ -515,35 +515,78 @@ const SEVERITY_UI = {
   info: { icon: Info, cls: 'text-subtle', label: 'Nota' },
 } as const
 
-/** Lista de revisión del modelo: cada aviso lleva al elemento con un clic. */
-function QAList({ issues, onSelect }: { issues: QAIssue[]; onSelect: (t: NonNullable<QAIssue['target']>) => void }) {
+/**
+ * Lista de revisión del modelo: los avisos iguales van juntos con su cantidad
+ * y cada uno lleva al elemento con un clic (cambia de piso, lo selecciona y lo encuadra).
+ */
+function QAList({ issues }: { issues: QAIssue[] }) {
+  const model = useEditor((s) => s.model)
+  const levelId = useEditor((s) => s.levelId)
+  const setLevel = useEditor((s) => s.setLevel)
+  const select = useEditor((s) => s.select)
+  const requestFit = useEditor((s) => s.requestFit)
   if (issues.length === 0) {
     return <p className="border-l-2 border-ok pl-3 text-xs text-muted">Sin problemas detectados en el modelo.</p>
   }
+  const go = (i: QAIssue) => {
+    if (!i.target || !model) return
+    if (i.levelId && i.levelId !== levelId) setLevel(i.levelId)
+    select(i.target)
+    const box = issueBox(model, i)
+    if (box) requestFit(box)
+  }
+  const levelName = (id?: string) => (model && model.levels.length > 1 ? model.levels.find((l) => l.id === id)?.name : undefined)
   return (
     <section aria-labelledby="qa-title">
       <h3 id="qa-title" className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
         Revisión del modelo ({issues.length})
       </h3>
       <ul className="flex flex-col gap-0.5">
-        {issues.map((i, n) => {
-          const ui = SEVERITY_UI[i.severity]
+        {groupIssues(issues).map((g) => {
+          const ui = SEVERITY_UI[g.severity]
           const Icon = ui.icon
-          const content = (
+          const first = g.issues[0]!
+          const head = (
             <>
               <Icon className={`mt-0.5 size-3.5 shrink-0 ${ui.cls}`} aria-label={ui.label} />
-              <span>{i.message}</span>
+              <span className="flex-1">{g.message}</span>
+              {g.issues.length > 1 && <span className="font-mono text-subtle">×{g.issues.length}</span>}
             </>
           )
+          if (g.issues.length === 1)
+            return (
+              <li key={g.message}>
+                {first.target ? (
+                  <button type="button" onClick={() => go(first)} className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-raised pointer-coarse:min-h-11">
+                    {head}
+                  </button>
+                ) : (
+                  <p className="flex items-start gap-2 px-2 py-1.5 text-xs">{head}</p>
+                )}
+              </li>
+            )
           return (
-            <li key={`${i.code}-${n}`}>
-              {i.target ? (
-                <button type="button" onClick={() => onSelect(i.target!)} className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-raised pointer-coarse:min-h-11">
-                  {content}
-                </button>
-              ) : (
-                <p className="flex items-start gap-2 px-2 py-1.5 text-xs">{content}</p>
-              )}
+            <li key={g.message}>
+              <details className="group">
+                <summary className="flex cursor-pointer list-none items-start gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-raised pointer-coarse:min-h-11">{head}</summary>
+                <div role="group" aria-label={g.message} className="flex flex-wrap gap-1 px-2 pt-1 pb-2 pl-7">
+                  {g.issues.map((i, n) => {
+                    const where = levelName(i.levelId)
+                    return (
+                      <button
+                        key={`${i.target?.id ?? 'x'}-${n}`}
+                        type="button"
+                        onClick={() => go(i)}
+                        aria-label={`Ver ${n + 1} de ${g.issues.length}${where ? `, ${where}` : ''}`}
+                        title={where}
+                        className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-sm border border-line font-mono text-xs hover:border-accent pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+                      >
+                        {n + 1}
+                      </button>
+                    )
+                  })}
+                </div>
+              </details>
             </li>
           )
         })}

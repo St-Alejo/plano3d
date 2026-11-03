@@ -19,7 +19,12 @@ export function Toolbar({ trailing }: { trailing?: ReactNode }) {
 
   return (
     <div className="flex items-center gap-2 border-b border-line bg-surface px-2 py-1" role="toolbar" aria-label="Herramientas del editor">
-      <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+      {/* las herramientas se desplazan si no caben (sin barra de scroll, con un desvanecido al borde);
+          deshacer y rehacer quedan siempre a la vista */}
+      <div
+        data-testid="herramientas"
+        className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none] mask-r-from-[calc(100%-1.5rem)] xl:mask-none [&::-webkit-scrollbar]:hidden"
+      >
         {GROUPS.map((g) => (
           <ToolbarGroup key={g.label} label={g.label}>
             {g.tools.map((id) => {
@@ -32,15 +37,15 @@ export function Toolbar({ trailing }: { trailing?: ReactNode }) {
             })}
           </ToolbarGroup>
         ))}
-        <ToolbarGroup label="Historial de cambios">
-          <IconButton label={undoLabel ? `Deshacer: ${undoLabel}` : 'Deshacer'} shortcut="Ctrl+Z" disabled={!canUndo} onClick={undo}>
-            <Undo2 className="size-5" aria-hidden />
-          </IconButton>
-          <IconButton label={redoLabel ? `Rehacer: ${redoLabel}` : 'Rehacer'} shortcut="Ctrl+Shift+Z" disabled={!canRedo} onClick={redo}>
-            <Redo2 className="size-5" aria-hidden />
-          </IconButton>
-        </ToolbarGroup>
       </div>
+      <ToolbarGroup label="Historial de cambios">
+        <IconButton label={undoLabel ? `Deshacer: ${undoLabel}` : 'Deshacer'} shortcut="Ctrl+Z" disabled={!canUndo} onClick={undo}>
+          <Undo2 className="size-5" aria-hidden />
+        </IconButton>
+        <IconButton label={redoLabel ? `Rehacer: ${redoLabel}` : 'Rehacer'} shortcut="Ctrl+Shift+Z" disabled={!canRedo} onClick={redo}>
+          <Redo2 className="size-5" aria-hidden />
+        </IconButton>
+      </ToolbarGroup>
       <div className="flex shrink-0 items-center gap-1.5 border-l border-line pl-2 sm:border-0">{trailing}</div>
     </div>
   )

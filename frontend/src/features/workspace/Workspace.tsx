@@ -24,7 +24,7 @@ import { CommandPalette } from './CommandPalette'
 import { EditorContextMenu } from './EditorContextMenu'
 import { GroupInspector } from './GroupInspector'
 import { HistoryDialog } from './HistoryDialog'
-import { LayersPanel } from './LayersPanel'
+import { LayersPanel, LevelPicker } from './LayersPanel'
 import { ShortcutsHelp } from './ShortcutsHelp'
 import { StatusBar } from './StatusBar'
 import { UnsavedChangesGuard } from './UnsavedChangesGuard'
@@ -299,6 +299,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
 
   const banner = (
     <>
+      {!desktop && <LevelPicker />}
       {hint && !desktop && <p className="border-b border-line bg-canvas px-3 py-1.5 text-xs text-muted">{hint}</p>}
       {(error || saveError) && (
         <div role="alert" className="flex items-center justify-between gap-2 border-b border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
@@ -425,10 +426,16 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
               </Tabs.Trigger>
             ))}
           </Tabs.List>
-          <Tabs.Content value="2d" className="min-h-[60vh] flex-1">{editor}</Tabs.Content>
-          <Tabs.Content value="3d" className="min-h-[60vh] flex-1">{viewer}</Tabs.Content>
+          {/* el lienzo llena la pestaña: el alto porcentual no se resuelve en un hijo flex, así que va absoluto */}
+          <Tabs.Content value="2d" className="relative min-h-[60vh] flex-1">
+            <div className="absolute inset-0">{editor}</div>
+          </Tabs.Content>
+          <Tabs.Content value="3d" className="relative min-h-[60vh] flex-1">
+            <div className="absolute inset-0">{viewer}</div>
+          </Tabs.Content>
           <Tabs.Content value="props" className="flex flex-1 flex-col gap-8 overflow-y-auto p-4">
             <PropertiesPanel onSolve={() => void solve()} solving={solving} />
+            <LayersPanel onReload={onReload} />
             <PanelSection title="Áreas">
               <AreaSchedulePanel projectName={project.name} />
             </PanelSection>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { BuildingModel } from '@/api/types'
 import { door, sampleModel, wall } from '@/test/fixtures'
-import { modelQA } from './qa'
+import { groupIssues, issueBox, modelQA } from './qa'
 
 const withLevel = (patch: Partial<BuildingModel['levels'][number]>, scale: BuildingModel['scale']['source'] = 'calibrated'): BuildingModel => {
   const m = sampleModel()
@@ -53,5 +53,24 @@ describe('revisión con el modelo v2', () => {
       m.scale = { ...m.scale, source }
       expect(modelQA(m).some((i) => i.code === 'scale')).toBe(false)
     }
+  })
+})
+
+describe('revisión agrupada', () => {
+  it('junta los avisos iguales con su cantidad y cada uno sabe su piso', () => {
+    // tres muros sueltos, cada uno lejos de los demás
+    const loose = [wall('s1', 20, 0, 22, 0), wall('s2', 20, 5, 22, 5), wall('s3', 20, 9, 22, 9)]
+    const m = withLevel({ walls: [...sampleModel().levels[0]!.walls, ...loose] })
+    const groups = groupIssues(modelQA(m))
+    const sueltos = groups.find((g) => g.message === 'Muro suelto: no toca ningún otro')!
+    expect(sueltos.issues).toHaveLength(3)
+    expect(sueltos.issues.every((i) => i.levelId === m.levels[0]!.id)).toBe(true)
+    expect(groups.filter((g) => g.message === sueltos.message)).toHaveLength(1)
+  })
+
+  it('la caja a encuadrar rodea al muro del aviso con margen', () => {
+    const m = withLevel({ walls: [...sampleModel().levels[0]!.walls, wall('s1', 20, 0, 22, 0)] })
+    const issue = modelQA(m).find((i) => i.target?.id === 's1')!
+    expect(issueBox(m, issue)).toEqual({ minX: 18.5, minY: -1.5, maxX: 23.5, maxY: 1.5 })
   })
 })

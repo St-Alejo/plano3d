@@ -10,6 +10,8 @@ import { useEditor } from '@/store/editorStore'
 import { CalibrateDialog } from './CalibrateDialog'
 import { PropertiesPanel } from './PropertiesPanel'
 import { Toolbar } from './Toolbar'
+import { LevelPicker } from '@/features/workspace/LayersPanel'
+import { wall } from '@/test/fixtures'
 
 const L = 'lvl_0'
 const level = () => findLevel(useEditor.getState().model!, L)
@@ -41,6 +43,29 @@ describe('Toolbar', () => {
     await userEvent.click(undo)
     expect(level().rooms[1]!.label).toBe('Espacio 2')
   })
+
+  it('deshacer y rehacer quedan fuera de la zona que se desplaza (siempre visibles)', () => {
+    render(<Toolbar />)
+    const tools = screen.getByTestId('herramientas')
+    expect(within(tools).getByRole('button', { name: 'Seleccionar' })).toBeInTheDocument()
+    expect(within(tools).queryByRole('button', { name: 'Deshacer' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Deshacer' })).toBeInTheDocument()
+  })
+})
+
+describe('selector de piso en tablet y celular', () => {
+  it('cambia el piso que se edita', async () => {
+    const m = sampleModel()
+    useEditor.getState().load('prj_1', { ...m, levels: [...m.levels, { ...m.levels[0]!, id: 'lvl_2', name: 'Piso 2', elevation: 2.8 }] })
+    render(<LevelPicker />)
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Piso que editas' }), 'lvl_2')
+    expect(useEditor.getState().levelId).toBe('lvl_2')
+  })
+
+  it('con un solo piso no aparece', () => {
+    render(<LevelPicker />)
+    expect(screen.queryByRole('combobox', { name: 'Piso que editas' })).toBeNull()
+  })
 })
 
 describe('PropertiesPanel', () => {
@@ -51,6 +76,20 @@ describe('PropertiesPanel', () => {
     expect(within(qa).getByText(/escala es estimada/)).toBeInTheDocument()
     await userEvent.click(within(qa).getByRole('button', { name: /Espacio 2.*dudosa/ }))
     expect(useEditor.getState().selection).toEqual({ kind: 'room', id: 'r_b' })
+  })
+
+  it('agrupa los avisos repetidos y cada uno se selecciona y se encuadra', async () => {
+    const m = sampleModel()
+    const loose = [wall('s1', 20, 0, 22, 0), wall('s2', 20, 5, 22, 5)]
+    useEditor.getState().load('prj_1', { ...m, levels: [{ ...m.levels[0]!, walls: [...m.levels[0]!.walls, ...loose] }] })
+    render(<PropertiesPanel />)
+    const qa = screen.getByRole('region', { name: /Revisión del modelo/ })
+    expect(within(qa).getAllByText('Muro suelto: no toca ningún otro')).toHaveLength(1)
+    expect(within(qa).getByText('×2')).toBeInTheDocument()
+    await userEvent.click(within(qa).getByText('Muro suelto: no toca ningún otro'))
+    await userEvent.click(within(qa).getByRole('button', { name: 'Ver 2 de 2' }))
+    expect(useEditor.getState().selection).toEqual({ kind: 'wall', id: 's2' })
+    expect(useEditor.getState().fitBox).toEqual({ minX: 18.5, minY: 3.5, maxX: 23.5, maxY: 6.5 })
   })
 
   it('largo exacto del muro con un comando que arrastra la esquina', async () => {

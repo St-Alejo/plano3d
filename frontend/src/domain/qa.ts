@@ -15,9 +15,48 @@ export interface QAIssue {
   severity: Severity
   message: string
   target?: QATarget
+  /** piso del elemento (para ir a él desde la lista) */
+  levelId?: string
 }
 
 const ORDER: Record<Severity, number> = { error: 0, warning: 1, info: 2 }
+
+export interface QAGroup {
+  message: string
+  severity: Severity
+  issues: QAIssue[]
+}
+
+/** Agrupa los avisos iguales ("Muro con un extremo suelto" ×10) conservando el orden por gravedad. */
+export function groupIssues(issues: QAIssue[]): QAGroup[] {
+  const groups = new Map<string, QAGroup>()
+  for (const i of issues) {
+    const key = `${i.severity}|${i.message}`
+    const g = groups.get(key) ?? { message: i.message, severity: i.severity, issues: [] }
+    g.issues.push(i)
+    groups.set(key, g)
+  }
+  return [...groups.values()]
+}
+
+/** Caja (en metros, con margen) que hay que encuadrar para ver el elemento del aviso. */
+export function issueBox(m: BuildingModel, i: QAIssue, margin = 1.5): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  const t = i.target
+  if (!t) return null
+  const lv = m.levels.find((l) => l.id === i.levelId) ?? m.levels.find((l) => l.walls.some((w) => w.id === (t.kind === 'opening' ? t.wallId : t.id)) || l.rooms.some((r) => r.id === t.id))
+  if (!lv) return null
+  const pts =
+    t.kind === 'room'
+      ? (lv.rooms.find((r) => r.id === t.id)?.polygon ?? [])
+      : (() => {
+          const w = lv.walls.find((x) => x.id === (t.kind === 'opening' ? t.wallId : t.id))
+          return w ? [w.start, w.end] : []
+        })()
+  if (pts.length === 0) return null
+  const xs = pts.map((p) => p.x)
+  const ys = pts.map((p) => p.y)
+  return { minX: Math.min(...xs) - margin, minY: Math.min(...ys) - margin, maxX: Math.max(...xs) + margin, maxY: Math.max(...ys) + margin }
+}
 
 /** ¿El punto toca algún otro muro (su extremo o su tramo, dentro del grosor)? */
 function touchesOther(p: { x: number; y: number }, self: Wall, walls: Wall[]): boolean {
@@ -103,7 +142,7 @@ function levelIssues(lv: Level): QAIssue[] {
 }
 
 export function modelQA(m: BuildingModel): QAIssue[] {
-  const issues = m.levels.flatMap(levelIssues)
+  const issues: QAIssue[] = m.levels.flatMap((lv) => levelIssues(lv).map((i) => ({ ...i, levelId: lv.id })))
   // exacta si la calibró una persona, si vino de un archivo CAD o si se ajustó a las cotas
   if (!['calibrated', 'vector', 'dimensions'].includes(m.scale.source ?? 'estimated')) {
     issues.push({
