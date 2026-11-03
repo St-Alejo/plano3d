@@ -33,6 +33,7 @@ from plano3d.application.use_cases.projects import (
     ListRevisions,
     ReanalyzeProject,
     RestoreRevision,
+    SetFacade,
     SolveDimensions,
     SuggestCorners,
     UpdateBuildingModel,
@@ -145,6 +146,10 @@ class Container:
     @property
     def reanalyze(self) -> ReanalyzeProject:
         return ReanalyzeProject(self.repo, self.queue, self.progress)
+
+    @property
+    def set_facade(self) -> SetFacade:
+        return SetFacade(self.repo)
 
     @property
     def add_level(self) -> AddLevelFromFile:

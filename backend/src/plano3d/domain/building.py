@@ -391,6 +391,11 @@ class SourceImage:
     height_px: int
 
 
+#: fachadas propuestas: solo cambian el exterior (revestimiento, marcos, antepecho, portón)
+FACADE_STYLES = ("moderna_blanca", "moderna_madera", "moderna_ladrillo")
+DEFAULT_FACADE = FACADE_STYLES[0]
+
+
 @dataclass(frozen=True, slots=True)
 class BuildingModel:
     project_id: str
@@ -398,8 +403,14 @@ class BuildingModel:
     levels: tuple[Level, ...] = field(default_factory=tuple)
     source_image: SourceImage | None = None
     schema_version: int = MODEL_SCHEMA_VERSION
+    #: estilo de fachada (``FACADE_STYLES``); no toca nada del interior
+    facade: str = DEFAULT_FACADE
 
     def __post_init__(self) -> None:
+        if self.facade not in FACADE_STYLES:
+            raise InvalidGeometryError(
+                f"Fachada {self.facade!r} desconocida (usa {', '.join(FACADE_STYLES)})"
+            )
         if not 1 <= self.schema_version <= MODEL_SCHEMA_VERSION:
             raise InvalidGeometryError(
                 f"Versión de esquema {self.schema_version} no soportada "
@@ -412,6 +423,9 @@ class BuildingModel:
             if lv.id == level_id:
                 return lv
         raise EntityNotFoundError(f"Nivel {level_id} no existe")
+
+    def with_facade(self, style: str) -> BuildingModel:
+        return replace(self, facade=style)
 
     def with_level(self, level: Level) -> BuildingModel:
         if any(lv.id == level.id for lv in self.levels):

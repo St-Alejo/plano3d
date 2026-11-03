@@ -243,6 +243,29 @@ class UpdateBuildingModel:
         )
 
 
+class SetFacade:
+    """Cambia el estilo de fachada. Solo ese campo: muros, vanos y ambientes no se tocan."""
+
+    def __init__(self, repo: ProjectRepository) -> None:
+        self._repo = repo
+
+    async def execute(
+        self, project_id: str, style: str, expected_revision: int | None = None
+    ) -> Project:
+        project = await _load(self._repo, project_id)
+        if project.model is None:
+            raise DomainError("El proyecto aún no tiene modelo")
+        if project.model.facade == style:
+            return project
+        return await commit_model(
+            self._repo,
+            project,
+            project.model.with_facade(style),
+            f"Fachada: {style.replace('_', ' ')}",
+            expected_revision,
+        )
+
+
 class CalibrateScale:
     """El usuario marca dos puntos de la imagen y cuántos metros hay entre ellos."""
 

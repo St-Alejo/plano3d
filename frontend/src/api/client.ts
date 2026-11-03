@@ -161,6 +161,14 @@ export const api = {
     })
   },
 
+  /** Estilo de fachada: solo cambia el exterior; el plano queda igual. */
+  setFacade: (id: string, style: string, revision?: number) => {
+    const init = json({ style })
+    const headers = { ...(init.headers as Record<string, string>) }
+    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    return request<Project>(`/projects/${encodeURIComponent(id)}/facade`, { method: 'PUT', ...init, headers })
+  },
+
   quality: (id: string) => request<CorrectionStats>(`/projects/${encodeURIComponent(id)}/quality`),
 
   reanalyze: (id: string, corners?: Corners) =>

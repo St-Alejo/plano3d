@@ -199,6 +199,9 @@ class SourceImageDTO(_DTO):
     height_px: int
 
 
+FacadeStyle = Literal["moderna_blanca", "moderna_madera", "moderna_ladrillo"]
+
+
 class BuildingModelDTO(_DTO):
     project_id: str
     scale: ScaleDTO
@@ -206,6 +209,11 @@ class BuildingModelDTO(_DTO):
     source_image: SourceImageDTO | None = None
     total_area: float | None = Field(default=None, description="solo salida, m²")
     schema_version: int | None = Field(default=None, description="null = 1 (se actualiza a 2)")
+    facade: FacadeStyle = Field(default="moderna_blanca", description="Estilo de la fachada")
+
+
+class FacadeDTO(_DTO):
+    style: FacadeStyle
 
 
 class ProjectSummaryDTO(_DTO):
@@ -505,6 +513,7 @@ def model_to_dto(m: BuildingModel) -> BuildingModelDTO:
         ),
         total_area=m.total_area,
         schema_version=m.schema_version,
+        facade=m.facade,
         levels=[_level_to_dto(lv) for lv in m.levels],
     )
 
@@ -652,6 +661,7 @@ def model_from_dto(d: BuildingModelDTO) -> BuildingModel:
         ),
         levels=tuple(_level_from_dto(lv) for lv in d.levels),
         schema_version=MODEL_SCHEMA_VERSION,
+        facade=d.facade,
     )
 
 

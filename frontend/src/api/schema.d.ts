@@ -137,6 +137,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/facade": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Facade
+         * @description Cambia solo el estilo de la fachada (el interior queda igual).
+         */
+        put: operations["set_facade_api_projects__project_id__facade_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/image": {
         parameters: {
             query?: never;
@@ -445,6 +465,13 @@ export interface components {
         /** BuildingModelDTO */
         BuildingModelDTO: {
             /**
+             * Facade
+             * @description Estilo de la fachada
+             * @default moderna_blanca
+             * @enum {string}
+             */
+            facade: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo";
+            /**
              * Levels
              * @default []
              */
@@ -628,6 +655,14 @@ export interface components {
              * @description Nombre del piso nuevo
              */
             name?: string | null;
+        };
+        /** FacadeDTO */
+        FacadeDTO: {
+            /**
+             * Style
+             * @enum {string}
+             */
+            style: "moderna_blanca" | "moderna_madera" | "moderna_ladrillo";
         };
         /**
          * FurnitureDTO
@@ -1413,6 +1448,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    set_facade_api_projects__project_id__facade_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Revisión que se editó; si cambió, responde 409 */
+                "If-Match"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FacadeDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
+                };
+            };
+            /** @description Otra persona guardó una versión más nueva */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

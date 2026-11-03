@@ -38,6 +38,7 @@ from plano3d.application.dto import (
     CornersDTO,
     CorrectionStatsDTO,
     DuplicateLevelDTO,
+    FacadeDTO,
     ProgressEventDTO,
     ProjectCreatedDTO,
     ProjectDTO,
@@ -314,6 +315,25 @@ async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: Container
     project = await c.calibrate_scale.execute(
         project_id, Point2D(body.a.x, body.a.y), Point2D(body.b.x, body.b.y), body.meters
     )
+    return project_to_dto(project)
+
+
+@router.put(
+    "/projects/{project_id}/facade",
+    response_model=ProjectDTO,
+    responses={409: {"description": "Otra persona guardó una versión más nueva"}},
+    tags=["modelo"],
+)
+async def set_facade(
+    project_id: str,
+    body: FacadeDTO,
+    c: ContainerDep,
+    response: Response,
+    if_match: IfMatch = None,
+) -> ProjectDTO:
+    """Cambia solo el estilo de la fachada (el interior queda igual)."""
+    project = await c.set_facade.execute(project_id, body.style, _parse_if_match(if_match))
+    response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
 
 

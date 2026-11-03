@@ -59,3 +59,30 @@ def test_errores(client: TestClient) -> None:
     assert bad.status_code in (415, 422)
     stale = client.post(f"/api/projects/{pid}/levels/lvl_0/duplicate", headers={"If-Match": '"99"'})
     assert stale.status_code == 409
+
+
+def test_la_fachada_cambia_solo_la_fachada(client: TestClient) -> None:
+    body = client.post("/api/projects/blank", json={"name": "Casa"}).json()
+    pid = body["id"]
+    r = client.post(
+        f"/api/projects/{pid}/levels",
+        files={"file": ("piso2.pdf", PISO2.read_bytes(), "application/pdf")},
+    )
+    before = r.json()
+    assert before["model"]["facade"] == "moderna_blanca"
+    r = client.put(
+        f"/api/projects/{pid}/facade",
+        json={"style": "moderna_ladrillo"},
+        headers={"If-Match": f'"{before["revision"]}"'},
+    )
+    assert r.status_code == 200, r.text
+    after = r.json()
+    assert after["model"]["facade"] == "moderna_ladrillo"
+    assert after["revision"] == before["revision"] + 1
+    # niveles, muros, vanos y ambientes idénticos
+    assert after["model"]["levels"] == before["model"]["levels"]
+    revisions = client.get(f"/api/projects/{pid}/revisions").json()
+    assert revisions[0]["summary"] == "Fachada: moderna ladrillo"
+    assert client.get(f"/api/projects/{pid}").json()["model"]["facade"] == "moderna_ladrillo"
+    bad = client.put(f"/api/projects/{pid}/facade", json={"style": "colonial"})
+    assert bad.status_code == 422

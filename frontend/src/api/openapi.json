@@ -176,6 +176,17 @@
       },
       "BuildingModelDTO": {
         "properties": {
+          "facade": {
+            "default": "moderna_blanca",
+            "description": "Estilo de la fachada",
+            "enum": [
+              "moderna_blanca",
+              "moderna_madera",
+              "moderna_ladrillo"
+            ],
+            "title": "Facade",
+            "type": "string"
+          },
           "levels": {
             "default": [],
             "items": {
@@ -564,6 +575,24 @@
           }
         },
         "title": "DuplicateLevelDTO",
+        "type": "object"
+      },
+      "FacadeDTO": {
+        "properties": {
+          "style": {
+            "enum": [
+              "moderna_blanca",
+              "moderna_madera",
+              "moderna_ladrillo"
+            ],
+            "title": "Style",
+            "type": "string"
+          }
+        },
+        "required": [
+          "style"
+        ],
+        "title": "FacadeDTO",
         "type": "object"
       },
       "FurnitureDTO": {
@@ -2096,6 +2125,80 @@
           }
         },
         "summary": "Assistant",
+        "tags": [
+          "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/facade": {
+      "put": {
+        "description": "Cambia solo el estilo de la fachada (el interior queda igual).",
+        "operationId": "set_facade_api_projects__project_id__facade_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Revisión que se editó; si cambió, responde 409",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Revisión que se editó; si cambió, responde 409",
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FacadeDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Otra persona guardó una versión más nueva"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Facade",
         "tags": [
           "modelo"
         ]
