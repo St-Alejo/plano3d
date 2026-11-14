@@ -10,3 +10,5 @@ data
 tests/fixtures/real/*.jpg
 models/*.pt
 ml/data
+.env
+.env.*

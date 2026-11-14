@@ -43,4 +43,6 @@ USER app
 ENV PLANO3D_MODE=full
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD curl -fsS http://localhost:8000/api/health || exit 1
-CMD ["sh", "-c", "alembic upgrade head && uvicorn plano3d.main:app --host 0.0.0.0 --port 8000 --proxy-headers --workers 2"]
+# full: migra y usa 2 procesos. memory (demo sin Postgres/Redis): un solo proceso, porque
+# los proyectos viven en la memoria de ese proceso.
+CMD ["sh", "-c", "if [ \"$PLANO3D_MODE\" = full ]; then alembic upgrade head && W=${WEB_CONCURRENCY:-2}; else W=1; fi; exec uvicorn plano3d.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --workers $W"]

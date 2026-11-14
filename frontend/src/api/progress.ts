@@ -3,6 +3,7 @@
  * (proxy corporativo, red móvil) cae a polling del historial por REST.
  */
 import { api } from './client'
+import { wsOrigin } from './origin'
 import type { ProgressEvent } from './types'
 
 export interface ProgressHandlers {
@@ -22,8 +23,7 @@ export type SocketFactory = (url: string) => SocketLike
 const defaultSocket: SocketFactory = (url) => new WebSocket(url) as unknown as SocketLike
 
 export function progressUrl(projectId: string, loc: Pick<Location, 'protocol' | 'host'> = window.location): string {
-  const proto = loc.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${proto}//${loc.host}/api/ws/projects/${encodeURIComponent(projectId)}`
+  return `${wsOrigin(loc)}/api/ws/projects/${encodeURIComponent(projectId)}`
 }
 
 export function subscribeProgress(

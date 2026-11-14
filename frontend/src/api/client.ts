@@ -1,3 +1,4 @@
+import { apiOrigin } from './origin'
 import type { Photos, PhotosStatus, AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
 
 export class ApiError extends Error {
@@ -9,7 +10,7 @@ export class ApiError extends Error {
   }
 }
 
-const BASE = '/api'
+const BASE = `${apiOrigin()}/api`
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
