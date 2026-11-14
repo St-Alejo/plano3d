@@ -415,11 +415,12 @@ class RenderedComplex(RenderedPlan):
 
 def render_complex(
     plan: ComplexPlan,
-    style: Style = Style(),  # noqa: B008 - Style es inmutable
+    style: Style | None = None,
     px_per_m: float = 60.0,
     margin_m: float = 2.2,
     seed: int = 0,
 ) -> RenderedComplex:
+    style = style or Style()
     w_px = round((plan.width_m + 2 * margin_m) * px_per_m)
     h_px = round((plan.height_m + 2 * margin_m) * px_per_m)
     img = np.full((h_px, w_px, 3), PAPER, np.uint8)
