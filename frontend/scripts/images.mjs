@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Convierte las imágenes originales (design/imagenes/*.png|jpg, fuera de public para no
  * publicarlas) a WebP en varios anchos: public/images/<nombre>-<ancho>.webp.
  * Uso: `npm run images`. Solo rehace las que cambiaron.
@@ -12,8 +12,8 @@ const OUT = 'public/images'
 const WIDTHS = [640, 1280, 1920]
 
 await mkdir(OUT, { recursive: true })
-// obra-*.png son fuentes del hero: la página usa sus versiones alineadas (hero-NN-*.png)
-const files = (await readdir(SRC)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f) && !f.startsWith('obra-'))
+// obra-*.png y *-fuente.png son fuentes: la página usa sus versiones alineadas (hero-NN-*.png)
+const files = (await readdir(SRC)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f) && !f.startsWith('obra-') && !/-fuente\.\w+$/.test(f))
 for (const file of files) {
   const { name } = parse(file)
   const src = join(SRC, file)

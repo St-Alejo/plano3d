@@ -5,11 +5,13 @@
  * A la derecha, la lista de espacios marca dónde se está. Con movimiento reducido (o sin
  * `position: sticky`) los espacios se muestran como una galería.
  */
-import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'motion/react'
-import { useRef, useState } from 'react'
+import { animate, motion, useMotionValue, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Photo, type PhotoName } from '@/components/Photo'
 import { prefersReducedMotion } from '@/features/viewer3d/motion'
+import { CoverBox, Glow, Hotspot, type Spot } from './interactive'
+import { useLight } from './useLight'
 
 interface Room {
   photo: PhotoName
@@ -20,6 +22,10 @@ interface Room {
 }
 
 const DOOR: PhotoName = 'interior-umbral'
+const DOOR_CLOSED: PhotoName = 'interior-umbral-cerrada'
+/** la hoja de la puerta, en % de la foto; el punto va junto a la manija */
+const DOOR_SPOT: Spot = { x: 40, y: 9, w: 22, h: 80, dotX: 56, dotY: 50 }
+const GARLAND_SPOT: Spot = { x: 18, y: 0, w: 80, h: 34, dotX: 58, dotY: 24 }
 
 const ROOMS: Room[] = [
   { photo: 'interior-entrada', floor: 'Piso 1', name: 'Entrada', text: 'El hall y la escalera: la casa empieza en la puerta, no en la fachada.', weight: 1 },
@@ -84,10 +90,33 @@ function Door({ progress }: { progress: MotionValue<number> }) {
   const visibility = useTransform(progress, (p) => (p > end + 0.002 ? 'hidden' : 'visible'))
   // llega desde la oscuridad con la que termina el hero
   const dark = useTransform(progress, [0, START[0]! * 0.35], [0.7, 0])
+  // la puerta llega cerrada: se abre al pasar el cursor, al tocar el punto o sola antes de cruzarla
+  const door = useLight(false, false)
+  const { setOn } = door
+  const [near, setNear] = useState(true)
+  useMotionValueEvent(progress, 'change', (p) => {
+    if (p > START[0]! * 0.5) setOn(true)
+    setNear(p < START[0]! * 0.62)
+  })
   return (
     <motion.div className="absolute inset-0 z-[2] origin-[52%_50%] will-change-transform" style={{ scale, opacity, visibility }}>
       <Photo name={DOOR} decorative sizes="100vw" className="size-full object-cover" />
-      <motion.div aria-hidden className="absolute inset-0 bg-black" style={{ opacity: dark }} />
+      <motion.div className="absolute inset-0" style={{ opacity: door.off }}>
+        <Photo name={DOOR_CLOSED} decorative sizes="100vw" className="size-full object-cover" />
+      </motion.div>
+      <CoverBox aspect={1672 / 941}>
+        <Glow x={50} y={58} r={34} opacity={door.glow} />
+        <Hotspot
+          spot={DOOR_SPOT}
+          active={near}
+          pressed={door.on}
+          label={door.on ? 'Cerrar la puerta' : 'Abrir la puerta'}
+          hint={door.on ? 'Cerrar' : 'Abre la puerta'}
+          onHover={() => setOn(true)}
+          onToggle={() => setOn((v) => !v)}
+        />
+      </CoverBox>
+      <motion.div aria-hidden className="pointer-events-none absolute inset-0 bg-black" style={{ opacity: dark }} />
     </motion.div>
   )
 }
@@ -98,7 +127,7 @@ function Door({ progress }: { progress: MotionValue<number> }) {
  * la doble exposición turbia de un fundido entre cuartos distintos). Mientras dura, la cámara
  * se desliza hacia un lado (alternando) y se acerca apenas.
  */
-function RoomPhoto({ progress, index }: { progress: MotionValue<number>; index: number }) {
+function RoomPhoto({ progress, index, active }: { progress: MotionValue<number>; index: number; active: boolean }) {
   const s = START[index]!
   const e = START[index + 1]!
   const dir = index % 2 === 0 ? 1 : -1
@@ -117,8 +146,53 @@ function RoomPhoto({ progress, index }: { progress: MotionValue<number>; index: 
     <motion.div className="absolute inset-0" style={{ opacity, visibility, maskImage: mask, WebkitMaskImage: mask }}>
       <motion.div className="size-full will-change-transform" style={{ scale, x }}>
         <Photo name={ROOMS[index]!.photo} decorative sizes="100vw" className="size-full object-cover" />
+        {index === ROOMS.length - 1 && <TerraceLights progress={progress} active={active} />}
       </motion.div>
     </motion.div>
+  )
+}
+
+/**
+ * La terraza llega con las guirnaldas apagadas. Al pasar el cursor por ellas (o tocar el punto)
+ * se encienden de izquierda a derecha, bombillo a bombillo, con un parpadeo; si nadie lo hace,
+ * se encienden solas al final.
+ */
+function TerraceLights({ progress, active }: { progress: MotionValue<number>; active: boolean }) {
+  const [on, setOn] = useState(false)
+  const sweep = useMotionValue(0)
+  const glow = useMotionValue(0)
+  useEffect(() => {
+    const a = animate(sweep, on ? 1 : 0, { duration: on ? 1.6 : 0.4, ease: on ? [0.3, 0, 0.2, 1] : 'easeIn' })
+    const b = animate(glow, on ? [0, 0.45, 0.25] : 0, { duration: on ? 2 : 0.4 })
+    return () => (a.stop(), b.stop())
+  }, [on, sweep, glow])
+  // lo encendido avanza con un borde suave; un poco de parpadeo en el borde
+  const mask = useTransform(sweep, (s) => (s >= 1 ? 'linear-gradient(transparent, transparent)' : `linear-gradient(to right, transparent ${s * 130 - 25}%, #000 ${s * 130}%)`))
+  const auto = useRef(false)
+  useMotionValueEvent(progress, 'change', (p) => {
+    if (p > 0.965 && !auto.current) {
+      auto.current = true
+      setOn(true)
+    }
+  })
+  return (
+    <>
+      <motion.div className="absolute inset-0" style={{ maskImage: mask, WebkitMaskImage: mask }}>
+        <Photo name="interior-terraza-apagada" decorative sizes="100vw" className="size-full object-cover" />
+      </motion.div>
+      <CoverBox aspect={1671 / 941}>
+        <Glow x={55} y={18} r={60} opacity={glow} />
+        <Hotspot
+          spot={GARLAND_SPOT}
+          active={active}
+          pressed={on}
+          label={on ? 'Apagar las luces de la terraza' : 'Encender las luces de la terraza'}
+          hint={on ? 'Apagar' : 'Enciende las guirnaldas'}
+          onHover={() => setOn(true)}
+          onToggle={() => setOn((v) => !v)}
+        />
+      </CoverBox>
+    </>
   )
 }
 
@@ -160,14 +234,14 @@ function AnimatedWalk() {
     <section id="recorrido" ref={box} aria-labelledby="recorrido-title" className="l-dark relative h-[620vh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <div className="absolute inset-0 bg-(--l-bg)">
-          {near && ROOMS.map((r, i) => <RoomPhoto key={r.photo} progress={scrollYProgress} index={i} />)}
+          {near && ROOMS.map((r, i) => <RoomPhoto key={r.photo} progress={scrollYProgress} index={i} active={room === i} />)}
           <Door progress={scrollYProgress} />
         </div>
         <div aria-hidden className="pointer-events-none absolute inset-0 z-[3] bg-[radial-gradient(ellipse_at_50%_45%,transparent_50%,rgb(0_0_0/0.4))]" />
         <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[65%] bg-linear-to-t from-black/90 via-black/45 to-transparent" />
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-[3] h-40 bg-linear-to-b from-black/55 to-transparent" />
 
-        <div className="frame relative z-[4] grid h-full grid-cols-1 items-end gap-10 pb-10 sm:pb-14 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        <div className="frame pointer-events-none relative z-[4] grid h-full grid-cols-1 items-end gap-10 pb-10 sm:pb-14 lg:grid-cols-[minmax(0,1fr)_16rem]">
           <div className="grid">
             <motion.div className="[grid-area:1/1] self-end" style={{ opacity: introOpacity, y: introY }}>
               <p className="t-label text-(--l-text-accent)">Recorrido</p>

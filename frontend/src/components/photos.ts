@@ -20,7 +20,10 @@ export const PHOTOS = {
   'hero-11-etapa-5-acabados': { w: 1920, h: 1080, alt: 'La casa terminada de día, con portón de madera y balcón de vidrio' },
   'hero-12-obra-07-hora-dorada': { w: 1920, h: 1080, alt: 'La casa terminada con la luz dorada del atardecer' },
   'hero-13-etapa-6-hogar': { w: 1920, h: 1080, alt: 'La casa al anochecer, con las luces de adentro encendidas' },
+  'hero-13-hogar-apagado': { w: 1920, h: 1080, alt: 'La casa al anochecer con todas las luces apagadas' },
   // recorrido por dentro
+  'interior-umbral-cerrada': { w: 1672, h: 941, alt: 'La puerta principal de madera cerrada, de noche' },
+  'interior-terraza-apagada': { w: 1671, h: 941, alt: 'La terraza al anochecer con las guirnaldas apagadas' },
   'interior-umbral': { w: 1672, h: 941, alt: 'La puerta principal de madera entreabierta de noche, con la luz del hall saliendo' },
   'interior-entrada': { w: 1671, h: 941, alt: 'El hall de entrada con la escalera de madera flotante y un muro de ladrillo' },
   'interior-comedor': { w: 1672, h: 941, alt: 'La sala-comedor en doble altura con un ventanal al patio y las montañas' },

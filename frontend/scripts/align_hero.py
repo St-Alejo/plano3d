@@ -31,6 +31,13 @@ SEQ = [
     "obra-07-hora-dorada",
     "etapa-6-hogar",
 ]
+# variantes del mismo cuadro (luces apagadas) que se alinean y recortan igual: nombre fuente -> salida
+VARIANTS = {"obra-08-hogar-apagado": "hero-13-hogar-apagado"}
+# pares interiores: la variante se alinea sobre su foto base y conserva su tamaño
+PAIRS = [
+    ("interior-umbral", "interior-umbral-cerrada-fuente", "interior-umbral-cerrada"),
+    ("interior-terraza", "interior-terraza-apagada-fuente", "interior-terraza-apagada"),
+]
 OUT_W, OUT_H = 1920, 1080
 
 
@@ -65,7 +72,7 @@ def main() -> None:
     h, w = ref.shape[:2]
     warped: dict[str, np.ndarray] = {}
     valid = np.ones((h, w), np.uint8)
-    for name in SEQ:
+    for name in [*SEQ, *VARIANTS]:
         img = load(name)
         print(name)
         if name == REF:
@@ -98,6 +105,15 @@ def main() -> None:
         crop = warped[name][y0:y1, x0:x1]
         crop = cv2.resize(crop, (OUT_W, OUT_H), interpolation=cv2.INTER_LANCZOS4)
         cv2.imwrite(str(SRC / f"hero-{i:02d}-{name}.png"), crop)
+    for name, out_name in VARIANTS.items():
+        crop = cv2.resize(warped[name][y0:y1, x0:x1], (OUT_W, OUT_H), interpolation=cv2.INTER_LANCZOS4)
+        cv2.imwrite(str(SRC / f"{out_name}.png"), crop)
+    for base, src, out_name in PAIRS:
+        b, v = load(base), load(src)
+        print(src)
+        M = match(b, v)
+        out = cv2.warpAffine(v, M, (b.shape[1], b.shape[0]), flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REPLICATE)
+        cv2.imwrite(str(SRC / f"{out_name}.png"), out)
     # el plano sobre la mesa: solo recorte 16:9 al mismo tamaño
     plano = load("etapa-1-plano")
     ph, pw = plano.shape[:2]

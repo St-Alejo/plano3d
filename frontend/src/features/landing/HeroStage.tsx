@@ -13,6 +13,8 @@ import { useRef, useState, type ReactNode } from 'react'
 import { Photo, type PhotoName } from '@/components/Photo'
 import { prefersReducedMotion } from '@/features/viewer3d/motion'
 import { EASE } from './ease'
+import { CoverBox, Glow, Hotspot, type Spot } from './interactive'
+import { useLight } from './useLight'
 import { STAGES } from './sequence'
 
 /** Cuadros del time-lapse: foto, etapa a la que pertenece, rótulo y peso (cuánto scroll dura). */
@@ -203,6 +205,46 @@ function StageLayer({ progress, index, children }: { progress: MotionValue<numbe
   )
 }
 
+/** La casa de noche: llega con las luces apagadas y se encienden al pasar el cursor, al tocar el
+ * punto o, si nadie lo hace, solas al final del recorrido. */
+const HOUSE: Spot = { x: 20, y: 4, w: 49, h: 82, dotX: 44, dotY: 38 }
+
+function HouseLights({ progress, active }: { progress: MotionValue<number>; active: boolean }) {
+  const s = START[F - 1]!
+  const frameIn = useTransform(progress, [s - XFADE / 2, s + XFADE / 2], [0, 1])
+  const light = useLight()
+  const offOpacity = useTransform(() => frameIn.get() * light.off.get())
+  const glow = useTransform(() => frameIn.get() * light.glow.get())
+  const auto = useRef(false)
+  const { setOn } = light
+  useMotionValueEvent(progress, 'change', (p) => {
+    if (p > 0.975 && !auto.current) {
+      auto.current = true
+      setOn(true)
+    }
+  })
+  const [narrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches)
+  return (
+    <div className="absolute inset-0">
+      <motion.div className="absolute inset-0" style={{ opacity: offOpacity }}>
+        <Photo name="hero-13-hogar-apagado" decorative className="size-full object-cover object-[38%_50%] sm:object-center" />
+      </motion.div>
+      <CoverBox aspect={16 / 9} posX={narrow ? 0.38 : 0.5}>
+        <Glow x={45} y={46} r={42} opacity={glow} />
+        <Hotspot
+          spot={HOUSE}
+          active={active}
+          pressed={light.on}
+          label={light.on ? 'Apagar las luces de la casa' : 'Encender las luces de la casa'}
+          hint={light.on ? 'Apagar' : 'Enciende las luces'}
+          onHover={() => setOn(true)}
+          onToggle={() => setOn((v) => !v)}
+        />
+      </CoverBox>
+    </div>
+  )
+}
+
 /** La escena fijada: `useScroll` necesita que la sección exista, por eso vive en su propio componente. */
 function AnimatedHero({ actions }: { actions: ReactNode }) {
   const stage = useRef<HTMLElement>(null)
@@ -235,6 +277,7 @@ function AnimatedHero({ actions }: { actions: ReactNode }) {
             {/* en el celular la obra sube: lo que se construye queda encima del texto y no debajo */}
             <div className="absolute inset-0 max-sm:top-[-2%] max-sm:bottom-[26%]">
               {FRAMES.map((f, i) => (i === 0 || i > reach ? null : <FramePhoto key={f.photo} progress={scrollYProgress} index={i} />))}
+              {reach >= F - 1 && <HouseLights progress={scrollYProgress} active={frame === F - 1} />}
             </div>
           </motion.div>
           <PlanDive progress={scrollYProgress} />
@@ -265,7 +308,7 @@ function AnimatedHero({ actions }: { actions: ReactNode }) {
           </AnimatePresence>
         </div>
 
-        <div className="frame relative z-[4] flex h-full flex-col justify-end pb-8 sm:pb-10">
+        <div className="frame pointer-events-none relative z-[4] flex h-full flex-col justify-end pb-8 sm:pb-10">
           <div className="grid">
             <StageLayer progress={scrollYProgress} index={0}>
               <Headline>{actions}</Headline>
