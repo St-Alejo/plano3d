@@ -5,16 +5,51 @@ import { useState } from 'react'
 import { useTheme } from '@/lib/theme'
 import { HeaderSlotContext } from './headerSlot'
 
-/** Marca: el mismo ícono y nombre que la landing. */
+/**
+ * Isotipo: la planta de la casa (un rectángulo con un muro interior y el vano de la puerta)
+ * que se levanta en volumen. Ladrillo sobre el color de fondo; hereda el tamaño por clase.
+ */
+export function Mark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <rect x="1" y="1" width="30" height="30" rx="8" fill="#a84b26" />
+      <path d="M9 23V12.5L16 8l7 4.5V23" fill="none" stroke="#fbf9f5" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M9 23h5.5v-5.5h3V23H23" fill="none" stroke="#fbf9f5" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** Marca: el mismo isotipo y nombre que la landing. */
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="group flex min-h-11 min-w-11 shrink-0 items-center gap-2 text-[17px] font-medium tracking-[-0.03em]" aria-label="Plano 3D, inicio">
-      <svg viewBox="0 0 24 24" className="size-6 transition-transform duration-500 ease-out group-hover:-rotate-8" aria-hidden>
-        <rect x="2.5" y="2.5" width="19" height="19" rx="4" className="fill-brand" />
-        <path d="M7 17V7h6v5h4v5Z" fill="none" className="stroke-brand-ink" strokeWidth="1.8" strokeLinejoin="round" />
-      </svg>
+    <Link to="/" className="group flex min-h-11 min-w-11 shrink-0 items-center gap-2.5 text-[17px] font-semibold tracking-[-0.02em]" aria-label="Plano 3D, inicio">
+      <Mark className="size-7 transition-transform duration-500 ease-out group-hover:-rotate-6" />
       <span className={compact ? 'hidden md:inline' : undefined}>Plano 3D</span>
     </Link>
+  )
+}
+
+/** Pie de las pantallas de la app (proyectos, nueva captura, 404): marca y enlaces. */
+function AppFooter() {
+  return (
+    <footer className="border-t border-line">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-subtle sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="flex items-center gap-2">
+          <Mark className="size-5" /> Plano 3D · del plano a la casa
+        </p>
+        <nav aria-label="Pie" className="flex flex-wrap gap-x-5">
+          <Link to="/" className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-fg pointer-fine:min-h-8">
+            Inicio
+          </Link>
+          <Link to="/proyectos" className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-fg pointer-fine:min-h-8">
+            Mis proyectos
+          </Link>
+          <a href="/tutoriales/crear.webm" className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-fg pointer-fine:min-h-8">
+            Tutorial
+          </a>
+        </nav>
+      </div>
+    </footer>
   )
 }
 
@@ -35,8 +70,8 @@ export function AppShell() {
       >
         Saltar al contenido
       </a>
-      <header className={clsx('sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur-md', viewer && 'hidden')}>
-        <div className={clsx('mx-auto flex items-center justify-between gap-4 px-4', editor ? 'h-12 max-w-none' : 'h-14 max-w-7xl sm:px-6')}>
+      <header className={clsx('sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-md backdrop-saturate-150', viewer && 'hidden')}>
+        <div className={clsx('mx-auto flex items-center justify-between gap-4 px-4', editor ? 'h-12 max-w-none' : 'h-16 max-w-7xl sm:px-6')}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <Logo compact={!!editor} />
             {editor && <div ref={setSlot} className="flex min-w-0 flex-1 items-center gap-2" />}
@@ -48,8 +83,8 @@ export function AppShell() {
               end
               className={({ isActive }) =>
                 clsx(
-                  'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm transition-colors pointer-fine:min-h-9',
-                  isActive ? 'bg-raised text-fg' : 'text-muted hover:text-fg',
+                  'relative inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors pointer-fine:min-h-9',
+                  isActive ? 'text-fg after:absolute after:inset-x-3.5 after:bottom-1 after:h-0.5 after:rounded-full after:bg-accent' : 'text-muted hover:text-fg',
                 )
               }
             >
@@ -59,7 +94,7 @@ export function AppShell() {
             {!editor && (
             <Link
               to="/nuevo"
-              className="ml-1 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-medium text-brand-ink shadow-sm transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-110 pointer-fine:h-9"
+              className="ml-1 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand px-4 text-sm font-medium text-brand-ink shadow-card transition-[filter,transform,box-shadow] duration-200 hover:-translate-y-px hover:shadow-lift hover:brightness-110 pointer-fine:h-9"
             >
               <Plus className="size-4" aria-hidden />
               <span className="hidden sm:inline">Nuevo plano</span>
@@ -80,6 +115,7 @@ export function AppShell() {
       <main id="main" className="flex min-h-0 flex-1 flex-col">
         <Outlet />
       </main>
+      {!editor && !viewer && <AppFooter />}
     </div>
     </HeaderSlotContext.Provider>
   )

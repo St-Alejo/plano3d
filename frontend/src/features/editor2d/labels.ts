@@ -1,6 +1,6 @@
 /** Etiquetas del plano que no se encimen: el nombre del ambiente se ajusta a su ancho y las cotas que chocan se omiten. */
 
-/** Ancho aproximado de un carácter respecto al tamaño de letra (Geist / Geist Mono). */
+/** Ancho aproximado de un carácter respecto al tamaño de letra (Hanken Grotesk / JetBrains Mono). */
 const CHAR = 0.6
 const MIN_FONT_RATIO = 0.7
 

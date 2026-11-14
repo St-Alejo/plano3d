@@ -1,65 +1,77 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/fraunces/opsz.css';
+@import '@fontsource-variable/fraunces/opsz-italic.css';
+@import '@fontsource-variable/hanken-grotesk/index.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
 
 /*
- * Sistema de diseño de la app: la misma identidad que la landing. Papel claro,
- * tinta grafito y un único acento verde (acciones, selección y foco); ámbar para
- * baja confianza y rojo para errores. Geist para todo el texto, Geist Mono para
- * cifras y etiquetas técnicas. Los componentes nunca usan hex crudos: solo tokens.
+ * Sistema de diseño "Obra limpia": una sola marca para la landing y la app, tomada de la
+ * mampostería confinada. Fondo hueso (mortero), tinta grafito, gris concreto para lo
+ * secundario y un único acento ladrillo para la acción, la selección y el foco; verde obra
+ * solo para estados correctos. Fraunces para titulares, Hanken Grotesk para la interfaz y
+ * JetBrains Mono para cotas y cifras. Los componentes nunca usan hex crudos: solo tokens.
  */
 @theme {
-  --color-canvas: #f5f5f1;
-  --color-surface: #ffffff;
-  --color-raised: #eeeee8;
-  --color-line: rgb(28 31 29 / 0.09);
-  --color-line-strong: rgb(28 31 29 / 0.2);
-  --color-fg: #1c1f1d;
+  --color-canvas: #f2eee6;
+  --color-surface: #fbf9f5;
+  --color-raised: #e9e4da;
+  --color-line: rgb(26 28 27 / 0.1);
+  --color-line-strong: rgb(26 28 27 / 0.22);
+  --color-fg: #1a1c1b;
   /* muted = texto secundario; subtle = metadatos (los dos pasan AA sobre canvas y surface) */
-  --color-muted: #3f4642;
-  --color-subtle: #646b67;
-  --color-accent: #2f6b55;
-  --color-accent-dim: #5a8f7b;
+  --color-muted: #45443f;
+  --color-subtle: #615f59;
+  /* acento ladrillo oscuro: texto, foco y selección (5,6:1 sobre hueso) */
+  --color-accent: #9a4422;
+  --color-accent-dim: #c98a6c;
   --color-accent-ink: #ffffff;
-  --color-warn: #865200;
-  --color-danger: #b3261e;
-  --color-ok: #236640;
-  --color-paper: #f3f2ed;
-  --color-ink: #1c1f1d;
-  /* acción primaria (un verde más profundo que el acento, que queda para foco y selección) */
-  --color-brand: #24543f;
+  --color-warn: #7d5300;
+  --color-danger: #a8261c;
+  --color-ok: #2f6b55;
+  --color-paper: #f6f2ea;
+  --color-ink: #1a1c1b;
+  /* acción primaria: ladrillo pleno con texto blanco (5,7:1) */
+  --color-brand: #a84b26;
   --color-brand-ink: #ffffff;
 
-  --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-serif: 'Fraunces Variable', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* escala única: sm controles chicos, md botones y campos, lg paneles y tarjetas, xl diálogos y bloques grandes */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-xl: 22px;
+
+  --shadow-card: 0 1px 0 rgb(26 28 27 / 0.04), 0 12px 32px -18px rgb(60 40 25 / 0.28);
+  --shadow-lift: 0 2px 0 rgb(26 28 27 / 0.04), 0 28px 60px -24px rgb(60 40 25 / 0.38);
 }
 
-/* Tema oscuro: carbón neutro (sin azul) con el verde aclarado para mantener el contraste. */
+/* Tema oscuro "planta de noche": grafito cálido con el ladrillo aclarado para el contraste. */
 [data-theme='dark'] {
-  --color-canvas: #111312;
-  --color-surface: #181b19;
-  --color-raised: #222624;
-  --color-line: rgb(236 239 233 / 0.08);
-  --color-line-strong: rgb(236 239 233 / 0.18);
-  --color-fg: #eceee9;
-  --color-muted: #bcc2bd;
-  --color-subtle: #8a918c;
-  --color-accent: #7cc4a3;
-  --color-accent-dim: #4f8f74;
-  --color-accent-ink: #0c1d15;
+  --color-canvas: #121413;
+  --color-surface: #1a1d1b;
+  --color-raised: #242725;
+  --color-line: rgb(242 238 230 / 0.09);
+  --color-line-strong: rgb(242 238 230 / 0.2);
+  --color-fg: #f2eee6;
+  --color-muted: #cdc7bb;
+  --color-subtle: #9c968b;
+  --color-accent: #e08a5f;
+  --color-accent-dim: #9a5a3c;
+  --color-accent-ink: #1a0e08;
   --color-warn: #e3a94f;
   --color-danger: #f07167;
-  --color-ok: #74cf98;
-  --color-paper: #ecebe5;
-  --color-ink: #1c1f1d;
-  --color-brand: #8fd1b2;
-  --color-brand-ink: #0c1d15;
+  --color-ok: #7cc4a3;
+  --color-paper: #ece6da;
+  --color-ink: #1a1c1b;
+  --color-brand: #e08a5f;
+  --color-brand-ink: #1a0e08;
+  --shadow-card: 0 1px 0 rgb(0 0 0 / 0.3), 0 16px 36px -20px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 0 rgb(0 0 0 / 0.3), 0 30px 64px -24px rgb(0 0 0 / 0.8);
 }
 
 @layer base {
@@ -85,8 +97,9 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.025em;
+    font-weight: 440;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
   }
   :focus-visible {
     outline: 2px solid var(--color-accent);
@@ -127,30 +140,48 @@
 }
 
 /*
- * Landing: tema de noche propio, independiente del tema de la app (como la obra vista al
- * atardecer). Tinta hueso sobre noche, un solo acento dorado (la acción y lo que avanza) y la
- * hoja clara donde se dibuja el plano. Instrument Serif para los titulares, Geist para leer.
- * Contrastes: hueso sobre noche 15:1, `--l-dim` sobre noche 7,9:1, noche sobre oro 9,6:1.
+ * Landing: la misma marca "Obra limpia", con su propia escala editorial. Va siempre en claro
+ * (hueso y grafito) con bandas oscuras (`.l-dark`) para los momentos de pausa; las fotos de
+ * la obra llevan su propio velo. Los `--l-*` son los roles de la página:
+ *   bg fondo · card bloque · fg texto · dim secundario · rule líneas · accent acción · on-accent.
+ * Contrastes: grafito sobre hueso 15:1, dim sobre hueso 7,2:1, blanco sobre ladrillo 5,7:1.
  */
+.landing,
+.landing .l-light {
+  --l-bg: #f2eee6;
+  --l-card: #e9e3d8;
+  --l-fg: #1a1c1b;
+  --l-dim: #4f4d47;
+  --l-rule: rgb(26 28 27 / 0.14);
+  --l-accent: #a84b26;
+  --l-accent-hi: #8f3d1c;
+  --l-on-accent: #ffffff;
+  --l-text-accent: #9a4422;
+  --l-sheet: #faf7f1;
+}
+.landing .l-dark {
+  --l-bg: #141615;
+  --l-card: #1e211f;
+  --l-fg: #f2eee6;
+  --l-dim: #bdb6a9;
+  --l-rule: rgb(242 238 230 / 0.16);
+  --l-accent: #d9774e;
+  --l-accent-hi: #e8916b;
+  --l-on-accent: #1a0e08;
+  --l-text-accent: #e8916b;
+  background: var(--l-bg);
+  color: var(--l-fg);
+}
 .landing {
-  --l-night: #0e0f0d;
-  --l-night-2: #171916;
-  --l-ink: #f1ece2;
-  --l-dim: #b5ae9f;
-  --l-rule: rgb(241 236 226 / 0.16);
-  --l-signal: #e3b341;
-  --l-signal-hi: #f0c55e;
-  --l-on-signal: #14120c;
-  --l-sheet: #ebe6dc;
-  background: var(--l-night);
-  color: var(--l-ink);
-  font-family: 'Geist', var(--font-sans);
+  background: var(--l-bg);
+  color: var(--l-fg);
+  font-family: var(--font-sans);
   font-size: 17px;
 }
 /* el desplazamiento suave lo hace Lenis; esto deja sitio a la cabecera fija si no está activo */
 html:has(.landing) {
   scroll-padding-top: 6rem;
-  background: #0e0f0d;
+  background: #f2eee6;
 }
 /* un solo marco para toda la página: márgenes iguales a los dos lados */
 .landing .frame {
@@ -164,37 +195,51 @@ html:has(.landing) {
     padding-inline: 2rem;
   }
 }
-/* titulares en serif, en peso normal y apretados, como en un cartel de obra */
+/* titulares en Fraunces con óptica de cartel: grandes, apretados y en peso ligero */
 .landing .display,
 .landing h1,
 .landing h2 {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 380;
+  font-optical-sizing: auto;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 .landing .display em,
-.landing h1 em {
+.landing h1 em,
+.landing h2 em {
   font-style: italic;
+  font-weight: 340;
 }
 .landing p {
   text-wrap: pretty;
 }
-/* cinco tamaños para toda la página: display, sección, título, entrada y nota */
+/* rótulo técnico: mono, mayúsculas y espaciado, como el rótulo de una lámina */
+.landing .t-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* seis tamaños para toda la página: héroe, display, sección, título, entrada y nota */
+.landing .t-hero {
+  font-size: clamp(3.25rem, 9vw, 8.5rem);
+  line-height: 0.9;
+}
 .landing .t-display {
   font-size: clamp(3rem, 7vw, 6.5rem);
   line-height: 0.92;
 }
 .landing .t-h2 {
-  font-size: clamp(2.25rem, 4vw, 3.5rem);
-  line-height: 1;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 0.98;
 }
 .landing .t-h3 {
-  font-size: 1.75rem;
-  line-height: 1.1;
+  font-size: clamp(1.5rem, 2vw, 1.875rem);
+  line-height: 1.12;
 }
 .landing .t-lead {
-  font-size: 1.1875rem;
+  font-size: clamp(1.125rem, 1.4vw, 1.3125rem);
   line-height: 1.5;
 }
 .landing .t-small {
@@ -202,12 +247,38 @@ html:has(.landing) {
   line-height: 1.45;
 }
 .landing ::selection {
-  background: var(--l-signal);
-  color: var(--l-on-signal);
+  background: var(--l-accent);
+  color: var(--l-on-accent);
 }
 .landing :focus-visible {
-  outline: 2px solid var(--l-signal);
+  outline: 2px solid var(--l-accent);
   outline-offset: 3px;
+}
+/* enlace con subrayado que crece desde la izquierda */
+.landing .l-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.landing .l-link:hover,
+.landing .l-link:focus-visible {
+  background-size: 100% 1px;
+}
+/* grano muy fino sobre las bandas oscuras para que no se vean planas */
+.landing .l-grain {
+  position: relative;
+  isolation: isolate;
+}
+.landing .l-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {

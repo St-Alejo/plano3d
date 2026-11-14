@@ -14,7 +14,7 @@
     display: block;
     color: #16140f;
     background: #fff;
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-family: 'Hanken Grotesk Variable', system-ui, sans-serif;
     font-size: 11pt;
   }
   .print-sheet table {
@@ -29,6 +29,6 @@
   }
   .print-sheet .num {
     text-align: right;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 }

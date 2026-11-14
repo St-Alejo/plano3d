@@ -9,8 +9,8 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand text-brand-ink border-transparent shadow-sm hover:brightness-110',
-  secondary: 'bg-surface text-fg border-line-strong shadow-xs hover:border-fg/40 hover:bg-raised/60',
+  primary: 'bg-brand text-brand-ink border-transparent shadow-card hover:-translate-y-px hover:shadow-lift hover:brightness-110 active:translate-y-0',
+  secondary: 'bg-surface text-fg border-line-strong hover:border-fg/50 hover:bg-raised/50',
   ghost: 'bg-transparent text-muted border-transparent hover:text-fg hover:bg-raised',
   danger: 'bg-transparent text-danger border-danger/40 hover:bg-danger/10',
 }
@@ -36,7 +36,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={disabled || loading}
       className={clsx(
-        'inline-flex shrink-0 items-center justify-center rounded-md border font-medium transition-[background-color,border-color,color,filter,box-shadow] duration-200 pointer-coarse:min-w-11',
+        'inline-flex shrink-0 items-center justify-center rounded-full border font-medium tracking-[-0.005em] transition-[background-color,border-color,color,filter,box-shadow,transform] duration-200 pointer-coarse:min-w-11',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],
         sizes[size],
@@ -65,7 +65,7 @@ export function IconButton({ label, active, shortcut, className, children, ...re
       aria-pressed={active}
       title={shortcut ? `${label} (${shortcut})` : label}
       className={clsx(
-        'inline-flex size-10 shrink-0 pointer-coarse:size-11 items-center justify-center rounded-md border transition-colors duration-150',
+        'inline-flex size-10 shrink-0 pointer-coarse:size-11 items-center justify-center rounded-lg border transition-colors duration-150',
         'disabled:cursor-not-allowed disabled:opacity-40',
         active ? 'border-transparent bg-accent text-accent-ink shadow-sm' : 'border-transparent text-muted hover:bg-raised hover:text-fg',
         className,
@@ -102,10 +102,10 @@ export const TextField = forwardRef<
   const inputId = id ?? `f-${label.replace(/\W+/g, '-').toLowerCase()}`
   return (
     <div className={clsx('flex flex-col gap-1.5', className)}>
-      <label htmlFor={inputId} className="text-sm font-medium text-muted">
+      <label htmlFor={inputId} className="text-sm font-medium text-fg">
         {label}
       </label>
-      <div className="flex items-center rounded-md border border-line-strong bg-surface transition-[border-color,box-shadow] focus-within:border-accent focus-within:ring-3 focus-within:ring-accent/15">
+      <div className="flex items-center rounded-lg border border-line-strong bg-surface transition-[border-color,box-shadow] hover:border-fg/40 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/12">
         <input
           ref={ref}
           id={inputId}
@@ -130,20 +130,21 @@ export function Spinner({ label = 'Cargando' }: { label?: string }) {
 
 export function ErrorState({ title, message, action }: { title: string; message?: string; action?: ReactNode }) {
   return (
-    <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-lg border border-danger/25 bg-danger/5 p-8 text-center">
+    <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-danger/25 bg-danger/5 p-10 text-center">
       <AlertTriangle className="size-8 text-danger" aria-hidden />
-      <h2 className="text-lg">{title}</h2>
+      <h2 className="text-2xl">{title}</h2>
       {message && <p className="text-sm text-muted">{message}</p>}
       {action}
     </div>
   )
 }
 
-export function EmptyState({ icon, title, message, action }: { icon: ReactNode; title: string; message: string; action?: ReactNode }) {
+/** Estado vacío: con `art` (una foto de la marca) muestra la imagen en vez del ícono. */
+export function EmptyState({ icon, title, message, action, art }: { icon: ReactNode; title: string; message: string; action?: ReactNode; art?: ReactNode }) {
   return (
-    <div className="blueprint-grid flex flex-col items-center gap-4 rounded-lg border border-dashed border-line-strong bg-surface/60 px-6 py-20 text-center">
-      <div className="grid size-16 place-items-center rounded-lg bg-accent/10 text-accent">{icon}</div>
-      <h2 className="text-2xl tracking-[-0.03em]">{title}</h2>
+    <div className="flex flex-col items-center gap-4 overflow-hidden rounded-xl border border-line bg-surface px-6 pt-0 pb-16 text-center shadow-card">
+      {art ? <div className="-mx-6 mb-4 aspect-[21/9] w-[calc(100%+3rem)] overflow-hidden">{art}</div> : <div className="mt-16 grid size-16 place-items-center rounded-xl bg-accent/10 text-accent">{icon}</div>}
+      <h2 className="text-3xl tracking-[-0.03em]">{title}</h2>
       <p className="max-w-sm text-sm text-muted">{message}</p>
       {action}
     </div>
@@ -254,7 +255,7 @@ export function Menu({ trigger, items, align = 'end' }: { trigger: ReactNode; it
         <DropdownMenu.Content
           align={align}
           sideOffset={6}
-          className="z-50 min-w-48 rounded-lg border border-line-strong bg-surface p-1 shadow-xl"
+          className="z-50 min-w-52 rounded-xl border border-line bg-surface p-1.5 shadow-lift"
         >
           {items.map((it) => {
             const body = (
@@ -265,7 +266,7 @@ export function Menu({ trigger, items, align = 'end' }: { trigger: ReactNode; it
               </>
             )
             const cls = clsx(
-              'flex min-h-9 cursor-default items-center gap-2 rounded-sm px-2 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-raised pointer-coarse:min-h-11',
+              'flex min-h-9 cursor-default items-center gap-2.5 rounded-md px-2.5 text-sm outline-none select-none data-[disabled]:opacity-40 data-[highlighted]:bg-raised pointer-coarse:min-h-11',
               it.danger ? 'text-danger' : 'text-fg',
             )
             return it.href ? (
