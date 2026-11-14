@@ -36,6 +36,8 @@ COPY alembic.ini pyproject.toml ./
 # red de muros (onnxruntime); los .pt de entrenamiento no entran (.dockerignore)
 COPY models ./models
 ENV PLANO3D_MODELS_DIR=/app/models
+# gasto y caché de las IA: el paquete instalado no se puede escribir, /app/data sí
+ENV PLANO3D_DATA_DIR=/app/data
 RUN pip install --no-deps . \
  && useradd --create-home --uid 10001 app \
  && mkdir -p /app/data && chown app /app/data

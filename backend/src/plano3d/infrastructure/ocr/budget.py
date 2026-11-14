@@ -19,7 +19,9 @@ from typing import Any
 
 log = logging.getLogger(__name__)
 
-DATA = Path(__file__).resolve().parents[4] / "data"
+#: carpeta de gasto y caché: ``PLANO3D_DATA_DIR`` en contenedores (el paquete instalado no se puede
+#: escribir); en desarrollo, ``backend/data``
+DATA = Path(os.environ.get("PLANO3D_DATA_DIR") or Path(__file__).resolve().parents[4] / "data")
 DEFAULT_BUDGET_USD = 1.0
 #: USD por millón de tokens (entrada, salida), precio de lista
 PRICES: dict[str, tuple[float, float]] = {

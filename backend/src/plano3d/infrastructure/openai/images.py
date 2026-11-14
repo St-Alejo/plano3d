@@ -26,12 +26,11 @@ import httpx
 
 from plano3d.application.ports import PhotoGenerator
 from plano3d.application.use_cases.errors import PhotosUnavailableError
-from plano3d.infrastructure.ocr.budget import ResponseCache
+from plano3d.infrastructure.ocr.budget import DATA, ResponseCache
 
 log = logging.getLogger(__name__)
 
 URL = "https://api.openai.com/v1/images/edits"
-DATA = Path(__file__).resolve().parents[4] / "data"
 DEFAULT_MODEL = "gpt-image-2"
 DEFAULT_QUALITY = "low"
 DEFAULT_BUDGET_USD = 1.8
