@@ -40,7 +40,7 @@ export default function QuantitiesDemo() {
   const figures = headline(rows, brick)
 
   return (
-    <div data-ui className="grid gap-6 rounded-lg bg-(--l-sheet) p-5 text-(--l-on-signal) sm:p-8">
+    <div data-ui className="l-light grid gap-6 rounded-xl bg-(--l-sheet) p-5 text-(--l-fg) shadow-[0_40px_80px_-40px_rgb(0_0_0/0.7)] sm:p-8">
       <div role="group" aria-label="Pieza de mampostería" className="inline-flex w-fit rounded-full bg-black/8 p-1">
         {BRICK_OPTIONS.map((o) => (
           <button
@@ -50,7 +50,7 @@ export default function QuantitiesDemo() {
             onClick={() => setBrick(o.id)}
             className={clsx(
               'min-h-11 rounded-full px-5 font-medium transition-colors duration-300',
-              brick === o.id ? 'bg-(--l-on-signal) text-(--l-sheet)' : 'hover:bg-black/8',
+              brick === o.id ? 'bg-(--l-fg) text-(--l-sheet)' : 'hover:bg-black/8',
             )}
           >
             {o.label}
@@ -61,8 +61,8 @@ export default function QuantitiesDemo() {
       <dl className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4" aria-live="polite">
         {figures.map((f) => (
           <div key={f.key} className="grid">
-            <dt className="order-2 t-small">{f.label}</dt>
-            <dd className="display order-1 text-5xl leading-none tabular-nums" data-figure={f.key}>
+            <dt className="order-2 mt-2 t-label text-(--l-dim)">{f.label}</dt>
+            <dd className="display order-1 text-5xl leading-none tabular-nums text-(--l-fg)" data-figure={f.key}>
               <Figure value={f.value} decimals={f.decimals} />
             </dd>
           </div>

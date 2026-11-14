@@ -1,7 +1,7 @@
 /**
- * Página de entrada. Va fuera del AppShell (tiene su propia cabecera y pie) y siempre en su
- * propio tema de noche, sin depender del tema de la app: la casa se construye en pantalla
- * completa y el resto de la página sigue en el mismo tono, con un solo acento dorado.
+ * Página de entrada. Va fuera del AppShell (tiene su propia cabecera y pie) y en la marca
+ * "Obra limpia": hueso y grafito, con bandas oscuras para las pausas. Abre con la casa que se
+ * construye a pantalla completa mientras bajas y sigue con una idea por pantalla.
  */
 import clsx from 'clsx'
 import { ArrowRight } from 'lucide-react'
@@ -9,13 +9,14 @@ import { motion, MotionConfig, useMotionValueEvent, useScroll } from 'motion/rea
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
+import { Mark } from '@/components/AppShell'
 import { HeroStage } from './HeroStage'
 import { Faq } from './Faq'
 import { Formats } from './Formats'
 import { HowItWorks } from './HowItWorks'
 import { Quantities } from './Quantities'
 import { EASE } from './ease'
-import { BeforeAfter, Capabilities, Closing, Footer, SectionHead } from './sections'
+import { BeforeAfter, CapabilitiesSection, Closing, Footer } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 
 const NAV = [
@@ -26,8 +27,8 @@ const NAV = [
 ]
 
 /**
- * Barra simple: el nombre, dos enlaces y una acción. Sobre la escena del hero va sin fondo;
- * al salir de ella toma el color de la página (sin vidrio ni sombra).
+ * Cabecera fija: sobre las fotos del hero va en blanco y sin fondo; al salir de ellas toma el
+ * hueso de la página con un borde fino.
  */
 function Masthead() {
   const { scrollY } = useScroll()
@@ -41,22 +42,26 @@ function Masthead() {
     <motion.header
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: EASE }}
-      className={clsx('fixed inset-x-0 top-0 z-30 transition-colors duration-300', solid ? 'bg-(--l-night)' : 'bg-transparent')}
+      transition={{ duration: 0.8, ease: EASE }}
+      className={clsx(
+        'fixed inset-x-0 top-0 z-30 transition-[background-color,border-color,color] duration-500',
+        solid ? 'border-b border-(--l-rule) bg-(--l-bg)/92 backdrop-blur-md' : 'l-dark border-b border-transparent !bg-transparent',
+      )}
     >
-      <div className="frame flex items-center justify-between gap-6 py-4">
-        <Link to="/" className="display t-h3 flex min-h-11 items-center leading-none" aria-label="Plano 3D, inicio">
-          Plano 3D
+      <div className="frame flex items-center justify-between gap-6 py-3">
+        <Link to="/" className="flex min-h-11 items-center gap-2.5 text-lg font-semibold tracking-tight" aria-label="Plano 3D, inicio">
+          <Mark className="size-7" />
+          <span aria-hidden>Plano 3D</span>
         </Link>
-        <nav aria-label="Secciones" className="flex items-center gap-2">
+        <nav aria-label="Secciones" className="flex items-center gap-1">
           {NAV.map((n) => (
-            <a key={n.href} href={n.href} className="hidden min-h-11 items-center px-3 t-small transition-opacity hover:opacity-70 md:inline-flex">
-              {n.label}
+            <a key={n.href} href={n.href} className="hidden min-h-11 items-center px-3 t-small md:inline-flex">
+              <span className="l-link">{n.label}</span>
             </a>
           ))}
           <Link
             to="/proyectos"
-            className="ml-2 inline-flex min-h-11 items-center rounded-full bg-(--l-ink) px-5 t-small font-medium text-(--l-night) transition-[background-color,color] duration-300 hover:bg-(--l-signal) hover:text-(--l-on-signal)"
+            className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-(--l-fg)/25 px-5 t-small font-medium transition-[background-color,color,border-color] duration-300 hover:border-(--l-fg) hover:bg-(--l-fg) hover:text-(--l-bg)"
           >
             Abrir la app
           </Link>
@@ -68,13 +73,19 @@ function Masthead() {
 
 function HeroActions() {
   return (
-    <div className="mt-8">
+    <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
       <Link
         to="/nuevo"
-        className="group inline-flex h-13 items-center gap-2 rounded-full bg-(--l-signal) px-7 font-medium text-(--l-on-signal) transition-[transform,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-signal-hi) active:translate-y-0"
+        className="group inline-flex h-14 items-center gap-3 rounded-full bg-(--l-accent) pr-2 pl-7 font-medium text-(--l-on-accent) shadow-[0_18px_40px_-18px_rgb(168_75_38/0.9)] transition-[transform,background-color] duration-300 ease-out hover:-translate-y-0.5 hover:bg-(--l-accent-hi) active:translate-y-0"
       >
-        Convertir un plano <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+        Convertir un plano
+        <span className="grid size-10 place-items-center rounded-full bg-black/15 transition-transform duration-300 group-hover:translate-x-0.5">
+          <ArrowRight className="size-4" aria-hidden />
+        </span>
       </Link>
+      <a href="#como-funciona" className="inline-flex min-h-11 items-center t-small text-(--l-dim) transition-colors hover:text-(--l-fg)">
+        <span className="l-link">Ver cómo funciona</span>
+      </a>
     </div>
   )
 }
@@ -92,35 +103,20 @@ export function LandingPage() {
       <div className="landing min-h-full">
         <a
           href="#contenido"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-(--l-ink) focus:px-3 focus:py-2 focus:text-(--l-night)"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-(--l-fg) focus:px-3 focus:py-2 focus:text-(--l-bg)"
         >
           Saltar al contenido
         </a>
         <Masthead />
         <main id="contenido">
           <HeroStage actions={<HeroActions />} />
-
           <HowItWorks />
-
-          <section aria-labelledby="que-puedes-hacer" className="frame grid gap-16 py-16 sm:py-24">
-            <SectionHead id="que-puedes-hacer" title="Todo lo que sale de un plano." />
-            <Capabilities />
-          </section>
-
+          <CapabilitiesSection />
           <Formats />
-
-          <section aria-labelledby="antes-despues" className="frame grid gap-12 py-16 sm:py-24">
-            <SectionHead id="antes-despues" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
-            <BeforeAfter />
-          </section>
-
+          <BeforeAfter />
           <Quantities />
-
           <Faq />
-
-          <section aria-labelledby="empezar" className="py-16 sm:py-24">
-            <Closing />
-          </section>
+          <Closing />
         </main>
         <Footer />
       </div>
