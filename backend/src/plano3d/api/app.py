@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import logging
 from collections.abc import AsyncIterator
@@ -40,6 +41,9 @@ from plano3d.application.dto import (
     DuplicateLevelDTO,
     FacadeDTO,
     FurnishDTO,
+    PhotoDTO,
+    PhotosDTO,
+    PhotosStatusDTO,
     ProgressEventDTO,
     ProjectCreatedDTO,
     ProjectDTO,
@@ -59,10 +63,14 @@ from plano3d.application.dto import (
 from plano3d.application.use_cases.errors import (
     AssistantUnavailableError,
     FileTooLargeError,
+    InvalidPhotoRequestError,
     NoDetectorAvailableError,
+    PhotosUnavailableError,
     ProjectNotFoundError,
     UnsupportedFileError,
 )
+from plano3d.application.use_cases.photos import MAX_BYTES as PHOTO_MAX_BYTES
+from plano3d.application.use_cases.photos import Shot
 from plano3d.application.use_cases.projects import normalize_content_type
 from plano3d.config import Settings
 from plano3d.container import Container, build_container
@@ -220,6 +228,53 @@ IfMatch = Annotated[
     str | None,
     Header(alias="If-Match", description="Revisión que se editó; si cambió, responde 409"),
 ]
+
+
+@router.get("/photos/status", response_model=PhotosStatusDTO, tags=["fotos"])
+async def photos_status(c: ContainerDep) -> PhotosStatusDTO:
+    """¿Se pueden pedir fotos con IA? (sin llamar a la API: solo clave y presupuesto)."""
+    gen = c.photos
+    if gen is None:
+        return PhotosStatusDTO(available=False, remaining_usd=0.0, cost_per_photo=0.0)
+    left = gen.remaining_usd()
+    return PhotosStatusDTO(
+        available=left >= gen.cost_per_photo,
+        remaining_usd=round(left, 4),
+        cost_per_photo=gen.cost_per_photo,
+    )
+
+
+@router.post(
+    "/projects/{project_id}/photos",
+    response_model=PhotosDTO,
+    responses={503: {"description": "Sin clave de OpenAI, sin presupuesto o la API falló"}},
+    tags=["fotos"],
+)
+async def generate_photos(
+    project_id: str,
+    c: ContainerDep,
+    images: Annotated[list[UploadFile], File(description="Una captura del modelo 3D por vista")],
+    views: Annotated[str, Form(description="Vistas separadas por coma, en el orden de images")],
+    facade: Annotated[str, Form()] = "",
+) -> PhotosDTO:
+    """Fotos realistas del proyecto a partir de capturas del modelo 3D (una por vista)."""
+    names = [v.strip() for v in views.split(",") if v.strip()]
+    if len(names) != len(images):
+        raise HTTPException(422, "Cada captura necesita su vista")
+    shots = [Shot(v, await f.read(PHOTO_MAX_BYTES + 1)) for v, f in zip(names, images, strict=True)]
+    batch = await c.generate_photos.execute(project_id, shots, facade)
+    return PhotosDTO(
+        photos=[
+            PhotoDTO(
+                view=p.view,
+                label=p.label,
+                image="data:image/jpeg;base64," + base64.b64encode(p.jpeg).decode("ascii"),
+            )
+            for p in batch.photos
+        ],
+        failed=batch.failed,
+        remaining_usd=round(batch.remaining_usd, 4),
+    )
 
 
 @router.get("/projects/{project_id}", response_model=ProjectDTO, tags=["proyectos"])
@@ -512,6 +567,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     handlers: list[tuple[type[Exception], int]] = [
         (ProjectNotFoundError, 404),
         (AssistantUnavailableError, 503),
+        (PhotosUnavailableError, 503),
+        (InvalidPhotoRequestError, 422),
         (UnsupportedFileError, 415),
         (FileTooLargeError, 413),
         (InvalidStateTransitionError, 409),

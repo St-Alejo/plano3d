@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     s3_region: str = "us-east-1"
 
 
-#: variables de los proveedores de IA que se leen del entorno (Anthropic, Groq y cuál usar)
+#: variables de los proveedores de IA que se leen del entorno (Anthropic, Groq, OpenAI y cuál usar)
 _LOCAL_KEYS = (
     "ANTHROPIC_API_KEY",
     "PLANO3D_CLAUDE_BUDGET_USD",
@@ -41,6 +41,11 @@ _LOCAL_KEYS = (
     "GROQ_API_KEY",
     "PLANO3D_GROQ",
     "PLANO3D_AI",
+    "OPENAI_API_KEY",
+    "PLANO3D_OPENAI",
+    "PLANO3D_OPENAI_BUDGET_USD",
+    "PLANO3D_IMAGE_MODEL",
+    "PLANO3D_IMAGE_QUALITY",
 )
 
 

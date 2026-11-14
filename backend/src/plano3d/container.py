@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from plano3d.application.ports import (
     FileStorage,
     JobQueue,
+    PhotoGenerator,
     PlanAssistant,
     ProgressBroker,
     ProjectRepository,
@@ -20,6 +21,7 @@ from plano3d.application.ports import (
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
 from plano3d.application.use_cases.assistant import InterpretChat
 from plano3d.application.use_cases.levels import AddLevelFromFile, DuplicateLevel, FurnishLevels
+from plano3d.application.use_cases.photos import GeneratePhotos
 from plano3d.application.use_cases.projects import (
     CalibrateScale,
     CheckCapture,
@@ -76,6 +78,15 @@ def default_assistant() -> PlanAssistant | None:
     return None
 
 
+def default_photos() -> PhotoGenerator | None:
+    """Fotos realistas con OpenAI si hay clave (``OPENAI_API_KEY`` en ``backend/.env``)."""
+    from plano3d.config import load_local_env
+    from plano3d.infrastructure.openai.images import OpenAIPhotoGenerator, openai_available
+
+    load_local_env()
+    return OpenAIPhotoGenerator() if openai_available() else None
+
+
 @dataclass
 class Container:
     repo: ProjectRepository
@@ -86,6 +97,8 @@ class Container:
     _closers: list[object] = field(default_factory=list)
     #: intérprete con IA del chat del editor (None: solo el intérprete local del navegador)
     assistant: PlanAssistant | None = field(default_factory=lambda: default_assistant())
+    #: fotos realistas del modelo 3D (None: el botón avisa que no está configurado)
+    photos: PhotoGenerator | None = field(default_factory=lambda: default_photos())
 
     @property
     def create_project(self) -> CreateProject:
@@ -98,6 +111,10 @@ class Container:
     @property
     def interpret_chat(self) -> InterpretChat:
         return InterpretChat(self.repo, self.assistant)
+
+    @property
+    def generate_photos(self) -> GeneratePhotos:
+        return GeneratePhotos(self.repo, self.photos)
 
     @property
     def check_capture(self) -> CheckCapture:
@@ -172,7 +189,7 @@ class Container:
         return AnalyzeFloorPlan(self.repo, self.storage, self.selector, self.progress)
 
     async def aclose(self) -> None:
-        for c in self._closers:
+        for c in [*self._closers, self.photos]:
             close = getattr(c, "aclose", None) or getattr(c, "dispose", None)
             if close is not None:
                 await close()

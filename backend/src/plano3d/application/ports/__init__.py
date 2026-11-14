@@ -254,3 +254,18 @@ class PlanAssistant(ABC):
     @abstractmethod
     async def interpret(self, message: str, context: str, scope: str = "plan") -> AssistantReply:
         """``scope``: ``plan`` (operaciones del editor) o ``viewer`` (ajustes de la vista 3D)."""
+
+
+class PhotoGenerator(ABC):
+    """Convierte una captura del modelo 3D en una foto realista (con IA de imágenes)."""
+
+    #: costo estimado de una foto, en USD (para avisar antes de gastar)
+    cost_per_photo: float = 0.0
+
+    @abstractmethod
+    async def generate(self, image: bytes, prompt: str) -> bytes:
+        """Devuelve la foto en JPEG. Lanza ``PhotosUnavailableError`` si no se pudo."""
+
+    @abstractmethod
+    def remaining_usd(self) -> float:
+        """Lo que queda del tope de gasto."""

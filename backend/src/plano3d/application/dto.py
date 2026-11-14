@@ -782,3 +782,23 @@ def custom_from_dto(d: FacadeCustomDTO | None) -> FacadeCustom | None:
         features=tuple(d.features) if d.features is not None else None,
     )
     return None if custom.is_empty else custom
+
+
+class PhotoDTO(_DTO):
+    view: str
+    label: str
+    #: la foto en JPEG como data URL (``data:image/jpeg;base64,...``)
+    image: str
+
+
+class PhotosDTO(_DTO):
+    photos: list[PhotoDTO]
+    #: vistas que OpenAI no pudo hacer (las demás sí salieron)
+    failed: int = 0
+    remaining_usd: float
+
+
+class PhotosStatusDTO(_DTO):
+    available: bool
+    remaining_usd: float
+    cost_per_photo: float

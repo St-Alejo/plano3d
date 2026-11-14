@@ -22,3 +22,11 @@ class NoDetectorAvailableError(ApplicationError):
 
 class AssistantUnavailableError(ApplicationError):
     """No hay asistente (sin credenciales, sin presupuesto o la API falló)."""
+
+
+class PhotosUnavailableError(ApplicationError):
+    """No se pueden generar fotos (sin clave, sin presupuesto o la API falló)."""
+
+
+class InvalidPhotoRequestError(ApplicationError):
+    """Las capturas enviadas no sirven (vista desconocida, archivo raro o demasiadas)."""
