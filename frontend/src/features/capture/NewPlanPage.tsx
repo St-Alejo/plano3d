@@ -2,6 +2,7 @@ import { Camera, Crop, FileUp, ScanLine, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { api, type Corners } from '@/api/client'
+import { Photo } from '@/components/Photo'
 import { Button, TextField } from '@/components/ui'
 import { CornerEditor } from './CornerEditor'
 import { StartBlank } from './StartBlank'
@@ -116,9 +117,23 @@ export function NewPlanPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-      <p className="font-mono text-xs font-medium tracking-[0.04em] text-accent uppercase">Captura</p>
-      <h1 className="mt-3 mb-8 text-5xl leading-[0.95] tracking-[-0.045em]">Nuevo plano</h1>
+    <div className={`mx-auto grid w-full gap-12 px-4 py-12 sm:px-6 sm:py-20 ${file ? 'max-w-3xl' : 'max-w-7xl lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16'}`}>
+      {!file && (
+        <figure className="relative hidden overflow-hidden rounded-xl shadow-lift lg:order-last lg:block lg:self-start lg:sticky lg:top-24">
+          <Photo name="nuevo-plano" sizes="26rem" priority className="aspect-[4/5] w-full object-cover" />
+          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-5 pt-16 pb-5 text-sm text-white">
+            Un plano impreso, una foto y listo: las medidas salen de las cotas.
+          </figcaption>
+        </figure>
+      )}
+      <div className="min-w-0">
+      <p className="flex items-center gap-3 font-mono text-xs font-medium tracking-[0.14em] text-accent uppercase">
+        <span aria-hidden className="h-px w-8 bg-accent" />
+        Captura
+      </p>
+      <h1 className="mt-5 mb-10 text-6xl leading-[0.9] font-[380] tracking-[-0.04em] sm:text-7xl">
+        Nuevo <em className="font-[340]">plano</em>
+      </h1>
       <CaptureSteps current={sending ? 2 : file ? 1 : 0} />
 
       <input
@@ -150,15 +165,15 @@ export function NewPlanPage() {
           }}
           onDragLeave={() => setDragOver(false)}
           onDrop={onDrop}
-          className={`blueprint-grid flex flex-col items-center gap-6 rounded-lg border-2 border-dashed bg-surface/70 px-6 py-16 text-center transition-[border-color,background-color] duration-300 ${
+          className={`blueprint-grid flex flex-col items-center gap-6 rounded-xl border-2 border-dashed bg-surface/70 px-6 py-16 text-center transition-[border-color,background-color] duration-300 ${
             dragOver ? 'border-accent bg-accent/5' : 'border-line-strong hover:border-accent-dim'
           }`}
         >
-          <span className="grid size-16 place-items-center rounded-lg bg-accent/10">
+          <span className="grid size-16 place-items-center rounded-2xl bg-accent/10">
             <ScanLine className="size-8 text-accent" aria-hidden />
           </span>
           <div>
-            <h2 className="text-xl tracking-[-0.02em]">Fotografía el plano desde arriba</h2>
+            <h2 className="text-2xl tracking-[-0.02em]">Fotografía el plano desde arriba</h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted">
               Que se vea la hoja completa, con buena luz y sin reflejos. La perspectiva se corrige sola.
             </p>
@@ -179,7 +194,7 @@ export function NewPlanPage() {
 
       {file && (
         <div className="flex flex-col gap-6">
-          <div className="rounded-lg border border-line bg-surface p-3 shadow-xs">
+          <div className="rounded-xl border border-line bg-surface p-3 shadow-card">
             {preview && manual && <CornerEditor src={preview} corners={corners} onChange={setCorners} />}
             {preview && !manual && <img src={preview} alt="Vista previa del plano" className="mx-auto max-h-[60vh] object-contain" />}
             {!preview && (
@@ -237,6 +252,7 @@ export function NewPlanPage() {
           {error}
         </p>
       )}
+      </div>
     </div>
   )
 }

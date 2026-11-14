@@ -18,16 +18,16 @@ import type {
 import { stairSteps } from "@/domain/geometry";
 import type { Selected, Selection } from "@/store/editorStore";
 
-const SEL = "#23845f";
+const SEL = "#a84b26";
 
 /** Columna o escalera arrastrada: cuánto se movió, en metros. */
 export type ItemMove =
   { kind: "column"; value: Column } | { kind: "stair"; value: Stair };
 
 export const DIM_COLORS: Record<MeasureStatus, string> = {
-  exact: "#2e7d4f",
-  inferred: "#6b7280",
-  conflict: "#c0392b",
+  exact: "#2f6b55",
+  inferred: "#615f59",
+  conflict: "#a8261c",
 };
 
 interface Props {
@@ -157,7 +157,7 @@ export function PlanElements({
                   rotation={(-st.rotationY * 180) / Math.PI}
                   stroke={sel ? SEL : "#8a6d4b"}
                   strokeWidth={(sel ? 2 : 1) / scale}
-                  fill={sel ? "rgba(35,132,95,0.18)" : "rgba(169,140,106,0.18)"}
+                  fill={sel ? "rgba(168,75,38,0.18)" : "rgba(169,140,106,0.18)"}
                 />
               );
             })}
@@ -202,7 +202,7 @@ export function PlanElements({
                   text={d.status === "conflict" ? `${text} ⚠` : text}
                   rotation={readable}
                   fontSize={font}
-                  fontFamily="Geist Mono"
+                  fontFamily="JetBrains Mono"
                   fontStyle={sel ? "bold" : "normal"}
                   fill={color}
                   offsetX={(text.length * font * 0.6) / 2}

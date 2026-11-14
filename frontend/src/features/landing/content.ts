@@ -31,9 +31,9 @@ export const FORMATS = [
  * cargar Konva en la landing; una prueba comprueba que coinciden.
  */
 export const DIM_SAMPLES = [
-  { status: 'exact', label: 'Exacta', text: 'leída del plano y confirmada', value: '3,20', color: '#2e7d4f' },
-  { status: 'inferred', label: 'Por verificar', text: 'inferida del dibujo', value: '2,85', color: '#6b7280' },
-  { status: 'conflict', label: 'En conflicto', text: 'el dibujo no cuadra con la cota', value: '4,10', color: '#c0392b' },
+  { status: 'exact', label: 'Exacta', text: 'leída del plano y confirmada', value: '3,20', color: '#2f6b55' },
+  { status: 'inferred', label: 'Por verificar', text: 'inferida del dibujo', value: '2,85', color: '#615f59' },
+  { status: 'conflict', label: 'En conflicto', text: 'el dibujo no cuadra con la cota', value: '4,10', color: '#a8261c' },
 ] as const
 
 export const FAQ = [

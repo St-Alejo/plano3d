@@ -20,7 +20,7 @@ export async function installOverlay(page: Page): Promise<void> {
           transform:translate(-3px,-2px);transition:transform .02s}
         #tut-cursor svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
         .tut-ripple{position:fixed;z-index:2147483646;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
-          border:3px solid #23845f;pointer-events:none;animation:tut-r .5s ease-out forwards}
+          border:3px solid #a84b26;pointer-events:none;animation:tut-r .5s ease-out forwards}
         @keyframes tut-r{from{transform:scale(.3);opacity:1}to{transform:scale(1.3);opacity:0}}
         #tut-caption{position:fixed;z-index:2147483645;left:50%;top:64px;transform:translateX(-50%);max-width:80%;
           padding:10px 18px;border-radius:12px;background:rgba(20,28,24,.88);color:#fff;font:600 17px/1.35 system-ui,sans-serif;

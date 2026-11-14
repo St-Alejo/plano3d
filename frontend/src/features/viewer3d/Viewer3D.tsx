@@ -305,7 +305,7 @@ function MeasureMarks({ points }: { points: [number, number, number][] }) {
 
 /** Color de fondo del visor coherente con el tema (claro: papel; oscuro: carbón). */
 function useThemeSky(): string {
-  const read = () => (document.documentElement.dataset.theme === 'light' ? '#e9e9e3' : '#151816')
+  const read = () => (document.documentElement.dataset.theme === 'light' ? '#ece7dd' : '#141615')
   const [sky, setSky] = useState(read)
   useEffect(() => {
     const obs = new MutationObserver(() => setSky(read()))

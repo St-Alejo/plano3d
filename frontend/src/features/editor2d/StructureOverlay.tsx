@@ -8,7 +8,7 @@ import { Group, Line, Rect, Text } from 'react-konva'
 import type { BuildingModel, Point } from '@/api/types'
 import { deriveStructure, type LinearElement } from '@/domain/structure/derive'
 
-const COLOR = { footing: '#7d7a74', column: '#3b3f45', beam: '#8a5a2b', label: '#1c1f1d' }
+const COLOR = { footing: '#7d7a74', column: '#3b3f45', beam: '#8a5a2b', label: '#1a1c1b' }
 
 export function StructureOverlay({ model, levelId, mpp, scale }: { model: BuildingModel; levelId: string; mpp: number; scale: number }) {
   const s = useMemo(() => deriveStructure(model), [model])
@@ -36,7 +36,7 @@ export function StructureOverlay({ model, levelId, mpp, scale }: { model: Buildi
       ))}
       {beams.map((b) => {
         const m = mid(b)
-        return <Text key={b.id} x={m.x + 4 / scale} y={m.y + 4 / scale} text={b.id} fontSize={font} fontFamily="Geist Mono" fill={COLOR.beam} />
+        return <Text key={b.id} x={m.x + 4 / scale} y={m.y + 4 / scale} text={b.id} fontSize={font} fontFamily="JetBrains Mono" fill={COLOR.beam} />
       })}
       {columns.map((c) => {
         const at = px(c.center)
@@ -45,7 +45,7 @@ export function StructureOverlay({ model, levelId, mpp, scale }: { model: Buildi
         return (
           <Group key={c.id} x={at.x} y={at.y}>
             <Rect width={w} height={h} offsetX={w / 2} offsetY={h / 2} rotation={(c.angle * 180) / Math.PI} fill={COLOR.column} />
-            <Text x={w / 2 + 2 / scale} y={-h / 2 - font} text={c.id} fontSize={font} fontFamily="Geist Mono" fill={COLOR.label} />
+            <Text x={w / 2 + 2 / scale} y={-h / 2 - font} text={c.id} fontSize={font} fontFamily="JetBrains Mono" fill={COLOR.label} />
           </Group>
         )
       })}

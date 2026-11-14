@@ -3,6 +3,7 @@ import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { api } from '@/api/client'
 import type { ProjectSummary } from '@/api/types'
+import { Photo } from '@/components/Photo'
 import { Badge, Button, EmptyState, ErrorState, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { listProjects, relativeTime, SORT_LABEL, totalArea, type ProjectSort } from './listing'
@@ -15,8 +16,8 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
   const status = STATUS_LABEL[p.status]
   const updated = new Date(p.updated_at)
   return (
-    <li className="group relative flex flex-col rounded-xl border border-line bg-surface p-2 shadow-xs transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-line-strong hover:shadow-[0_24px_48px_-24px_rgb(28_31_29/0.35)] focus-within:border-line-strong">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-paper">
+    <li className="group relative flex flex-col rounded-xl border border-line bg-surface p-2 shadow-card transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-accent/40 hover:shadow-lift focus-within:border-accent/40">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[calc(var(--radius-xl)-0.5rem)] bg-paper">
         {p.status === 'ready' && p.has_source !== false ? (
           <img
             src={api.imageUrl(p.id, 'rectified', p.updated_at)}
@@ -34,8 +35,8 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
           <Badge tone={status.tone}>{status.text}</Badge>
         </span>
       </div>
-      <div className="flex flex-col px-2 pt-1.5 pb-2">
-        <h2 className="pr-10 text-lg leading-snug tracking-[-0.02em]">
+      <div className="flex flex-col px-2.5 pt-2 pb-2.5">
+        <h2 className="pr-10 text-xl leading-snug tracking-[-0.02em]">
           {/* el enlace cubre toda la tarjeta; el menú queda por encima */}
           <Link
             to={`/p/${p.id}`}
@@ -53,7 +54,7 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
             {relativeTime(p.updated_at)}
           </time>
         </p>
-        <span aria-hidden className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand">
+        <span aria-hidden className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
           Abrir
           <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
         </span>
@@ -94,20 +95,25 @@ export function ProjectsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
-      <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-20">
+      <header className="mb-12 flex flex-wrap items-end justify-between gap-8 border-b border-line pb-10">
         <div>
-          <p className="font-mono text-xs font-medium tracking-[0.04em] text-accent uppercase">Proyectos</p>
-          <h1 className="mt-3 text-5xl leading-[0.95] tracking-[-0.045em] sm:text-6xl">Tus planos</h1>
+          <p className="flex items-center gap-3 font-mono text-xs font-medium tracking-[0.14em] text-accent uppercase">
+            <span aria-hidden className="h-px w-8 bg-accent" />
+            Proyectos
+          </p>
+          <h1 className="mt-5 text-6xl leading-[0.9] font-[380] tracking-[-0.04em] sm:text-7xl lg:text-8xl">
+            Tus <em className="font-[340]">planos</em>
+          </h1>
           {data && data.length > 0 && (
-            <p className="mt-4 inline-flex rounded-full bg-raised px-3 py-1 text-sm text-muted">
+            <p className="mt-5 font-mono text-sm text-muted">
               {data.length} {data.length === 1 ? 'plano' : 'planos'} · {totalArea(data).toFixed(1)} m² modelados
             </p>
           )}
         </div>
         <Link
           to="/nuevo"
-          className="group inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-sm transition-[filter,transform] duration-200 hover:-translate-y-0.5 hover:brightness-110"
+          className="group inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-card transition-[filter,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:brightness-110"
         >
           <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" aria-hidden /> Convertir un plano
         </Link>
@@ -158,12 +164,13 @@ export function ProjectsPage() {
       {data && data.length === 0 && (
         <EmptyState
           icon={<Camera className="size-10" aria-hidden />}
+          art={<Photo name="vacio-proyectos" decorative sizes="(min-width: 1280px) 1232px, 100vw" className="size-full object-cover object-[50%_8%]" />}
           title="Todavía no hay planos"
           message="Toma una foto de un plano impreso (o sube una imagen o PDF) y en segundos podrás recorrerlo en 3D."
           action={
             <Link
               to="/nuevo"
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-sm hover:brightness-110"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-card transition-[filter,box-shadow] hover:shadow-lift hover:brightness-110"
             >
               <Camera className="size-4" aria-hidden /> Tomar foto de un plano
             </Link>

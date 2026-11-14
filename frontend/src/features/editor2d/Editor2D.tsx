@@ -24,17 +24,17 @@ import { fitRoomLabel, LINE_HEIGHT, placeLabels, rotatedBox, type Box, type Room
 
 const LOW_CONFIDENCE = 0.6
 const C = {
-  wall: '#1c1f1d',
-  wallSel: '#23845f',
-  door: '#c47a12',
+  wall: '#1a1c1b',
+  wallSel: '#a84b26',
+  door: '#b7791f',
   window: '#3d7ea6',
   roomOk: 'rgba(47,107,85,0.07)',
   roomLow: 'rgba(196,122,18,0.16)',
-  roomSel: 'rgba(35,132,95,0.22)',
-  text: '#1c1f1d',
-  draft: '#23845f',
-  guide: '#d9480f',
-  hit: '#b3261e',
+  roomSel: 'rgba(168,75,38,0.2)',
+  text: '#1a1c1b',
+  draft: '#a84b26',
+  guide: '#2f6b55',
+  hit: '#a8261c',
 }
 
 function useImage(url: string | undefined): HTMLImageElement | undefined {
@@ -563,7 +563,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       text={fit.showArea ? `${r.label}\n${roomArea(r).toFixed(1)} m²` : r.label}
                       fontSize={fit.fontSize}
                       lineHeight={LINE_HEIGHT}
-                      fontFamily="Geist"
+                      fontFamily="Hanken Grotesk Variable"
                       fill={C.text}
                       align="center"
                       wrap="word"
@@ -606,7 +606,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                       text={cota.txt}
                       rotation={cota.ang}
                       fontSize={11 / view.scale}
-                      fontFamily="Geist Mono"
+                      fontFamily="JetBrains Mono"
                       fill="#2f6b55"
                       offsetX={cota.tw / 2}
                       offsetY={11 / view.scale / 2}
@@ -773,7 +773,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
               return (
                 <Label key={key} x={m.x} y={m.y} offsetX={(txt.length * 11 * 0.62) / view.scale / 2 + 4 / view.scale} offsetY={9 / view.scale}>
                   <Tag fill={color} cornerRadius={3 / view.scale} />
-                  <Text text={txt} fontSize={11 / view.scale} fontFamily="Geist Mono" fill="#ffffff" padding={3 / view.scale} />
+                  <Text text={txt} fontSize={11 / view.scale} fontFamily="JetBrains Mono" fill="#ffffff" padding={3 / view.scale} />
                 </Label>
               )
             }
@@ -829,7 +829,7 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                 <Rect x={a.x} y={a.y} width={r.w / mpp} height={r.h / mpp} stroke={C.draft} strokeWidth={(level?.walls[0]?.thickness ?? 0.15) / mpp} fill="rgba(35,132,95,0.08)" />
                 <Label x={a.x + r.w / mpp / 2} y={a.y + r.h / mpp / 2} offsetX={(txt.length * 12 * 0.6) / view.scale / 2 + 4 / view.scale} offsetY={10 / view.scale}>
                   <Tag fill={C.draft} cornerRadius={3 / view.scale} />
-                  <Text text={txt} fontSize={12 / view.scale} fontFamily="Geist Mono" fill="#ffffff" padding={4 / view.scale} />
+                  <Text text={txt} fontSize={12 / view.scale} fontFamily="JetBrains Mono" fill="#ffffff" padding={4 / view.scale} />
                 </Label>
               </Group>
             )
