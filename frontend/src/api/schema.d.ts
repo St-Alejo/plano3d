@@ -61,6 +61,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/photos/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Photos Status
+         * @description ¿Se pueden pedir fotos con IA? (sin llamar a la API: solo clave y presupuesto).
+         */
+        get: operations["photos_status_api_photos_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects": {
         parameters: {
             query?: never;
@@ -246,6 +266,26 @@ export interface paths {
         /** Update Model */
         put: operations["update_model_api_projects__project_id__model_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Photos
+         * @description Fotos realistas del proyecto a partir de capturas del modelo 3D (una por vista).
+         */
+        post: operations["generate_photos_api_projects__project_id__photos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -473,6 +513,24 @@ export interface components {
              * @default Plano sin nombre
              */
             name: string;
+        };
+        /** Body_generate_photos_api_projects__project_id__photos_post */
+        Body_generate_photos_api_projects__project_id__photos_post: {
+            /**
+             * Facade
+             * @default
+             */
+            facade: string;
+            /**
+             * Images
+             * @description Una captura del modelo 3D por vista
+             */
+            images: string[];
+            /**
+             * Views
+             * @description Vistas separadas por coma, en el orden de images
+             */
+            views: string;
         };
         /** Body_suggest_corners_api_corners_post */
         Body_suggest_corners_api_corners_post: {
@@ -878,6 +936,36 @@ export interface components {
          * @enum {string}
          */
         OpeningOperation: "swing" | "double_swing" | "sliding" | "folding" | "fixed" | "casement" | "none";
+        /** PhotoDTO */
+        PhotoDTO: {
+            /** Image */
+            image: string;
+            /** Label */
+            label: string;
+            /** View */
+            view: string;
+        };
+        /** PhotosDTO */
+        PhotosDTO: {
+            /**
+             * Failed
+             * @default 0
+             */
+            failed: number;
+            /** Photos */
+            photos: components["schemas"]["PhotoDTO"][];
+            /** Remaining Usd */
+            remaining_usd: number;
+        };
+        /** PhotosStatusDTO */
+        PhotosStatusDTO: {
+            /** Available */
+            available: boolean;
+            /** Cost Per Photo */
+            cost_per_photo: number;
+            /** Remaining Usd */
+            remaining_usd: number;
+        };
         /** PointDTO */
         PointDTO: {
             /** X */
@@ -1336,6 +1424,26 @@ export interface operations {
             };
         };
     };
+    photos_status_api_photos_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotosStatusDTO"];
+                };
+            };
+        };
+    };
     list_projects_api_projects_get: {
         parameters: {
             query?: never;
@@ -1783,6 +1891,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    generate_photos_api_projects__project_id__photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_generate_photos_api_projects__project_id__photos_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotosDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Sin clave de OpenAI, sin presupuesto o la API falló */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

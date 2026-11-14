@@ -159,6 +159,35 @@
         "title": "Body_create_project_api_projects_post",
         "type": "object"
       },
+      "Body_generate_photos_api_projects__project_id__photos_post": {
+        "properties": {
+          "facade": {
+            "default": "",
+            "title": "Facade",
+            "type": "string"
+          },
+          "images": {
+            "description": "Una captura del modelo 3D por vista",
+            "items": {
+              "contentMediaType": "application/octet-stream",
+              "type": "string"
+            },
+            "title": "Images",
+            "type": "array"
+          },
+          "views": {
+            "description": "Vistas separadas por coma, en el orden de images",
+            "title": "Views",
+            "type": "string"
+          }
+        },
+        "required": [
+          "images",
+          "views"
+        ],
+        "title": "Body_generate_photos_api_projects__project_id__photos_post",
+        "type": "object"
+      },
       "Body_suggest_corners_api_corners_post": {
         "properties": {
           "file": {
@@ -1125,6 +1154,78 @@
         "title": "OpeningOperation",
         "type": "string"
       },
+      "PhotoDTO": {
+        "properties": {
+          "image": {
+            "title": "Image",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "view": {
+            "title": "View",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view",
+          "label",
+          "image"
+        ],
+        "title": "PhotoDTO",
+        "type": "object"
+      },
+      "PhotosDTO": {
+        "properties": {
+          "failed": {
+            "default": 0,
+            "title": "Failed",
+            "type": "integer"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoDTO"
+            },
+            "title": "Photos",
+            "type": "array"
+          },
+          "remaining_usd": {
+            "title": "Remaining Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "photos",
+          "remaining_usd"
+        ],
+        "title": "PhotosDTO",
+        "type": "object"
+      },
+      "PhotosStatusDTO": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "cost_per_photo": {
+            "title": "Cost Per Photo",
+            "type": "number"
+          },
+          "remaining_usd": {
+            "title": "Remaining Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "available",
+          "remaining_usd",
+          "cost_per_photo"
+        ],
+        "title": "PhotosStatusDTO",
+        "type": "object"
+      },
       "PointDTO": {
         "properties": {
           "x": {
@@ -2083,6 +2184,28 @@
         ]
       }
     },
+    "/api/photos/status": {
+      "get": {
+        "description": "¿Se pueden pedir fotos con IA? (sin llamar a la API: solo clave y presupuesto).",
+        "operationId": "photos_status_api_photos_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotosStatusDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Photos Status",
+        "tags": [
+          "fotos"
+        ]
+      }
+    },
     "/api/projects": {
       "get": {
         "operationId": "list_projects_api_projects_get",
@@ -2770,6 +2893,62 @@
         "summary": "Update Model",
         "tags": [
           "modelo"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/photos": {
+      "post": {
+        "description": "Fotos realistas del proyecto a partir de capturas del modelo 3D (una por vista).",
+        "operationId": "generate_photos_api_projects__project_id__photos_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_generate_photos_api_projects__project_id__photos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotosDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Sin clave de OpenAI, sin presupuesto o la API falló"
+          }
+        },
+        "summary": "Generate Photos",
+        "tags": [
+          "fotos"
         ]
       }
     },

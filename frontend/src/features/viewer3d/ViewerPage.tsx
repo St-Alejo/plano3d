@@ -2,7 +2,7 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tabs from '@radix-ui/react-tabs'
-import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, MoreHorizontal, Orbit, Paintbrush, Ruler, Sofa, Users } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, MoreHorizontal, Orbit, Paintbrush, Ruler, Sofa, Sparkles, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
@@ -17,7 +17,8 @@ import { Button, ErrorState, Kbd, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
 import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
-import { Viewer3D, type FlyTarget, type Quality, type ViewMode } from './Viewer3D'
+import { Viewer3D, type CaptureFn, type FlyTarget, type Quality, type ViewMode } from './Viewer3D'
+import { PhotoStudio } from './photos/PhotoStudio'
 import { LevelRail } from './LevelRail'
 import { applyLevelFocus, highlightLevel } from './scene/levelFocus'
 import { levelCamera, levelsAbove, levelSummaries } from '@/domain/levels'
@@ -173,6 +174,12 @@ export function ViewerPage() {
   const [measuring, setMeasuring] = useState(false)
   const [points, setPoints] = useState<[number, number, number][]>([])
   const box = useRef<HTMLDivElement>(null)
+  // fotos realistas con IA: la vista 3D llena captureRef con su función de captura
+  const captureRef = useRef<CaptureFn | null>(null)
+  const [photosOpen, setPhotosOpen] = useState(false)
+  const onCapture = useCallback((fn: CaptureFn | null) => {
+    captureRef.current = fn
+  }, [])
   // la secuencia de obra anima la escena armada: se guarda también como estado
   const [built, setBuilt] = useState<BuiltScene | null>(null)
   const onScene = useCallback((s: BuiltScene) => {
@@ -339,6 +346,19 @@ export function ViewerPage() {
     } finally {
       setExporting(false)
     }
+  }
+
+  /** Deja la escena como en una presentación antes de capturar: materiales, sin cortes ni simulación. */
+  const preparePhotos = async () => {
+    if (strategy.panel) choosePlanMode('presentacion')
+    if (simOn) toggleSim()
+    setDisplay('material')
+    setCutOn(false)
+    setFocusLevel(null)
+    setMeasuring(false)
+    // dos cuadros para que React y la escena apliquen los cambios, y un respiro para las texturas
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    await new Promise((r) => setTimeout(r, 400))
   }
 
   const doPng = () => {
@@ -550,6 +570,17 @@ export function ViewerPage() {
         highlightElementId={strategy.panel ? elementId : null}
         onElement={strategy.panel && !measuring ? setElementId : undefined}
         simulation={!strategy.panel}
+        onCapture={onCapture}
+      />
+      <PhotoStudio
+        open={photosOpen}
+        onOpenChange={setPhotosOpen}
+        projectId={project.id}
+        fileBase={fileBase}
+        facade={facadeName.replace(' *', '')}
+        model={model}
+        captureRef={captureRef}
+        prepare={preparePhotos}
       />
 
       {/* reloj de la simulación: bajo la barra; a la izquierda en el celular (a la derecha va el HUD del recorrido) */}
@@ -669,6 +700,16 @@ export function ViewerPage() {
               {facadeError}
             </p>
           )}
+          {!narrow && (
+            <Button
+              className="h-11 bg-canvas/85 backdrop-blur"
+              onClick={() => setPhotosOpen(true)}
+              title="Cinco fotos realistas de tu casa, hechas con IA a partir del modelo 3D"
+              icon={<Sparkles className="size-4" aria-hidden />}
+            >
+              Fotos con IA
+            </Button>
+          )}
           <Menu
             items={[
               ...(narrow && !strategy.panel
@@ -680,6 +721,7 @@ export function ViewerPage() {
                       : { label: showFurniture ? 'Quitar los muebles' : 'Poner los muebles', icon: <Sofa className="size-4" aria-hidden />, onSelect: () => setShowFurniture((v) => !v) },
                   ]
                 : []),
+              ...(narrow ? [{ label: 'Fotos realistas con IA', icon: <Sparkles className="size-4" aria-hidden />, onSelect: () => setPhotosOpen(true) }] : []),
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
               { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
               { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },

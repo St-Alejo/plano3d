@@ -1,4 +1,4 @@
-import type { AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
+import type { Photos, PhotosStatus, AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
 
 export class ApiError extends Error {
   constructor(
@@ -103,6 +103,18 @@ export const api = {
 
   /** Chat del editor: lo que el intérprete local no entendió lo interpreta la IA (503 si no hay). */
   /** `scope`: 'plan' edita el plano (chat del editor); 'viewer' ajusta la vista 3D */
+  /** ¿Hay fotos con IA en este servidor y cuánto presupuesto queda? */
+  photosStatus: () => request<PhotosStatus>('/photos/status'),
+
+  /** Fotos realistas desde capturas del modelo 3D (una por vista). Tarda ~15 s. */
+  generatePhotos: (id: string, shots: { view: string; image: Blob }[], facade: string) => {
+    const form = new FormData()
+    for (const s of shots) form.append('images', s.image, `${s.view}.jpg`)
+    form.append('views', shots.map((s) => s.view).join(','))
+    form.append('facade', facade)
+    return request<Photos>(`/projects/${encodeURIComponent(id)}/photos`, { method: 'POST', body: form })
+  },
+
   assistant: (id: string, message: string, context: string, scope: 'plan' | 'viewer' = 'plan') =>
     request<AssistantReply>(`/projects/${encodeURIComponent(id)}/assistant`, { method: 'POST', ...json({ message, context, scope }) }),
 

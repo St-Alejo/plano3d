@@ -24,10 +24,25 @@ import { applyDisplayMode, buildingHeight, cameraPreset, distance3, fitFraming, 
 export type ViewMode = 'orbit' | 'walk'
 
 /** A dónde volar en órbita: un punto en planta (a la altura de su piso) o un encuadre exacto. */
-export type FlyTarget = Point & { elevation?: number; pos?: [number, number, number]; look?: [number, number, number] }
+export type FlyTarget = Point & {
+  elevation?: number
+  pos?: [number, number, number]
+  look?: [number, number, number]
+  /** saltar sin animar (capturas para las fotos con IA) */
+  instant?: boolean
+}
 
 /** alta: cielo HDRI, oclusión ambiental y antialias; baja: solo luces (celulares) */
 export type Quality = 'alta' | 'baja'
+
+/** Una toma para las fotos con IA: dónde va la cámara y hacia dónde mira. */
+export interface Shot {
+  pos: [number, number, number]
+  look: [number, number, number]
+  fov: number
+}
+/** Dibuja la escena desde una toma, fuera de la pantalla, y la devuelve en JPEG (3:2). */
+export type CaptureFn = (shot: Shot) => Promise<Blob>
 
 export interface Viewer3DProps {
   model: BuildingModel
@@ -56,6 +71,8 @@ export interface Viewer3DProps {
   display?: DisplayMode
   /** medir en 3D: puntos marcados y callback al tocar una superficie */
   measure?: { points: [number, number, number][]; onPoint: (p: [number, number, number]) => void } | null
+  /** recibe la función que captura tomas para las fotos con IA (null al desmontar) */
+  onCapture?: (capture: CaptureFn | null) => void
   /** modo del plano (presentación por defecto) */
   strategy?: ViewModeStrategy
   quality?: Quality
@@ -91,6 +108,39 @@ function PlanOverlay({ model, url, opacity }: { model: BuildingModel; url: strin
 }
 
 /** Encuadra la cámara al modelo y anima los "vuelos" a un ambiente. */
+const CAPTURE_W = 1200
+const CAPTURE_H = 800
+
+/**
+ * Captura tomas con una cámara propia y a tamaño fijo (3:2), sin mover la de la vista ni
+ * depender de la forma de la pantalla. Todo pasa en la misma tarea (dibujar, copiar y
+ * restaurar), así que la pantalla nunca alcanza a mostrar el cambio de tamaño.
+ */
+function Capturer({ onReady }: { onReady: (capture: CaptureFn | null) => void }) {
+  const { gl, scene, camera } = useThree()
+  useEffect(() => {
+    onReady((shot) => {
+      const cam = new THREE.PerspectiveCamera(shot.fov, CAPTURE_W / CAPTURE_H, 0.05, 500)
+      cam.position.set(...shot.pos)
+      cam.lookAt(...shot.look)
+      cam.layers.mask = camera.layers.mask
+      const size = gl.getSize(new THREE.Vector2())
+      const ratio = gl.getPixelRatio()
+      gl.setPixelRatio(1)
+      gl.setSize(CAPTURE_W, CAPTURE_H, false)
+      gl.render(scene, cam)
+      const blob = new Promise<Blob>((resolve, reject) =>
+        gl.domElement.toBlob((b) => (b ? resolve(b) : reject(new Error('No se pudo capturar la vista'))), 'image/jpeg', 0.88),
+      )
+      gl.setPixelRatio(ratio)
+      gl.setSize(size.x, size.y, false)
+      return blob
+    })
+    return () => onReady(null)
+  }, [gl, scene, camera, onReady])
+  return null
+}
+
 function OrbitRig({
   model,
   flyTo,
@@ -136,9 +186,11 @@ function OrbitRig({
     const y = flyTo.elevation ?? 0
     const look = flyTo.look ? new THREE.Vector3(...flyTo.look) : new THREE.Vector3(flyTo.x, y + 0.8, flyTo.y)
     const pos = flyTo.pos ? new THREE.Vector3(...flyTo.pos) : new THREE.Vector3(flyTo.x + 2.5, y + 4.5, flyTo.y + 3.5)
-    if (prefersReducedMotion()) {
+    if (flyTo.instant || prefersReducedMotion()) {
+      target.current = null
       camera.position.copy(pos)
       controls.current?.target.copy(look)
+      controls.current?.update()
     } else target.current = { pos, look }
   }, [flyTo, camera])
 
@@ -336,6 +388,7 @@ export function Viewer3D({
   autoRotate,
   display = 'material',
   measure,
+  onCapture,
   strategy,
   // incrustado (editor, vista previa) va liviano; la página 3D pasa la calidad elegida
   quality = 'baja',
@@ -403,6 +456,7 @@ export function Viewer3D({
         {simulation && <Simulation model={model} furniture={furniture} walking={mode === 'walk'} />}
         {night && mode === 'orbit' && <NightLights model={model} />}
         {measure && <MeasureMarks points={measure.points} />}
+        {onCapture && <Capturer onReady={onCapture} />}
         {overlayUrl && overlayOpacity > 0 && (
           <Suspense fallback={null}>
             <PlanOverlay model={model} url={overlayUrl} opacity={overlayOpacity} />
