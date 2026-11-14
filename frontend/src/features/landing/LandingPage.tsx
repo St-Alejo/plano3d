@@ -18,6 +18,7 @@ import { Quantities } from './Quantities'
 import { EASE } from './ease'
 import { BeforeAfter, CapabilitiesSection, Closing, Footer } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
+import { Walkthrough } from './Walkthrough'
 
 const NAV = [
   { href: '#como-funciona', label: 'Cómo funciona' },
@@ -34,7 +35,8 @@ function Masthead() {
   const { scrollY } = useScroll()
   const [solid, setSolid] = useState(false)
   useMotionValueEvent(scrollY, 'change', (y) => {
-    const hero = document.getElementById('hero')
+    // sobre las fotos (el hero y el recorrido) la cabecera va transparente
+    const hero = document.getElementById('recorrido') ?? document.getElementById('hero')
     const end = hero ? hero.offsetTop + hero.offsetHeight - 80 : 80
     setSolid(y > end)
   })
@@ -110,6 +112,7 @@ export function LandingPage() {
         <Masthead />
         <main id="contenido">
           <HeroStage actions={<HeroActions />} />
+          <Walkthrough />
           <HowItWorks />
           <CapabilitiesSection />
           <Formats />
