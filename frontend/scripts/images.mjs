@@ -12,7 +12,8 @@ const OUT = 'public/images'
 const WIDTHS = [640, 1280, 1920]
 
 await mkdir(OUT, { recursive: true })
-const files = (await readdir(SRC)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
+// obra-*.png son fuentes del hero: la página usa sus versiones alineadas (hero-NN-*.png)
+const files = (await readdir(SRC)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f) && !f.startsWith('obra-'))
 for (const file of files) {
   const { name } = parse(file)
   const src = join(SRC, file)
