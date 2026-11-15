@@ -1,9 +1,10 @@
 /**
  * Cómo funciona: a la izquierda el título y los tres momentos del proceso (fijos mientras se
- * lee); a la derecha el video real de la app, con la foto del plano debajo en parallax. El
- * segundo paso nombra las etapas reales del análisis, las mismas de la pantalla de proceso.
+ * lee); a la derecha el video animado (30 s, de la foto a la casa en 3D, fuente en
+ * design/video-landing), con la foto del plano debajo en parallax. El segundo paso nombra las
+ * etapas reales del análisis, las mismas de la pantalla de proceso.
  */
-import { Pause, Play } from 'lucide-react'
+import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -13,14 +14,32 @@ import { Parallax } from './motion'
 import { Reveal, Stagger, StaggerItem } from './reveal'
 import { SectionHead } from './sections'
 
-/** Video en bucle y sin sonido: corre solo cuando se ve y se puede pausar. */
+/**
+ * Video en bucle: corre solo cuando se ve, empieza sin sonido (los navegadores no dejan
+ * reproducir con sonido sin un gesto) y trae subtítulos; el botón de sonido lo reinicia con voz.
+ */
 function Loop() {
   const box = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const inView = useInView(box, { amount: 0.4 })
   const reduce = useReducedMotion()
   const [paused, setPaused] = useState(false)
+  const [sound, setSound] = useState(false)
   const playing = inView && !reduce && !paused
+
+  const toggleSound = () => {
+    const v = video.current
+    const next = !sound
+    setSound(next)
+    if (!v) return
+    v.muted = !next
+    // con voz se oye desde el comienzo; al activarlo también se quita la pausa
+    if (next) {
+      v.currentTime = 0
+      setPaused(false)
+      Promise.resolve(v.play()).catch(() => undefined)
+    }
+  }
 
   useEffect(() => {
     const v = video.current
@@ -34,13 +53,13 @@ function Loop() {
     <div ref={box} className="relative aspect-video overflow-hidden rounded-xl bg-(--l-sheet) shadow-[0_40px_80px_-44px_rgb(60_40_25/0.55)] ring-1 ring-(--l-rule)">
       <video
         ref={video}
-        src="/tutoriales/crear.webm"
-        poster="/landing/crear.jpg"
+        src="/tutoriales/como-funciona.mp4"
+        poster="/landing/como-funciona.jpg"
         muted
         loop
         playsInline
         preload="none"
-        aria-label="Video: se dibuja un plano escribiendo y aparece en 3D al lado"
+        aria-label="Video: la foto de un plano se endereza, se leen sus cotas, se trazan los muros y suben en 3D"
         className="size-full object-cover"
       />
       <button
@@ -52,6 +71,15 @@ function Loop() {
         {paused || reduce ? <Play className="size-4" aria-hidden /> : <Pause className="size-4" aria-hidden />}
         {paused || reduce ? 'Reproducir' : 'Pausar'}
       </button>
+      <button
+        type="button"
+        onClick={toggleSound}
+        aria-pressed={sound}
+        className="absolute right-4 bottom-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-(--l-fg)/85 px-4 t-small text-(--l-bg) backdrop-blur transition-colors duration-300 hover:bg-(--l-fg)"
+      >
+        {sound ? <Volume2 className="size-4" aria-hidden /> : <VolumeX className="size-4" aria-hidden />}
+        {sound ? 'Con sonido' : 'Activar sonido'}
+      </button>
     </div>
   )
 }
@@ -60,7 +88,7 @@ export function HowItWorks() {
   return (
     <section aria-labelledby="como-funciona" className="frame grid gap-16 py-24 sm:py-36 lg:grid-cols-[5fr_7fr] lg:gap-20">
       <div className="grid content-start gap-14 lg:sticky lg:top-28 lg:self-start">
-        <SectionHead id="como-funciona" index={1} label="Cómo funciona" title="Así se ve por dentro." lead="El tutorial de la app: de la hoja en blanco al plano en 3D, en segundos." />
+        <SectionHead id="como-funciona" index={1} label="Cómo funciona" title="Así se ve por dentro." lead="En 30 segundos: de la foto del plano a la casa en 3D. Míralo con voz o sin sonido, con subtítulos." />
         <Stagger as="ol" aria-label="Cómo funciona" className="grid gap-8" gap={0.08}>
           {STEPS.map((s, i) => (
             <StaggerItem key={s.title} as="li" className="grid grid-cols-[3rem_1fr] gap-x-4 gap-y-2 border-t border-(--l-rule) pt-6">

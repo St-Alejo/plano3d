@@ -1,0 +1,105 @@
+<template>
+  <style>
+    @font-face { font-family: 'Fraunces'; src: url('assets/fonts/fraunces-latin-full-normal.woff2') format('woff2'); font-weight: 100 900; }
+    @font-face { font-family: 'Fraunces'; src: url('assets/fonts/fraunces-latin-full-italic.woff2') format('woff2'); font-weight: 100 900; font-style: italic; }
+    @font-face { font-family: 'Hanken Grotesk'; src: url('assets/fonts/hanken-grotesk-latin-wght-normal.woff2') format('woff2'); font-weight: 100 900; }
+    @font-face { font-family: 'JetBrains Mono'; src: url('assets/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2'); font-weight: 500; }
+    #root { position: absolute; inset: 0; overflow: hidden; background: #f2eee6; font-family: 'Hanken Grotesk', sans-serif; color: #1a1c1b; }
+    .rc-full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; }
+    .rc-full img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #rc-editor-img { transform-origin: 30% 45%; }
+    #rc-sala-img { transform-origin: 50% 55%; }
+    #rc-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(20 16 12 / 0.62) 0%, rgb(20 16 12 / 0.15) 55%, transparent 80%); }
+    #rc-ring { position: absolute; left: 360px; top: 300px; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%; border: 6px solid #a84b26; opacity: 0; }
+    #rc-cursor { position: absolute; left: 0; top: 0; width: 44px; height: 44px; opacity: 0; }
+    .rc-title { position: absolute; opacity: 0; }
+    .rc-num { font-family: 'JetBrains Mono', monospace; font-size: 30px; letter-spacing: 0.08em; color: #a84b26; }
+    .rc-h { font-family: 'Fraunces', serif; font-weight: 500; font-size: 124px; line-height: 0.98; letter-spacing: -0.02em; margin-top: 14px; }
+    .rc-h em { font-style: italic; color: #a84b26; }
+    #rc-t1 { left: 1120px; top: 120px; width: 760px; padding: 34px 40px; background: rgb(250 247 241 / 0.94); border-radius: 18px; box-shadow: 0 30px 60px -30px rgb(30 20 10 / 0.5); }
+    #rc-t1 .rc-h { font-size: 104px; }
+    #rc-t2 { left: 110px; top: 330px; width: 820px; }
+    #rc-t2 .rc-h, #rc-t2 .rc-num { color: #faf7f1; }
+    #rc-t2 em { color: #f0a47f; }
+    #rc-steps { position: absolute; left: 110px; top: 640px; display: flex; gap: 14px; opacity: 0; }
+    .rc-key { width: 74px; height: 74px; border-radius: 14px; border: 3px solid rgb(250 247 241 / 0.85); color: #faf7f1; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 32px; background: rgb(20 16 12 / 0.35); }
+
+    /* cierre: la misma hoja y la casa construida */
+    #rc-end { position: absolute; inset: 0; background: #f2eee6; opacity: 0; }
+    #rc-end-sheet { position: absolute; left: 150px; top: 250px; width: 380px; height: 594px; background: #faf7f1; border-radius: 6px; box-shadow: 0 40px 80px -40px rgb(60 40 25 / 0.55); }
+    #rc-end-svg { position: absolute; left: 19px; top: 12px; width: 342px; height: 570px; overflow: visible; }
+    .wall { stroke: #1a1c1b; stroke-width: 0.17; stroke-linecap: square; }
+    .tread { stroke: #4f4d47; stroke-width: 0.025; }
+    .tread-box { fill: none; stroke: #4f4d47; stroke-width: 0.03; }
+    .leaf { stroke: #a84b26; stroke-width: 0.05; stroke-linecap: round; }
+    .swing { fill: none; stroke: #a84b26; stroke-width: 0.03; stroke-dasharray: 0.08 0.06; }
+    .gate { stroke: #a84b26; stroke-width: 0.05; stroke-dasharray: 0.18 0.1; }
+    .glass { stroke: #2f6b8f; stroke-width: 0.045; }
+    #rc-end-house { position: absolute; left: 820px; top: 190px; width: 960px; height: 640px; border-radius: 14px; overflow: hidden; box-shadow: 0 50px 90px -40px rgb(30 20 10 / 0.6); }
+    #rc-end-house img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #rc-arrow { position: absolute; left: 570px; top: 500px; width: 220px; height: 60px; overflow: visible; }
+    #rc-arrow path { fill: none; stroke: #a84b26; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+    #rc-end-title { position: absolute; left: 150px; top: 60px; width: 1630px; display: flex; align-items: baseline; justify-content: space-between; opacity: 0; }
+    #rc-end-title .rc-h { font-size: 104px; margin: 0; }
+    #rc-brand { font-family: 'JetBrains Mono', monospace; font-size: 34px; color: #4f4d47; letter-spacing: 0.06em; }
+  </style>
+
+  <div id="root" data-composition-id="recorre" data-width="1920" data-height="1080">
+    <div id="rc-editor" class="rc-full"><img id="rc-editor-img" src="assets/img/editor.jpg" alt="" /></div>
+    <div id="rc-ring"></div>
+    <svg id="rc-cursor" viewBox="0 0 24 24"><path d="M4 2 L4 20 L9 15 L12.5 22 L15.5 20.6 L12 14 L19 14 Z" fill="#1a1c1b" stroke="#faf7f1" stroke-width="1.6" stroke-linejoin="round" /></svg>
+    <div id="rc-t1" class="rc-title"><div class="rc-num">05</div><div class="rc-h">Corrige <em>a tu gusto</em></div></div>
+
+    <div id="rc-sala" class="rc-full"><div id="rc-bob" class="rc-full"><img id="rc-sala-img" src="assets/img/interior-sala-1920.webp" alt="" /></div><div id="rc-shade"></div></div>
+    <div id="rc-t2" class="rc-title"><div class="rc-num">06</div><div class="rc-h">Camina <em>por dentro</em></div></div>
+    <div id="rc-steps"><div class="rc-key" id="rc-kw">W</div><div class="rc-key">A</div><div class="rc-key">S</div><div class="rc-key">D</div></div>
+
+    <div id="rc-end">
+      <div id="rc-end-sheet"><svg id="rc-end-svg" viewBox="-0.5 -1 9 15" data-prefix="rc-"></svg></div>
+      <svg id="rc-arrow" viewBox="0 0 220 60"><path id="rc-arrow-path" d="M6 30 L206 30 M180 8 L208 30 L180 52" /></svg>
+      <div id="rc-end-house"><img id="rc-end-house-img" src="assets/img/hero-13-etapa-6-hogar-1920.webp" alt="" /></div>
+      <div id="rc-end-title"><div class="rc-h">Del papel <em>al 3D</em></div><div id="rc-brand">PLANO 3D</div></div>
+    </div>
+  </div>
+
+  <script src="assets/plan.js"></script>
+  <script>
+    ;(function () {
+      window.drawPlan(document.getElementById('rc-end-svg'), ['stairs', 'walls', 'doors', 'windows'])
+      const tl = gsap.timeline({ paused: true })
+
+      // 05 · el editor (la voz dice «Corrige» al empezar): entra desde muy cerca, como si saliera del 3D
+      tl.fromTo('#rc-editor', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' }, 0)
+      tl.fromTo('#rc-editor-img', { scale: 1.9 }, { scale: 1.12, duration: 0.9, ease: 'power3.out' }, 0)
+      tl.to('#rc-editor-img', { scale: 1.0, duration: 0.8, ease: 'sine.out' }, 0.9)
+      tl.fromTo('#rc-t1', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.25)
+      // el cursor toma un muro y lo arrastra
+      tl.fromTo('#rc-cursor', { opacity: 0, x: 560, y: 560 }, { opacity: 1, x: 395, y: 330, duration: 0.5, ease: 'power2.out' }, 0.6)
+      tl.fromTo('#rc-ring', { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 1.05)
+      tl.to(['#rc-cursor', '#rc-ring'], { x: '+=60', duration: 0.4, ease: 'power2.inOut' }, 1.25)
+      tl.to('#rc-ring', { opacity: 0, duration: 0.2 }, 1.7)
+      tl.to('#rc-cursor', { opacity: 0, duration: 0.2 }, 1.75)
+
+      // 06 · adentro de la sala: la cámara camina («camina» a los 1,28 s locales)
+      tl.fromTo('#rc-sala', { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power1.inOut' }, 1.5)
+      tl.fromTo('#rc-sala-img', { scale: 1.02 }, { scale: 1.2, duration: 4.0, ease: 'none' }, 1.5)
+      // balanceo de los pasos
+      tl.fromTo('#rc-bob', { y: 0 }, { y: -7, duration: 0.32, ease: 'sine.inOut', yoyo: true, repeat: 9 }, 1.6)
+      tl.to('#rc-t1', { opacity: 0, duration: 0.25 }, 1.6)
+      tl.fromTo('#rc-t2', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 1.7)
+      tl.fromTo('#rc-steps', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 2.0)
+      tl.fromTo('#rc-kw', { backgroundColor: 'rgba(20,16,12,0.35)' }, { backgroundColor: 'rgba(168,75,38,0.95)', duration: 0.15, yoyo: true, repeat: 7, ease: 'none' }, 2.3)
+      tl.to(['#rc-t2', '#rc-steps'], { opacity: 0, y: -20, duration: 0.35, ease: 'power2.in' }, 5.0)
+
+      // cierre («Del papel» a los 6,08 locales, «3D» a los 7,28): la hoja del comienzo y la casa
+      tl.fromTo('#rc-end', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power1.inOut' }, 5.4)
+      tl.fromTo('#rc-end-sheet', { opacity: 0, x: -80, rotation: -4 }, { opacity: 1, x: 0, rotation: 0, duration: 0.6, ease: 'power3.out' }, 5.6)
+      tl.fromTo('#rc-end-title', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 5.9)
+      tl.fromTo('#rc-arrow-path', { strokeDasharray: 340, strokeDashoffset: 340 }, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.inOut' }, 6.5)
+      tl.fromTo('#rc-end-house', { opacity: 0, scale: 0.9, x: 40 }, { opacity: 1, scale: 1, x: 0, duration: 0.7, ease: 'power3.out' }, 7.2)
+      tl.fromTo('#rc-end-house-img', { scale: 1.12 }, { scale: 1.0, duration: 2.7, ease: 'sine.out' }, 7.2)
+
+      window.__timelines['recorre'] = tl
+    })()
+  </script>
+</template>

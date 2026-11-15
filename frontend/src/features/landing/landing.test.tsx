@@ -149,13 +149,18 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('img', { name: /editor con el plano en 2D/ }).length).toBeGreaterThan(0)
   })
 
-  it('cómo funciona: video real sin sonido, con póster y pausa, y las etapas reales del análisis', () => {
+  it('cómo funciona: video animado sin sonido al comienzo, con póster, pausa y botón de voz', () => {
     const { container } = renderLanding()
     const video = container.querySelector('video')!
-    expect(video).toHaveAttribute('src', '/tutoriales/crear.webm')
-    expect(video).toHaveAttribute('poster', '/landing/crear.jpg')
+    expect(video).toHaveAttribute('src', '/tutoriales/como-funciona.mp4')
+    expect(video).toHaveAttribute('poster', '/landing/como-funciona.jpg')
     expect(video.muted).toBe(true)
     expect(screen.getByRole('button', { name: /Pausar|Reproducir/ })).toBeInTheDocument()
+    const sound = screen.getByRole('button', { name: 'Activar sonido' })
+    expect(sound).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(sound)
+    expect(video.muted).toBe(false)
+    expect(screen.getByRole('button', { name: 'Con sonido' })).toHaveAttribute('aria-pressed', 'true')
     const steps = within(screen.getByRole('list', { name: 'Cómo funciona' })).getAllByRole('listitem')
     expect(steps).toHaveLength(3)
     for (const s of NAMED_STAGES) expect(steps[1]).toHaveTextContent(s)

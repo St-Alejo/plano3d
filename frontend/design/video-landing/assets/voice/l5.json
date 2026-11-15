@@ -1,0 +1,62 @@
+[
+  {
+    "id": "w0",
+    "text": "Corrige",
+    "start": 0,
+    "end": 0.48
+  },
+  {
+    "id": "w1",
+    "text": "lo",
+    "start": 0.48,
+    "end": 0.64
+  },
+  {
+    "id": "w2",
+    "text": "que",
+    "start": 0.64,
+    "end": 0.72
+  },
+  {
+    "id": "w3",
+    "text": "quieras",
+    "start": 0.72,
+    "end": 1.12
+  },
+  {
+    "id": "w4",
+    "text": "y",
+    "start": 1.12,
+    "end": 1.28
+  },
+  {
+    "id": "w5",
+    "text": "camina",
+    "start": 1.28,
+    "end": 1.76
+  },
+  {
+    "id": "w6",
+    "text": "tu",
+    "start": 1.84,
+    "end": 2
+  },
+  {
+    "id": "w7",
+    "text": "casa",
+    "start": 2,
+    "end": 2.24
+  },
+  {
+    "id": "w8",
+    "text": "por",
+    "start": 2.24,
+    "end": 2.4
+  },
+  {
+    "id": "w9",
+    "text": "dentro.",
+    "start": 2.4,
+    "end": 2.72
+  }
+]

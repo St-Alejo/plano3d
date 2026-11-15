@@ -1,0 +1,38 @@
+[
+  {
+    "id": "w0",
+    "text": "Y",
+    "start": 0,
+    "end": 0.16
+  },
+  {
+    "id": "w1",
+    "text": "levanta",
+    "start": 0.16,
+    "end": 0.64
+  },
+  {
+    "id": "w2",
+    "text": "los",
+    "start": 0.64,
+    "end": 0.8
+  },
+  {
+    "id": "w3",
+    "text": "muros",
+    "start": 0.8,
+    "end": 1.12
+  },
+  {
+    "id": "w4",
+    "text": "en",
+    "start": 1.12,
+    "end": 1.28
+  },
+  {
+    "id": "w5",
+    "text": "3D.",
+    "start": 1.28,
+    "end": 1.92
+  }
+]

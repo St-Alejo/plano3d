@@ -1,0 +1,50 @@
+[
+  {
+    "id": "w0",
+    "text": "Después",
+    "start": 0,
+    "end": 0.32
+  },
+  {
+    "id": "w1",
+    "text": "traza",
+    "start": 0.32,
+    "end": 0.8
+  },
+  {
+    "id": "w2",
+    "text": "muros,",
+    "start": 0.8,
+    "end": 1.28
+  },
+  {
+    "id": "w3",
+    "text": "puertas",
+    "start": 1.28,
+    "end": 1.68
+  },
+  {
+    "id": "w4",
+    "text": "y",
+    "start": 1.68,
+    "end": 1.76
+  },
+  {
+    "id": "w5",
+    "text": "ventanas",
+    "start": 1.76,
+    "end": 2.24
+  },
+  {
+    "id": "w6",
+    "text": "a",
+    "start": 2.24,
+    "end": 2.4
+  },
+  {
+    "id": "w7",
+    "text": "escala.",
+    "start": 2.4,
+    "end": 2.8
+  }
+]

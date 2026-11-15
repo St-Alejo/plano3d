@@ -1,0 +1,44 @@
+[
+  {
+    "id": "w0",
+    "text": "Del",
+    "start": 0.08,
+    "end": 0.32
+  },
+  {
+    "id": "w1",
+    "text": "papel",
+    "start": 0.32,
+    "end": 0.64
+  },
+  {
+    "id": "w2",
+    "text": "a",
+    "start": 0.64,
+    "end": 0.8
+  },
+  {
+    "id": "w3",
+    "text": "tu",
+    "start": 0.8,
+    "end": 0.96
+  },
+  {
+    "id": "w4",
+    "text": "casa",
+    "start": 0.96,
+    "end": 1.04
+  },
+  {
+    "id": "w5",
+    "text": "en",
+    "start": 1.2,
+    "end": 1.28
+  },
+  {
+    "id": "w6",
+    "text": "3D.",
+    "start": 1.28,
+    "end": 1.84
+  }
+]
