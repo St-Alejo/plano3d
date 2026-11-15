@@ -90,7 +90,7 @@
     <div id="pl-flash"></div>
 
     <div id="pl-titles">
-      <div id="pl-t1" class="pl-title"><div class="pl-num">01</div><div class="pl-h">Toma la <em>foto</em></div></div>
+      <div id="pl-t1" class="pl-title"><div class="pl-num">01</div><div class="pl-h">Tomale la <em>foto</em></div></div>
       <div id="pl-t2" class="pl-title"><div class="pl-num">02</div><div class="pl-h">Lee las <em>cotas</em></div></div>
       <div id="pl-t3" class="pl-title"><div class="pl-num">03</div><div class="pl-h">Traza <em>muros</em> y puertas</div></div>
       <div id="pl-t4" class="pl-title"><div class="pl-num">04</div><div class="pl-h">Muros en <em>3D</em></div></div>
@@ -142,50 +142,50 @@
       set(0, '#pl-paper', { opacity: 0 })
       set(0, '#pl-sheet', { rotationX: 0, rotationZ: 0, scale: 1, x: 0, y: 0 })
 
-      // 01 · la foto (la voz dice «foto» a los 2,98 s)
-      tl.fromTo('#pl-photo', { scale: 1.08 }, { scale: 1.16, duration: 2.9, ease: 'none' }, 0)
+      // 01 · la foto (la voz dice «foto» a los 3,52 s)
+      tl.fromTo('#pl-photo', { scale: 1.08 }, { scale: 1.17, duration: 3.45, ease: 'none' }, 0)
       tl.fromTo('#pl-scrim', { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0.3)
-      tl.to('#pl-scrim', { opacity: 0, duration: 0.4 }, 3.05)
+      tl.to('#pl-scrim', { opacity: 0, duration: 0.4 }, 3.57)
       tl.fromTo('#pl-t1', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.5)
-      tl.fromTo('.pl-corner', { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.35, ease: 'power3.out', stagger: 0.04 }, 2.55)
-      tl.fromTo('#pl-flash', { opacity: 0 }, { opacity: 0.95, duration: 0.05, ease: 'none' }, 2.98)
-      tl.to('#pl-flash', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 3.03)
-      tl.to('.pl-corner', { opacity: 0, duration: 0.2 }, 3.05)
+      tl.fromTo('.pl-corner', { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.35, ease: 'power3.out', stagger: 0.04 }, 3.07)
+      tl.fromTo('#pl-flash', { opacity: 0 }, { opacity: 0.95, duration: 0.05, ease: 'none' }, 3.5)
+      tl.to('#pl-flash', { opacity: 0, duration: 0.45, ease: 'power2.out' }, 3.55)
+      tl.to('.pl-corner', { opacity: 0, duration: 0.2 }, 3.57)
       // la foto queda tomada: se encoge como una foto impresa con borde
-      tl.to('#pl-photo', { scale: 0.86, duration: 0.5, ease: 'power3.out' }, 3.05)
-      tl.fromTo('#pl-photo-frame', { borderWidth: 0 }, { borderWidth: 22, duration: 0.4, ease: 'power3.out' }, 3.05)
-      tl.to('#pl-t1', { opacity: 0, y: -30, duration: 0.4, ease: 'power2.in' }, 4.2)
+      tl.to('#pl-photo', { scale: 0.86, duration: 0.5, ease: 'power3.out' }, 3.57)
+      tl.fromTo('#pl-photo-frame', { borderWidth: 0 }, { borderWidth: 22, duration: 0.4, ease: 'power3.out' }, 3.57)
+      tl.to('#pl-t1', { opacity: 0, y: -30, duration: 0.35, ease: 'power2.in' }, 4.4)
 
       // 02 · la foto viaja a la hoja, torcida, y se endereza en «endereza» (5,84 s)
-      tl.to('#pl-photo', { scale: 0.62, x: -260, rotationZ: -9, rotationX: 22, duration: 0.9, ease: 'power3.inOut' }, 4.35)
+      tl.to('#pl-photo', { scale: 0.62, x: -260, rotationZ: -9, rotationX: 22, duration: 0.85, ease: 'power3.inOut' }, 4.55)
       tl.to('#pl-photo', { rotationZ: 0, rotationX: 0, duration: 0.55, ease: 'back.out(1.6)' }, 5.84)
       tl.fromTo(['#pl-pencil', '#pl-paper'], { opacity: 0 }, { opacity: 1, duration: 0.3 }, 6.15)
       tl.to('#pl-photo', { opacity: 0, duration: 0.4, ease: 'power1.inOut' }, 6.15)
       tl.fromTo('#pl-t2', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 6.45)
-      // el escáner baja y las cotas escritas se encienden en «cotas» (7,52 s)
-      tl.fromTo('#pl-scan', { opacity: 0, y: -120 }, { opacity: 1, y: 300, duration: 0.5, ease: 'none' }, 6.6)
-      tl.to('#pl-scan', { y: 1000, duration: 1.0, ease: 'none' }, 7.1)
-      tl.to('#pl-scan', { opacity: 0, duration: 0.2 }, 7.9)
-      tl.fromTo('#pl-dims', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.45)
+      // el escáner baja y las cotas escritas se encienden en «cotas» (7,28 s)
+      tl.fromTo('#pl-scan', { opacity: 0, y: -120 }, { opacity: 1, y: 300, duration: 0.5, ease: 'none' }, 6.4)
+      tl.to('#pl-scan', { y: 1000, duration: 1.0, ease: 'none' }, 6.9)
+      tl.to('#pl-scan', { opacity: 0, duration: 0.2 }, 7.7)
+      tl.fromTo('#pl-dims', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 7.25)
       ;['#pl-tag-1', '#pl-tag-2', '#pl-tag-3', '#pl-tag-4'].forEach((id, i) => {
-        tl.fromTo(id, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.2)' }, 7.5 + i * 0.2)
+        tl.fromTo(id, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.2)' }, 7.3 + i * 0.2)
         tl.to(id, { opacity: 0, scale: 0.9, duration: 0.3 }, 9.3 + i * 0.05)
       })
       tl.fromTo('#pl-ruler', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power3.out' }, 8.5)
       tl.to('#pl-t2', { opacity: 0, y: -30, duration: 0.4, ease: 'power2.in' }, 9.6)
 
-      // 03 · muros en «muros» (11,0), puertas en «puertas» (11,48), ventanas en «ventanas» (11,96)
+      // 03 · muros en «muros» (11,0), puertas en «puertas» (11,74), ventanas en «ventanas» (12,28)
       tl.fromTo('#pl-t3', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 10.2)
       tl.to(walls, { strokeDashoffset: 0, duration: 0.7, ease: 'power2.inOut', stagger: 0.025 }, 10.85)
       tl.to('#pl-pencil', { opacity: 0.35, duration: 0.6 }, 11.2)
       tl.fromTo('#pl-stairs', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 11.3)
-      tl.fromTo('#pl-doors', { opacity: 0 }, { opacity: 1, duration: 0.01 }, 11.45)
-      tl.fromTo('#pl-doors .door, #pl-doors .gate', { opacity: 0, scale: 0.4, transformOrigin: '50% 50%', transformBox: 'fill-box' }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.06 }, 11.48)
-      tl.fromTo('#pl-windows', { opacity: 0 }, { opacity: 1, duration: 0.01 }, 11.94)
-      tl.fromTo('#pl-windows .window', { opacity: 0, scale: 0.3, transformOrigin: '50% 50%', transformBox: 'fill-box' }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.06 }, 11.96)
-      tl.fromTo('#pl-rooms', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 12.6)
+      tl.fromTo('#pl-doors', { opacity: 0 }, { opacity: 1, duration: 0.01 }, 11.7)
+      tl.fromTo('#pl-doors .door, #pl-doors .gate', { opacity: 0, scale: 0.4, transformOrigin: '50% 50%', transformBox: 'fill-box' }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.06 }, 11.72)
+      tl.fromTo('#pl-windows', { opacity: 0 }, { opacity: 1, duration: 0.01 }, 12.22)
+      tl.fromTo('#pl-windows .window', { opacity: 0, scale: 0.3, transformOrigin: '50% 50%', transformBox: 'fill-box' }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.06 }, 12.24)
+      tl.fromTo('#pl-rooms', { opacity: 0 }, { opacity: 1, duration: 0.5 }, 12.9)
       // «a escala»: la regla late
-      tl.fromTo('#pl-ruler', { scale: 1 }, { scale: 1.35, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: '0% 50%' }, 12.6)
+      tl.fromTo('#pl-ruler', { scale: 1 }, { scale: 1.35, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: '0% 50%' }, 13.25)
       tl.to('#pl-t3', { opacity: 0, y: -30, duration: 0.4, ease: 'power2.in' }, 14.6)
 
       // 04 · la hoja se acuesta y los muros suben en «levanta» (15,36) hasta «3D» (16,48)

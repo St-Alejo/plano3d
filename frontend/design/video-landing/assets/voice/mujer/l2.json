@@ -1,0 +1,52 @@
+[
+ {
+  "text": "La",
+  "start": 0.098,
+  "end": 0.23
+ },
+ {
+  "text": "aplicación",
+  "start": 0.23,
+  "end": 0.795
+ },
+ {
+  "text": "endereza",
+  "start": 0.819,
+  "end": 1.312
+ },
+ {
+  "text": "la",
+  "start": 1.336,
+  "end": 1.444
+ },
+ {
+  "text": "hoja",
+  "start": 1.48,
+  "end": 1.721
+ },
+ {
+  "text": "y",
+  "start": 1.769,
+  "end": 1.817
+ },
+ {
+  "text": "lee",
+  "start": 1.841,
+  "end": 2.021
+ },
+ {
+  "text": "las",
+  "start": 2.045,
+  "end": 2.213
+ },
+ {
+  "text": "cotas",
+  "start": 2.262,
+  "end": 2.538
+ },
+ {
+  "text": "escritas",
+  "start": 2.562,
+  "end": 3.247
+ }
+]

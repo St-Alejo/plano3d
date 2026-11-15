@@ -12,28 +12,33 @@
   </head>
   <body>
     <!-- «Cómo funciona» de la landing: de la foto del plano a la casa en 3D, en 30 s.
-         Voz: Kokoro ef_dora (local). Efectos: CC0 de Freesound y la biblioteca de HyperFrames. -->
-    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1920" data-height="1080">
+         Voz: es-CO Salomé / Gonzalo (voces.py), en voseo paisa; variantes.py la cambia y renderiza.
+         Música: «Calming Background Music Guitar Loop» de Migfus20 (CC BY 4.0). Efectos: ver CREDITOS.md. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="31" data-width="1920" data-height="1080">
       <div id="plano" data-composition-id="plano" data-composition-src="compositions/plano.html" data-start="0" data-duration="20" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="recorre" data-composition-id="recorre" data-composition-src="compositions/recorre.html" data-start="20" data-duration="10" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="recorre" data-composition-id="recorre" data-composition-src="compositions/recorre.html" data-start="20" data-duration="11" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
       <div id="subs" data-composition-id="subs" data-composition-src="compositions/subs.html" data-start="0" data-duration="26" data-track-index="3" data-track-kind="captions" data-width="1920" data-height="1080" style="z-index: 10"></div>
 
-      <audio id="vo-1" class="clip" src="assets/voice/l1.wav" data-start="0.5" data-track-index="10" data-volume="1"></audio>
-      <audio id="vo-2" class="clip" src="assets/voice/l2.wav" data-start="5.2" data-track-index="10" data-volume="1"></audio>
-      <audio id="vo-3" class="clip" src="assets/voice/l3.wav" data-start="10.2" data-track-index="10" data-volume="1"></audio>
-      <audio id="vo-4" class="clip" src="assets/voice/l4.wav" data-start="15.2" data-track-index="10" data-volume="1"></audio>
-      <audio id="vo-5" class="clip" src="assets/voice/l5.wav" data-start="20.4" data-track-index="10" data-volume="1"></audio>
-      <audio id="vo-6" class="clip" src="assets/voice/l6.wav" data-start="26.0" data-track-index="10" data-volume="1"></audio>
+      <!-- voz:inicio -->
+      <audio id="vo-1" class="clip" src="assets/voice/mujer/l1.mp3" data-start="0.3" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-2" class="clip" src="assets/voice/mujer/l2.mp3" data-start="5.02" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-3" class="clip" src="assets/voice/mujer/l3.mp3" data-start="10.04" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-4" class="clip" src="assets/voice/mujer/l4.mp3" data-start="15.16" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-5" class="clip" src="assets/voice/mujer/l5.mp3" data-start="20.3" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-6" class="clip" src="assets/voice/mujer/l6.mp3" data-start="25.9" data-track-index="10" data-volume="1"></audio>
+      <!-- voz:fin -->
 
-      <audio id="fx-foto" class="clip" src="assets/sfx/obturador.mp3" data-start="2.85" data-media-start="0.6" data-duration="0.8" data-track-index="11" data-volume="0.7"></audio>
-      <audio id="fx-viaje" class="clip" src="assets/sfx/barrido-largo.mp3" data-start="4.25" data-media-start="2.2" data-duration="1.2" data-track-index="11" data-volume="0.35" data-fade-out="0.3"></audio>
+      <audio id="musica" class="clip" src="assets/music/guitarra.mp3" data-start="0" data-duration="31" data-track-index="9" data-volume="0.45" data-fade-in="0.8" data-fade-out="2.5"></audio>
+
+      <audio id="fx-foto" class="clip" src="assets/sfx/obturador.mp3" data-start="3.375" data-media-start="0.6" data-duration="0.8" data-track-index="11" data-volume="0.7"></audio>
+      <audio id="fx-viaje" class="clip" src="assets/sfx/barrido-largo.mp3" data-start="4.45" data-media-start="2.2" data-duration="1.2" data-track-index="11" data-volume="0.35" data-fade-out="0.3"></audio>
       <audio id="fx-endereza" class="clip" src="assets/sfx/barrido.mp3" data-start="5.71" data-track-index="11" data-volume="0.45"></audio>
-      <audio id="fx-cota-1" class="clip" src="assets/sfx/pop.mp3" data-start="7.41" data-track-index="12" data-volume="0.5"></audio>
-      <audio id="fx-cota-2" class="clip" src="assets/sfx/pop.mp3" data-start="7.61" data-track-index="12" data-volume="0.38"></audio>
-      <audio id="fx-cota-3" class="clip" src="assets/sfx/pop.mp3" data-start="7.81" data-track-index="12" data-volume="0.45"></audio>
-      <audio id="fx-cota-4" class="clip" src="assets/sfx/pop.mp3" data-start="8.01" data-track-index="12" data-volume="0.34"></audio>
-      <audio id="fx-puertas" class="clip" src="assets/sfx/pop.mp3" data-start="11.39" data-track-index="12" data-volume="0.45"></audio>
-      <audio id="fx-ventanas" class="clip" src="assets/sfx/pop.mp3" data-start="11.87" data-track-index="12" data-volume="0.4"></audio>
+      <audio id="fx-cota-1" class="clip" src="assets/sfx/pop.mp3" data-start="7.21" data-track-index="12" data-volume="0.5"></audio>
+      <audio id="fx-cota-2" class="clip" src="assets/sfx/pop.mp3" data-start="7.41" data-track-index="12" data-volume="0.38"></audio>
+      <audio id="fx-cota-3" class="clip" src="assets/sfx/pop.mp3" data-start="7.61" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="fx-cota-4" class="clip" src="assets/sfx/pop.mp3" data-start="7.81" data-track-index="12" data-volume="0.34"></audio>
+      <audio id="fx-puertas" class="clip" src="assets/sfx/pop.mp3" data-start="11.63" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="fx-ventanas" class="clip" src="assets/sfx/pop.mp3" data-start="12.15" data-track-index="12" data-volume="0.4"></audio>
       <audio id="fx-muros" class="clip" src="assets/sfx/golpe.mp3" data-start="16.42" data-duration="1.6" data-track-index="11" data-volume="0.8" data-fade-out="0.5"></audio>
       <audio id="fx-entra" class="clip" src="assets/sfx/barrido-largo.mp3" data-start="19.4" data-media-start="2.2" data-duration="1.2" data-track-index="11" data-volume="0.45" data-fade-out="0.3"></audio>
       <audio id="fx-sala" class="clip" src="assets/sfx/barrido.mp3" data-start="21.4" data-track-index="11" data-volume="0.35"></audio>

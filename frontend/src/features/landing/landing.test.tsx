@@ -149,18 +149,21 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('img', { name: /editor con el plano en 2D/ }).length).toBeGreaterThan(0)
   })
 
-  it('cómo funciona: video animado sin sonido al comienzo, con póster, pausa y botón de voz', () => {
+  it('cómo funciona: video sin sonido al comienzo, con póster, pausa y voz paisa de mujer u hombre', () => {
     const { container } = renderLanding()
     const video = container.querySelector('video')!
-    expect(video).toHaveAttribute('src', '/tutoriales/como-funciona.mp4')
+    expect(video).toHaveAttribute('src', '/tutoriales/como-funciona-mujer.mp4')
     expect(video).toHaveAttribute('poster', '/landing/como-funciona.jpg')
     expect(video.muted).toBe(true)
     expect(screen.getByRole('button', { name: /Pausar|Reproducir/ })).toBeInTheDocument()
-    const sound = screen.getByRole('button', { name: 'Activar sonido' })
-    expect(sound).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(sound)
+    const sound = within(screen.getByRole('radiogroup', { name: 'Sonido del video' }))
+    expect(sound.getByRole('radio', { name: 'Sin sonido' })).toHaveAttribute('aria-checked', 'true')
+    fireEvent.click(sound.getByRole('radio', { name: 'Voz de hombre' }))
+    expect(video).toHaveAttribute('src', '/tutoriales/como-funciona-hombre.mp4')
     expect(video.muted).toBe(false)
-    expect(screen.getByRole('button', { name: 'Con sonido' })).toHaveAttribute('aria-pressed', 'true')
+    expect(sound.getByRole('radio', { name: 'Voz de hombre' })).toHaveAttribute('aria-checked', 'true')
+    fireEvent.click(sound.getByRole('radio', { name: 'Sin sonido' }))
+    expect(video.muted).toBe(true)
     const steps = within(screen.getByRole('list', { name: 'Cómo funciona' })).getAllByRole('listitem')
     expect(steps).toHaveLength(3)
     for (const s of NAMED_STAGES) expect(steps[1]).toHaveTextContent(s)
