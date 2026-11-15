@@ -270,7 +270,7 @@ function AnimatedHero({ actions }: { actions: ReactNode }) {
   const veil = useTransform(scrollYProgress, [START[F - 2]!, 1], [0.82, 0.92])
 
   return (
-    <section id="hero" ref={stage} aria-label="Del plano al modelo 3D, etapa por etapa" className="l-dark relative h-[960vh]">
+    <section id="hero" ref={stage} aria-label="Del plano al modelo 3D, etapa por etapa" className="l-dark relative h-[380vh] md:h-[460vh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <div className="absolute inset-0 bg-(--l-bg)">
           <motion.div className="absolute inset-0 origin-[46%_18%] will-change-transform" style={{ scale: dolly, y: drift }}>

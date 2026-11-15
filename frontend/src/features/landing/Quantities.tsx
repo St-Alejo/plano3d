@@ -15,7 +15,7 @@ const QuantitiesDemo = lazy(() => import('./QuantitiesDemo'))
 
 export function Quantities() {
   return (
-    <section aria-labelledby="cantidades" className="l-dark l-grain py-24 sm:py-36">
+    <section aria-labelledby="cantidades" className="l-dark l-grain py-16 sm:py-24">
       <div className="frame grid gap-14 lg:grid-cols-[5fr_7fr] lg:items-start lg:gap-20">
         <div className="grid gap-10 lg:sticky lg:top-28">
           <Stagger className="grid gap-6" gap={0.09}>

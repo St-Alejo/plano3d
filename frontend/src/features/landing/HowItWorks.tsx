@@ -109,7 +109,7 @@ function Loop() {
 
 export function HowItWorks() {
   return (
-    <section aria-labelledby="como-funciona" className="frame grid gap-16 py-24 sm:py-36 lg:grid-cols-[5fr_7fr] lg:gap-20">
+    <section aria-labelledby="como-funciona" className="frame grid gap-16 py-16 sm:py-24 lg:grid-cols-[5fr_7fr] lg:gap-20">
       <div className="grid content-start gap-14 lg:sticky lg:top-28 lg:self-start">
         <SectionHead id="como-funciona" index={1} label="Cómo funciona" title="Así se ve por dentro." lead="En 30 segundos: de la foto del plano a la casa en 3D. Míralo sin sonido, con subtítulos, o con voz paisa de mujer o de hombre." />
         <Stagger as="ol" aria-label="Cómo funciona" className="grid gap-8" gap={0.08}>

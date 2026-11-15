@@ -60,7 +60,7 @@ export function Walkthrough() {
 
 function StaticWalk() {
   return (
-    <section id="recorrido" aria-labelledby="recorrido-title" className="l-dark py-24 sm:py-32">
+    <section id="recorrido" aria-labelledby="recorrido-title" className="l-dark py-16 sm:py-24">
       <div className="frame">
         <p className="t-label text-(--l-text-accent)">Recorrido</p>
         <h2 id="recorrido-title" className="t-h2 mt-5 max-w-3xl">
@@ -231,7 +231,7 @@ function AnimatedWalk() {
   const introY = useTransform(scrollYProgress, [0, START[0]!], [0, -60])
 
   return (
-    <section id="recorrido" ref={box} aria-labelledby="recorrido-title" className="l-dark relative h-[620vh]">
+    <section id="recorrido" ref={box} aria-labelledby="recorrido-title" className="l-dark relative h-[260vh] md:h-[320vh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         <div className="absolute inset-0 bg-(--l-bg)">
           {near && ROOMS.map((r, i) => <RoomPhoto key={r.photo} progress={scrollYProgress} index={i} active={room === i} />)}

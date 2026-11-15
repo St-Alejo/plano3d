@@ -129,7 +129,7 @@ export function Capabilities() {
 /** Banda oscura: la sala de la casa al lado del título y, debajo, las capacidades. */
 export function CapabilitiesSection() {
   return (
-    <section aria-labelledby="que-puedes-hacer" className="l-dark l-grain py-24 sm:py-36">
+    <section aria-labelledby="que-puedes-hacer" className="l-dark l-grain py-16 sm:py-24">
       <div className="frame grid gap-20">
         <div className="grid items-end gap-12 lg:grid-cols-[7fr_5fr]">
           <SectionHead
@@ -234,7 +234,7 @@ function Comparator() {
 
 export function BeforeAfter() {
   return (
-    <section aria-labelledby="antes-despues" className="frame grid gap-14 py-24 sm:py-36">
+    <section aria-labelledby="antes-despues" className="frame grid gap-14 py-16 sm:py-24">
       <SectionHead id="antes-despues" index={4} label="Antes y después" title="Del papel al modelo." lead="Arrastra el divisor: el mismo apartamento, en la misma escala." />
       <Comparator />
     </section>
@@ -260,10 +260,10 @@ export function Closing() {
         <Photo name="cierre-calle" decorative sizes="100vw" className="size-full object-cover" />
       </ZoomIn>
       <div aria-hidden className="absolute inset-0 bg-linear-to-r from-black/85 via-black/60 to-black/25" />
-      <div className="frame relative grid min-h-[44rem] items-center gap-12 py-24 sm:py-32 lg:grid-cols-[6fr_5fr] lg:gap-20">
+      <div className="frame relative grid min-h-[44rem] items-center gap-12 py-16 sm:py-24 lg:grid-cols-[6fr_5fr] lg:gap-20">
         <Stagger gap={0.09}>
           <StaggerItem>
-            <DimLine index={7} label="Empezar" />
+            <DimLine index={6} label="Empezar" />
           </StaggerItem>
           <StaggerItem>
             <h2 id="empezar" className="t-h2 mt-6">
