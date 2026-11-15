@@ -143,7 +143,7 @@ describe('personas que se mueven solas', () => {
     }
     expect(visited.some((s) => s.size > 1)).toBe(true)
     expect(minGap).toBeGreaterThan(0.3)
-  })
+  }, 30_000) // 3 minutos simulados: en CI con cobertura pasa de los 5 s por defecto
 
   it('alguien parado en la sala no detiene a nadie: lo rodean sin tocarlo', () => {
     const corridor = roomPoint(p2!.id, /SALA/)
