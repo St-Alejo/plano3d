@@ -1,52 +1,52 @@
 [
  {
   "text": "Corregí",
-  "start": 0.098,
-  "end": 0.507
+  "start": 0.0,
+  "end": 0.42
  },
  {
   "text": "lo",
-  "start": 0.543,
-  "end": 0.615
+  "start": 0.42,
+  "end": 0.52
  },
  {
   "text": "que",
-  "start": 0.675,
-  "end": 0.747
+  "start": 0.52,
+  "end": 0.66
  },
  {
   "text": "querás",
-  "start": 0.807,
-  "end": 1.252
+  "start": 0.66,
+  "end": 1.14
  },
  {
   "text": "y",
-  "start": 1.456,
-  "end": 1.516
+  "start": 1.14,
+  "end": 1.46
  },
  {
-  "text": "caminá",
-  "start": 1.576,
-  "end": 1.925
+  "text": "camina",
+  "start": 1.46,
+  "end": 1.9
  },
  {
   "text": "tu",
-  "start": 1.997,
-  "end": 2.069
+  "start": 1.9,
+  "end": 2.02
  },
  {
   "text": "casa",
-  "start": 2.129,
-  "end": 2.37
+  "start": 2.02,
+  "end": 2.28
  },
  {
   "text": "por",
-  "start": 2.442,
-  "end": 2.55
+  "start": 2.28,
+  "end": 2.56
  },
  {
-  "text": "dentro",
-  "start": 2.61,
-  "end": 2.959
+  "text": "dentro.",
+  "start": 2.56,
+  "end": 2.9
  }
 ]

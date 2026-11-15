@@ -1,42 +1,37 @@
 [
  {
   "text": "Después",
-  "start": 0.098,
-  "end": 0.495
+  "start": 0.0,
+  "end": 0.38
  },
  {
-  "text": "traza",
-  "start": 0.543,
-  "end": 0.819
- },
- {
-  "text": "muros",
-  "start": 0.843,
-  "end": 1.204
+  "text": "trasamuros",
+  "start": 0.38,
+  "end": 1.36
  },
  {
   "text": "puertas",
-  "start": 1.432,
-  "end": 1.817
+  "start": 1.36,
+  "end": 2.2
  },
  {
   "text": "y",
-  "start": 1.829,
-  "end": 1.865
+  "start": 2.2,
+  "end": 2.44
  },
  {
   "text": "ventanas",
-  "start": 1.901,
-  "end": 2.49
+  "start": 2.44,
+  "end": 3.14
  },
  {
   "text": "a",
-  "start": 2.718,
-  "end": 2.802
+  "start": 3.14,
+  "end": 3.46
  },
  {
-  "text": "escala",
-  "start": 2.802,
-  "end": 3.163
+  "text": "escala.",
+  "start": 3.46,
+  "end": 3.92
  }
 ]

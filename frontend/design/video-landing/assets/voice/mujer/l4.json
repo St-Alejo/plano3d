@@ -1,32 +1,32 @@
 [
  {
-  "text": "Y",
-  "start": 0.098,
-  "end": 0.206
+  "text": "y",
+  "start": 0.0,
+  "end": 0.14
  },
  {
   "text": "levanta",
-  "start": 0.242,
-  "end": 0.651
+  "start": 0.14,
+  "end": 0.56
  },
  {
   "text": "los",
-  "start": 0.675,
-  "end": 0.831
+  "start": 0.56,
+  "end": 0.7
  },
  {
   "text": "muros",
-  "start": 0.867,
-  "end": 1.192
+  "start": 0.7,
+  "end": 1.24
  },
  {
   "text": "en",
-  "start": 1.204,
-  "end": 1.348
+  "start": 1.24,
+  "end": 1.42
  },
  {
-  "text": "3D",
-  "start": 1.348,
-  "end": 1.793
+  "text": "3D.",
+  "start": 1.42,
+  "end": 1.94
  }
 ]

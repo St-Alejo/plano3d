@@ -1,32 +1,32 @@
 [
  {
-  "text": "Tenés",
-  "start": 0.098,
-  "end": 0.435
+  "text": "¿Tenés",
+  "start": 0.0,
+  "end": 0.38
  },
  {
   "text": "el",
-  "start": 0.435,
-  "end": 0.531
+  "start": 0.38,
+  "end": 0.5
  },
  {
   "text": "plano",
-  "start": 0.591,
-  "end": 0.843
+  "start": 0.5,
+  "end": 0.72
  },
  {
   "text": "de",
-  "start": 0.843,
-  "end": 0.891
+  "start": 0.72,
+  "end": 0.94
  },
  {
   "text": "tu",
-  "start": 0.951,
-  "end": 1.024
+  "start": 0.94,
+  "end": 1.04
  },
  {
   "text": "casa",
-  "start": 1.072,
+  "start": 1.04,
   "end": 1.3
  },
  {
@@ -35,28 +35,33 @@
   "end": 1.42
  },
  {
-  "text": "papel",
-  "start": 1.432,
-  "end": 1.805
+  "text": "papel?",
+  "start": 1.42,
+  "end": 1.72
  },
  {
-  "text": "Tomale",
-  "start": 2.644,
-  "end": 3.005
+  "text": "¡Tú",
+  "start": 2.14,
+  "end": 2.44
+ },
+ {
+  "text": "malo",
+  "start": 2.44,
+  "end": 2.66
  },
  {
   "text": "una",
-  "start": 3.029,
-  "end": 3.197
+  "start": 2.66,
+  "end": 2.78
  },
  {
-  "text": "foto",
-  "start": 3.221,
-  "end": 3.642
+  "text": "foto,",
+  "start": 2.78,
+  "end": 3.08
  },
  {
-  "text": "pues",
-  "start": 3.966,
-  "end": 4.291
+  "text": "pues!",
+  "start": 3.14,
+  "end": 3.36
  }
 ]

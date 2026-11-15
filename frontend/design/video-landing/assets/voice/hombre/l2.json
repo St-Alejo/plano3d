@@ -1,52 +1,52 @@
 [
  {
   "text": "La",
-  "start": 0.098,
-  "end": 0.218
+  "start": 0.0,
+  "end": 0.16
  },
  {
   "text": "aplicación",
-  "start": 0.218,
-  "end": 0.687
+  "start": 0.16,
+  "end": 0.7
  },
  {
   "text": "endereza",
-  "start": 0.699,
-  "end": 1.108
+  "start": 0.7,
+  "end": 1.24
  },
  {
   "text": "la",
-  "start": 1.144,
-  "end": 1.216
+  "start": 1.24,
+  "end": 1.4
  },
  {
   "text": "hoja",
-  "start": 1.264,
-  "end": 1.468
+  "start": 1.4,
+  "end": 1.86
  },
  {
   "text": "y",
-  "start": 1.492,
-  "end": 1.516
+  "start": 1.86,
+  "end": 2.14
  },
  {
   "text": "lee",
-  "start": 1.54,
-  "end": 1.733
+  "start": 2.14,
+  "end": 2.38
  },
  {
   "text": "las",
-  "start": 1.757,
-  "end": 1.901
+  "start": 2.38,
+  "end": 2.62
  },
  {
   "text": "cotas",
-  "start": 1.937,
-  "end": 2.189
+  "start": 2.62,
+  "end": 3.06
  },
  {
-  "text": "escritas",
-  "start": 2.189,
-  "end": 2.826
+  "text": "escritas.",
+  "start": 3.06,
+  "end": 3.74
  }
 ]

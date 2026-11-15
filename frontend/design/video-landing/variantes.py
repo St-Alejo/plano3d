@@ -15,9 +15,9 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 PUBLIC = HERE.parent.parent / 'public' / 'tutoriales'
-STARTS = {
-    'mujer': [0.3, 5.02, 10.04, 15.16, 20.3, 25.9],
-    'hombre': [0.6, 5.14, 10.16, 15.15, 20.3, 25.9],
+STARTS = {  # voces de ElevenLabs: Lina (mujer) y Robert (hombre), acento paisa
+    'mujer': [0.65, 5.14, 9.8, 15.25, 20.36, 25.98],
+    'hombre': [0.72, 5.13, 9.88, 15.25, 20.35, 25.97],
 }
 
 

@@ -9,14 +9,14 @@
   <div id="root" data-composition-id="subs" data-width="1920" data-height="1080">
     <div id="sb-1" class="sb side clip" data-start="0.3" data-duration="4.5">¿Tenés el plano en papel? Tomale una <b>foto</b>, pues.</div>
     <div id="sb-2" class="sb side clip" data-start="5.0" data-duration="4.5">La aplicación <b>endereza</b> la hoja y lee las <b>cotas</b>.</div>
-    <div id="sb-3" class="sb side clip" data-start="10.0" data-duration="4.5">Traza <b>muros</b>, <b>puertas</b> y <b>ventanas</b>, a escala.</div>
+    <div id="sb-3" class="sb side clip" data-start="9.75" data-duration="4.75">Traza <b>muros</b>, <b>puertas</b> y <b>ventanas</b>, a escala.</div>
     <div id="sb-4" class="sb side clip" data-start="15.1" data-duration="4.3">Y <b>levanta</b> los muros en 3D.</div>
     <div id="sb-5" class="sb clip" data-start="20.25" data-duration="5.05"><b>Corregí</b> lo que querás y <b>caminá</b> tu casa por dentro.</div>
   </div>
   <script>
     ;(function () {
       const tl = gsap.timeline({ paused: true })
-      ;[0.3, 5.0, 10.0, 15.1, 20.25].forEach((t, i) => {
+      ;[0.3, 5.0, 9.75, 15.1, 20.25].forEach((t, i) => {
         tl.fromTo('#sb-' + (i + 1), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' }, t)
       })
       window.__timelines['subs'] = tl
