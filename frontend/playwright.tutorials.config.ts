@@ -3,7 +3,8 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * Graba los tutoriales en video (botón "Ver tutorial" del estudio y de "Empezar desde cero").
  * Con la app levantada:  E2E_BASE_URL=http://localhost:5173 npm run tutorials
- * Los videos quedan en public/tutoriales/ (editar.webm y crear.webm).
+ * Los videos quedan en public/tutoriales/ (crear.webm, editar.webm y recorrer.webm); guion en
+ * e2e/tutorials/GUION.md. recorrer arma la casa de 3 pisos con los PDF de backend/tests/real.
  */
 export default defineConfig({
   testDir: './e2e/tutorials',

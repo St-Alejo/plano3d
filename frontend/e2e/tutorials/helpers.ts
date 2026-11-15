@@ -334,18 +334,24 @@ export async function drawStairProfile(page: Page, origin: Pt, steps: number, ri
 
 /** Riel de niveles: losas apiladas con su elevación; `current` en ladrillo. */
 export async function drawLevels(page: Page, at: Pt, elevations: number[], current: number, pxPerM = 22): Promise<void> {
+  // se redibuja en el mismo sitio: solo la primera vez entra con animación
+  const again = await page.evaluate(() => {
+    const old = document.getElementById('tut-levels')
+    old?.remove()
+    return !!old
+  })
   const w = 120
   let out = ''
   elevations.forEach((e, i) => {
     const y = at.y - e * pxPerM
     const on = i === current
-    out += `<g class="pop" style="animation-delay:${i * 0.15}s"><rect x="${at.x}" y="${y - 6}" width="${w}" height="8" rx="2" fill="${on ? BRICK : INK}"/>
+    out += `<g class="${again ? '' : 'pop'}" style="animation-delay:${i * 0.15}s"><rect x="${at.x}" y="${y - 6}" width="${w}" height="8" rx="2" fill="${on ? BRICK : INK}"/>
       <text x="${at.x + w + 10}" y="${y + 1}" fill="${on ? BRICK : INK}" style="font-size:13px">${e.toFixed(1).replace('.', ',')} m</text></g>`
   })
   const top = at.y - elevations.at(-1)! * pxPerM
   await svg(
     page,
-    `<rect x="${at.x - 14}" y="${top - 26}" width="${w + 86}" height="${at.y - top + 44}" rx="10" fill="rgba(242,238,230,.94)" stroke="${INK}" stroke-width="1.5"/>${out}`,
+    `<g id="tut-levels"><rect x="${at.x - 14}" y="${top - 26}" width="${w + 86}" height="${at.y - top + 44}" rx="10" fill="rgba(242,238,230,.94)" stroke="${INK}" stroke-width="1.5"/>${out}</g>`,
   )
 }
 
@@ -367,28 +373,24 @@ export async function drawRay(page: Page, from: Pt, to: Pt, label: string): Prom
   await dim(page, from, to, label, 16)
 }
 
-/** Franja de texto de los tutoriales anteriores (se quita cuando los tres usen `scene`). */
-export async function caption(page: Page, title: string, detail = ''): Promise<void> {
-  await page.evaluate(
-    ([t, d]) => {
-      const s = document.getElementById('tut-sub')!
-      s.textContent = d ? `${t} — ${d}` : t!
-      s.classList.add('on')
-    },
-    [title, detail],
-  )
-  await page.waitForTimeout(400)
-}
-
 export const pause = (page: Page, ms = 900) => page.waitForTimeout(ms)
 
 /** Imagen final de la escena: todo quieto un momento antes de seguir. */
 export const hold = (page: Page, ms = 900) => page.waitForTimeout(ms)
 
 let last = { x: VIEWPORT.width / 2, y: VIEWPORT.height / 2 }
+let defaultSteps = 22
+
+/**
+ * Pasos de cada deslizamiento del ratón. Con el visor 3D renderizado por CPU cada movimiento
+ * tarda en llegar, así que allí se usan menos pasos para que el cursor no se arrastre.
+ */
+export function setGlideSteps(steps: number): void {
+  defaultSteps = steps
+}
 
 /** Movimiento suave del ratón (se ve en el video). */
-export async function glide(page: Page, to: Pt, steps = 22): Promise<void> {
+export async function glide(page: Page, to: Pt, steps = defaultSteps): Promise<void> {
   const from = last
   for (let i = 1; i <= steps; i++) {
     const t = i / steps
