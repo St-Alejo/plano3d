@@ -179,13 +179,14 @@ describe('LandingPage', () => {
     const pieces = (brick: 'tolete' | 'bloque5') => headline(sampleTotals(brick), brick)[0]!.value.toLocaleString('es-CO')
     expect(pieces('tolete')).not.toBe(pieces('bloque5'))
     const figure = () => document.querySelector('[data-figure="piezas"]')!
-    await screen.findByRole('group', { name: 'Pieza de mampostería' })
+    // la sección es diferida: con cobertura el import tarda más que el segundo por defecto
+    await screen.findByRole('group', { name: 'Pieza de mampostería' }, { timeout: 10_000 })
     expect(figure()).toHaveTextContent(pieces('tolete'))
     fireEvent.click(screen.getByRole('button', { name: 'Bloque Nº5' }))
     expect(screen.getByRole('button', { name: 'Bloque Nº5' })).toHaveAttribute('aria-pressed', 'true')
     await waitFor(() => expect(figure()).toHaveTextContent(pieces('bloque5')))
     expect(screen.getByRole('table', { name: 'Todos los materiales' })).toHaveTextContent(BRICKS.bloque5.name)
-  })
+  }, 15_000)
 
   it('preguntas frecuentes: cada una abre su respuesta; el pie repite el nombre y enlaza a la app', () => {
     renderLanding()
