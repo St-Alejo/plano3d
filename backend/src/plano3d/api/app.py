@@ -85,7 +85,7 @@ from plano3d.application.use_cases.photos import MAX_BYTES as PHOTO_MAX_BYTES
 from plano3d.application.use_cases.photos import Shot
 from plano3d.application.use_cases.projects import normalize_content_type
 from plano3d.config import Settings
-from plano3d.container import Container, build_container
+from plano3d.container import Container, build_container, snapshot_store
 from plano3d.domain import Point2D
 from plano3d.domain.errors import (
     ConcurrencyError,
@@ -95,6 +95,7 @@ from plano3d.domain.errors import (
 )
 from plano3d.domain.user import User
 from plano3d.infrastructure.demo import seed_demo
+from plano3d.infrastructure.snapshot import enable_snapshots
 
 log = logging.getLogger(__name__)
 
@@ -587,6 +588,12 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.container = (container or await build_container(settings)).configure(settings)
+        store = snapshot_store(settings)
+        if store is not None:
+            if settings.mode != "memory":
+                log.warning("PLANO3D_SNAPSHOT solo aplica al modo memory: se ignora")
+            else:
+                await enable_snapshots(app.state.container, store)
         if settings.demo_enabled:
             await seed_demo(app.state.container, settings.demo_password)
         try:

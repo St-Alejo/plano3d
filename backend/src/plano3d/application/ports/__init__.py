@@ -329,3 +329,18 @@ class LinkCodeStore(ABC):
     @abstractmethod
     async def consume(self, code: str) -> str | None:
         """El id del usuario si el código existe y no venció; el código deja de valer."""
+
+
+class StateSnapshotStore(ABC):
+    """Copia comprimida del estado (cuentas, proyectos, versiones) para la API en memoria.
+
+    Permite que la réplica única de la demo se apague (escala a cero) sin perder nada:
+    al arrancar se restaura la última copia.
+    """
+
+    @abstractmethod
+    async def load(self) -> bytes | None:
+        """La última copia, o None si todavía no hay ninguna."""
+
+    @abstractmethod
+    async def save(self, data: bytes) -> None: ...

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://plano3d:plano3d@postgres:5432/plano3d"
     redis_url: str = "redis://redis:6379/0"
 
-    storage: Literal["local", "s3"] = "local"
+    storage: Literal["local", "s3", "blob"] = "local"
     storage_dir: Path = Path("./data")
     s3_bucket: str = "plano3d"
     s3_endpoint_url: str | None = "http://storage:8333"

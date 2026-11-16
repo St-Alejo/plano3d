@@ -21,6 +21,7 @@ from plano3d.application.ports import (
     PlanAssistant,
     ProgressBroker,
     ProjectRepository,
+    StateSnapshotStore,
     TextReader,
     TokenService,
     UserRepository,
@@ -343,6 +344,10 @@ def memory_container(storage: FileStorage | None = None) -> Container:
 
 
 def _storage(settings: Settings) -> FileStorage:
+    if settings.storage == "blob":
+        from plano3d.infrastructure.storage.blob_storage import BlobFileStorage
+
+        return BlobFileStorage(settings.blob_connection_string, settings.blob_container)
     if settings.storage == "s3":
         from plano3d.infrastructure.storage.s3_storage import S3FileStorage
 
@@ -354,6 +359,19 @@ def _storage(settings: Settings) -> FileStorage:
             settings.s3_region,
         )
     return LocalFileStorage(settings.storage_dir)
+
+
+def snapshot_store(settings: Settings) -> StateSnapshotStore | None:
+    """Dónde guardar la copia del estado de la API en memoria (None = no se guarda)."""
+    if settings.snapshot == "blob":
+        from plano3d.infrastructure.storage.blob_storage import BlobSnapshotStore
+
+        return BlobSnapshotStore(settings.blob_connection_string, settings.blob_container)
+    if settings.snapshot == "file":
+        from plano3d.infrastructure.snapshot import FileSnapshotStore
+
+        return FileSnapshotStore(settings.snapshot_file)
+    return None
 
 
 async def build_container(settings: Settings) -> Container:
