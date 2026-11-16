@@ -15,8 +15,10 @@ import { polygonArea, polygonCentroid, roomArea, wallDirection, wallLength } fro
 import { DrawRoom, rectFrom } from '@/domain/drawing'
 import { placeOpening, type Placement } from '@/domain/openings'
 import { nearestWall, snapPoint, snapWithGuides, wallEndpoints, type Guide } from '@/domain/snap'
+import { useCollab } from '@/collab/collabStore'
 import { selectLevel, useEditor, type Selected } from '@/store/editorStore'
 import { dimensionLine, PlanElements } from './PlanElements'
+import { RemoteLayer } from './RemoteLayer'
 import { StructureOverlay } from './StructureOverlay'
 import { contentBounds, parseLength, pointInPolygon, wallsInBox } from './selectionMath'
 import { pinchOf, pinchStep, zoomAt, type Pinch } from './viewMath'
@@ -73,6 +75,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
   const level = useEditor(selectLevel)
   const tool = useEditor((s) => s.tool)
   const selection = useEditor((s) => s.selection)
+  // edición en vivo: lo que se arrastra se ve como fantasma en las otras pantallas
+  const sendPreview = useCollab((s) => s.sendPreview)
   const select = useEditor((s) => s.select)
   const toggleSelect = useEditor((s) => s.toggleSelect)
   const selectMany = useEditor((s) => s.selectMany)
@@ -423,12 +427,15 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
     const hit = nearestWall(level, at, Math.max(screenTol * mpp * 3, 0.4))
     if (!hit) return
     const step = gridStep > 0 ? Math.max(gridStep, 0.05) : 0.05
-    setGhost({ ...placeOpening(hit.wall, o.width, hit.offset, o.id, step), wall: hit.wall, opening: o })
+    const placed = placeOpening(hit.wall, o.width, hit.offset, o.id, step)
+    setGhost({ ...placed, wall: hit.wall, opening: o })
+    sendPreview({ k: 'opening', level: level.id, id: o.id, v: { wall: hit.wall.id, offset: placed.offset, width: o.width, kind: o.kind } })
   }
   const dropOpening = (e: Konva.KonvaEventObject<DragEvent>) => {
     e.target.position({ x: 0, y: 0 })
     const g = ghost
     setGhost(null)
+    sendPreview(null)
     if (!level || !g) return
     if (!g.ok) {
       useEditor.getState().setError('Ahí no cabe: se sale del muro o pisa otra abertura')
@@ -669,10 +676,12 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   onClick={pick({ kind: 'furniture', id: f.id })}
                   onTap={pick({ kind: 'furniture', id: f.id })}
                   onContextMenu={pickForMenu({ kind: 'furniture', id: f.id })}
+                  onDragMove={(e) => sendPreview({ k: 'furniture', level: level!.id, id: f.id, v: { ...f, position: toM({ x: e.target.x(), y: e.target.y() }) } })}
                   onDragEnd={(e) => {
                     const raw = toM({ x: e.target.x(), y: e.target.y() })
                     const to = gridStep > 0 ? { x: Math.round(raw.x / gridStep) * gridStep, y: Math.round(raw.y / gridStep) * gridStep } : raw
                     if (!dispatch(new UpdateFurniture(level!.id, f.id, { position: to }))) e.target.position(c)
+                    sendPreview(null)
                   }}
                 >
                   <Rect
@@ -723,6 +732,8 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
 
           {showStructure && model && level && <StructureOverlay model={model} levelId={level.id} mpp={mpp} scale={view.scale} />}
 
+          {level && <RemoteLayer level={level} mpp={mpp} scale={view.scale} />}
+
           {selectedWall &&
             group.length === 1 &&
             !lockedWalls &&
@@ -738,8 +749,15 @@ export function Editor2D({ imageUrl, onCalibrate }: { imageUrl?: string; onCalib
                   stroke={C.wallSel}
                   strokeWidth={2.5 / view.scale}
                   draggable
-                  onDragMove={(e) => e.target.position(dragSnap(selectedWall, end, { x: e.target.x(), y: e.target.y() }))}
-                  onDragEnd={dragEndpoint(selectedWall, end)}
+                  onDragMove={(e) => {
+                    const at = dragSnap(selectedWall, end, { x: e.target.x(), y: e.target.y() })
+                    e.target.position(at)
+                    sendPreview({ k: 'wall', level: level!.id, id: selectedWall.id, v: { ...selectedWall, [end]: toM(at) } })
+                  }}
+                  onDragEnd={(e) => {
+                    dragEndpoint(selectedWall, end)(e)
+                    sendPreview(null)
+                  }}
                 />
               )
             })}

@@ -13,6 +13,9 @@ import { CalibrateDialog } from '@/features/editor2d/CalibrateDialog'
 import { PropertiesPanel } from '@/features/editor2d/PropertiesPanel'
 import { Toolbar } from '@/features/editor2d/Toolbar'
 import { TOOLS } from '@/features/editor2d/tools'
+import { PresenceBar } from '@/collab/PresenceBar'
+import { useCollab } from '@/collab/collabStore'
+import { useLiveEditing } from '@/collab/useLiveEditing'
 import { ChatPanel } from '@/features/studio/ChatPanel'
 import { StudioLayout } from '@/features/studio/StudioLayout'
 import { TutorialButton } from '@/features/studio/TutorialButton'
@@ -80,6 +83,11 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
     if (project.model) load(project.id, project.model, project.revision)
   }, [project.id, project.model, project.revision, load])
 
+  // edición en vivo (ADR-021): con la sala abierta el servidor guarda solo
+  useLiveEditing(project.id)
+  const live = useCollab((s) => s.status === 'live')
+  const syncing = useCollab((s) => s.pending > 0)
+
   /**
    * Guarda con bloqueo optimista (If-Match con la revisión cargada). Si otra persona
    * guardó antes, el servidor responde 409 y se ofrece recargar o sobrescribir.
@@ -89,6 +97,8 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
       const st = useEditor.getState()
       const m = st.model
       if (!m || (!force && !selectIsDirty(st))) return true
+      // en vivo cada cambio ya viajó al servidor, que lo guarda solo
+      if (useCollab.getState().status === 'live') return true
       setSaving(true)
       setSaveError(null)
       // la posición del historial que se envía: lo que se edite mientras viaja sigue sin guardar
@@ -274,17 +284,18 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
       />
       <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} open={historyOpen} onOpenChange={setHistoryOpen} />
       <span className="mx-0.5 h-6 w-px bg-line" aria-hidden />
+      <PresenceBar />
       <span className="hidden font-mono text-xs text-subtle xl:inline" aria-live="polite">
-        {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
+        {live ? (syncing ? 'sincronizando…' : 'guardado') : saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'guardado'}
       </span>
       <Button
         size="sm"
-        variant={dirty ? 'primary' : 'ghost'}
+        variant={dirty && !live ? 'primary' : 'ghost'}
         loading={saving}
-        disabled={!dirty}
-        aria-label={dirty ? 'Guardar cambios' : 'Todo guardado'}
-        title={dirty ? 'Guardar (Ctrl+S)' : 'No hay cambios pendientes'}
-        icon={dirty ? <Save className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
+        disabled={!dirty || live}
+        aria-label={live ? 'Se guarda solo (en vivo)' : dirty ? 'Guardar cambios' : 'Todo guardado'}
+        title={live ? 'En vivo: cada cambio se guarda solo' : dirty ? 'Guardar (Ctrl+S)' : 'No hay cambios pendientes'}
+        icon={dirty && !live ? <Save className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
         onClick={() => void save()}
       >
         <span className="hidden sm:inline">Guardar</span>
