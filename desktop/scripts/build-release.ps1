@@ -74,6 +74,10 @@ New-Item -ItemType Directory -Force $out | Out-Null
 & $godot --headless --path $app --import | Out-Null
 & $godot --headless --path $app --export-release 'Windows Desktop' (Join-Path $out 'Plano3D.exe')
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path (Join-Path $out 'Plano3D.exe'))) { throw 'Godot no exportó la app' }
+# sin la carpeta data_* la app arranca sin sus scripts C#: Godot solo lo avisa, aquí es error
+if (-not (Get-ChildItem -Path $out -Directory -Filter 'data_*' | Where-Object { Test-Path (Join-Path $_.FullName 'Plano3D.App.dll') })) {
+  throw 'La exportación salió sin los ensamblados .NET (data_*\Plano3D.App.dll): revisa el SDK de .NET y app\Plano3D.App.sln'
+}
 
 # ------------------------------------------------------------------ instalador
 Write-Host '== Compilando el instalador'
