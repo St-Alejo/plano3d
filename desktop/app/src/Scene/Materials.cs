@@ -1,4 +1,5 @@
 using Godot;
+using Plano3D.Core.Editing;
 
 namespace Plano3D.App.Scene;
 
@@ -18,21 +19,25 @@ public static class Materials
 
     private static StandardMaterial3D Matte(string hex, float rough = 0.9f) => new() { AlbedoColor = new Color(hex), Roughness = rough };
 
-    public static StandardMaterial3D Wall(string material) => material switch
+    /// <summary>Acabado de muro con los mismos ids y colores que la web (la fase de gráficos trae las texturas).</summary>
+    public static StandardMaterial3D Wall(string material)
     {
-        "brick" => Get("wall-brick", () => Matte("a85a3c")),
-        "concrete" => Get("wall-concrete", () => Matte("b9b4aa")),
-        "glass" => Glass,
-        _ => Get("wall", () => Matte("ece7dd")),
-    };
+        if (material == "glass") return Glass;
+        var spec = Catalog.WallFinish(material) ?? Catalog.WallFinishes[0];
+        return Get($"wall-{spec.Id}", () => Matte(spec.Color, (float)spec.Roughness));
+    }
 
-    public static StandardMaterial3D Floor(string? material, string? roomType) => (material ?? roomType) switch
+    public static StandardMaterial3D Floor(string? material, string? roomType)
     {
-        "tile" or "porcelanato" or "baldosa" or "bathroom" or "kitchen" => Get("floor-tile", () => Matte("d8d3c8", 0.5f)),
-        "concrete" or "garage" or "parking" => Get("floor-concrete", () => Matte("a9a59d")),
-        "grass" => Get("floor-grass", () => Matte("7d9a5b")),
-        _ => Get("floor-wood", () => Matte("b98a5e", 0.7f)),
-    };
+        if (Catalog.FloorFinish(material) is { } spec) return Get($"floor-{spec.Id}", () => Matte(spec.Color, (float)spec.Roughness));
+        return (material ?? roomType) switch
+        {
+            "tile" or "bathroom" or "kitchen" => Get("floor-tile", () => Matte("d8d3c8", 0.5f)),
+            "concrete" or "garage" or "parking" => Get("floor-concrete", () => Matte("a9a59d")),
+            "grass" => Get("floor-grass", () => Matte("7d9a5b")),
+            _ => Get("floor-wood", () => Matte("b98a5e", 0.7f)),
+        };
+    }
 
     public static StandardMaterial3D Door => Get("door", () => Matte("6b4428", 0.6f));
 

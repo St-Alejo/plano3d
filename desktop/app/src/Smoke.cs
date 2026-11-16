@@ -72,6 +72,32 @@ public static class Smoke
             walls.Remove(walls.First(w => (string?)w!["id"] == wallId));
             await web.EditAsync(back);
             await Until(main, () => !editor.Sync.Find(wallId).Any(), 10, "deshacer el muro");
+
+            // y al revés: se dibuja un muro en la planta con el ratón y la web lo recibe
+            editor.SetMode(EditorScreen.ViewMode.Split);
+            editor.SetTool("wall");
+            await Frames(tree, 10);
+            var plan = editor.PlanView.GetGlobalRect();
+            var a = plan.Position + plan.Size * new Vector2(0.3f, 0.45f);
+            var b = plan.Position + plan.Size * new Vector2(0.75f, 0.45f);
+            Click(main, a);
+            await Frames(tree, 2);
+            sw.Restart();
+            Click(main, b);
+            await Frames(tree, 2);
+            var drawn = editor.Selection.FirstOrDefault();
+            if (drawn is null || editor.History.UndoLabel != "Agregar muro") throw new InvalidOperationException("la herramienta de muro no creó nada");
+            PressKey(main, Godot.Key.Escape);
+            await Until(main, () => HasEntity(web.Document.View, drawn), 10, "el muro del escritorio en la web");
+            GD.Print($"[humo] el muro dibujado en el escritorio llegó a la web en {sw.ElapsedMilliseconds} ms");
+            await Frames(tree, 30);
+            Shot(main, output.Replace(".png", "-planta.png"));
+
+            // deshacer también viaja
+            editor.Undo();
+            await Until(main, () => !HasEntity(web.Document.View, drawn), 10, "deshacer en la web");
+            GD.Print("[humo] deshacer llegó a la web");
+            editor.SetTool("select");
             GD.Print("[humo] OK");
             main.ShowProjects();
             await Frames(tree, 5);
@@ -82,6 +108,24 @@ public static class Smoke
             GD.PrintErr($"[humo] FALLÓ: {e.Message}");
             tree.Quit(1);
         }
+    }
+
+    private static bool HasEntity(JsonObject? model, string id) =>
+        model?.ToJsonString().Contains($"\"id\":\"{id}\"", StringComparison.Ordinal) == true;
+
+    private static void Click(Main main, Vector2 at)
+    {
+        var vp = main.GetViewport();
+        vp.PushInput(new InputEventMouseMotion { Position = at, GlobalPosition = at });
+        vp.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = at, GlobalPosition = at });
+        vp.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = at, GlobalPosition = at });
+    }
+
+    private static void PressKey(Main main, Key key)
+    {
+        var vp = main.GetViewport();
+        vp.PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true });
+        vp.PushInput(new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false });
     }
 
     private static void Shot(Main main, string path)

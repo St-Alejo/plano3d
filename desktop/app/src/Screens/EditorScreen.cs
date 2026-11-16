@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
 using Godot;
+using Plano3D.App.Plan;
 using Plano3D.App.Scene;
+using Plano3D.Core.Editing;
 using Plano3D.Core.Geometry;
 using Plano3D.Core.Json;
 using Plano3D.Core.Model;
@@ -11,12 +13,16 @@ using Plano3D.Infrastructure.Collab;
 namespace Plano3D.App.Screens;
 
 /// <summary>
-/// El proyecto en 3D y en vivo: lo que se edita en la web llega aquí al instante (y lo que
-/// se selecciona aquí se ve resaltado allá).
+/// El editor del escritorio: la casa en 3D, la planta del piso activo, o ambas lado a lado.
+/// Todo lo que se edita aquí viaja a la sala como ops por entidad y aparece al instante en la
+/// web; lo que se edita allá llega aquí igual. Esta parte tiene el estado, el 3D y la sala;
+/// los paneles están en <c>EditorScreen.Panels.cs</c>.
 /// </summary>
-public partial class EditorScreen : Control
+public partial class EditorScreen : Control, IEditorHost
 {
     private static readonly CultureInfo Es = CultureInfo.GetCultureInfo("es-CO");
+
+    public enum ViewMode { Model3D, Plan, Split }
 
     private Main _main = null!;
     private string _projectId = "";
@@ -27,31 +33,58 @@ public partial class EditorScreen : Control
     private bool _framed;
     private bool _closed;
 
-    private Label _title = null!;
-    private Label _status = null!;
-    private HBoxContainer _peers = null!;
-    private OptionButton _levelPick = null!;
-    private Label _toast = null!;
-    private PanelContainer _infoPanel = null!;
-    private Label _info = null!;
-    private Label _loading = null!;
+    // estado de la edición
+    private JsonObject? _model;
+    private BuildingModel? _building;
+    private readonly EditHistory _history = new();
+    private List<string> _selection = [];
+    private string? _levelId;
+    private bool _gridSnap = true;
+    private bool _showUpper = true;
+    private string _catalogId = "sofa_3";
+    private string _wallFinish = "ladrillo";
+    private string _floorFinish = "madera_roble";
+    private ViewMode _mode = ViewMode.Model3D;
+    private readonly Dictionary<int, OrbitCamera.View> _bookmarks = [];
 
-    private string? _selected;
-    private readonly List<GeometryInstance3D> _overlays = [];
+    // arrastre de muebles en 3D
+    private JsonObject? _grabBase;
+    private JsonObject? _grabDraft;
+    private Vector3 _grabFrom;
+    private float _grabY;
+    private List<string> _grabIds = [];
+
     private readonly Dictionary<string, Node3D> _ghosts = [];
+    private readonly List<GeometryInstance3D> _overlays = [];
     private IReadOnlyList<Peer> _peerList = [];
     private double _toastLeft;
+    private ulong _lastPreview;
 
     /// <summary>Estado para pruebas y diagnóstico.</summary>
     public SceneSync Sync => _sync;
     public CollabClient? Collab => _collab;
     public bool Ready3D { get; private set; }
+    public PlanView PlanView => _plan;
+    public EditHistory History => _history;
+    public ViewMode Mode => _mode;
+
+    // ------------------------------------------------------------------ IEditorHost
+    public JsonObject? Model => _model;
+    public BuildingModel? Building => _building;
+    public string? LevelId => _levelId;
+    public IReadOnlyList<string> Selection => _selection;
+    public IReadOnlyList<Peer> Peers => _peerList;
+    public bool GridSnap => _gridSnap;
+    public string CatalogId => _catalogId;
+    public string WallFinish => _wallFinish;
+    public string FloorFinish => _floorFinish;
 
     public void Build(Main main, Node3D worldHost, string projectId, string name)
     {
         _main = main;
         _projectId = projectId;
         MouseFilter = MouseFilterEnum.Ignore;
+        SetAnchorsPreset(LayoutPreset.FullRect);
 
         // ---------------------------------------------------------------- mundo 3D
         _world = new Node3D { Name = "Escena" };
@@ -78,71 +111,11 @@ public partial class EditorScreen : Control
         _world.AddChild(_camera);
         _camera.MakeCurrent();
         _camera.Clicked += Pick;
+        _camera.TryGrab = TryGrab;
+        _camera.Grabbed += GrabMove;
+        _camera.Released += GrabEnd;
 
-        // ---------------------------------------------------------------- interfaz
-        var bar = new PanelContainer();
-        bar.AddThemeStyleboxOverride("panel", Ui.Box(new Color(Ui.Surface, 0.94f), 14, Ui.Line, 10));
-        bar.SetAnchorsPreset(LayoutPreset.TopWide);
-        bar.OffsetLeft = 16;
-        bar.OffsetRight = -16;
-        bar.OffsetTop = 14;
-        AddChild(bar);
-        var row = new HBoxContainer();
-        bar.AddChild(row);
-        var back = Ui.Flat("←  Proyectos");
-        back.Pressed += () => _main.ShowProjects();
-        row.AddChild(back);
-        _title = Ui.Text(name, 18);
-        _title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        _title.VerticalAlignment = VerticalAlignment.Center;
-        row.AddChild(_title);
-        _levelPick = new OptionButton { TooltipText = "Qué pisos se ven" };
-        _levelPick.ItemSelected += _ => ApplyLevelFilter();
-        row.AddChild(_levelPick);
-        var frame = Ui.Secondary("Encuadrar");
-        frame.TooltipText = "Encuadrar la casa (F)";
-        frame.Pressed += () => FrameHouse(false);
-        row.AddChild(frame);
-        _peers = new HBoxContainer();
-        _peers.AddThemeConstantOverride("separation", 6);
-        row.AddChild(_peers);
-        _status = Ui.Text("conectando…", 13, Ui.Muted);
-        _status.VerticalAlignment = VerticalAlignment.Center;
-        row.AddChild(_status);
-
-        _toast = Ui.Text("", 14, Ui.Paper);
-        var toastBox = new PanelContainer { Visible = false };
-        toastBox.AddThemeStyleboxOverride("panel", Ui.Box(new Color(Ui.Ink, 0.88f), 999, null, 10));
-        toastBox.AddChild(_toast);
-        toastBox.SetAnchorsPreset(LayoutPreset.CenterBottom);
-        toastBox.GrowHorizontal = GrowDirection.Both;
-        toastBox.GrowVertical = GrowDirection.Begin;
-        toastBox.OffsetBottom = -28;
-        toastBox.Name = "Aviso";
-        AddChild(toastBox);
-
-        _infoPanel = new PanelContainer { Visible = false, CustomMinimumSize = new Vector2(260, 0) };
-        _infoPanel.SetAnchorsPreset(LayoutPreset.BottomLeft);
-        _infoPanel.GrowVertical = GrowDirection.Begin;
-        _infoPanel.OffsetLeft = 16;
-        _infoPanel.OffsetBottom = -16;
-        _info = Ui.Text("", 14, wrap: true);
-        _infoPanel.AddChild(_info);
-        AddChild(_infoPanel);
-
-        var help = Ui.Text("Arrastra para girar · clic derecho para mover · rueda para acercar · clic para elegir", 12, Ui.Muted);
-        help.SetAnchorsPreset(LayoutPreset.BottomRight);
-        help.GrowHorizontal = GrowDirection.Begin;
-        help.GrowVertical = GrowDirection.Begin;
-        help.OffsetRight = -16;
-        help.OffsetBottom = -12;
-        AddChild(help);
-
-        _loading = Ui.Text("Abriendo el proyecto…", 18, Ui.Muted);
-        _loading.SetAnchorsPreset(LayoutPreset.Center);
-        _loading.GrowHorizontal = GrowDirection.Both;
-        _loading.GrowVertical = GrowDirection.Both;
-        AddChild(_loading);
+        BuildPanels(name);
     }
 
     private static Godot.Environment MakeEnvironment()
@@ -219,9 +192,14 @@ public partial class EditorScreen : Control
         _world.QueueFree();
     }
 
+    /// <summary>Dibuja el modelo vigente en el 3D, la planta y los paneles.</summary>
     private void Show(JsonObject model)
     {
+        _model = model;
+        _grabDraft = null;
         _sync.Apply(model);
+        _building = _sync.Model;
+        _plan.Draft = null;
         _loading.Visible = false;
         Ready3D = true;
         RefreshLevels();
@@ -230,9 +208,153 @@ public partial class EditorScreen : Control
             FrameHouse(true);
             _framed = true;
         }
+        // lo elegido que ya no existe (otra persona lo borró) se suelta
+        var alive = _selection.Where(id => ModelEditor.Find(model, id) is not null).ToList();
+        if (alive.Count != _selection.Count) _selection = alive;
+        Reselect();
+        _plan.Refresh();
+        RefreshInspector();
+    }
+
+    // ------------------------------------------------------------------ editar
+    public void Commit(JsonObject next, string label, IEnumerable<string>? select = null)
+    {
+        if (_model is null) return;
+        _history.Record(label, _model, next);
+        Publish(next, select);
+    }
+
+    /// <summary>Manda el modelo cambiado a la sala (como ops) y lo muestra ya, sin esperar al servidor.</summary>
+    private void Publish(JsonObject next, IEnumerable<string>? select = null)
+    {
+        if (_collab is { } c)
+        {
+            if (c.Document.View is null)
+            {
+                Toast("Todavía no hay conexión con la sala: espera a que diga «en vivo»");
+                Show(_model!);
+                return;
+            }
+            Observe(c.EditAsync(next));
+        }
+        if (select is not null) _selection = select.Distinct().ToList();
+        Show(next);
+        UpdateUndoButtons();
+        SendPresence();
+    }
+
+    private void Observe(Task task) => task.ContinueWith(t => OnMain(() => Toast($"No se pudo enviar el cambio: {t.Exception?.GetBaseException().Message}")), TaskContinuationOptions.OnlyOnFaulted);
+
+    public void Undo()
+    {
+        if (_model is null || _history.Undo(_model) is not { } r)
+        {
+            Toast("No hay nada que deshacer");
+            return;
+        }
+        Publish(r.Model);
+        Toast($"Deshecho: {r.Label}");
+    }
+
+    public void Redo()
+    {
+        if (_model is null || _history.Redo(_model) is not { } r)
+        {
+            Toast("No hay nada que rehacer");
+            return;
+        }
+        Publish(r.Model);
+        Toast($"Rehecho: {r.Label}");
+    }
+
+    /// <summary>Una edición sobre lo elegido; si no aplica, se avisa.</summary>
+    private void Edit(string label, Func<JsonObject, JsonObject> change, IEnumerable<string>? select = null)
+    {
+        if (_model is null) return;
+        try
+        {
+            Commit(change(_model), label, select);
+        }
+        catch (EditException e)
+        {
+            Toast(e.Message);
+        }
+    }
+
+    /// <summary>Agrega algo y lo deja elegido.</summary>
+    private void Add(string label, Func<JsonObject, (JsonObject Model, string Id)> add)
+    {
+        if (_model is null) return;
+        try
+        {
+            var (m, id) = add(_model);
+            Commit(m, label, [id]);
+        }
+        catch (EditException e)
+        {
+            Toast(e.Message);
+        }
+    }
+
+    public void ShowDraft(JsonObject? draft)
+    {
+        var shown = draft ?? _model;
+        if (shown is null) return;
+        _sync.Apply(shown);
+        _plan.Draft = draft is null ? null : _sync.Model;
+        _plan.QueueRedraw();
         Reselect();
     }
 
+    public void Preview(string kind, string id, JsonObject? value)
+    {
+        if (_collab is not { Status: LiveStatus.Live } c || _levelId is null) return;
+        var entity = value is null ? null : new JsonObject { ["k"] = kind, ["level"] = _levelId, ["id"] = id, ["v"] = value.DeepClone() };
+        Observe(c.PreviewAsync(entity));
+    }
+
+    public void Select(IEnumerable<string> ids)
+    {
+        _selection = ids.Distinct().ToList();
+        Reselect();
+        _plan.QueueRedraw();
+        RefreshInspector();
+        SendPresence();
+    }
+
+    private void DeleteSelection()
+    {
+        if (_selection.Count == 0) return;
+        var n = _selection.Count;
+        Edit(n == 1 ? "Borrar" : $"Borrar {n} elementos", m => ModelEditor.Delete(m, _selection), []);
+    }
+
+    private void RotateSelection(double radians) =>
+        Edit("Girar", m => ModelEditor.Rotate(m, _selection, radians), _selection);
+
+    private void DuplicateSelection()
+    {
+        if (_model is null || _selection.Count == 0) return;
+        try
+        {
+            var (m, ids) = ModelEditor.Duplicate(_model, _selection, new Point2(0.5, 0.5));
+            Commit(m, "Duplicar", ids);
+        }
+        catch (EditException e)
+        {
+            Toast(e.Message);
+        }
+    }
+
+    private void Nudge(Point2 d) => Edit("Mover", m => ModelEditor.Translate(m, _selection, d), _selection);
+
+    private void SelectAll()
+    {
+        if (_building?.FindLevel(_levelId ?? "") is not { } lv) return;
+        Select(lv.Walls.Select(w => w.Id).Concat(lv.Furniture.Select(f => f.Id)).Concat(lv.Columns.Select(c => c.Id)).Concat(lv.Rooms.Select(r => r.Id)));
+    }
+
+    // ------------------------------------------------------------------ cámara y pisos
     private void FrameHouse(bool instant)
     {
         if (_sync.Model is not { } m) return;
@@ -242,61 +364,140 @@ public partial class EditorScreen : Control
         // media diagonal de la caja de la casa: así entra entera con el campo de visión de la cámara
         var radius = (float)Math.Sqrt(Math.Pow(max.X - min.X, 2) + Math.Pow(max.Y - min.Y, 2) + top * top) / 2;
         _camera.Frame(center, radius, instant);
+        if (_mode != ViewMode.Model3D) _plan.Fit();
     }
 
-    // ------------------------------------------------------------------ pisos
     private void RefreshLevels()
     {
-        if (_sync.Model is not { } m) return;
-        var wanted = new List<string> { "Todos los pisos" };
-        wanted.AddRange(m.Levels.Select(l => $"Hasta {l.Name}"));
-        var current = _levelPick.ItemCount == 0 ? 0 : _levelPick.Selected;
-        if (_levelPick.ItemCount != wanted.Count || Enumerable.Range(0, wanted.Count).Any(i => _levelPick.GetItemText(i) != wanted[i]))
+        if (_building is not { } m || m.Levels.Count == 0) return;
+        if (_levelId is null || m.FindLevel(_levelId) is null) _levelId = m.Levels[0].Id;
+        var names = m.Levels.Select(l => l.Name).ToList();
+        if (_levelPick.ItemCount != names.Count || Enumerable.Range(0, names.Count).Any(i => _levelPick.GetItemText(i) != names[i]))
         {
             _levelPick.Clear();
-            foreach (var w in wanted) _levelPick.AddItem(w);
-            _levelPick.Select(Math.Min(current, wanted.Count - 1));
+            foreach (var n in names) _levelPick.AddItem(n);
         }
+        var idx = m.Levels.ToList().FindIndex(l => l.Id == _levelId);
+        if (_levelPick.Selected != idx) _levelPick.Select(idx);
         ApplyLevelFilter();
+    }
+
+    private void SetLevel(int index)
+    {
+        if (_building is not { } m || index < 0 || index >= m.Levels.Count) return;
+        if (m.Levels[index].Id == _levelId) return;
+        _plan.Tool.Cancel();
+        _levelId = m.Levels[index].Id;
+        _levelPick.Select(index);
+        _selection.Clear();
+        ApplyLevelFilter();
+        _plan.Fit();
+        Reselect();
+        RefreshInspector();
+        SendPresence();
     }
 
     private void ApplyLevelFilter()
     {
-        if (_sync.Model is not { } m) return;
-        var idx = _levelPick.Selected;
-        if (idx <= 0)
-        {
-            _sync.ShowLevels(_ => true);
-            return;
-        }
-        var top = m.Levels[idx - 1];
-        _sync.ShowLevels(l => l.Elevation <= top.Elevation + 0.01);
-        SendPresence();
+        if (_building is not { } m || m.FindLevel(_levelId ?? "") is not { } active) return;
+        _sync.ShowLevels(l => _showUpper || l.Elevation <= active.Elevation + 0.01);
     }
 
-    private string? FocusLevel()
-    {
-        if (_sync.Model is not { } m) return null;
-        if (_levelPick.Selected > 0) return m.Levels[_levelPick.Selected - 1].Id;
-        if (_selected is { } id) return _sync.Find(id).FirstOrDefault()?.LevelId;
-        return m.Levels.FirstOrDefault()?.Id;
-    }
-
-    // ------------------------------------------------------------------ elegir
-    private void Pick(Vector2 screen)
+    // ------------------------------------------------------------------ 3D: elegir, poner, pintar y arrastrar
+    private (string Id, Vector3 Point)? RayHit(Vector2 screen)
     {
         var from = _camera.ProjectRayOrigin(screen);
         var to = from + _camera.ProjectRayNormal(screen) * 500;
         var hit = _camera.GetWorld3D().DirectSpaceState.IntersectRay(PhysicsRayQueryParameters3D.Create(from, to));
-        _selected = hit.Count > 0 && hit["collider"].As<Node>() is { } body && body.HasMeta("entity") ? body.GetMeta("entity").AsString() : null;
-        Reselect();
-        SendPresence();
+        if (hit.Count == 0 || hit["collider"].As<Node>() is not { } body || !body.HasMeta("entity")) return null;
+        return (body.GetMeta("entity").AsString(), hit["position"].AsVector3());
+    }
+
+    /// <summary>Punto del plano horizontal a esa altura bajo el cursor.</summary>
+    private Vector3? OnPlane(Vector2 screen, float y)
+    {
+        var from = _camera.ProjectRayOrigin(screen);
+        var dir = _camera.ProjectRayNormal(screen);
+        if (Math.Abs(dir.Y) < 1e-4) return null;
+        var t = (y - from.Y) / dir.Y;
+        return t > 0 ? from + dir * t : null;
+    }
+
+    private float ActiveElevation => (float)(_building?.FindLevel(_levelId ?? "")?.Elevation ?? 0);
+
+    private void Pick(Vector2 screen)
+    {
+        var tool = _plan.Tool;
+        if (tool is FurnitureTool or ColumnTool)
+        {
+            if (OnPlane(screen, ActiveElevation) is not { } p) return;
+            var at = Snapping.ToGrid(new Point2(p.X, p.Z), 0.05);
+            if (tool is FurnitureTool) Add("Agregar mueble", m => ModelEditor.AddFurniture(m, _levelId!, _catalogId, at));
+            else Add("Agregar columna", m => ModelEditor.AddColumn(m, _levelId!, at));
+            return;
+        }
+        var hit = RayHit(screen);
+        var found = hit is { } h && _model is not null ? ModelEditor.Find(_model, h.Id) : null;
+        if (tool is PaintTool)
+        {
+            PaintTool.Apply(this, found is null ? null : new Hit(found.Kind, hit!.Value.Id));
+            return;
+        }
+        if (found is not null && found.Level.Str("id") is { } lid && lid != _levelId && _building is { } b)
+        {
+            // elegir algo de otro piso cambia el piso activo
+            _levelId = lid;
+            _levelPick.Select(b.Levels.ToList().FindIndex(l => l.Id == lid));
+            ApplyLevelFilter();
+            _plan.Fit();
+        }
+        if (hit is null) Select([]);
+        else if (Input.IsKeyPressed(Key.Shift))
+        {
+            var sel = _selection.ToList();
+            if (!sel.Remove(hit.Value.Id)) sel.Add(hit.Value.Id);
+            Select(sel);
+        }
+        else Select([hit.Value.Id]);
+    }
+
+    private bool TryGrab(Vector2 screen)
+    {
+        if (_plan.Tool is not SelectTool || _model is null || RayHit(screen) is not { } hit || !_selection.Contains(hit.Id)) return false;
+        if (ModelEditor.Find(_model, hit.Id) is not { Kind: "furniture" or "column" or "stair" } f) return false;
+        var lv = _building?.FindLevel(f.Level.Str("id") ?? "");
+        _grabY = (float)(lv?.Elevation ?? 0);
+        if (OnPlane(screen, _grabY) is not { } p) return false;
+        _grabFrom = p;
+        _grabBase = _model;
+        _grabIds = _selection.ToList();
+        return true;
+    }
+
+    private void GrabMove(Vector2 screen)
+    {
+        if (_grabBase is null || OnPlane(screen, _grabY) is not { } p) return;
+        var d = Snapping.ToGrid(new Point2(p.X - _grabFrom.X, p.Z - _grabFrom.Z), _gridSnap ? 0.05 : 0);
+        _grabDraft = ModelEditor.Translate(_grabBase, _grabIds, d);
+        ShowDraft(_grabDraft);
+        if (_grabIds.Count == 1 && Time.GetTicksMsec() - _lastPreview > 50 && ModelEditor.Find(_grabDraft, _grabIds[0]) is { Kind: "furniture" } f)
+        {
+            _lastPreview = Time.GetTicksMsec();
+            Preview("furniture", _grabIds[0], f.Entity);
+        }
+    }
+
+    private void GrabEnd(Vector2 screen)
+    {
+        if (_grabDraft is { } draft) Commit(draft, _grabIds.Count == 1 ? "Mover" : $"Mover {_grabIds.Count} elementos", _grabIds);
+        if (_grabDraft is not null) Preview("", "", null);
+        _grabBase = _grabDraft = null;
     }
 
     private void SendPresence()
     {
-        if (_collab is not { Status: LiveStatus.Live } c || FocusLevel() is not { } level) return;
-        _ = c.PresenceAsync(level, _selected);
+        if (_collab is not { Status: LiveStatus.Live } c || _levelId is null) return;
+        Observe(c.PresenceAsync(_levelId, _selection.FirstOrDefault(), _plan.Tool.GetType().Name.Replace("Tool", "").ToLowerInvariant()));
     }
 
     /// <summary>Resalta lo propio y lo que miran las demás personas (con su color).</summary>
@@ -314,34 +515,7 @@ public partial class EditorScreen : Control
                 }
         }
         foreach (var p in _peerList.Where(p => p.Selection is not null)) Mark(p.Selection!, Ui.PeerColor(p.Id));
-        if (_selected is { } sel) Mark(sel, Ui.Accent);
-        ShowInfo();
-    }
-
-    private void ShowInfo()
-    {
-        if (_selected is null || _sync.Model is not { } m)
-        {
-            _infoPanel.Visible = false;
-            return;
-        }
-        string? text = null;
-        foreach (var level in m.Levels)
-        {
-            if (level.Walls.FirstOrDefault(w => w.Id == _selected) is { } w)
-                text = $"Muro · {level.Name}\n{w.Length.ToString("0.00", Es)} m de largo · {w.Thickness.ToString("0.00", Es)} m de grueso\n{w.OpeningsOrEmpty.Count} abertura(s)";
-            else if (level.Walls.SelectMany(x => x.OpeningsOrEmpty).FirstOrDefault(o => o.Id == _selected) is { } o)
-                text = $"{(o.IsDoor ? "Puerta" : "Ventana")} · {level.Name}\n{o.Width.ToString("0.00", Es)} × {o.Height.ToString("0.00", Es)} m";
-            else if (level.Rooms.FirstOrDefault(r => r.Id == _selected) is { } r)
-                text = $"{(string.IsNullOrWhiteSpace(r.Label) ? "Ambiente" : r.Label)} · {level.Name}\n{Math.Abs(BuildingGeometry.SignedArea(r.Polygon)).ToString("0.0", Es)} m²";
-            else if (level.Furniture.FirstOrDefault(f => f.Id == _selected) is { } f)
-                text = $"Mueble ({f.CatalogId}) · {level.Name}\n{f.Width.ToString("0.00", Es)} × {f.Depth.ToString("0.00", Es)} m";
-            else if (level.Columns.Any(c => c.Id == _selected)) text = $"Columna · {level.Name}";
-            else if (level.Stairs.Any(s => s.Id == _selected)) text = $"Escalera · {level.Name}";
-            if (text is not null) break;
-        }
-        _info.Text = text ?? _selected;
-        _infoPanel.Visible = true;
+        foreach (var id in _selection) Mark(id, Ui.Accent);
     }
 
     // ------------------------------------------------------------------ presencia y avisos
@@ -351,7 +525,7 @@ public partial class EditorScreen : Control
         {
             LiveStatus.Live => ("● en vivo", Ui.Live),
             LiveStatus.Connecting => ("conectando…", Ui.Muted),
-            LiveStatus.Offline => ("sin conexión · reintentando…", Ui.Danger),
+            LiveStatus.Offline => ("sin conexión · tus cambios esperan", Ui.Danger),
             LiveStatus.Closed => (detail ?? "la sala se cerró", Ui.Danger),
             _ => ("", Ui.Muted),
         };
@@ -372,9 +546,10 @@ public partial class EditorScreen : Control
             _peers.AddChild(chip);
         }
         Reselect();
+        _plan.QueueRedraw();
     }
 
-    private void Toast(string text)
+    public void Toast(string text)
     {
         _toast.Text = text;
         ((Control)_toast.GetParent()).Visible = true;
@@ -386,19 +561,7 @@ public partial class EditorScreen : Control
         if (_toastLeft > 0 && (_toastLeft -= delta) <= 0) ((Control)_toast.GetParent()).Visible = false;
     }
 
-    public override void _UnhandledKeyInput(InputEvent e)
-    {
-        if (e is not InputEventKey { Pressed: true } k) return;
-        if (k.Keycode == Key.F) FrameHouse(false);
-        if (k.Keycode == Key.Escape)
-        {
-            _selected = null;
-            Reselect();
-            SendPresence();
-        }
-    }
-
-    /// <summary>Fantasma de lo que otra persona arrastra en la web (muro, mueble o abertura).</summary>
+    /// <summary>Fantasma de lo que otra persona arrastra (muro, mueble o abertura).</summary>
     private void ShowGhost(string peerId, JsonObject? entity)
     {
         if (_ghosts.Remove(peerId, out var old)) old.QueueFree();

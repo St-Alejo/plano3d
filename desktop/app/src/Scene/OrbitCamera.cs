@@ -24,8 +24,31 @@ public partial class OrbitCamera : Camera3D
     private MouseButton _button;
     private bool _dragging;
 
+    private bool _grabbing;
+
     /// <summary>Clic sin arrastre sobre la vista 3D (posición en pantalla).</summary>
     public event Action<Vector2>? Clicked;
+
+    /// <summary>
+    /// Al presionar el botón izquierdo: si devuelve true, el arrastre es de quien lo pidió (mover
+    /// un mueble) y la cámara no gira. Luego llegan <see cref="Grabbed"/> y <see cref="Released"/>.
+    /// </summary>
+    public Func<Vector2, bool>? TryGrab;
+    public event Action<Vector2>? Grabbed;
+    public event Action<Vector2>? Released;
+
+    /// <summary>Encuadre guardable (marcadores de cámara).</summary>
+    public readonly record struct View(Vector3 Target, float Distance, float Yaw, float Pitch);
+
+    public View Bookmark => new(_goalTarget, _goalDistance, _goalYaw, _goalPitch);
+
+    public void GoTo(View v)
+    {
+        _goalTarget = v.Target;
+        _goalDistance = v.Distance;
+        _goalYaw = v.Yaw;
+        _goalPitch = v.Pitch;
+    }
 
     public override void _Ready()
     {
@@ -64,16 +87,24 @@ public partial class OrbitCamera : Camera3D
                     _pressAt = mb.Position;
                     _button = mb.ButtonIndex;
                     _dragging = false;
+                    _grabbing = mb.ButtonIndex == MouseButton.Left && TryGrab?.Invoke(mb.Position) == true;
                 }
                 else if (_pressAt is not null && mb.ButtonIndex == _button)
                 {
-                    if (!_dragging && _button == MouseButton.Left) Clicked?.Invoke(mb.Position);
+                    if (_grabbing) Released?.Invoke(mb.Position);
+                    else if (!_dragging && _button == MouseButton.Left) Clicked?.Invoke(mb.Position);
                     _pressAt = null;
+                    _grabbing = false;
                 }
                 break;
             case InputEventMouseMotion mm when _pressAt is { } start:
                 if (!_dragging && (mm.Position - start).Length() < DragThreshold) return;
                 _dragging = true;
+                if (_grabbing)
+                {
+                    Grabbed?.Invoke(mm.Position);
+                    return;
+                }
                 if (_button == MouseButton.Left)
                 {
                     _goalYaw -= mm.Relative.X * 0.008f;
