@@ -51,6 +51,34 @@ public static class Smoke
             editor.SetPhotoMode(false);
             await Frames(tree, 5);
 
+            // simulación y recorrido: personas caminando, caminar 3 s grabando y armar el mp4
+            editor.SetPeople(true);
+            await Frames(tree, 10);
+            if (editor.People.Count == 0) throw new InvalidOperationException("no aparecieron personas");
+            GD.Print($"[humo] {editor.People.Count} personas caminando; sin camino: {string.Join(", ", editor.People.Unreachable)}");
+            await Seconds(tree, 3);
+            Shot(main, output.Replace(".png", "-personas.png"));
+            if (!editor.StartWalk()) throw new InvalidOperationException("no se pudo entrar al recorrido");
+            await Frames(tree, 20);
+            var walker = editor.Walker!;
+            var from = walker.GlobalPosition;
+            editor.StartRecording();
+            walker.Push = new Vector2(0, 1);
+            await Seconds(tree, 1.5);
+            walker.Push = new Vector2(0.7f, 0.7f);
+            await Seconds(tree, 1.5);
+            walker.Push = Vector2.Zero;
+            var moved = new Vector2(walker.GlobalPosition.X - from.X, walker.GlobalPosition.Z - from.Z).Length();
+            GD.Print($"[humo] el recorrido avanzó {moved:0.00} m (altura {from.Y:0.00} → {walker.GlobalPosition.Y:0.00})");
+            if (moved < 0.5 || walker.GlobalPosition.Y < from.Y - 0.5) throw new InvalidOperationException("el recorrido no camina o se cae");
+            Shot(main, output.Replace(".png", "-recorrido.png"));
+            var video = await editor.StopRecordingAsync(output.Replace(".png", "-recorrido.mp4"));
+            if (video is null || !System.IO.File.Exists(video)) throw new InvalidOperationException("no salió el video del recorrido");
+            GD.Print($"[humo] video {new System.IO.FileInfo(video).Length / 1024} KB");
+            editor.StopWalk();
+            editor.SetPeople(false);
+            await Frames(tree, 5);
+
             // otra persona, como si fuera la web, agrega un muro en el primer piso
             using var webApi = new ApiClient(main.Api.BaseUrl, new MemoryTokenStore());
             await webApi.DemoAsync();
@@ -152,6 +180,12 @@ public static class Smoke
         var img = main.GetViewport().GetTexture().GetImage();
         img.SavePng(path);
         GD.Print($"[humo] captura {path} ({img.GetWidth()}x{img.GetHeight()})");
+    }
+
+    private static async Task Seconds(SceneTree tree, double s)
+    {
+        var sw = Stopwatch.StartNew();
+        while (sw.Elapsed.TotalSeconds < s) await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
     }
 
     private static async Task Frames(SceneTree tree, int n)

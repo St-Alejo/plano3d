@@ -12,7 +12,14 @@ public static class MeshFactory
     public static Vector3 V(Vec3 v) => new((float)v.X, (float)v.Y, (float)v.Z);
 
     /// <summary>Malla de caja con su cuerpo de colisión (para elegir con el mouse).</summary>
-    public static MeshInstance3D Box(Box b, Material material, string entityId, bool pickable = true)
+    /// <summary>Capa física de lo macizo: se elige con el ratón y choca al caminar.</summary>
+    public const uint SolidLayer = 1;
+    /// <summary>Capa de lo que solo se elige (hojas de puerta, peldaños): al caminar no estorba.</summary>
+    public const uint PickLayer = 4;
+    /// <summary>Capa del terreno y las rampas invisibles para caminar.</summary>
+    public const uint WalkLayer = 8;
+
+    public static MeshInstance3D Box(Box b, Material material, string entityId, bool pickable = true, uint layer = SolidLayer)
     {
         var size = V(b.Size);
         var key = (MathF.Round(size.X, 3), MathF.Round(size.Y, 3), MathF.Round(size.Z, 3));
@@ -26,7 +33,7 @@ public static class MeshFactory
         };
         if (pickable)
         {
-            var body = new StaticBody3D();
+            var body = new StaticBody3D { CollisionLayer = layer, CollisionMask = 0 };
             body.SetMeta("entity", entityId);
             body.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = size } });
             mi.AddChild(body);

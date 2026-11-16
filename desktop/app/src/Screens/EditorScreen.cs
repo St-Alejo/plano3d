@@ -100,6 +100,10 @@ public partial class EditorScreen : Control, IEditorHost
             Layers = SceneSync.OutdoorLayer,
         };
         _world.AddChild(ground);
+        // el terreno sostiene al recorrido cuando sale de la casa
+        var land = new StaticBody3D { CollisionLayer = MeshFactory.WalkLayer, CollisionMask = 0 };
+        land.AddChild(new CollisionShape3D { Shape = new WorldBoundaryShape3D() });
+        _world.AddChild(land);
         _sync = new SceneSync { Name = "Casa" };
         _world.AddChild(_sync);
         _camera = new OrbitCamera { Name = "Camara" };
@@ -114,6 +118,7 @@ public partial class EditorScreen : Control, IEditorHost
 
         BuildPanels(name);
         BuildScenePanels();
+        BuildWalkPanels();
     }
 
     // ------------------------------------------------------------------ carga y sala en vivo
@@ -190,6 +195,7 @@ public partial class EditorScreen : Control, IEditorHost
         Reselect();
         _plan.Refresh();
         RefreshInspector();
+        _peopleDirty = 1.0;
     }
 
     // ------------------------------------------------------------------ editar
@@ -376,7 +382,7 @@ public partial class EditorScreen : Control, IEditorHost
     private void ApplyLevelFilter()
     {
         if (_building is not { } m || m.FindLevel(_levelId ?? "") is not { } active) return;
-        _sync.ShowLevels(l => _showUpper || l.Elevation <= active.Elevation + 0.01);
+        _sync.ShowLevels(l => _showUpper || Walking || l.Elevation <= active.Elevation + 0.01);
     }
 
     // ------------------------------------------------------------------ 3D: elegir, poner, pintar y arrastrar
@@ -537,6 +543,7 @@ public partial class EditorScreen : Control, IEditorHost
     {
         if (_toastLeft > 0 && (_toastLeft -= delta) <= 0) ((Control)_toast.GetParent()).Visible = false;
         UpdateFps(delta);
+        UpdateWalk(delta);
     }
 
     /// <summary>Fantasma de lo que otra persona arrastra (muro, mueble o abertura).</summary>

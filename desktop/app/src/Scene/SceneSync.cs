@@ -148,9 +148,13 @@ public partial class SceneSync : Node3D
         foreach (var o in wall.OpeningsOrEmpty)
         {
             var infill = BuildingGeometry.OpeningInfill(wall, o, elev);
-            var glass = MeshFactory.Box(infill, o.IsDoor ? Materials.Door : Materials.Glass, o.Id);
-            if (!o.IsDoor) glass.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off; // el vidrio deja pasar el sol
-            n.AddChild(glass);
+            if (o.IsDoor) n.AddChild(BuildDoor(wall, o, infill, elev));
+            else
+            {
+                var glass = MeshFactory.Box(infill, Materials.Glass, o.Id);
+                glass.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off; // el vidrio deja pasar el sol
+                n.AddChild(glass);
+            }
             foreach (var trim in BuildingGeometry.OpeningTrim(wall, o, elev))
             {
                 var m = trim.Part switch { "door_frame" => Materials.DoorFrame, "sill_stone" => Materials.Sill, _ => Materials.WindowFrame };
@@ -158,6 +162,26 @@ public partial class SceneSync : Node3D
             }
         }
         return n;
+    }
+
+    /// <summary>Hoja de puerta con bisagra (o portón que sube) para abrirse en el recorrido.</summary>
+    private static Node3D BuildDoor(Wall wall, Opening o, Box infill, double elev)
+    {
+        var lifts = o.Kind == "garage";
+        var dir = wall.Direction;
+        var anchor = lifts ? wall.Start + dir * (o.Offset + o.Width / 2) : wall.Start + dir * o.Offset;
+        var pivot = new DoorLeaf
+        {
+            Lifts = lifts,
+            Width = (float)o.Width,
+            LeafHeight = (float)o.Height,
+            Position = new Vector3((float)anchor.X, (float)elev, (float)anchor.Y),
+            Rotation = new Vector3(0, (float)infill.Yaw, 0),
+        };
+        var local = new Vec3(lifts ? 0 : o.Width / 2, o.Height / 2, 0);
+        // la hoja solo se elige: al caminar no estorba (se abre sola)
+        pivot.AddChild(MeshFactory.Box(new Box(local, infill.Size, 0, "door"), Materials.Door, o.Id, layer: MeshFactory.PickLayer));
+        return pivot;
     }
 
     /// <summary>Si las lámparas de los ambientes están encendidas (de noche); las nuevas nacen igual.</summary>
@@ -214,7 +238,24 @@ public partial class SceneSync : Node3D
     private static Node3D BuildStair(Stair s, double elev)
     {
         var n = new Node3D();
-        foreach (var step in BuildingGeometry.StairSteps(s, elev)) n.AddChild(MeshFactory.Box(step, Materials.Stair, s.Id));
+        foreach (var step in BuildingGeometry.StairSteps(s, elev)) n.AddChild(MeshFactory.Box(step, Materials.Stair, s.Id, layer: MeshFactory.PickLayer));
+        // rampa invisible sobre las narices de los peldaños: el recorrido sube sin tropezar
+        var run = (s.End - s.Start).Length;
+        if (run > 0.1 && s.Steps > 0)
+        {
+            var rise = s.Riser * s.Steps;
+            var dir = (s.End - s.Start).Normalized;
+            var mid = s.Start + dir * (run / 2);
+            var ramp = new StaticBody3D
+            {
+                CollisionLayer = MeshFactory.WalkLayer,
+                CollisionMask = 0,
+                Position = new Vector3((float)mid.X, (float)(elev + s.Base + rise / 2 - 0.05), (float)mid.Y),
+                Rotation = new Vector3(0, (float)BuildingGeometry.YawOf(dir), (float)Math.Atan2(rise, run)),
+            };
+            ramp.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3((float)Math.Sqrt(run * run + rise * rise) + 0.3f, 0.1f, (float)s.Width) } });
+            n.AddChild(ramp);
+        }
         foreach (var part in BuildingGeometry.StairRailing(s, elev)) n.AddChild(MeshFactory.Box(part, Materials.Railing, s.Id, pickable: false));
         return n;
     }

@@ -103,6 +103,9 @@ public partial class EditorScreen
             _fps.Visible = on;
         };
         col.AddChild(fps);
+        var people = new CheckButton { Text = "Personas caminando", TooltipText = "Simulación: van de un ambiente a otro por las puertas" };
+        people.Toggled += SetPeople;
+        col.AddChild(people);
         var photo = Ui.Primary("Modo foto");
         photo.TooltipText = "Encuadre limpio, focal, desenfoque y capturas en 4K";
         photo.Pressed += () => SetPhotoMode(true);

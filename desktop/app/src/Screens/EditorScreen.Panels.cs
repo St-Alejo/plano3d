@@ -608,6 +608,8 @@ public partial class EditorScreen
             new("Piso de abajo", "AvPág", () => SetLevel(_levelPick.Selected - 1)),
             new("Encuadrar la casa", "F", () => FrameHouse(false)),
             new("Imán a la rejilla (5 cm): activar o quitar", "G", ToggleGrid),
+            new("Recorrer la casa en primera persona", "J", () => StartWalk()),
+            new("Personas caminando: activar o quitar", "", () => SetPeople(!_peopleOn)),
             new("Modo foto", "", () => SetPhotoMode(true)),
             new("Capturar la vista en 4K", "F12", () => _ = CaptureAsync(0)),
             new("Luz, hora y calidad", "L", ToggleLightPanel),
@@ -685,6 +687,11 @@ public partial class EditorScreen
             if (k.Keycode == Key.Escape) ClosePalette();
             return;
         }
+        if (Walking)
+        {
+            if (WalkKey(k)) GetViewport().SetInputAsHandled();
+            return;
+        }
         if (PhotoMode)
         {
             if (k.Keycode == Key.Escape) SetPhotoMode(false);
@@ -733,6 +740,9 @@ public partial class EditorScreen
                 break;
             case Key.F:
                 FrameHouse(false);
+                break;
+            case Key.J when !k.CtrlPressed:
+                StartWalk();
                 break;
             case Key.L when !k.CtrlPressed:
                 ToggleLightPanel();
