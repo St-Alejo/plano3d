@@ -19,6 +19,9 @@ OPS_COPIES = (
     ROOT / "frontend" / "src" / "domain" / "__fixtures__" / "ops-cases.json",
     ROOT / "desktop" / "tests" / "Plano3D.Core.Tests" / "Fixtures" / "ops-cases.json",
 )
+#: la casa de 3 pisos de la demo, para probar la geometría del escritorio con un modelo real
+DEMO_HOUSE = ROOT / "backend" / "src" / "plano3d" / "infrastructure" / "demo" / "data" / "casa3.json"
+DESKTOP_HOUSE = ROOT / "desktop" / "tests" / "Plano3D.Core.Tests" / "Fixtures" / "casa3.json"
 
 
 def spec() -> str:
@@ -35,3 +38,6 @@ if __name__ == "__main__":
             copy.parent.mkdir(parents=True, exist_ok=True)
             copy.write_bytes(OPS_CASES.read_bytes())
             print(f"Casos de ops copiados a {copy}")
+    if DESKTOP_HOUSE.parent.exists():
+        DESKTOP_HOUSE.write_bytes(DEMO_HOUSE.read_bytes())
+        print(f"Casa demo copiada a {DESKTOP_HOUSE}")

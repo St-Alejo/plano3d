@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2031F46C-32A9-4A4A-AD39-7F7717DF7FE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plano3D.Core", "src\Plano3D.Core\Plano3D.Core.csproj", "{1924FD5B-CE10-483D-ADA6-22630B9B8497}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plano3D.Infrastructure", "src\Plano3D.Infrastructure\Plano3D.Infrastructure.csproj", "{DEB8473A-0A61-4675-A104-7D9831E542A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1358B01A-428B-43ED-82B4-14C494E3E1DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plano3D.Core.Tests", "tests\Plano3D.Core.Tests\Plano3D.Core.Tests.csproj", "{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plano3D.Infrastructure.Tests", "tests\Plano3D.Infrastructure.Tests\Plano3D.Infrastructure.Tests.csproj", "{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1924FD5B-CE10-483D-ADA6-22630B9B8497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1924FD5B-CE10-483D-ADA6-22630B9B8497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1924FD5B-CE10-483D-ADA6-22630B9B8497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1924FD5B-CE10-483D-ADA6-22630B9B8497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEB8473A-0A61-4675-A104-7D9831E542A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEB8473A-0A61-4675-A104-7D9831E542A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEB8473A-0A61-4675-A104-7D9831E542A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEB8473A-0A61-4675-A104-7D9831E542A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1924FD5B-CE10-483D-ADA6-22630B9B8497} = {2031F46C-32A9-4A4A-AD39-7F7717DF7FE7}
+		{DEB8473A-0A61-4675-A104-7D9831E542A6} = {2031F46C-32A9-4A4A-AD39-7F7717DF7FE7}
+		{742DE8A9-8D03-4AB9-AFA3-149D12BE8B48} = {1358B01A-428B-43ED-82B4-14C494E3E1DE}
+		{3E40BB47-B990-4824-A4C7-5BF9C64ACBA9} = {1358B01A-428B-43ED-82B4-14C494E3E1DE}
+	EndGlobalSection
+EndGlobal
