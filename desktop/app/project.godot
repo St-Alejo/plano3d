@@ -1,0 +1,27 @@
+; Configuración del motor (Godot 4). La interfaz se arma en C# (src/), no en escenas.
+
+config_version=5
+
+[application]
+
+config/name="Plano 3D"
+config/description="Editor de planos en 3D, en vivo con la web"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7", "C#", "Forward Plus")
+config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.957, 0.945, 0.918, 1)
+boot_splash/show_image=false
+
+[display]
+
+window/size/viewport_width=1440
+window/size/viewport_height=900
+
+[dotnet]
+
+project/assembly_name="Plano3D.App"
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3

@@ -1,0 +1,18 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+  <!-- La app de escritorio (Godot 4 + C#). Lo que no depende del motor vive en Core e Infrastructure. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <RootNamespace>Plano3D.App</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Plano3D.Core\Plano3D.Core.csproj" />
+    <ProjectReference Include="..\src\Plano3D.Infrastructure\Plano3D.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
