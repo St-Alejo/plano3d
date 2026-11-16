@@ -8,12 +8,16 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import threading
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContainerClient, ContentSettings
 
 from plano3d.application.ports import FileStorage, StateSnapshotStore
+
+# el SDK registra cada petición HTTP en INFO: en los registros solo interesan los problemas
+logging.getLogger("azure").setLevel(logging.WARNING)
 
 
 class _Blobs:
