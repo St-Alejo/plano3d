@@ -38,7 +38,7 @@ const REQUIREMENTS = [
   ['Sistema', 'Windows 10 u 11 de 64 bits'],
   ['Tarjeta de video', 'Con Vulkan (casi todas desde 2016); integrada sirve en calidad Media'],
   ['Memoria', '8 GB de RAM'],
-  ['Disco', 'Unos 400 MB'],
+  ['Disco', 'Unos 250 MB'],
   ['Render', 'Blender 4 o 5 (gratis); la app lo encuentra sola'],
   ['Cuenta', 'La misma de la web; también entra con la demo'],
 ] as const
