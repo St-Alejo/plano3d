@@ -1154,6 +1154,47 @@
         "title": "LinkExchangeDTO",
         "type": "object"
       },
+      "LinkGrantDTO": {
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "project_name": {
+            "title": "Project Name",
+            "type": "string"
+          },
+          "role": {
+            "const": "interiores",
+            "default": "interiores",
+            "title": "Role",
+            "type": "string"
+          },
+          "token": {
+            "description": "token de enlace: abre solo este proyecto",
+            "title": "Token",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "bearer",
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_in",
+          "project_id",
+          "project_name"
+        ],
+        "title": "LinkGrantDTO",
+        "type": "object"
+      },
       "LoginDTO": {
         "properties": {
           "email": {
@@ -2020,6 +2061,72 @@
         "title": "SessionDTO",
         "type": "object"
       },
+      "ShareClaimDTO": {
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 8,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ShareClaimDTO",
+        "type": "object"
+      },
+      "ShareCreateDTO": {
+        "properties": {
+          "app": {
+            "const": "interiores",
+            "default": "interiores",
+            "title": "App",
+            "type": "string"
+          }
+        },
+        "title": "ShareCreateDTO",
+        "type": "object"
+      },
+      "ShareDTO": {
+        "properties": {
+          "app": {
+            "const": "interiores",
+            "default": "interiores",
+            "title": "App",
+            "type": "string"
+          },
+          "claimed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "última vez que la otra app lo canjeó",
+            "title": "Claimed At"
+          },
+          "code": {
+            "description": "8 caracteres en dos grupos, p. ej. K7QM-3XTP",
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "created_at"
+        ],
+        "title": "ShareDTO",
+        "type": "object"
+      },
       "SolveReportDTO": {
         "properties": {
           "conflicts": {
@@ -2418,7 +2525,7 @@
     },
     "securitySchemes": {
       "HTTPBearer": {
-        "description": "Token de acceso de /api/auth/login",
+        "description": "Token de enlace de /api/shares/claim",
         "scheme": "bearer",
         "type": "http"
       }
@@ -4347,6 +4454,168 @@
         ]
       }
     },
+    "/api/projects/{project_id}/shares": {
+      "get": {
+        "operationId": "list_shares_api_projects__project_id__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShareDTO"
+                  },
+                  "title": "Response List Shares Api Projects  Project Id  Shares Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Shares",
+        "tags": [
+          "compartir"
+        ]
+      },
+      "post": {
+        "operationId": "create_share_api_projects__project_id__shares_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ShareCreateDTO"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Share",
+        "tags": [
+          "compartir"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/shares/{code}": {
+      "delete": {
+        "operationId": "revoke_share_api_projects__project_id__shares__code__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revoke Share",
+        "tags": [
+          "compartir"
+        ]
+      }
+    },
     "/api/projects/{project_id}/solve": {
       "post": {
         "description": "Ajusta los muros a las cotas del plano (las medidas escritas mandan).",
@@ -4408,6 +4677,76 @@
         "summary": "Solve Dimensions",
         "tags": [
           "modelo"
+        ]
+      }
+    },
+    "/api/shares/claim": {
+      "post": {
+        "operationId": "claim_share_api_shares_claim_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareClaimDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkGrantDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "El código no existe o fue revocado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim Share",
+        "tags": [
+          "compartir"
+        ]
+      }
+    },
+    "/api/shares/project": {
+      "get": {
+        "operationId": "shared_project_api_shares_project_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Shared Project",
+        "tags": [
+          "compartir"
         ]
       }
     }

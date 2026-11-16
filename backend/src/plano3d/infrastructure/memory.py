@@ -16,11 +16,13 @@ from plano3d.application.ports import (
     JobQueue,
     ProgressBroker,
     ProjectRepository,
+    ShareRepository,
     UserRepository,
 )
 from plano3d.application.use_cases.errors import EmailTakenError
 from plano3d.domain import ModelRevision, Project
 from plano3d.domain.errors import ConcurrencyError
+from plano3d.domain.share import ProjectShare
 from plano3d.domain.user import User
 
 log = logging.getLogger(__name__)
@@ -84,6 +86,30 @@ class InMemoryUserRepository(UserRepository):
         self._items[user.id] = user
 
     async def list(self) -> builtins.list[User]:
+        return list(self._items.values())
+
+
+class InMemoryShareRepository(ShareRepository):
+    def __init__(self) -> None:
+        self._items: dict[str, ProjectShare] = {}
+
+    async def add(self, share: ProjectShare) -> None:
+        if share.code in self._items:
+            raise KeyError(share.code)
+        self._items[share.code] = share
+
+    async def get(self, code: str) -> ProjectShare | None:
+        return self._items.get(code)
+
+    async def list_for_project(self, project_id: str) -> builtins.list[ProjectShare]:
+        return [s for s in self._items.values() if s.project_id == project_id]
+
+    async def save(self, share: ProjectShare) -> None:
+        if share.code not in self._items:
+            raise KeyError(share.code)
+        self._items[share.code] = share
+
+    async def list(self) -> builtins.list[ProjectShare]:
         return list(self._items.values())
 
 

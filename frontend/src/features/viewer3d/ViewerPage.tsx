@@ -22,6 +22,7 @@ import { Viewer3D, type CaptureFn, type FlyTarget, type Quality, type ViewMode }
 import { PhotoStudio } from './photos/PhotoStudio'
 import { RenderGallery } from './renders/RenderGallery'
 import { OpenInDesktop } from '@/features/desktop/OpenInDesktop'
+import { ShareWithInteriores } from '@/features/share/ShareWithInteriores'
 import { LevelRail } from './LevelRail'
 import { applyLevelFocus, highlightLevel } from './scene/levelFocus'
 import { levelCamera, levelsAbove, levelSummaries } from '@/domain/levels'
@@ -184,6 +185,7 @@ export function ViewerPage() {
   const [photosOpen, setPhotosOpen] = useState(false)
   const [rendersOpen, setRendersOpen] = useState(false)
   const [desktopOpen, setDesktopOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const onCapture = useCallback((fn: CaptureFn | null) => {
     captureRef.current = fn
   }, [])
@@ -591,6 +593,7 @@ export function ViewerPage() {
       />
       <RenderGallery open={rendersOpen} onOpenChange={setRendersOpen} projectId={project.id} fileBase={fileBase} />
       <OpenInDesktop open={desktopOpen} onOpenChange={setDesktopOpen} projectId={project.id} />
+      <ShareWithInteriores open={shareOpen} onOpenChange={setShareOpen} projectId={project.id} />
 
       {/* reloj de la simulación: bajo la barra; a la izquierda en el celular (a la derecha va el HUD del recorrido) */}
       <div data-testid="sim-clock-slot" className="pointer-events-none absolute top-[4.25rem] left-3 z-20 sm:left-1/2 sm:-translate-x-1/2">
@@ -747,6 +750,7 @@ export function ViewerPage() {
                   ]
                 : []),
               { label: 'Abrir en escritorio', icon: <Monitor className="size-4" aria-hidden />, onSelect: () => setDesktopOpen(true) },
+              { label: 'Continuar en Interiores 3D', icon: <Sofa className="size-4" aria-hidden />, onSelect: () => setShareOpen(true) },
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
               { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
               { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },

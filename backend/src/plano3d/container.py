@@ -22,6 +22,7 @@ from plano3d.application.ports import (
     PlanAssistant,
     ProgressBroker,
     ProjectRepository,
+    ShareRepository,
     StateSnapshotStore,
     TextReader,
     TokenService,
@@ -61,6 +62,13 @@ from plano3d.application.use_cases.projects import (
     UpdateBuildingModel,
 )
 from plano3d.application.use_cases.renders import RenderGallery
+from plano3d.application.use_cases.shares import (
+    ClaimShare,
+    CreateShareCode,
+    ListShares,
+    ResolveLink,
+    RevokeShare,
+)
 from plano3d.config import Settings, ai_provider
 from plano3d.infrastructure.auth import (
     Argon2PasswordHasher,
@@ -80,6 +88,7 @@ from plano3d.infrastructure.memory import (
     InMemoryFileStorage,
     InMemoryProgressBroker,
     InMemoryProjectRepository,
+    InMemoryShareRepository,
     InMemoryUserRepository,
     InProcessJobQueue,
     LocalFileStorage,
@@ -147,6 +156,8 @@ class Container:
     hasher: PasswordHasher = field(default_factory=Argon2PasswordHasher)
     tokens: TokenService = field(default_factory=token_service)
     link_codes: LinkCodeStore = field(default_factory=InMemoryLinkCodeStore)
+    #: códigos para compartir con otra app (ADR-024)
+    shares: ShareRepository = field(default_factory=InMemoryShareRepository)
     #: False = API sin login (pruebas): todos los proyectos son visibles
     auth_required: bool = True
     demo_enabled: bool = True
@@ -204,6 +215,26 @@ class Container:
     @property
     def create_ws_ticket(self) -> CreateWsTicket:
         return CreateWsTicket(self.tokens)
+
+    @property
+    def create_share(self) -> CreateShareCode:
+        return CreateShareCode(self.repo, self.shares)
+
+    @property
+    def list_shares(self) -> ListShares:
+        return ListShares(self.shares)
+
+    @property
+    def revoke_share(self) -> RevokeShare:
+        return RevokeShare(self.shares)
+
+    @property
+    def claim_share(self) -> ClaimShare:
+        return ClaimShare(self.repo, self.shares, self.tokens)
+
+    @property
+    def resolve_link(self) -> ResolveLink:
+        return ResolveLink(self.repo, self.shares, self.tokens)
 
     @property
     def create_project(self) -> CreateProject:
@@ -405,6 +436,7 @@ async def build_container(settings: Settings) -> Container:
     from plano3d.infrastructure.jobs.arq_queue import ArqJobQueue
     from plano3d.infrastructure.persistence.sqlalchemy_repository import (
         SqlAlchemyProjectRepository,
+        SqlAlchemyShareRepository,
         SqlAlchemyUserRepository,
     )
     from plano3d.infrastructure.realtime.redis_broker import RedisProgressBroker
@@ -423,5 +455,6 @@ async def build_container(settings: Settings) -> Container:
         progress=RedisProgressBroker(redis),
         selector=default_selector(),
         users=SqlAlchemyUserRepository(engine),
+        shares=SqlAlchemyShareRepository(engine),
         _closers=[engine, redis, arq_pool],
     )

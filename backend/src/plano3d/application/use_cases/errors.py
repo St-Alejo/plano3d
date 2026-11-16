@@ -67,3 +67,13 @@ class WeakPasswordError(ApplicationError):
 class DemoUnavailableError(ApplicationError):
     def __init__(self) -> None:
         super().__init__("La cuenta demo no está habilitada en este servidor")
+
+
+# ---- compartir con otra app (ADR-024)
+class ShareNotFoundError(ApplicationError):
+    def __init__(self) -> None:
+        super().__init__("Ese código no existe o el dueño lo revocó: pide uno nuevo en Plano 3D")
+
+
+class TooManySharesError(ApplicationError):
+    pass

@@ -24,6 +24,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Final, Literal
 
+from plano3d.application.collab.ownership import interiores_violation
 from plano3d.application.ops import apply_ops_to_model, model_json
 from plano3d.application.ports import ProjectRepository
 from plano3d.application.use_cases.errors import ProjectNotFoundError
@@ -34,9 +35,14 @@ from plano3d.domain.errors import ConcurrencyError, DomainError
 log = logging.getLogger(__name__)
 
 Json = dict[str, Any]
-ClientKind = Literal["web", "desktop"]
+#: «interiores» = Interiores 3D enlazado por un código (ADR-024): solo interiorismo
+ClientKind = Literal["web", "desktop", "interiores"]
 
-CLIENT_LABEL: Final[dict[str, str]] = {"web": "web", "desktop": "escritorio"}
+CLIENT_LABEL: Final[dict[str, str]] = {
+    "web": "web",
+    "desktop": "escritorio",
+    "interiores": "Interiores 3D",
+}
 #: mensajes en cola por participante antes de darlo por caído
 QUEUE_SIZE: Final = 256
 #: cambios por lote (un «pegar» grande cabe; un abuso no)
@@ -225,6 +231,11 @@ class CollabHub:
                     {"type": "reject", "op_id": op_id, "reason": "Demasiados cambios en un lote"}
                 )
                 return None
+            if peer.client == "interiores":
+                reason = interiores_violation(model_json(room.model), ops)
+                if reason is not None:
+                    peer.deliver({"type": "reject", "op_id": op_id, "reason": reason})
+                    return None
             try:
                 model = apply_ops_to_model(room.model, list(ops))
             except (DomainError, ValueError, KeyError, TypeError) as exc:

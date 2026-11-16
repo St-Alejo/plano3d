@@ -21,8 +21,14 @@ from pathlib import Path
 from typing import Any
 
 from plano3d.application.dto import BuildingModelDTO, model_from_dto, model_to_dto
-from plano3d.application.ports import ProjectRepository, StateSnapshotStore, UserRepository
+from plano3d.application.ports import (
+    ProjectRepository,
+    ShareRepository,
+    StateSnapshotStore,
+    UserRepository,
+)
 from plano3d.domain import BuildingModel, ModelRevision, Project, ProjectStatus
+from plano3d.domain.share import ProjectShare
 from plano3d.domain.user import User
 
 log = logging.getLogger(__name__)
@@ -118,7 +124,40 @@ def _user_in(d: dict[str, Any]) -> User:
     )
 
 
-async def encode_state(repo: ProjectRepository, users: UserRepository) -> bytes:
+def _dt(value: datetime | None) -> str | None:
+    return value.isoformat() if value else None
+
+
+def _share_out(s: ProjectShare) -> dict[str, Any]:
+    return {
+        "code": s.code,
+        "project_id": s.project_id,
+        "owner_id": s.owner_id,
+        "app": s.app,
+        "created_at": s.created_at.isoformat(),
+        "revoked_at": _dt(s.revoked_at),
+        "claimed_at": _dt(s.claimed_at),
+    }
+
+
+def _share_in(d: dict[str, Any]) -> ProjectShare:
+    def when(key: str) -> datetime | None:
+        return datetime.fromisoformat(d[key]) if d.get(key) else None
+
+    return ProjectShare(
+        code=d["code"],
+        project_id=d["project_id"],
+        owner_id=d.get("owner_id"),
+        app=d.get("app", "interiores"),
+        created_at=datetime.fromisoformat(d["created_at"]),
+        revoked_at=when("revoked_at"),
+        claimed_at=when("claimed_at"),
+    )
+
+
+async def encode_state(
+    repo: ProjectRepository, users: UserRepository, shares: ShareRepository | None = None
+) -> bytes:
     projects = await repo.list()
     revisions = [r for p in projects for r in await repo.list_revisions(p.id)]
     state = {
@@ -126,11 +165,17 @@ async def encode_state(repo: ProjectRepository, users: UserRepository) -> bytes:
         "users": [_user_out(u) for u in await users.list()],
         "projects": [_project_out(p) for p in projects],
         "revisions": [_revision_out(r) for r in revisions],
+        "shares": [_share_out(s) for s in await shares.list()] if shares else [],
     }
     return gzip.compress(json.dumps(state, ensure_ascii=False).encode("utf-8"), mtime=0)
 
 
-async def decode_state(data: bytes, repo: ProjectRepository, users: UserRepository) -> int:
+async def decode_state(
+    data: bytes,
+    repo: ProjectRepository,
+    users: UserRepository,
+    shares: ShareRepository | None = None,
+) -> int:
     """Carga la copia en repositorios vacíos. Devuelve cuántos proyectos restauró."""
     state = json.loads(gzip.decompress(data).decode("utf-8"))
     if state.get("format") != FORMAT:
@@ -141,6 +186,9 @@ async def decode_state(data: bytes, repo: ProjectRepository, users: UserReposito
         await repo.add(_project_in(p))
     for r in sorted(state["revisions"], key=lambda r: (r["project_id"], r["number"])):
         await repo.add_revision(_revision_in(r))
+    if shares is not None:
+        for sh in state.get("shares", []):  # copias anteriores a ADR-024 no traen códigos
+            await shares.add(_share_in(sh))
     return len(state["projects"])
 
 
@@ -181,9 +229,11 @@ class Snapshotter:
         users: UserRepository,
         store: StateSnapshotStore,
         delay_s: float = 2.0,
+        shares: ShareRepository | None = None,
     ) -> None:
         self.repo = repo
         self.users = users
+        self.shares = shares
         self.store = store
         self.delay_s = delay_s
         self._dirty = False
@@ -195,7 +245,7 @@ class Snapshotter:
         if data is None:
             log.info("Sin copia previa del estado: se arranca en limpio")
             return 0
-        count = await decode_state(data, self.repo, self.users)
+        count = await decode_state(data, self.repo, self.users, self.shares)
         log.info("Estado restaurado desde la copia (%d proyectos)", count)
         return count
 
@@ -217,7 +267,7 @@ class Snapshotter:
                 return
             self._dirty = False  # lo que cambie mientras se codifica vuelve a marcarla
             try:
-                await self.store.save(await encode_state(self.repo, self.users))
+                await self.store.save(await encode_state(self.repo, self.users, self.shares))
             except Exception:
                 self._dirty = True
                 raise
@@ -287,6 +337,29 @@ class SnapshottingUserRepository(UserRepository):
         return await self.inner.list()
 
 
+class SnapshottingShareRepository(ShareRepository):
+    def __init__(self, inner: ShareRepository, on_change: Callable[[], None]) -> None:
+        self.inner = inner
+        self._changed = on_change
+
+    async def add(self, share: ProjectShare) -> None:
+        await self.inner.add(share)
+        self._changed()
+
+    async def get(self, code: str) -> ProjectShare | None:
+        return await self.inner.get(code)
+
+    async def list_for_project(self, project_id: str) -> builtins.list[ProjectShare]:
+        return await self.inner.list_for_project(project_id)
+
+    async def save(self, share: ProjectShare) -> None:
+        await self.inner.save(share)
+        self._changed()
+
+    async def list(self) -> builtins.list[ProjectShare]:
+        return await self.inner.list()
+
+
 async def enable_snapshots(
     container: Any, store: StateSnapshotStore, delay_s: float = 2.0
 ) -> Snapshotter:
@@ -295,9 +368,10 @@ async def enable_snapshots(
     ``container``: ``plano3d.container.Container`` (en memoria). Al cerrarlo se sube la
     última copia pendiente.
     """
-    snap = Snapshotter(container.repo, container.users, store, delay_s)
+    snap = Snapshotter(container.repo, container.users, store, delay_s, container.shares)
     await snap.restore()
     container.repo = SnapshottingProjectRepository(container.repo, snap.mark_dirty)
     container.users = SnapshottingUserRepository(container.users, snap.mark_dirty)
+    container.shares = SnapshottingShareRepository(container.shares, snap.mark_dirty)
     container._closers.insert(0, snap)
     return snap

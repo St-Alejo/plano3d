@@ -24,10 +24,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from plano3d.application.dto import BuildingModelDTO, model_from_dto, model_to_dto
-from plano3d.application.ports import ProjectRepository, UserRepository
+from plano3d.application.ports import ProjectRepository, ShareRepository, UserRepository
 from plano3d.application.use_cases.errors import EmailTakenError
 from plano3d.domain import ModelRevision, Project, ProjectStatus
 from plano3d.domain.errors import ConcurrencyError
+from plano3d.domain.share import ProjectShare
 from plano3d.domain.user import User
 
 JsonType = JSON().with_variant(JSONB(), "postgresql")
@@ -63,6 +64,20 @@ class UserRow(Base):
     token_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ShareRow(Base):
+    """Código para compartir un proyecto con otra app (ADR-024)."""
+
+    __tablename__ = "project_shares"
+
+    code: Mapped[str] = mapped_column(String(16), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(40), index=True)
+    owner_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    app: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    claimed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class RevisionRow(Base):
@@ -248,3 +263,56 @@ class SqlAlchemyUserRepository(UserRepository):
     async def list(self) -> builtins.list[User]:
         async with self._sessions() as s:
             return [_user(r) for r in (await s.scalars(select(UserRow))).all()]
+
+
+def _share_row(share: ProjectShare, row: ShareRow | None = None) -> ShareRow:
+    row = row or ShareRow(code=share.code)
+    row.project_id = share.project_id
+    row.owner_id = share.owner_id
+    row.app = share.app
+    row.created_at = share.created_at
+    row.revoked_at = share.revoked_at
+    row.claimed_at = share.claimed_at
+    return row
+
+
+def _share(row: ShareRow) -> ProjectShare:
+    return ProjectShare(
+        code=row.code,
+        project_id=row.project_id,
+        owner_id=row.owner_id,
+        app=row.app,  # type: ignore[arg-type]
+        created_at=row.created_at,
+        revoked_at=row.revoked_at,
+        claimed_at=row.claimed_at,
+    )
+
+
+class SqlAlchemyShareRepository(ShareRepository):
+    def __init__(self, engine: AsyncEngine) -> None:
+        self._sessions = async_sessionmaker(engine, expire_on_commit=False)
+
+    async def add(self, share: ProjectShare) -> None:
+        async with self._sessions.begin() as s:
+            s.add(_share_row(share))
+
+    async def get(self, code: str) -> ProjectShare | None:
+        async with self._sessions() as s:
+            row = await s.get(ShareRow, code)
+            return _share(row) if row else None
+
+    async def list_for_project(self, project_id: str) -> builtins.list[ProjectShare]:
+        async with self._sessions() as s:
+            rows = await s.scalars(select(ShareRow).where(ShareRow.project_id == project_id))
+            return [_share(r) for r in rows.all()]
+
+    async def save(self, share: ProjectShare) -> None:
+        async with self._sessions.begin() as s:
+            row = await s.get(ShareRow, share.code)
+            if row is None:
+                raise KeyError(share.code)
+            _share_row(share, row)
+
+    async def list(self) -> builtins.list[ProjectShare]:
+        async with self._sessions() as s:
+            return [_share(r) for r in (await s.scalars(select(ShareRow))).all()]

@@ -43,6 +43,8 @@ from plano3d.api.deps import (
     require_project_access,
     ws_user,
 )
+from plano3d.api.shares import owned as shares_owned
+from plano3d.api.shares import public as shares_public
 from plano3d.application.dto import (
     AssistantReplyDTO,
     AssistantRequestDTO,
@@ -88,6 +90,8 @@ from plano3d.application.use_cases.errors import (
     PhotosUnavailableError,
     ProjectNotFoundError,
     RenderNotFoundError,
+    ShareNotFoundError,
+    TooManySharesError,
     UnsupportedFileError,
     WeakPasswordError,
 )
@@ -711,6 +715,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     app.include_router(signed)
     app.include_router(auth_router)
     app.include_router(collab_router)
+    app.include_router(shares_owned)
+    app.include_router(shares_public)
 
     handlers: list[tuple[type[Exception], int]] = [
         (AuthError, 401),
@@ -718,6 +724,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         (WeakPasswordError, 422),
         (DemoUnavailableError, 404),
         (ProjectNotFoundError, 404),
+        (ShareNotFoundError, 404),
+        (TooManySharesError, 409),
         (AssistantUnavailableError, 503),
         (PhotosUnavailableError, 503),
         (InvalidPhotoRequestError, 422),

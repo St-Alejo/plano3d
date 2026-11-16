@@ -17,6 +17,7 @@ import numpy.typing as npt
 
 from plano3d.application.dto import ProgressEventDTO
 from plano3d.domain import BuildingModel, ModelRevision, Project
+from plano3d.domain.share import ProjectShare
 from plano3d.domain.user import User
 
 Image = npt.NDArray[np.uint8]
@@ -284,6 +285,34 @@ class TokenClaims:
     version: int
 
 
+@dataclass(frozen=True)
+class LinkClaims:
+    """Lo que dice un token de enlace: qué código lo emitió y qué proyecto abre."""
+
+    code: str
+    project_id: str
+
+
+class ShareRepository(ABC):
+    """Códigos para compartir un proyecto con otra app (ADR-024)."""
+
+    @abstractmethod
+    async def add(self, share: ProjectShare) -> None: ...
+
+    @abstractmethod
+    async def get(self, code: str) -> ProjectShare | None: ...
+
+    @abstractmethod
+    async def list_for_project(self, project_id: str) -> builtins.list[ProjectShare]: ...
+
+    @abstractmethod
+    async def save(self, share: ProjectShare) -> None: ...
+
+    @abstractmethod
+    async def list(self) -> builtins.list[ProjectShare]:
+        """Todos (para la copia del estado en el modo en memoria)."""
+
+
 class UserRepository(ABC):
     @abstractmethod
     async def add(self, user: User) -> None:
@@ -318,6 +347,14 @@ class TokenService(ABC):
     @abstractmethod
     def verify(self, token: str, kind: TokenKind) -> TokenClaims:
         """Lanza ``InvalidTokenError`` si está vencido, alterado o es de otro tipo."""
+
+    @abstractmethod
+    def issue_link(self, share: ProjectShare) -> tuple[str, int]:
+        """Token de enlace (ADR-024): abre solo el proyecto del código compartido."""
+
+    @abstractmethod
+    def verify_link(self, token: str) -> LinkClaims:
+        """Lanza ``InvalidTokenError`` si está vencido, alterado o no es de enlace."""
 
 
 class LinkCodeStore(ABC):

@@ -12,6 +12,7 @@ from argon2 import PasswordHasher as _Argon2
 from argon2.exceptions import InvalidHashError, VerificationError
 
 from plano3d.application.ports import (
+    LinkClaims,
     LinkCodeStore,
     PasswordHasher,
     TokenClaims,
@@ -19,6 +20,7 @@ from plano3d.application.ports import (
     TokenService,
 )
 from plano3d.application.use_cases.errors import InvalidTokenError
+from plano3d.domain.share import ProjectShare
 from plano3d.domain.user import User
 
 #: sin 0/O ni 1/I: el código se lee en voz alta o se copia a mano
@@ -51,6 +53,7 @@ class JwtTokenService(TokenService):
         access_ttl: timedelta = timedelta(hours=1),
         refresh_ttl: timedelta = timedelta(days=30),
         ws_ttl: timedelta = timedelta(seconds=60),
+        link_ttl: timedelta = timedelta(days=30),
     ) -> None:
         if len(secret) < 32:
             raise ValueError("El secreto de los tokens debe tener al menos 32 caracteres")
@@ -60,6 +63,7 @@ class JwtTokenService(TokenService):
             "refresh": refresh_ttl,
             "ws": ws_ttl,
         }
+        self._link_ttl = link_ttl
 
     def issue(self, user: User, kind: TokenKind) -> tuple[str, int]:
         now = datetime.now(UTC)
@@ -91,6 +95,37 @@ class JwtTokenService(TokenService):
         if data.get("typ") != kind:
             raise InvalidTokenError("Token de otro tipo")
         return TokenClaims(str(data["sub"]), kind, int(data["ver"]))
+
+    def issue_link(self, share: ProjectShare) -> tuple[str, int]:
+        now = datetime.now(UTC)
+        claims = {
+            "sub": share.code,
+            "prj": share.project_id,
+            "typ": "link",
+            "iss": self.ISSUER,
+            "iat": now,
+            "exp": now + self._link_ttl,
+            "jti": secrets.token_urlsafe(8),
+        }
+        token = jwt.encode(claims, self._secret, algorithm="HS256")
+        return token, int(self._link_ttl.total_seconds())
+
+    def verify_link(self, token: str) -> LinkClaims:
+        try:
+            data = jwt.decode(
+                token,
+                self._secret,
+                algorithms=["HS256"],
+                issuer=self.ISSUER,
+                options={"require": ["sub", "prj", "typ", "exp"]},
+            )
+        except jwt.ExpiredSignatureError as exc:
+            raise InvalidTokenError("El enlace venció: pide un código nuevo en Plano 3D") from exc
+        except jwt.PyJWTError as exc:
+            raise InvalidTokenError() from exc
+        if data.get("typ") != "link":
+            raise InvalidTokenError("Token de otro tipo")
+        return LinkClaims(str(data["sub"]), str(data["prj"]))
 
 
 class InMemoryLinkCodeStore(LinkCodeStore):

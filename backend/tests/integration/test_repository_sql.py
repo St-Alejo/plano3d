@@ -103,3 +103,23 @@ async def test_postgres_round_trip() -> None:
         await _exercise(SqlAlchemyProjectRepository(engine))
     finally:
         await engine.dispose()
+
+
+async def test_codigos_para_compartir_en_sql() -> None:
+    from plano3d.domain.share import ProjectShare
+    from plano3d.infrastructure.persistence.sqlalchemy_repository import (
+        SqlAlchemyShareRepository,
+    )
+
+    engine = await _engine("sqlite+aiosqlite:///:memory:")
+    try:
+        shares = SqlAlchemyShareRepository(engine)
+        share = ProjectShare.create("prj_1", "usr_1")
+        await shares.add(share)
+        await shares.save(share.claimed().revoked())
+        stored = await shares.get(share.code)
+        assert stored is not None and not stored.active and stored.claimed_at is not None
+        assert [s.code for s in await shares.list_for_project("prj_1")] == [share.code]
+        assert await shares.list_for_project("prj_2") == []
+    finally:
+        await engine.dispose()

@@ -17,6 +17,7 @@ const BASE = `${apiOrigin()}/api`
 export type AuthConfig = components['schemas']['AuthConfigDTO']
 export type LinkCode = components['schemas']['LinkCodeDTO']
 export type Featured = components['schemas']['FeaturedDTO']
+export type Share = components['schemas']['ShareDTO']
 
 /** Rutas que reciben credenciales: un 401 ahí es la respuesta, no un token vencido. */
 const NO_RETRY = new Set(['/auth/login', '/auth/register', '/auth/demo', '/auth/refresh', '/auth/link-codes/exchange'])
@@ -175,6 +176,14 @@ export const api = {
   featured: {
     list: () => request<Featured[]>('/featured'),
     get: (id: string) => request<Project>(`/featured/${encodeURIComponent(id)}`),
+  },
+
+  /** Compartir con Interiores 3D por un código (ADR-024). */
+  shares: {
+    list: (projectId: string) => request<Share[]>(`/projects/${encodeURIComponent(projectId)}/shares`),
+    create: (projectId: string) => request<Share>(`/projects/${encodeURIComponent(projectId)}/shares`, { method: 'POST', ...json({ app: 'interiores' }) }),
+    revoke: (projectId: string, code: string) =>
+      request<void>(`/projects/${encodeURIComponent(projectId)}/shares/${encodeURIComponent(code)}`, { method: 'DELETE' }),
   },
 
   listProjects: () => request<ProjectSummary[]>('/projects'),

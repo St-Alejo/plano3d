@@ -4,6 +4,8 @@ Protocolo (JSON, un mensaje por cuadro de texto):
 
 Cliente → servidor
     {"type": "hello", "client": "web"|"desktop", "last_seq": n|null}   primero, siempre
+    (con ``?link=<token de enlace>`` en vez de ``?ticket=`` el cliente es «interiores»,
+    ADR-024: solo puede cambiar muebles y acabados)
     {"type": "ops", "op_id": "...", "ops": [...]}                      lote de cambios (ADR-019)
     {"type": "presence", "state": {...}}                               selección, herramienta, piso
     {"type": "preview", "entity": {...}}                               arrastre en curso
@@ -31,7 +33,7 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from plano3d.api.deps import WS_UNAUTHORIZED, ensure_access, ws_user
 from plano3d.application.collab.hub import CollabError, CollabHub, Peer, presence_ok
-from plano3d.application.use_cases.errors import ProjectNotFoundError
+from plano3d.application.use_cases.errors import AuthError, ProjectNotFoundError
 from plano3d.container import Container
 from plano3d.domain import new_id
 
@@ -51,15 +53,22 @@ MAX_MESSAGE = 4_000_000
 
 @router.websocket("/ws/collab/{project_id}")
 async def collab_ws(
-    websocket: WebSocket, project_id: str, ticket: Annotated[str | None, Query()] = None
+    websocket: WebSocket,
+    project_id: str,
+    ticket: Annotated[str | None, Query()] = None,
+    link: Annotated[str | None, Query()] = None,
 ) -> None:
     container: Container = websocket.app.state.container
-    ok, user = await ws_user(websocket, ticket)
-    if ok:
-        try:
-            await ensure_access(container, user, project_id)
-        except ProjectNotFoundError:
-            ok = False
+    if link is not None:
+        ok, user, linked = await _link_access(container, link, project_id), None, True
+    else:
+        linked = False
+        ok, user = await ws_user(websocket, ticket)
+        if ok:
+            try:
+                await ensure_access(container, user, project_id)
+            except ProjectNotFoundError:
+                ok = False
     if not ok:
         await websocket.close(code=WS_UNAUTHORIZED)
         return
@@ -69,11 +78,18 @@ async def collab_ws(
     if hello is None:
         await websocket.close(code=WS_BAD_HELLO)
         return
-    client = hello.get("client") if hello.get("client") in ("web", "desktop") else "web"
+    client: str
+    if linked:
+        client = "interiores"
+        name = str(hello.get("name") or "Interiores 3D")[:60]
+    else:
+        asked = hello.get("client")
+        client = asked if asked in ("web", "desktop") else "web"
+        name = user.name if user else "Invitado"
     last_seq = hello.get("last_seq")
     peer = Peer(
         id=new_id("peer"),
-        name=user.name if user else "Invitado",
+        name=name,
         client=client,  # type: ignore[arg-type]
         user_id=user.id if user else None,
     )
@@ -100,6 +116,15 @@ async def collab_ws(
             writer.cancel()
         with contextlib.suppress(RuntimeError, WebSocketDisconnect):
             await websocket.close()
+
+
+async def _link_access(container: Container, token: str, project_id: str) -> bool:
+    """El token de enlace vale solo para su proyecto y mientras el código siga activo."""
+    try:
+        share, _ = await container.resolve_link.execute(token)
+    except AuthError:
+        return False
+    return share.project_id == project_id
 
 
 async def _hello(websocket: WebSocket) -> dict[str, Any] | None:
