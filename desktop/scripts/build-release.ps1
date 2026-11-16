@@ -49,6 +49,10 @@ if ($current -ne $Version) {
 # ------------------------------------------------------------------ herramientas
 $dotnetRoot = Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet'
 if (Test-Path (Join-Path $dotnetRoot 'dotnet.exe')) { $env:DOTNET_ROOT = $dotnetRoot; $env:PATH = "$dotnetRoot;$env:PATH" }
+# sin esto el nodo de MSBuild que lanza Godot sigue vivo con la salida de Godot abierta y la
+# exportación nunca «termina»
+$env:MSBUILDDISABLENODEREUSE = '1'
+$env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
 $wingetGodot = Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages') -Filter "Godot_v$godotVersion-stable_mono_win64_console.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
 $godot = Find-Tool 'godot' @($env:PLANO3D_GODOT, $(if ($wingetGodot) { $wingetGodot.FullName }))
 $iscc = Find-Tool 'ISCC.exe' @($env:PLANO3D_ISCC, (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'), "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")
