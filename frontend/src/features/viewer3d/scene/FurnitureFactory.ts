@@ -7,9 +7,19 @@ import * as THREE from 'three'
 import type { Furniture } from '@/api/types'
 import { catalogItem, scaledParts, type Part } from '@/domain/catalog'
 import type { MaterialFactory } from './MaterialFactory'
+import { fitModel, isInterioresItem, loadInterioresModel } from './interioresModels'
+
+/** Trae el modelo real de una pieza externa (null = se queda la caja). */
+export type ExternalModels = (catalogId: string) => Promise<THREE.Object3D | null>
+
+/** En el navegador, los muebles de Interiores traen su GLB; en las pruebas, no hay red. */
+const defaultExternal: ExternalModels | null = import.meta.env.MODE === 'test' ? null : (id) => loadInterioresModel(id)
 
 export class FurnitureFactory {
-  constructor(private readonly materials: MaterialFactory) {}
+  constructor(
+    private readonly materials: MaterialFactory,
+    private readonly external: ExternalModels | null = defaultExternal,
+  ) {}
 
   private partMesh(p: Part): THREE.Mesh {
     const geo = p.shape === 'cyl' ? new THREE.CylinderGeometry(p.w / 2, p.w / 2, p.h, 24) : new THREE.BoxGeometry(p.w, p.h, p.d)
@@ -36,6 +46,19 @@ export class FurnitureFactory {
     group.rotation.y = -(f.rotation ?? 0)
     group.name = `furniture:${f.id}`
     group.userData = { kind: 'furniture', furnitureId: f.id }
+    if (isInterioresItem(f.catalog_id)) {
+      // Diseñado en Interiores: la caja se ve al instante y se cambia por el modelo real al llegar.
+      group.userData.source = 'interiores'
+      void this.external?.(f.catalog_id).then((model) => {
+        if (!model) return
+        const fitted = fitModel(model, f, { kind: 'furniture', furnitureId: f.id })
+        for (const child of [...group.children]) {
+          group.remove(child)
+          ;(child as THREE.Mesh).geometry?.dispose()
+        }
+        group.add(fitted)
+      })
+    }
     return group
   }
 }

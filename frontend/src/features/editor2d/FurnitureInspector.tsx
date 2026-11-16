@@ -4,12 +4,20 @@ import { useState } from 'react'
 import type { Furniture } from '@/api/types'
 import { Button, TextField } from '@/components/ui'
 import { catalogItem } from '@/domain/catalog'
+import { isInterioresItem } from '@/features/viewer3d/scene/interioresModels'
 import { DeleteFurniture, UpdateFurniture } from '@/domain/commands'
 import { wallsHitBy } from '@/domain/furniture'
 import type { MaterialSpec } from '@/domain/materials'
 import { selectLevel, useEditor } from '@/store/editorStore'
 
 const SELECT = 'h-8 rounded-md border border-line-strong bg-canvas px-2 text-xs pointer-coarse:h-11'
+
+/** «int_sofa-3-plazas» → «Sofa 3 plazas»: el nombre legible de una pieza de Interiores. */
+function interioresName(catalogId: string): string {
+  if (!isInterioresItem(catalogId)) return catalogId
+  const words = catalogId.slice(4).replace(/[-_]+/g, ' ').trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
 
 export function MaterialSelect({
   label,
@@ -74,7 +82,12 @@ export function FurnitureInspector({ furniture: f }: { furniture: Furniture }) {
       <div className="flex items-center justify-between">
         <h2 className="font-display text-base font-semibold">Mueble</h2>
       </div>
-      <p className="text-sm">{item?.name ?? f.catalog_id}</p>
+      <p className="text-sm">{item?.name ?? interioresName(f.catalog_id)}</p>
+      {isInterioresItem(f.catalog_id) && (
+        <p role="note" className="border-l-2 border-brand pl-2 text-xs text-muted">
+          Diseñado en Interiores 3D: si lo mueves aquí, allá también se mueve.
+        </p>
+      )}
       {hits.length > 0 && (
         <p role="status" className="border-l-2 border-warn pl-2 text-xs text-warn">
           Atraviesa {hits.length === 1 ? 'un muro' : `${hits.length} muros`}: muévelo o gíralo.
