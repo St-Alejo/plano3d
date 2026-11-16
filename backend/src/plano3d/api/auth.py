@@ -24,6 +24,10 @@ router = APIRouter(prefix="/api/auth", tags=["cuentas"])
 
 #: intentos por minuto y por IP en las rutas que reciben contraseñas o códigos
 _limit = RateLimiter(limit=10, window_s=60)
+#: el refresco llega en cada carga de página y en cada pestaña; su token va firmado y no
+#: se adivina, así que el límite solo frena abusos (10 por minuto sacaba de la sesión a
+#: quien recargaba o abría varias pestañas)
+_refresh_limit = RateLimiter(limit=120, window_s=60)
 
 
 def _session(s: Session) -> SessionDTO:
@@ -81,7 +85,7 @@ async def demo_reset(user: SignedInUser, c: ContainerDep) -> Response:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/refresh", response_model=SessionDTO, dependencies=[Depends(_limit)])
+@router.post("/refresh", response_model=SessionDTO, dependencies=[Depends(_refresh_limit)])
 async def refresh(body: RefreshDTO, c: ContainerDep) -> SessionDTO:
     return _session(await c.refresh_session.execute(body.refresh_token))
 

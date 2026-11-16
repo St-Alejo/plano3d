@@ -180,3 +180,10 @@ def test_login_con_fuerza_bruta_se_frena(client: TestClient) -> None:
     codes = [client.post("/api/auth/login", json=body).status_code for _ in range(11)]
     assert codes[:10] == [401] * 10
     assert codes[10] == 429
+
+
+def test_recargar_muchas_veces_no_saca_de_la_sesion(client: TestClient) -> None:
+    demo = client.post("/api/auth/demo").json()
+    body = {"refresh_token": demo["refresh_token"]}
+    codes = {client.post("/api/auth/refresh", json=body).status_code for _ in range(30)}
+    assert codes == {200}
