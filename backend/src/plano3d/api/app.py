@@ -34,6 +34,7 @@ from plano3d.api.deps import (
     WS_UNAUTHORIZED,
     ContainerDep,
     CurrentUser,
+    collab_flush,
     collab_sync,
     current_user,
     ensure_access,
@@ -295,7 +296,12 @@ async def generate_photos(
     )
 
 
-@owned.get("/projects/{project_id}", response_model=ProjectDTO, tags=["proyectos"])
+@owned.get(
+    "/projects/{project_id}",
+    response_model=ProjectDTO,
+    tags=["proyectos"],
+    dependencies=[Depends(collab_flush)],
+)
 async def get_project(project_id: str, c: ContainerDep, response: Response) -> ProjectDTO:
     project = await c.get_project.execute(project_id)
     response.headers["ETag"] = _etag(project.revision)
@@ -333,7 +339,12 @@ async def update_model(
     return project_to_dto(project)
 
 
-@owned.get("/projects/{project_id}/revisions", response_model=list[RevisionDTO], tags=["modelo"])
+@owned.get(
+    "/projects/{project_id}/revisions",
+    response_model=list[RevisionDTO],
+    tags=["modelo"],
+    dependencies=[Depends(collab_flush)],
+)
 async def list_revisions(project_id: str, c: ContainerDep) -> list[RevisionDTO]:
     return [revision_to_dto(r) for r in await c.list_revisions.execute(project_id)]
 

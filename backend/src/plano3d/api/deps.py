@@ -103,6 +103,12 @@ async def collab_sync(project_id: str, c: ContainerDep) -> AsyncIterator[None]:
     await c.collab.reload(project_id)
 
 
+async def collab_flush(project_id: str, c: ContainerDep) -> None:
+    """Lectura por REST con la sala abierta: primero se guarda lo pendiente, así quien lee
+    (otra pestaña sin conexión en vivo, una exportación, el historial) ve lo último."""
+    await c.collab.flush(project_id)
+
+
 async def ws_user(websocket: WebSocket, ticket: str | None) -> tuple[bool, User | None]:
     """(permitido, usuario) para un WebSocket: el ticket viene de POST /api/auth/ws-ticket."""
     container: Container = websocket.app.state.container

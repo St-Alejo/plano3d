@@ -136,3 +136,28 @@ def test_borrar_el_proyecto_cierra_la_sala(client: TestClient) -> None:
         gone = client.delete(f"/api/projects/{DEMO_PROJECT_ID}", headers=_auth(client, demo))
         assert gone.status_code == 204
         assert _until(ws, "closed")["reason"] == "El proyecto se eliminó"
+
+
+def test_leer_por_rest_con_la_sala_abierta_trae_lo_ultimo(client: TestClient) -> None:
+    demo = client.post("/api/auth/demo").json()
+    with client.websocket_connect(f"{URL}?ticket={_ticket(client, demo)}") as ws:
+        ws.send_json({"type": "hello", "client": "web"})
+        model = _until(ws, "welcome")["model"]
+        level = model["levels"][0]
+        furniture = copy.deepcopy(level["furniture"][0])
+        furniture["position"]["y"] += 0.75
+        op = {"t": "put", "k": "furniture", "level": level["id"], "id": furniture["id"]}
+        ws.send_json({"type": "ops", "op_id": "w-1", "ops": [{**op, "v": furniture}]})
+        _until(ws, "applied")
+        # sin esperar el guardado diferido (1,5 s): leer guarda antes lo pendiente
+        got = client.get(f"/api/projects/{DEMO_PROJECT_ID}", headers=_auth(client, demo)).json()
+        assert got["revision"] == 2
+        moved = next(
+            f for f in got["model"]["levels"][0]["furniture"] if f["id"] == furniture["id"]
+        )
+        assert moved["position"]["y"] == pytest.approx(furniture["position"]["y"])
+        revisions = client.get(
+            f"/api/projects/{DEMO_PROJECT_ID}/revisions", headers=_auth(client, demo)
+        ).json()
+        assert revisions[0]["summary"] == "Edición en vivo (web)"
+        assert _until(ws, "saved")["revision"] == 2
