@@ -91,7 +91,7 @@ public partial class SceneSync : Node3D
             for (var i = 0; i < level.Furniture.Count; i++)
             {
                 var f = level.Furniture[i];
-                Upsert("furniture", f.Id, jFurn[i], () => Wrap(MeshFactory.Box(BuildingGeometry.FurnitureBox(f, elev), Materials.Furniture(f.CatalogId), f.Id)));
+                Upsert("furniture", f.Id, jFurn[i], () => BuildFurniture(f, elev));
             }
         }
 
@@ -131,6 +131,16 @@ public partial class SceneSync : Node3D
             root.Visible = on;
             root.ProcessMode = on ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
         }
+    }
+
+    /// <summary>Mueble como caja; si viene de Interiores, su modelo real reemplaza la caja al llegar.</summary>
+    private static Node3D BuildFurniture(Furniture f, double elev)
+    {
+        var b = BuildingGeometry.FurnitureBox(f, elev);
+        var box = MeshFactory.Box(b, Materials.Furniture(f.CatalogId), f.Id);
+        var holder = Wrap(box);
+        if (ExternalModels.IsInteriores(f.CatalogId)) InterioresModels.Attach(holder, box, b.Size, f.CatalogId);
+        return holder;
     }
 
     private static Node3D Wrap(Node3D child)
