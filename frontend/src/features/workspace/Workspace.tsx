@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Tabs from '@radix-ui/react-tabs'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
-import { Box, Check, Command, History, Keyboard, Maximize2, MoreHorizontal, PanelLeft, Save } from 'lucide-react'
+import { Box, Check, Command, History, Keyboard, Maximize2, Monitor, MoreHorizontal, PanelLeft, Save } from 'lucide-react'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
@@ -28,6 +28,7 @@ import { CommandPalette } from './CommandPalette'
 import { EditorContextMenu } from './EditorContextMenu'
 import { GroupInspector } from './GroupInspector'
 import { HistoryDialog } from './HistoryDialog'
+import { OpenInDesktop } from '@/features/desktop/OpenInDesktop'
 import { LayersPanel, LevelPicker } from './LayersPanel'
 import { ShortcutsHelp } from './ShortcutsHelp'
 import { StatusBar } from './StatusBar'
@@ -146,6 +147,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   const [palette, setPalette] = useState(false)
   const [help, setHelp] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [desktopOpen, setDesktopOpen] = useState(false)
   const actions = useMemo(
     () =>
       buildActions({
@@ -259,6 +261,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
     { label: 'Buscar un comando', icon: <Command className="size-4" aria-hidden />, shortcut: 'Ctrl+K', onSelect: () => setPalette(true) },
     { label: 'Atajos de teclado', icon: <Keyboard className="size-4" aria-hidden />, shortcut: '?', onSelect: () => setHelp(true) },
     ...(!studio ? [{ label: 'Abrir el estudio a pantalla completa', icon: <Maximize2 className="size-4" aria-hidden />, href: `/p/${project.id}/estudio` }] : []),
+    { label: 'Abrir en escritorio', icon: <Monitor className="size-4" aria-hidden />, onSelect: () => setDesktopOpen(true) },
   ]
 
   const trailing = (
@@ -282,6 +285,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           </IconButton>
         }
       />
+      <OpenInDesktop open={desktopOpen} onOpenChange={setDesktopOpen} projectId={project.id} />
       <HistoryDialog projectId={project.id} currentRevision={revision} dirty={dirty} onRestored={onReload} open={historyOpen} onOpenChange={setHistoryOpen} />
       <span className="mx-0.5 h-6 w-px bg-line" aria-hidden />
       <PresenceBar />

@@ -59,6 +59,9 @@ function Masthead() {
               <span className="l-link">{n.label}</span>
             </a>
           ))}
+          <Link to="/escritorio" className="hidden min-h-11 items-center px-3 t-small lg:inline-flex">
+            <span className="l-link">Descargar para Windows</span>
+          </Link>
           <Link
             to="/proyectos"
             className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-(--l-fg)/25 px-5 t-small font-medium transition-[background-color,color,border-color] duration-300 hover:border-(--l-fg) hover:bg-(--l-fg) hover:text-(--l-bg)"

@@ -277,6 +277,9 @@ export function Closing() {
             <Link to="/proyectos" className="group mt-6 inline-flex min-h-11 items-center gap-2 font-medium">
               <span className="l-link">Ver mis proyectos</span> <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
             </Link>
+            <Link to="/escritorio" className="group mt-2 flex min-h-11 items-center gap-2 font-medium text-(--l-dim) hover:text-(--l-fg)">
+              <span className="l-link">Descargar la app para Windows</span>
+            </Link>
           </StaggerItem>
         </Stagger>
         <div

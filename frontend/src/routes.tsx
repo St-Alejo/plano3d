@@ -5,6 +5,7 @@ import { AuthPage } from '@/features/auth/AuthPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { LazyViewerPage } from '@/features/viewer3d/LazyViewerPage'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
+import { DesktopPage } from '@/features/desktop/DesktopPage'
 import { LandingPage } from '@/features/landing/LandingPage'
 import { ProjectsPage } from '@/features/projects/ProjectsPage'
 import { StudioPage } from '@/features/studio/StudioPage'
@@ -33,5 +34,13 @@ export const routes: RouteObject[] = [
       },
     ],
   },
-  { element: <AppShell />, errorElement: <NotFound />, children: [{ path: '*', element: <NotFound /> }] },
+  // públicas con la cabecera de la aplicación
+  {
+    element: <AppShell />,
+    errorElement: <NotFound />,
+    children: [
+      { path: 'escritorio', element: <DesktopPage /> },
+      { path: '*', element: <NotFound /> },
+    ],
+  },
 ]
