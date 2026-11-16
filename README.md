@@ -76,6 +76,37 @@ continuar están en [`calidad/README.md`](calidad/README.md); cada iteración, e
 5. **Recorrer**: orbitar o caminar (WASD + mouse, o joystick en el celular), comparar con el plano
    original (deslizador) y **exportar GLB** (se abre en Blender o cualquier visor glTF).
 
+## App de escritorio (Windows)
+
+Un segundo cliente, hecho con **Godot 4 .NET + C#** (`desktop/`), que edita los mismos proyectos que la
+web **en vivo**: lo que dibujas en uno aparece en el otro en menos de 200 ms. Suma iluminación global en
+tiempo real, día y noche, recorrido a pie con personas, video del recorrido y **render fotorrealista con
+Blender** (Cycles en la GPU local, que llega solo a la galería del proyecto).
+
+- **Descargar:** botón «Descargar para Windows» de la web (`/escritorio`) o
+  [el último release](https://github.com/St-Alejo/plano3d-frontend/releases/latest). El instalador no
+  tiene firma de código: Windows SmartScreen avisa y la página explica cómo seguir y publica el SHA-256.
+- **Abrir un proyecto de la web:** «Abrir en escritorio» en el editor o el visor 3D abre la app ya con
+  la sesión y en ese proyecto (`plano3d://`, código de un solo uso de 2 min).
+- **Desarrollar:** .NET 8 SDK, Godot 4.7.2 .NET e Inno Setup 6.
+
+```bash
+dotnet test desktop/Plano3D.sln                       # dominio, ops compartidas, API, Blender
+cd desktop/app && godot --path . -- --smoke salida.png --api http://127.0.0.1:8010   # prueba de humo
+powershell -File desktop/scripts/build-release.ps1 -Version 1.0.0 [-Publish]        # instalador / release
+```
+
+Arquitectura: `Plano3D.Core` (sin Godot: modelo, ops, comandos, geometría, sol, recorrido),
+`Plano3D.Infrastructure` (API, sesión con DPAPI, sala en vivo, Blender, actualizaciones) y `app/`
+(pantallas y escena). Decisiones en ADR-019 a ADR-023.
+
+## Cuentas, demo y edición en vivo
+
+- Registro e inicio de sesión con JWT (`/api/auth/*`); cada proyecto tiene dueño.
+- **Cuenta demo:** el botón «Entrar con la cuenta demo» abre la casa de 3 pisos (`prj_demo_casa3`).
+- **Edición en vivo:** sala WebSocket por proyecto (`/api/ws/collab/{id}`) que reparte cambios por
+  entidad («ops», con la misma semántica en Python, TypeScript y C#), presencia y renders nuevos.
+
 ## Arquitectura
 
 ```
@@ -90,6 +121,12 @@ frontend/src/
   store/           Zustand: única fuente de verdad del editor
   features/        capture · processing · editor2d · viewer3d · workspace · projects
   api/             cliente, progreso (WS + polling) y tipos generados desde OpenAPI
+  collab/          sala en vivo: cliente WS, presencia, ops remotas
+desktop/
+  src/Plano3D.Core            dominio en C# (port de frontend/src/domain, mismas pruebas)
+  src/Plano3D.Infrastructure  ApiClient, sesión DPAPI, CollabClient, BlenderRunner, UpdateChecker
+  app/                        proyecto Godot 4 (pantallas, SceneSync, planta, render, recorrido)
+  installer/ · scripts/       Inno Setup y build-release.ps1
 ```
 
 Patrones: **Strategy** (detectores), **Pipeline/Chain of Responsibility** (etapas), **Adapter**
@@ -109,6 +146,7 @@ Documentación: [revisión de los docs](docs/revision-docs.md) · [usabilidad](d
 | E2E | `cd frontend && npx playwright test` (con el stack arriba) | foto → pipeline → edición → guardado → recorrido → GLB; error; vista móvil |
 | Usabilidad | incluida en E2E (`e2e/usability.spec.ts`) + `node e2e/usability-audit.mjs <carpeta>` | accesibilidad WCAG 2.1 AA (axe) en ambos temas, objetivos táctiles, 320 px, teclado, cambios sin guardar — ver [docs/usabilidad.md](docs/usabilidad.md) |
 | Calidad | `cd backend && python scripts/eval.py` | benchmark de detección por dificultad (IoU, precisión/exhaustividad) |
+| Escritorio | `dotnet test desktop/Plano3D.sln` (con `PLANO3D_TEST_API=http://127.0.0.1:8010` también contra una API real) + prueba de humo de Godot | ops con los mismos casos JSON que pytest y vitest, comandos, geometría, cliente de API, sala en vivo, Blender |
 | Estático | `ruff check`, `mypy` (strict), `npm run lint`, `npm run typecheck` | |
 
 En contenedores (imagen `dev`, con el stack arriba), incluida la prueba contra PostgreSQL real
@@ -135,8 +173,20 @@ cd ../frontend && npm run gen:api
 
 `tests/integration/test_contract.py` falla si te olvidas.
 
-## Desplegar después
+## Despliegue (demo en Azure)
 
-Todo se configura con variables `PLANO3D_*`: apunta `PLANO3D_DATABASE_URL` a un Postgres gestionado,
-`PLANO3D_S3_*` a AWS S3 o Cloudflare R2 y `PLANO3D_REDIS_URL` a un Redis gestionado. Las imágenes de
+- **Web:** Azure Static Web Apps (plan gratis) desde el repo `St-Alejo/plano3d-frontend`.
+- **API:** Azure Container Apps de consumo (`ca-plano3d-api`, 1 réplica como máximo), imagen
+  `ghcr.io/st-alejo/plano3d-backend` desde `St-Alejo/plano3d-backend`. Los datos viven en memoria con
+  una copia `state.json.gz` en Azure Blob (ADR-022): sobreviven a reinicios sin pagar una base de datos.
+- **Encender o apagar para presentar:**
+
+```powershell
+powershell -File scripts\presentacion.ps1 estado
+powershell -File scripts\presentacion.ps1 on -ReiniciarDemo   # siempre lista (~US$0,8/día en reposo)
+powershell -File scripts\presentacion.ps1 off                 # se apaga sola sin uso (arranque ~20 s)
+```
+
+Fuera de Azure todo se configura con variables `PLANO3D_*`: `PLANO3D_DATABASE_URL` a un Postgres
+gestionado, `PLANO3D_S3_*` a S3 o R2 y `PLANO3D_REDIS_URL` a un Redis gestionado. Las imágenes de
 producción corren sin privilegios y el frontend se sirve por nginx con la API en el mismo origen.
