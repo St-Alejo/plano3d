@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import type { Tone } from '@/domain/catalog'
 import type { Cladding } from '@/domain/facades'
 import { floorMaterial, TEXTURES, wallMaterial, type MaterialSpec, type Pattern, type TextureId } from '@/domain/materials'
+import { applyInterioresTextures, interioresFloorId, interioresFloorLook, interioresFloorSet } from './interioresFinishes'
 
 export type WallPart = 'solid' | 'sill' | 'lintel'
 
@@ -177,6 +178,8 @@ export class MaterialFactory {
 
   /** Piso del ambiente: el acabado elegido o, si no hay, uno según su nombre. */
   floor(materialId: string | null | undefined, label: string): THREE.MeshStandardMaterial {
+    const fromInteriores = interioresFloorId(materialId)
+    if (fromInteriores) return this.interioresFloor(fromInteriores)
     const spec = floorMaterial(materialId)
     if (!spec) return this.floorFor(label)
     return this.cached(`floor:${spec.id}`, () => {
@@ -201,6 +204,16 @@ export class MaterialFactory {
           opacity: t.opacity ?? 1,
         }),
     )
+  }
+
+  /** Piso diseñado en Interiores: su color ya, sus texturas cuando lleguen. */
+  private interioresFloor(id: string): THREE.MeshStandardMaterial {
+    return this.cached(`floor:int:${id}`, () => {
+      const m = new THREE.MeshStandardMaterial(interioresFloorLook(id))
+      const loader = this.loader
+      if (loader) void interioresFloorSet(id).then((set) => set && applyInterioresTextures(m, set, loader))
+      return m
+    })
   }
 
   floorFor(label: string): THREE.MeshStandardMaterial {
