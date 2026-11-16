@@ -1,6 +1,7 @@
 using System.Globalization;
 using Godot;
 using Plano3D.Infrastructure.Api;
+using Plano3D.Infrastructure.Updates;
 
 namespace Plano3D.App.Screens;
 
@@ -25,7 +26,7 @@ public partial class ProjectsScreen : Control
 
         var top = new HBoxContainer();
         var titles = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        titles.AddChild(Ui.Text("Plano 3D", 14, Ui.Accent));
+        titles.AddChild(Ui.Text($"Plano 3D · versión {AppVersion.Current}", 14, Ui.Accent));
         titles.AddChild(Ui.Text("Tus planos", 34));
         top.AddChild(titles);
         var user = _main.Api.User;
@@ -38,6 +39,19 @@ public partial class ProjectsScreen : Control
         top.AddChild(logout);
         col.AddChild(top);
 
+        var update = new PanelContainer { Visible = false };
+        update.AddThemeStyleboxOverride("panel", Ui.Box(new Color(Ui.Accent, 0.12f), 10, Ui.Accent, 12));
+        var updateRow = new HBoxContainer();
+        updateRow.AddThemeConstantOverride("separation", 12);
+        var updateText = Ui.Text("", 14, wrap: true);
+        updateText.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        updateRow.AddChild(updateText);
+        var get = Ui.Secondary("Descargar");
+        updateRow.AddChild(get);
+        update.AddChild(updateRow);
+        col.AddChild(update);
+        _ = ShowUpdateAsync(update, updateText, get);
+
         _status = Ui.Text("Cargando proyectos…", 14, Ui.Muted);
         col.AddChild(_status);
 
@@ -47,6 +61,14 @@ public partial class ProjectsScreen : Control
         scroll.AddChild(_list);
         col.AddChild(scroll);
         _ = LoadAsync();
+    }
+
+    private async Task ShowUpdateAsync(Control box, Label text, Button get)
+    {
+        if (await _main.UpdateAsync() is not { } info || !IsInstanceValid(box)) return;
+        text.Text = $"Hay una versión nueva de Plano 3D: {info.Latest.ToString(3)} (tienes {AppVersion.Current}).";
+        get.Pressed += () => OS.ShellOpen(info.Url);
+        box.Visible = true;
     }
 
     private async Task LoadAsync()

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Godot;
 using Plano3D.App.Screens;
 using Plano3D.Infrastructure.Api;
+using Plano3D.Infrastructure.Updates;
 
 namespace Plano3D.App;
 
@@ -19,6 +20,12 @@ public partial class Main : Node
 
     public ApiClient Api { get; private set; } = null!;
     public AppSettings Settings { get; private set; } = null!;
+    private Task<UpdateInfo?>? _update;
+
+    /// <summary>¿Hay versión nueva? Se pregunta una vez por sesión (nunca en la prueba de humo).</summary>
+    public Task<UpdateInfo?> UpdateAsync() => _update ??= Launch.Smoke is not null
+        ? Task.FromResult<UpdateInfo?>(null)
+        : new UpdateChecker(new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(8) }).CheckAsync(Version.Parse(AppVersion.Current));
     public LaunchOptions Launch { get; private set; } = null!;
     public Theme Theme { get; } = Ui.MakeTheme();
 
