@@ -1,7 +1,7 @@
 import { apiOrigin } from './origin'
 import { tokens, type Session } from './tokens'
 import type { components } from './schema'
-import type { Photos, PhotosStatus, AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
+import type { Photos, PhotosStatus, RenderInfo, AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
 
 export class ApiError extends Error {
   constructor(
@@ -207,6 +207,12 @@ export const api = {
 
   /** Chat del editor: lo que el intérprete local no entendió lo interpreta la IA (503 si no hay). */
   /** `scope`: 'plan' edita el plano (chat del editor); 'viewer' ajusta la vista 3D */
+  /** Renders de Blender que subió la app de escritorio (del más viejo al más nuevo). */
+  renders: (id: string) => request<RenderInfo[]>(`/projects/${encodeURIComponent(id)}/renders`),
+  /** La imagen de un render con la sesión (un `<img src>` no puede mandar el token). */
+  renderBlob: async (id: string, renderId: string): Promise<Blob> =>
+    (await send(`/projects/${encodeURIComponent(id)}/renders/${encodeURIComponent(renderId)}`)).blob(),
+
   /** ¿Hay fotos con IA en este servidor y cuánto presupuesto queda? */
   photosStatus: () => request<PhotosStatus>('/photos/status'),
 

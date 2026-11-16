@@ -2,7 +2,7 @@
 import * as Slider from '@radix-ui/react-slider'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tabs from '@radix-ui/react-tabs'
-import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, MoreHorizontal, Orbit, Paintbrush, Ruler, Sofa, Sparkles, Users } from 'lucide-react'
+import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Images, Layers, MoreHorizontal, Orbit, Paintbrush, Ruler, Sofa, Sparkles, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
@@ -20,6 +20,7 @@ import { TutorialButton } from '@/features/studio/TutorialButton'
 import { Joystick } from './Joystick'
 import { Viewer3D, type CaptureFn, type FlyTarget, type Quality, type ViewMode } from './Viewer3D'
 import { PhotoStudio } from './photos/PhotoStudio'
+import { RenderGallery } from './renders/RenderGallery'
 import { LevelRail } from './LevelRail'
 import { applyLevelFocus, highlightLevel } from './scene/levelFocus'
 import { levelCamera, levelsAbove, levelSummaries } from '@/domain/levels'
@@ -180,6 +181,7 @@ export function ViewerPage() {
   // fotos realistas con IA: la vista 3D llena captureRef con su función de captura
   const captureRef = useRef<CaptureFn | null>(null)
   const [photosOpen, setPhotosOpen] = useState(false)
+  const [rendersOpen, setRendersOpen] = useState(false)
   const onCapture = useCallback((fn: CaptureFn | null) => {
     captureRef.current = fn
   }, [])
@@ -585,6 +587,7 @@ export function ViewerPage() {
         captureRef={captureRef}
         prepare={preparePhotos}
       />
+      <RenderGallery open={rendersOpen} onOpenChange={setRendersOpen} projectId={project.id} fileBase={fileBase} />
 
       {/* reloj de la simulación: bajo la barra; a la izquierda en el celular (a la derecha va el HUD del recorrido) */}
       <div data-testid="sim-clock-slot" className="pointer-events-none absolute top-[4.25rem] left-3 z-20 sm:left-1/2 sm:-translate-x-1/2">
@@ -713,6 +716,16 @@ export function ViewerPage() {
               Fotos con IA
             </Button>
           )}
+          {!narrow && (
+            <Button
+              className="h-11 bg-canvas/85 backdrop-blur"
+              onClick={() => setRendersOpen(true)}
+              title="Renders fotorrealistas de Blender hechos desde la app de escritorio"
+              icon={<Images className="size-4" aria-hidden />}
+            >
+              Renders
+            </Button>
+          )}
           <Menu
             items={[
               ...(narrow && !strategy.panel
@@ -724,7 +737,12 @@ export function ViewerPage() {
                       : { label: showFurniture ? 'Quitar los muebles' : 'Poner los muebles', icon: <Sofa className="size-4" aria-hidden />, onSelect: () => setShowFurniture((v) => !v) },
                   ]
                 : []),
-              ...(narrow ? [{ label: 'Fotos realistas con IA', icon: <Sparkles className="size-4" aria-hidden />, onSelect: () => setPhotosOpen(true) }] : []),
+              ...(narrow
+                ? [
+                    { label: 'Fotos realistas con IA', icon: <Sparkles className="size-4" aria-hidden />, onSelect: () => setPhotosOpen(true) },
+                    { label: 'Renders de Blender', icon: <Images className="size-4" aria-hidden />, onSelect: () => setRendersOpen(true) },
+                  ]
+                : []),
               { label: 'Guardar imagen PNG', icon: <Camera className="size-4" aria-hidden />, onSelect: doPng },
               { label: 'Descargar modelo OBJ', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doObj() },
               { label: 'Descargar modelo GLB', icon: <Download className="size-4" aria-hidden />, onSelect: () => void doExport() },

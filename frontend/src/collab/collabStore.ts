@@ -3,6 +3,7 @@
  * Lo escribe la sesión (`CollabSession`); lo leen la barra de presencia y el editor 2D.
  */
 import { create } from 'zustand'
+import type { RenderInfo } from '@/api/types'
 import type { ClientKind, PeerInfo, PresenceState, PreviewEntity } from './protocol'
 
 export type LiveStatus = 'off' | 'connecting' | 'live' | 'offline' | 'closed'
@@ -24,6 +25,8 @@ interface CollabState {
   pending: number
   /** último cambio que llegó de otra persona (para el aviso) */
   notice: RemoteNotice | null
+  /** renders de Blender que llegaron en vivo durante la sesión (la galería los suma) */
+  arrivedRenders: RenderInfo[]
   /** lo conecta la sesión activa; sin sesión no hace nada */
   sendPreview: (entity: PreviewEntity | null) => void
 }
@@ -36,6 +39,7 @@ const initial = {
   previews: {},
   pending: 0,
   notice: null,
+  arrivedRenders: [],
   sendPreview: () => {},
 }
 
@@ -66,6 +70,7 @@ export const collabActions = {
       return { previews }
     }),
   pending: (pending: number) => useCollab.setState({ pending }),
+  renderAdded: (render: RenderInfo) => useCollab.setState((s) => ({ arrivedRenders: [...s.arrivedRenders, render] })),
   remoteChange: (peerId: string) => {
     const peer = useCollab.getState().peers[peerId]
     if (peer) useCollab.setState({ notice: { name: peer.name, client: peer.client, at: Date.now() } })

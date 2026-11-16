@@ -167,6 +167,14 @@ describe('sesión de edición en vivo', () => {
     expect(useCollab.getState().peers[DESK.id]).toBeUndefined()
   })
 
+  it('un render que sube el escritorio queda en la lista de llegados', () => {
+    const { fake, welcome } = setup()
+    welcome({ peers: [DESK] })
+    const render = { id: 'p-1', label: 'Calle', camera: 'Calle', quality: 'final', hour: 'dia', media_type: 'image/jpeg', size_bytes: 9, width: 4, height: 3, created_at: '2026-11-16T00:00:00Z' }
+    fake.h.onMessage({ type: 'render_added', render })
+    expect(useCollab.getState().arrivedRenders).toEqual([render])
+  })
+
   it('al cerrar se apaga todo', () => {
     const { session, fake, welcome } = setup()
     welcome()

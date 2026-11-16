@@ -2,7 +2,7 @@
  * Mensajes del WebSocket de edición en vivo (ADR-021). Espejo de
  * `backend/src/plano3d/api/collab.py`: si cambia allá, cambia acá.
  */
-import type { BuildingModel } from '@/api/types'
+import type { BuildingModel, RenderInfo } from '@/api/types'
 import type { ModelOp } from '@/domain/ops'
 
 export type ClientKind = 'web' | 'desktop'
@@ -56,6 +56,7 @@ export type ServerMessage =
   | { type: 'peer_joined'; peer: PeerInfo }
   | { type: 'peer_left'; peer_id: string }
   | { type: 'closed'; reason: string }
+  | { type: 'render_added'; render: RenderInfo }
   | { type: 'pong' }
   | { type: 'error'; reason: string }
 

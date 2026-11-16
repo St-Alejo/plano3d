@@ -17,6 +17,8 @@ export type Project = S['ProjectDTO']
 export type Photos = S['PhotosDTO']
 export type Photo = S['PhotoDTO']
 export type PhotosStatus = S['PhotosStatusDTO']
+/** Render de Blender subido por la app de escritorio. */
+export type RenderInfo = S['RenderDTO']
 export type ProjectSummary = S['ProjectSummaryDTO']
 export type ProjectStatus = S['ProjectStatus']
 export type ProgressEvent = S['ProgressEventDTO']

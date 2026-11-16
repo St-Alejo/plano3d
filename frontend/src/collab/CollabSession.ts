@@ -218,6 +218,8 @@ export class CollabSession {
         return collabActions.left(msg.peer_id)
       case 'closed':
         return collabActions.status('closed', msg.reason)
+      case 'render_added':
+        return collabActions.renderAdded(msg.render)
       default:
         return
     }
