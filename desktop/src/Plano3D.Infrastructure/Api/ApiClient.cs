@@ -108,6 +108,29 @@ public sealed class ApiClient : IDisposable
     public async Task<JsonObject> ProjectAsync(string id, CancellationToken ct = default) =>
         await SendAsync(HttpMethod.Get, $"projects/{Uri.EscapeDataString(id)}", null, ct);
 
+    /// <summary>
+    /// Sube un render de Blender a la galería del proyecto; la web lo ve al instante. Devuelve
+    /// el id que le dio el servidor.
+    /// </summary>
+    public async Task<string> UploadRenderAsync(
+        string projectId, byte[] image, string fileName, string label, string camera, string quality, string hour, CancellationToken ct = default)
+    {
+        HttpContent Form()
+        {
+            var form = new MultipartFormDataContent();
+            var file = new ByteArrayContent(image);
+            file.Headers.ContentType = new MediaTypeHeaderValue(fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg");
+            form.Add(file, "image", fileName);
+            form.Add(new StringContent(label), "label");
+            form.Add(new StringContent(camera), "camera");
+            form.Add(new StringContent(quality), "quality");
+            form.Add(new StringContent(hour), "hour");
+            return form;
+        }
+        var json = await SendContentAsync(HttpMethod.Post, $"projects/{Uri.EscapeDataString(projectId)}/renders", Form, ct);
+        return json.Str("id") ?? "";
+    }
+
     // ------------------------------------------------------------------ transporte
     private async Task<Session> EnterAsync(string path, JsonObject? body, CancellationToken ct)
     {
@@ -149,12 +172,16 @@ public sealed class ApiClient : IDisposable
         }
     }
 
-    private async Task<JsonObject> SendAsync(HttpMethod method, string path, JsonObject? body, CancellationToken ct, bool auth = true)
+    private Task<JsonObject> SendAsync(HttpMethod method, string path, JsonObject? body, CancellationToken ct, bool auth = true) =>
+        SendContentAsync(method, path, body is null ? null : () => JsonContent.Create(body), ct, auth);
+
+    /// <summary>El contenido se arma de nuevo en cada intento (un reintento tras renovar la sesión no puede reusarlo).</summary>
+    private async Task<JsonObject> SendContentAsync(HttpMethod method, string path, Func<HttpContent>? content, CancellationToken ct, bool auth = true)
     {
         for (var attempt = 0; ; attempt++)
         {
             using var req = new HttpRequestMessage(method, path);
-            if (body is not null) req.Content = JsonContent.Create(body);
+            if (content is not null) req.Content = content();
             if (auth && _access is not null) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _access);
             using var res = await _http.SendAsync(req, ct);
             if (res.StatusCode == HttpStatusCode.Unauthorized && auth && attempt == 0 && await RefreshAsync(ct)) continue;

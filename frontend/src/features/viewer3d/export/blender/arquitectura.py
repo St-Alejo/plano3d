@@ -924,13 +924,15 @@ def render_all(folder: str, only: str | None = None) -> list[str]:
     os.makedirs(out_dir, exist_ok=True)
     done = []
     current = scene.camera
-    for obj in [o for o in bpy.data.objects if o.type == "CAMERA"]:
-        if only and only.lower() not in obj.name.lower():
-            continue
+    wanted = [o for o in bpy.data.objects if o.type == "CAMERA" and (not only or only.lower() in o.name.lower())]
+    for i, obj in enumerate(wanted, 1):
+        # la app de escritorio lee estas líneas para mostrar el avance
+        print(f"camara: {i}/{len(wanted)} {obj.name}", flush=True)
         prepare_camera(obj)
         safe = "".join(ch if ch.isalnum() else "_" for ch in obj.name)
         scene.render.filepath = os.path.join(out_dir, f"{safe}.png")
         bpy.ops.render.render(write_still=True)
+        print("render:", scene.render.filepath, flush=True)
         done.append(scene.render.filepath)
     if current:
         prepare_camera(current)
@@ -1084,8 +1086,7 @@ def main() -> None:
     print(f"Plano 3D: escena lista en {blend} ({len(meshes)} mallas, {len(project['cameras'])} cámaras, {device})")
     if "--render" in _script_args():
         only = _option("camara", "")
-        for path in render_all(folder, only or None):
-            print("render:", path)
+        render_all(folder, only or None)
 
 
 if __name__ == "__main__":
