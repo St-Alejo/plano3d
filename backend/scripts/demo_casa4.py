@@ -112,10 +112,10 @@ class _Floor:
             }
         )
 
-    def frame(self) -> None:
+    def frame(self, ys: tuple[float, ...] = (0.0, 7.0, 11.0, 18.0)) -> None:
         """Columnas del pórtico (las mismas en todos los pisos, alinean el apilado)."""
         for x in (0.0, 5.0, 7.0, 12.0):
-            for y in (0.0, 7.0, 11.0, 18.0):
+            for y in ys:
                 self.columns.append(
                     {"id": self._id("c"), "center": {"x": x, "y": y}, "width": 0.35, "depth": 0.35}
                 )
@@ -311,7 +311,7 @@ def _piso4() -> _Floor:
     f.room("Baño azotea", "bathroom", 7, 12, 9.5, 14)
     f.room("Bar", "kitchen", 9.5, 12, W, 14)
     f.room("Solárium y piscina", "patio", 0, 14, W, D)
-    f.frame()
+    f.frame((7.0, 11.0, 14.0))  # en la azotea solo el bloque cubierto
     return f
 
 

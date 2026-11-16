@@ -4902,7 +4902,7 @@
       "id": "c_azotea_38",
       "center": {
        "x": 0.0,
-       "y": 0.0
+       "y": 7.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4914,7 +4914,7 @@
       "id": "c_azotea_39",
       "center": {
        "x": 0.0,
-       "y": 7.0
+       "y": 11.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4926,7 +4926,7 @@
       "id": "c_azotea_40",
       "center": {
        "x": 0.0,
-       "y": 11.0
+       "y": 14.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4937,8 +4937,8 @@
      {
       "id": "c_azotea_41",
       "center": {
-       "x": 0.0,
-       "y": 18.0
+       "x": 5.0,
+       "y": 7.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4950,7 +4950,7 @@
       "id": "c_azotea_42",
       "center": {
        "x": 5.0,
-       "y": 0.0
+       "y": 11.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4962,7 +4962,7 @@
       "id": "c_azotea_43",
       "center": {
        "x": 5.0,
-       "y": 7.0
+       "y": 14.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4973,8 +4973,8 @@
      {
       "id": "c_azotea_44",
       "center": {
-       "x": 5.0,
-       "y": 11.0
+       "x": 7.0,
+       "y": 7.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4985,8 +4985,8 @@
      {
       "id": "c_azotea_45",
       "center": {
-       "x": 5.0,
-       "y": 18.0
+       "x": 7.0,
+       "y": 11.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -4998,7 +4998,7 @@
       "id": "c_azotea_46",
       "center": {
        "x": 7.0,
-       "y": 0.0
+       "y": 14.0
       },
       "width": 0.35,
       "depth": 0.35,
@@ -5009,7 +5009,7 @@
      {
       "id": "c_azotea_47",
       "center": {
-       "x": 7.0,
+       "x": 12.0,
        "y": 7.0
       },
       "width": 0.35,
@@ -5021,7 +5021,7 @@
      {
       "id": "c_azotea_48",
       "center": {
-       "x": 7.0,
+       "x": 12.0,
        "y": 11.0
       },
       "width": 0.35,
@@ -5033,56 +5033,8 @@
      {
       "id": "c_azotea_49",
       "center": {
-       "x": 7.0,
-       "y": 18.0
-      },
-      "width": 0.35,
-      "depth": 0.35,
-      "round": false,
-      "rotation": 0.0,
-      "confidence": 1.0
-     },
-     {
-      "id": "c_azotea_50",
-      "center": {
        "x": 12.0,
-       "y": 0.0
-      },
-      "width": 0.35,
-      "depth": 0.35,
-      "round": false,
-      "rotation": 0.0,
-      "confidence": 1.0
-     },
-     {
-      "id": "c_azotea_51",
-      "center": {
-       "x": 12.0,
-       "y": 7.0
-      },
-      "width": 0.35,
-      "depth": 0.35,
-      "round": false,
-      "rotation": 0.0,
-      "confidence": 1.0
-     },
-     {
-      "id": "c_azotea_52",
-      "center": {
-       "x": 12.0,
-       "y": 11.0
-      },
-      "width": 0.35,
-      "depth": 0.35,
-      "round": false,
-      "rotation": 0.0,
-      "confidence": 1.0
-     },
-     {
-      "id": "c_azotea_53",
-      "center": {
-       "x": 12.0,
-       "y": 18.0
+       "y": 14.0
       },
       "width": 0.35,
       "depth": 0.35,
