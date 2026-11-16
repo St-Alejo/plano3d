@@ -1,0 +1,304 @@
+{
+  "_doc": "Casos compartidos del contrato de ops (ADR-019). Los leen pytest, vitest y xunit. check: 'apply' = apply(before, ops) == after; 'diff' = diff(before, after) == ops.",
+  "cases": [
+    {
+      "name": "agregar un muro nuevo",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] }
+            ],
+            "rooms": []
+          }
+        ]
+      },
+      "ops": [
+        { "t": "put", "k": "wall", "level": "L1", "id": "w2", "v": { "id": "w2", "start": { "x": 4, "y": 0 }, "end": { "x": 4, "y": 3 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] },
+              { "id": "w2", "start": { "x": 4, "y": 0 }, "end": { "x": 4, "y": 3 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] }
+            ],
+            "rooms": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "mover un muro existente conserva su lugar en la lista",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] },
+              { "id": "w2", "start": { "x": 4, "y": 0 }, "end": { "x": 4, "y": 3 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] }
+            ],
+            "rooms": []
+          }
+        ]
+      },
+      "ops": [
+        { "t": "put", "k": "wall", "level": "L1", "id": "w1", "v": { "id": "w1", "start": { "x": 0, "y": 0.5 }, "end": { "x": 4, "y": 0.5 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0.5 }, "end": { "x": 4, "y": 0.5 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] },
+              { "id": "w2", "start": { "x": 4, "y": 0 }, "end": { "x": 4, "y": 3 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] }
+            ],
+            "rooms": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "poner una ventana reemplaza el muro entero con sus aberturas",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] }
+            ],
+            "rooms": []
+          }
+        ]
+      },
+      "ops": [
+        { "t": "put", "k": "wall", "level": "L1", "id": "w1", "v": { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [ { "id": "o1", "kind": "window", "offset": 1.0, "width": 1.2, "height": 1.2, "sill": 0.9, "confidence": 1.0 } ] } }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [
+              { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [ { "id": "o1", "kind": "window", "offset": 1.0, "width": 1.2, "height": 1.2, "sill": 0.9, "confidence": 1.0 } ] }
+            ],
+            "rooms": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "borrar un mueble",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [], "rooms": [],
+            "furniture": [
+              { "id": "f1", "catalog_id": "sofa", "position": { "x": 2, "y": 1 }, "width": 2, "depth": 0.9, "height": 0.8, "rotation": 0 },
+              { "id": "f2", "catalog_id": "mesa", "position": { "x": 1, "y": 2 }, "width": 1.2, "depth": 0.8, "height": 0.75, "rotation": 1.5708 }
+            ]
+          }
+        ]
+      },
+      "ops": [
+        { "t": "del", "k": "furniture", "level": "L1", "id": "f1" }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [], "rooms": [],
+            "furniture": [
+              { "id": "f2", "catalog_id": "mesa", "position": { "x": 1, "y": 2 }, "width": 1.2, "depth": 0.8, "height": 0.75, "rotation": 1.5708 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "borrar algo que ya no existe no hace nada",
+      "check": ["apply"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      },
+      "ops": [
+        { "t": "del", "k": "wall", "level": "L1", "id": "w9" }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      }
+    },
+    {
+      "name": "cambiar la fachada",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      },
+      "ops": [
+        { "t": "set", "k": "model", "f": "facade", "v": "moderna_contemporanea" }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_contemporanea",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      }
+    },
+    {
+      "name": "piso nuevo con un muro: primero el nivel, después lo que lleva",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      },
+      "ops": [
+        { "t": "put", "k": "level", "id": "L2", "v": { "id": "L2", "name": "Piso 2", "elevation": 2.8, "height": 2.6 } },
+        { "t": "put", "k": "wall", "level": "L2", "id": "w5", "v": { "id": "w5", "start": { "x": 0, "y": 0 }, "end": { "x": 3, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] },
+          { "id": "L2", "name": "Piso 2", "elevation": 2.8, "height": 2.6, "walls": [ { "id": "w5", "start": { "x": 0, "y": 0 }, "end": { "x": 3, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } ], "rooms": [] }
+        ]
+      }
+    },
+    {
+      "name": "renombrar un piso no toca sus muros",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [ { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } ], "rooms": [] } ]
+      },
+      "ops": [
+        { "t": "put", "k": "level", "id": "L1", "v": { "id": "L1", "name": "Primer piso", "elevation": 0.0, "height": 2.6 } }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Primer piso", "elevation": 0.0, "height": 2.6, "walls": [ { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } ], "rooms": [] } ]
+      }
+    },
+    {
+      "name": "borrar un piso",
+      "check": ["apply", "diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] },
+          { "id": "L2", "name": "Piso 2", "elevation": 2.8, "height": 2.6, "walls": [], "rooms": [] }
+        ]
+      },
+      "ops": [
+        { "t": "del", "k": "level", "id": "L2" }
+      ],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [ { "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6, "walls": [], "rooms": [] } ]
+      }
+    },
+    {
+      "name": "los campos calculados por el servidor y los null no cuentan como cambio",
+      "check": ["diff"],
+      "before": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "facade_custom": null,
+        "total_area": 12.0,
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [ { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [], "length": 4.0, "bulge": null } ],
+            "rooms": [ { "id": "r1", "label": "Sala", "polygon": [ { "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 4, "y": 3 } ], "confidence": 1.0, "area": 6.0, "centroid": { "x": 2.67, "y": 1.0 } } ]
+          }
+        ]
+      },
+      "ops": [],
+      "after": {
+        "project_id": "p1",
+        "scale": { "meters_per_pixel": 0.01, "source": "vector", "confidence": 1.0 },
+        "facade": "moderna_blanca",
+        "levels": [
+          {
+            "id": "L1", "name": "Piso 1", "elevation": 0.0, "height": 2.6,
+            "walls": [ { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 4, "y": 0 }, "thickness": 0.15, "height": 2.6, "material": "plaster", "openings": [] } ],
+            "rooms": [ { "id": "r1", "label": "Sala", "polygon": [ { "x": 0, "y": 0 }, { "x": 4, "y": 0 }, { "x": 4, "y": 3 } ], "confidence": 1.0 } ]
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "name": "poner un muro en un piso que no existe",
+      "before": { "project_id": "p1", "scale": { "meters_per_pixel": 0.01 }, "levels": [] },
+      "ops": [ { "t": "put", "k": "wall", "level": "L9", "id": "w1", "v": { "id": "w1", "start": { "x": 0, "y": 0 }, "end": { "x": 1, "y": 0 } } } ]
+    },
+    {
+      "name": "el id del cambio y el de la entidad no coinciden",
+      "before": { "project_id": "p1", "scale": { "meters_per_pixel": 0.01 }, "levels": [ { "id": "L1", "name": "Piso 1", "walls": [], "rooms": [] } ] },
+      "ops": [ { "t": "put", "k": "wall", "level": "L1", "id": "w1", "v": { "id": "w2", "start": { "x": 0, "y": 0 }, "end": { "x": 1, "y": 0 } } } ]
+    },
+    {
+      "name": "tipo de entidad desconocido",
+      "before": { "project_id": "p1", "scale": { "meters_per_pixel": 0.01 }, "levels": [] },
+      "ops": [ { "t": "put", "k": "ventilador", "level": "L1", "id": "x" } ]
+    },
+    {
+      "name": "set de un campo que no se puede cambiar así",
+      "before": { "project_id": "p1", "scale": { "meters_per_pixel": 0.01 }, "levels": [] },
+      "ops": [ { "t": "set", "k": "model", "f": "project_id", "v": "otro" } ]
+    }
+  ]
+}
