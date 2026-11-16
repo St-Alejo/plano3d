@@ -32,11 +32,18 @@ export type ViewMode = '2d' | 'split' | '3d'
 
 export const GRID_STEPS = [0, 0.01, 0.05, 0.1] as const
 
+/**
+ * De dónde vino el último cambio del modelo: la edición en vivo solo manda al servidor
+ * lo `local` (lo `remote` ya llegó de otro participante y lo `load` es una carga entera).
+ */
+export type ModelOrigin = 'load' | 'local' | 'remote'
+
 export const sameSelected = (a: Selected, b: Selected): boolean => a.kind === b.kind && a.id === b.id
 
 interface EditorState {
   projectId: string | null
   model: BuildingModel | null
+  origin: ModelOrigin
   /** revisión del servidor sobre la que se está editando (va en If-Match al guardar) */
   revision: number
   /** posición del historial actual y la que está guardada en el servidor */
@@ -70,6 +77,12 @@ interface EditorState {
 
   load: (projectId: string, model: BuildingModel, revision?: number) => void
   dispatch: (cmd: Command) => boolean
+  /**
+   * Pone un modelo que llegó de otro participante (edición en vivo): no entra al historial
+   * de deshacer ni recalcula ambientes (el autor ya mandó los suyos). Si lo seleccionado
+   * desapareció, se deselecciona.
+   */
+  applyRemote: (model: BuildingModel) => void
   undo: () => void
   redo: () => void
   setTool: (tool: Tool) => void
@@ -138,6 +151,7 @@ const flags = () => ({
 const initial = {
   projectId: null,
   model: null,
+  origin: 'load' as ModelOrigin,
   revision: 0,
   savedHead: null,
   levelId: 'lvl_0',
@@ -159,7 +173,7 @@ export const useEditor = create<EditorState>()((set, get) => {
     const prev = get().model
     const model = prev ? withDerivedRooms(prev, next) : next
     remember(model)
-    set({ model, ...extra, ...flags() })
+    set({ model, origin: 'local', ...extra, ...flags() })
   }
 
   return {
@@ -193,6 +207,21 @@ export const useEditor = create<EditorState>()((set, get) => {
         set({ error: e instanceof CommandError || e instanceof Error ? e.message : 'Edición inválida' })
         return false
       }
+    },
+
+    applyRemote: (model) => {
+      if (!get().model) return
+      remember(model)
+      const exists = (sel: Selected): boolean => selectedExists(model, sel)
+      const { selection, group } = get()
+      const kept = group.filter(exists)
+      set({
+        model,
+        origin: 'remote',
+        ...(kept.length !== group.length || (selection && !exists(selection))
+          ? { group: kept, selection: kept.at(-1) ?? null }
+          : {}),
+      })
     },
 
     undo: () => {
@@ -242,6 +271,28 @@ export const useEditor = create<EditorState>()((set, get) => {
     },
   }
 })
+
+/** ¿Sigue en el modelo lo que apunta la selección? */
+export function selectedExists(model: BuildingModel, sel: Selected): boolean {
+  return model.levels.some((lv) => {
+    switch (sel.kind) {
+      case 'wall':
+        return lv.walls.some((w) => w.id === sel.id)
+      case 'opening':
+        return lv.walls.some((w) => w.id === sel.wallId && w.openings.some((o) => o.id === sel.id))
+      case 'room':
+        return lv.rooms.some((r) => r.id === sel.id)
+      case 'dimension':
+        return (lv.dimensions ?? []).some((d) => d.id === sel.id)
+      case 'furniture':
+        return (lv.furniture ?? []).some((f) => f.id === sel.id)
+      case 'column':
+        return (lv.columns ?? []).some((c) => c.id === sel.id)
+      case 'stair':
+        return (lv.stairs ?? []).some((x) => x.id === sel.id)
+    }
+  })
+}
 
 /** Hay cambios si la posición del historial difiere de la guardada (deshacer hasta ahí = limpio). */
 export const selectIsDirty = (s: EditorState): boolean => s.head !== s.savedHead

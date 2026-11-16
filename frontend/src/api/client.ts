@@ -26,16 +26,26 @@ let refreshing: Promise<boolean> | null = null
  * Renueva la sesión con el token de refresco (una sola vez aunque fallen varias peticiones
  * a la vez). Devuelve si quedó con sesión. Un refresco rechazado cierra la sesión local.
  */
+/** espera antes de reintentar un refresco frenado (429) o con el servidor caído */
+export const refreshRetry = { ms: 1000 }
+
 export function refreshSession(): Promise<boolean> {
   const refresh = tokens.refresh()
   if (!refresh) return Promise.resolve(false)
   refreshing ??= (async () => {
     try {
-      const res = await fetch(`${BASE}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refresh }),
-      })
+      const post = () =>
+        fetch(`${BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refresh }),
+        })
+      let res = await post()
+      // servidor ocupado o frenando (429): un reintento antes de dar la sesión por perdida
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise((r) => setTimeout(r, refreshRetry.ms))
+        res = await post()
+      }
       if (!res.ok) {
         if (res.status === 401) tokens.clear()
         return false
@@ -127,6 +137,21 @@ const json = (body: unknown): RequestInit => ({
 /** Esquinas normalizadas 0..1 en orden TL, TR, BR, BL. */
 export type Corners = [number, number][]
 
+/**
+ * Proyecto que se está editando en vivo (ADR-021). Mientras la sala está abierta el
+ * servidor guarda solo y ordena los cambios: el bloqueo optimista (If-Match) sobra y
+ * daría 409 falsos, porque antes de cada ruta REST la sala guarda lo pendiente.
+ */
+let liveProject: string | null = null
+export function setLiveProject(id: string | null): void {
+  liveProject = id
+}
+
+function ifMatch(id: string, revision: number | '*' | undefined): Record<string, string> {
+  if (revision === undefined || id === liveProject) return {}
+  return { 'If-Match': revision === '*' ? '*' : `"${revision}"` }
+}
+
 export const api = {
   auth: {
     config: () => request<AuthConfig>('/auth/config'),
@@ -208,7 +233,7 @@ export const api = {
   saveModel: (id: string, model: BuildingModel, revision?: number | '*', summary?: string) => {
     const init = json(model)
     const headers = { ...(init.headers as Record<string, string>) }
-    if (revision !== undefined) headers['If-Match'] = revision === '*' ? '*' : `"${revision}"`
+    Object.assign(headers, ifMatch(id, revision))
     const q = summary ? `?summary=${encodeURIComponent(summary)}` : ''
     return request<Project>(`/projects/${encodeURIComponent(id)}/model${q}`, { method: 'PUT', ...init, headers })
   },
@@ -218,14 +243,14 @@ export const api = {
   restoreRevision: (id: string, number: number, revision?: number) =>
     request<Project>(`/projects/${encodeURIComponent(id)}/revisions/${number}/restore`, {
       method: 'POST',
-      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+      headers: ifMatch(id, revision),
     }),
 
   /** Ajusta los muros a las cotas del plano (las medidas escritas mandan). */
   solve: (id: string, revision?: number) =>
     request<SolveResult>(`/projects/${encodeURIComponent(id)}/solve`, {
       method: 'POST',
-      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+      headers: ifMatch(id, revision),
     }),
 
   /** Otro plano del mismo edificio como un piso más, encima del último (alineado por columnas). */
@@ -236,7 +261,7 @@ export const api = {
     return request<Project>(`/projects/${encodeURIComponent(id)}/levels`, {
       method: 'POST',
       body: form,
-      headers: revision !== undefined ? { 'If-Match': `"${revision}"` } : {},
+      headers: ifMatch(id, revision),
     })
   },
 
@@ -244,7 +269,7 @@ export const api = {
   duplicateLevel: (id: string, levelId: string, name?: string, revision?: number) => {
     const init = json({ name: name ?? null })
     const headers = { ...(init.headers as Record<string, string>) }
-    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    Object.assign(headers, ifMatch(id, revision))
     return request<Project>(`/projects/${encodeURIComponent(id)}/levels/${encodeURIComponent(levelId)}/duplicate`, {
       method: 'POST',
       ...init,
@@ -256,7 +281,7 @@ export const api = {
   setFacade: (id: string, style: string, revision?: number, custom?: FacadeCustom | null) => {
     const init = json({ style, custom: custom ?? null })
     const headers = { ...(init.headers as Record<string, string>) }
-    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    Object.assign(headers, ifMatch(id, revision))
     return request<Project>(`/projects/${encodeURIComponent(id)}/facade`, { method: 'PUT', ...init, headers })
   },
 
@@ -264,7 +289,7 @@ export const api = {
   furnish: (id: string, levelId?: string, revision?: number) => {
     const init = json({ level_id: levelId ?? null })
     const headers = { ...(init.headers as Record<string, string>) }
-    if (revision !== undefined) headers['If-Match'] = `"${revision}"`
+    Object.assign(headers, ifMatch(id, revision))
     return request<Project>(`/projects/${encodeURIComponent(id)}/furnish`, { method: 'POST', ...init, headers })
   },
 

@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it } from 'vitest'
 import { server } from '@/test/server'
-import { api, ApiError } from './client'
+import { api, ApiError, refreshRetry, refreshSession } from './client'
 import { tokens, type Session } from './tokens'
 
 const session = (access: string, refresh = `r-${access}`): Session => ({
@@ -63,6 +63,31 @@ describe('sesión en el cliente de la API', () => {
     expect(tokens.refresh()).toBeNull()
     expect(seen).toEqual([null])
     off()
+  })
+
+  it('si el servidor frena el refresco (429) reintenta y no pierde la sesión', async () => {
+    tokens.set(session('a1'))
+    refreshRetry.ms = 1
+    let calls = 0
+    server.use(
+      http.post('/api/auth/refresh', () => {
+        calls += 1
+        return calls === 1 ? HttpResponse.json({ detail: 'Demasiados intentos' }, { status: 429 }) : HttpResponse.json(session('a2'))
+      }),
+    )
+    expect(await refreshSession()).toBe(true)
+    expect(calls).toBe(2)
+    expect(tokens.access()).toBe('a2')
+    refreshRetry.ms = 1000
+  })
+
+  it('si sigue frenado conserva el token para la próxima carga', async () => {
+    tokens.set(session('a1'))
+    refreshRetry.ms = 1
+    server.use(http.post('/api/auth/refresh', () => HttpResponse.json({ detail: 'x' }, { status: 429 })))
+    expect(await refreshSession()).toBe(false)
+    expect(tokens.refresh()).toBe('r-a1')
+    refreshRetry.ms = 1000
   })
 
   it('una contraseña equivocada no intenta renovar', async () => {
