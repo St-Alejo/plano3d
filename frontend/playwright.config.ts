@@ -6,6 +6,8 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  // una cuenta nueva por corrida: el navegador entra con su refresco y `request` con su token
+  globalSetup: './e2e/global-setup.ts',
   timeout: 120_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
@@ -14,6 +16,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
     trace: 'retain-on-failure',
+    storageState: 'e2e/.auth/state.json',
+    extraHTTPHeaders: process.env.E2E_TOKEN ? { Authorization: `Bearer ${process.env.E2E_TOKEN}` } : undefined,
     screenshot: 'only-on-failure',
   },
   projects: [

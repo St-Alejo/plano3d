@@ -4,6 +4,7 @@
  */
 import { api } from './client'
 import { wsOrigin } from './origin'
+import { tokens } from './tokens'
 import type { ProgressEvent } from './types'
 
 export interface ProgressHandlers {
@@ -22,6 +23,13 @@ export type SocketFactory = (url: string) => SocketLike
 
 const defaultSocket: SocketFactory = (url) => new WebSocket(url) as unknown as SocketLike
 
+/** Ticket de 60 s para el WebSocket (null si no se pudo pedir). */
+const defaultTicket = (): Promise<string | null> =>
+  api.auth.wsTicket().then(
+    (t) => t.ticket,
+    () => null,
+  )
+
 export function progressUrl(projectId: string, loc: Pick<Location, 'protocol' | 'host'> = window.location): string {
   return `${wsOrigin(loc)}/api/ws/projects/${encodeURIComponent(projectId)}`
 }
@@ -29,7 +37,7 @@ export function progressUrl(projectId: string, loc: Pick<Location, 'protocol' | 
 export function subscribeProgress(
   projectId: string,
   handlers: ProgressHandlers,
-  opts: { socket?: SocketFactory; pollMs?: number } = {},
+  opts: { socket?: SocketFactory; pollMs?: number; ticket?: () => Promise<string | null> } = {},
 ): () => void {
   let stopped = false
   let finished = false
@@ -58,20 +66,35 @@ export function subscribeProgress(
   }
 
   let socket: SocketLike | null = null
-  try {
-    socket = (opts.socket ?? defaultSocket)(progressUrl(projectId))
-    socket.onmessage = (msg) => {
-      seen += 1
-      deliver(JSON.parse(String(msg.data)) as ProgressEvent)
+  const open = (url: string) => {
+    try {
+      const s = (opts.socket ?? defaultSocket)(url)
+      socket = s
+      s.onmessage = (msg) => {
+        seen += 1
+        deliver(JSON.parse(String(msg.data)) as ProgressEvent)
+      }
+      s.onerror = () => {
+        s.close()
+      }
+      s.onclose = () => {
+        if (!stopped && !finished) void poll()
+      }
+    } catch {
+      void poll()
     }
-    socket.onerror = () => {
-      socket?.close()
-    }
-    socket.onclose = () => {
-      if (!stopped && !finished) void poll()
-    }
-  } catch {
-    void poll()
+  }
+
+  const url = progressUrl(projectId)
+  if (!tokens.access() && !tokens.refresh() && !opts.ticket) {
+    open(url) // servidor sin cuentas
+  } else {
+    // con sesión: el navegador no pone cabeceras al WebSocket, se manda un ticket corto
+    void (opts.ticket ?? defaultTicket)().then((ticket) => {
+      if (stopped) return
+      if (ticket) open(`${url}?ticket=${encodeURIComponent(ticket)}`)
+      else void poll()
+    })
   }
 
   return () => {

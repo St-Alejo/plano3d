@@ -6,10 +6,24 @@ import type { ProjectSummary } from '@/api/types'
 import { Photo } from '@/components/Photo'
 import { Badge, Button, EmptyState, ErrorState, Menu, Spinner } from '@/components/ui'
 import { useAsync } from '@/hooks/useAsync'
+import { usePlanImage } from '@/hooks/usePlanImage'
 import { listProjects, relativeTime, SORT_LABEL, totalArea, type ProjectSort } from './listing'
 import { STATUS_LABEL } from './status'
 
 const dateFmt = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' })
+
+/** Miniatura del plano rectificado (descargada con la sesión). */
+function PlanThumb({ p }: { p: ProjectSummary }) {
+  const url = usePlanImage(p.id, p.updated_at)
+  if (!url) return <div className="blueprint-grid size-full" aria-hidden />
+  return (
+    <img
+      src={url}
+      alt=""
+      className="size-full object-contain p-5 transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+    />
+  )
+}
 
 /** Tarjeta de proyecto: miniatura grande, nombre, una línea de datos y "Abrir". */
 function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: ProjectSummary) => void }) {
@@ -19,12 +33,7 @@ function ProjectCard({ p, onDelete }: { p: ProjectSummary; onDelete: (p: Project
     <li className="group relative flex flex-col rounded-xl border border-line bg-surface p-2 shadow-card transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-accent/40 hover:shadow-lift focus-within:border-accent/40">
       <div className="relative aspect-[16/10] overflow-hidden rounded-[calc(var(--radius-xl)-0.5rem)] bg-paper">
         {p.status === 'ready' && p.has_source !== false ? (
-          <img
-            src={api.imageUrl(p.id, 'rectified', p.updated_at)}
-            alt=""
-            loading="lazy"
-            className="size-full object-contain p-5 transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-          />
+          <PlanThumb p={p} />
         ) : (
           <div className="blueprint-grid flex size-full items-center justify-center text-subtle">
             <FileImage className="size-10" aria-hidden />

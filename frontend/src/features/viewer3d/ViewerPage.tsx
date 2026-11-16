@@ -6,6 +6,7 @@ import { ArrowLeft, Camera, ChevronUp, Download, Footprints, Layers, MoreHorizon
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { api } from '@/api/client'
+import { usePlanImage } from '@/hooks/usePlanImage'
 import type { Point, Project } from '@/api/types'
 import { streetEntry } from '@/domain/facadeGeometry'
 import { applyFacadeEdit, describeFacadeEdit, facadeSpec, nextFacade, resolveFacade, type FacadeEdit, type FacadeState } from '@/domain/facades'
@@ -100,6 +101,8 @@ export function ViewerPage() {
   // lo que se guarda desde el visor (amoblar) reemplaza al proyecto cargado sin recargarlo
   const [saved, setSaved] = useState<Project | null>(null)
   const project = saved && saved.id === loaded?.id ? saved : loaded
+  // el plano de fondo (calco) se descarga con la sesión; los dibujados desde cero no tienen
+  const overlayUrl = usePlanImage(project?.id, project?.updated_at, { enabled: project?.has_source !== false })
   // última revisión guardada desde aquí (fachada, muebles): la siguiente escritura la exige
   const [savedRevision, setSavedRevision] = useState<{ id: string; n: number } | null>(null)
   const revision = savedRevision && savedRevision.id === project?.id ? savedRevision.n : project?.revision
@@ -545,7 +548,7 @@ export function ViewerPage() {
       <Viewer3D
         model={model}
         mode={mode}
-        overlayUrl={project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)}
+        overlayUrl={overlayUrl}
         overlayOpacity={overlay}
         flyTo={flyTo}
         walkStart={walkStart ?? entry ?? (firstRoom ? { ...firstRoom.at, levelId: firstRoom.levelId } : undefined)}

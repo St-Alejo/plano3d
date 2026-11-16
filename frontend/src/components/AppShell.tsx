@@ -1,8 +1,11 @@
-import { Moon, Plus, Sun } from 'lucide-react'
-import { Link, NavLink, Outlet, useMatch } from 'react-router'
+import { LogOut, Moon, Plus, RotateCcw, Sun } from 'lucide-react'
+import { Link, NavLink, Outlet, useMatch, useNavigate } from 'react-router'
 import clsx from 'clsx'
 import { useState } from 'react'
+import { api } from '@/api/client'
 import { useTheme } from '@/lib/theme'
+import { useAuth } from '@/store/authStore'
+import { Menu } from './ui'
 import { HeaderSlotContext } from './headerSlot'
 
 /**
@@ -50,6 +53,48 @@ function AppFooter() {
         </nav>
       </div>
     </footer>
+  )
+}
+
+/** Cuenta en la cabecera: inicial del nombre; adentro, cerrar sesión (y restaurar la demo). */
+function AccountMenu() {
+  const user = useAuth((s) => s.user)
+  const logout = useAuth((s) => s.logout)
+  const navigate = useNavigate()
+  if (!user) return null
+  const items = [
+    ...(user.is_demo
+      ? [
+          {
+            label: 'Restaurar la casa demo',
+            icon: <RotateCcw className="size-4" />,
+            onSelect: () => {
+              if (!window.confirm('¿Dejar la casa demo como nueva? Se pierden los cambios hechos en ella.')) return
+              void api.auth.resetDemo().then(() => navigate('/proyectos', { replace: true }))
+            },
+          },
+        ]
+      : []),
+    {
+      label: 'Cerrar sesión',
+      icon: <LogOut className="size-4" />,
+      onSelect: () => void logout().then(() => navigate('/entrar', { replace: true })),
+    },
+  ]
+  return (
+    <Menu
+      trigger={
+        <button
+          type="button"
+          aria-label={`Cuenta de ${user.name}`}
+          title={user.email}
+          className="ml-1 inline-flex size-11 items-center justify-center rounded-full border border-line-strong bg-surface text-sm font-semibold text-fg uppercase transition-colors hover:border-fg/50 pointer-fine:size-9"
+        >
+          {user.name.trim().charAt(0) || '?'}
+        </button>
+      }
+      items={items}
+    />
   )
 }
 
@@ -109,6 +154,7 @@ export function AppShell() {
             >
               {theme === 'dark' ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
             </button>
+            <AccountMenu />
           </nav>
         </div>
       </header>

@@ -1,4 +1,6 @@
 import { apiOrigin } from './origin'
+import { tokens, type Session } from './tokens'
+import type { components } from './schema'
 import type { Photos, PhotosStatus, AssistantReply, BuildingModel, CorrectionStats, Project, ProgressEvent, ProjectSummary, Revision, SolveResult, CaptureCheck, FacadeCustom } from './types'
 
 export class ApiError extends Error {
@@ -12,33 +14,92 @@ export class ApiError extends Error {
 
 const BASE = `${apiOrigin()}/api`
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export type AuthConfig = components['schemas']['AuthConfigDTO']
+export type LinkCode = components['schemas']['LinkCodeDTO']
+
+/** Rutas que reciben credenciales: un 401 ahí es la respuesta, no un token vencido. */
+const NO_RETRY = new Set(['/auth/login', '/auth/register', '/auth/demo', '/auth/refresh', '/auth/link-codes/exchange'])
+
+let refreshing: Promise<boolean> | null = null
+
+/**
+ * Renueva la sesión con el token de refresco (una sola vez aunque fallen varias peticiones
+ * a la vez). Devuelve si quedó con sesión. Un refresco rechazado cierra la sesión local.
+ */
+export function refreshSession(): Promise<boolean> {
+  const refresh = tokens.refresh()
+  if (!refresh) return Promise.resolve(false)
+  refreshing ??= (async () => {
+    try {
+      const res = await fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh }),
+      })
+      if (!res.ok) {
+        if (res.status === 401) tokens.clear()
+        return false
+      }
+      tokens.set((await res.json()) as Session)
+      return true
+    } catch {
+      return false // sin red: se conserva el token para intentarlo después
+    } finally {
+      refreshing = null
+    }
+  })()
+  return refreshing
+}
+
+function withAuth(init?: RequestInit): RequestInit | undefined {
+  const access = tokens.access()
+  if (!access) return init
+  const headers = new Headers(init?.headers)
+  headers.set('Authorization', `Bearer ${access}`)
+  return { ...init, headers }
+}
+
+async function send(path: string, init?: RequestInit): Promise<Response> {
   let res: Response
   try {
-    res = await fetch(`${BASE}${path}`, init)
+    res = await fetch(`${BASE}${path}`, withAuth(init))
+    if (res.status === 401 && !NO_RETRY.has(path) && (await refreshSession())) {
+      res = await fetch(`${BASE}${path}`, withAuth(init))
+    }
   } catch {
     throw new ApiError(0, 'No se pudo conectar con el servidor')
   }
-  if (!res.ok) {
-    let detail = res.statusText
-    try {
-      const body = (await res.json()) as { detail?: unknown }
-      if (typeof body.detail === 'string') detail = body.detail
-      else if (Array.isArray(body.detail)) detail = 'Datos inválidos'
-    } catch {
-      /* cuerpo sin JSON */
-    }
-    throw new ApiError(res.status, detail || `Error ${res.status}`)
+  if (!res.ok) throw await toError(res)
+  return res
+}
+
+async function toError(res: Response): Promise<ApiError> {
+  let detail = res.statusText
+  try {
+    const body = (await res.json()) as { detail?: unknown }
+    if (typeof body.detail === 'string') detail = body.detail
+    else if (Array.isArray(body.detail)) detail = 'Datos inválidos'
+  } catch {
+    /* cuerpo sin JSON */
   }
+  return new ApiError(res.status, detail || `Error ${res.status}`)
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await send(path, init)
   if (res.status === 204) return undefined as T
   return (await res.json()) as T
 }
 
 /** `fetch` no informa el avance de la subida: para fotos grandes en redes lentas se usa XHR. */
-function uploadWithProgress<T>(path: string, body: FormData, onProgress: (fraction: number) => void): Promise<T> {
+async function uploadWithProgress<T>(path: string, body: FormData, onProgress: (fraction: number) => void): Promise<T> {
+  // XHR no reintenta: se asegura antes un token de acceso vigente
+  if (!tokens.access()) await refreshSession()
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${BASE}${path}`)
+    const access = tokens.access()
+    if (access) xhr.setRequestHeader('Authorization', `Bearer ${access}`)
     xhr.responseType = 'json'
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && e.total > 0) onProgress(e.loaded / e.total)
@@ -67,6 +128,23 @@ const json = (body: unknown): RequestInit => ({
 export type Corners = [number, number][]
 
 export const api = {
+  auth: {
+    config: () => request<AuthConfig>('/auth/config'),
+    login: (email: string, password: string) => request<Session>('/auth/login', { method: 'POST', ...json({ email, password }) }),
+    register: (email: string, name: string, password: string) =>
+      request<Session>('/auth/register', { method: 'POST', ...json({ email, name, password }) }),
+    /** La cuenta demo (con la casa de 3 pisos), sin contraseña. */
+    demo: () => request<Session>('/auth/demo', { method: 'POST' }),
+    /** Deja la casa demo como nueva (solo desde la cuenta demo). */
+    resetDemo: () => request<void>('/auth/demo/reset', { method: 'POST' }),
+    /** Cierra la sesión en todos los dispositivos (web y escritorio). */
+    logout: () => request<void>('/auth/logout', { method: 'POST' }),
+    /** Código de un solo uso (2 min) para abrir la sesión en la app de escritorio. */
+    linkCode: () => request<LinkCode>('/auth/link-codes', { method: 'POST' }),
+    /** Ticket de 60 s para un WebSocket (el navegador no le pone cabeceras). */
+    wsTicket: () => request<{ ticket: string; expires_in: number }>('/auth/ws-ticket', { method: 'POST' }),
+  },
+
   listProjects: () => request<ProjectSummary[]>('/projects'),
 
   suggestCorners: async (file: File): Promise<Corners | null> => {
@@ -202,6 +280,10 @@ export const api = {
 
   progress: (id: string) => request<ProgressEvent[]>(`/projects/${encodeURIComponent(id)}/progress`),
 
-  imageUrl: (id: string, kind: 'original' | 'rectified' = 'rectified', version?: string) =>
-    `${BASE}/projects/${encodeURIComponent(id)}/image?kind=${kind}${version ? `&v=${encodeURIComponent(version)}` : ''}`,
+  imagePath: (id: string, kind: 'original' | 'rectified' = 'rectified', version?: string) =>
+    `/projects/${encodeURIComponent(id)}/image?kind=${kind}${version ? `&v=${encodeURIComponent(version)}` : ''}`,
+
+  /** La imagen del plano con la sesión (un `<img src>` no puede mandar el token). */
+  imageBlob: async (id: string, kind: 'original' | 'rectified' = 'rectified', version?: string): Promise<Blob> =>
+    (await send(api.imagePath(id, kind, version))).blob(),
 }

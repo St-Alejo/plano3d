@@ -1,6 +1,8 @@
 import type { RouteObject } from 'react-router'
 import { AppShell } from '@/components/AppShell'
 import { NotFound } from '@/components/NotFound'
+import { AuthPage } from '@/features/auth/AuthPage'
+import { RequireAuth } from '@/features/auth/RequireAuth'
 import { LazyViewerPage } from '@/features/viewer3d/LazyViewerPage'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { LandingPage } from '@/features/landing/LandingPage'
@@ -11,18 +13,25 @@ import { ProjectPage } from '@/features/workspace/ProjectPage'
 export const routes: RouteObject[] = [
   // la landing tiene su propio cajetín: va fuera del AppShell
   { index: true, element: <LandingPage />, errorElement: <NotFound /> },
-  // el estudio ocupa toda la ventana: sin la cabecera de la aplicación
-  { path: 'p/:id/estudio', element: <StudioPage />, errorElement: <NotFound /> },
+  { path: 'entrar', element: <AuthPage mode="login" />, errorElement: <NotFound /> },
+  { path: 'registro', element: <AuthPage mode="register" />, errorElement: <NotFound /> },
+  // todo lo que muestra proyectos pide sesión (ADR-020)
   {
-    element: <AppShell />,
+    element: <RequireAuth />,
     errorElement: <NotFound />,
     children: [
-      { path: 'proyectos', element: <ProjectsPage /> },
-      { path: 'nuevo', element: <NewPlanPage /> },
-      { path: 'p/:id', element: <ProjectPage /> },
-      { path: 'p/:id/3d', element: <LazyViewerPage /> },
-      { path: '*', element: <NotFound /> },
+      // el estudio ocupa toda la ventana: sin la cabecera de la aplicación
+      { path: 'p/:id/estudio', element: <StudioPage /> },
+      {
+        element: <AppShell />,
+        children: [
+          { path: 'proyectos', element: <ProjectsPage /> },
+          { path: 'nuevo', element: <NewPlanPage /> },
+          { path: 'p/:id', element: <ProjectPage /> },
+          { path: 'p/:id/3d', element: <LazyViewerPage /> },
+        ],
+      },
     ],
   },
+  { element: <AppShell />, errorElement: <NotFound />, children: [{ path: '*', element: <NotFound /> }] },
 ]
-

@@ -5,6 +5,7 @@ import { Box, Check, Command, History, Keyboard, Maximize2, MoreHorizontal, Pane
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ApiError, api } from '@/api/client'
+import { usePlanImage } from '@/hooks/usePlanImage'
 import type { Point, Project } from '@/api/types'
 import { CalibrateScale, ReplaceModel } from '@/domain/commands'
 import { Button, IconButton, Menu, PanelSection, Spinner, type MenuItem } from '@/components/ui'
@@ -150,6 +151,9 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
   )
   useEditorShortcuts(actions)
 
+  // los planos dibujados desde cero no tienen foto de fondo
+  const imageUrl = usePlanImage(project.id, project.updated_at, { enabled: project.has_source !== false })
+
   // aviso al salir con cambios sin guardar
   useEffect(() => {
     if (!dirty) return
@@ -160,8 +164,6 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
 
   if (!model) return <Spinner label="Preparando el editor" />
 
-  // los planos dibujados desde cero no tienen foto de fondo
-  const imageUrl = project.has_source === false ? undefined : api.imageUrl(project.id, 'rectified', project.updated_at)
   const t = TOOLS.find((x) => x.id === tool)
   const hint = coarse ? t?.touchHint : t?.hint
 

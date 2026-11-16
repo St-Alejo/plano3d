@@ -59,7 +59,7 @@ describe('api client', () => {
   })
 
   it('arma URLs de imagen y WebSocket', () => {
-    expect(api.imageUrl('a b', 'original', 'v1')).toBe('/api/projects/a%20b/image?kind=original&v=v1')
+    expect(api.imagePath('a b', 'original', 'v1')).toBe('/projects/a%20b/image?kind=original&v=v1')
     expect(progressUrl('p', { protocol: 'https:', host: 'x.io' })).toBe('wss://x.io/api/ws/projects/p')
     expect(progressUrl('p', { protocol: 'http:', host: 'localhost:8080' })).toBe('ws://localhost:8080/api/ws/projects/p')
   })
@@ -105,6 +105,37 @@ describe('subscribeProgress', () => {
     sock.onclose?.({})
     await expect(done).resolves.toBe(false)
     expect(events).toEqual(['ingest', 'rectify', 'done'])
+  })
+
+  it('con sesión abre el WebSocket con un ticket', async () => {
+    const sock = new FakeSocket()
+    const urls: string[] = []
+    const events: string[] = []
+    subscribeProgress(
+      'p',
+      { onEvent: (e) => events.push(e.stage) },
+      {
+        ticket: () => Promise.resolve('t/1'),
+        socket: (url) => {
+          urls.push(url)
+          return sock
+        },
+      },
+    )
+    await vi.waitFor(() => expect(urls).toHaveLength(1))
+    expect(urls[0]?.endsWith('/api/ws/projects/p?ticket=t%2F1')).toBe(true)
+    sock.emit(ev('ingest'))
+    expect(events).toEqual(['ingest'])
+  })
+
+  it('si no hay ticket, sigue por polling', async () => {
+    server.use(http.get('/api/projects/:id/progress', () => HttpResponse.json([ev('done')])))
+    const socket = vi.fn()
+    const done = new Promise<boolean>((resolve) => {
+      subscribeProgress('p', { onEvent: () => undefined, onDone: resolve }, { ticket: () => Promise.resolve(null), socket, pollMs: 5 })
+    })
+    await expect(done).resolves.toBe(true)
+    expect(socket).not.toHaveBeenCalled()
   })
 
   it('si no se puede crear el WebSocket, usa polling desde el inicio', async () => {
