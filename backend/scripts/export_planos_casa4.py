@@ -15,8 +15,6 @@ import sys
 from pathlib import Path
 
 import cv2
-
-from plano3d.infrastructure.demo import FEATURED_PROJECT_ID, FIXTURES
 from tests.synth.complex_plans import (
     ComplexPlan,
     Style,
@@ -28,6 +26,8 @@ from tests.synth.complex_plans import (
 )
 from tests.synth.plan_generator import SynthOpening, SynthWall
 from tests.synth.to_pdf import plan_to_pdf
+
+from plano3d.infrastructure.demo import FEATURED_PROJECT_ID, FIXTURES
 
 DATA = Path(__file__).resolve().parents[1] / "src/plano3d/infrastructure/demo/data"
 OUT = Path(__file__).resolve().parents[2] / "presentacion/planos-casa4"
@@ -51,11 +51,11 @@ def level_plan(level: dict, width: float, height: float) -> ComplexPlan:
     stairs = []
     for s in level["stairs"]:
         (x0, y0), (x1, y1) = (s["start"]["x"], s["start"]["y"]), (s["end"]["x"], s["end"]["y"])
-        half = s["width"] / 2
+        half, n = s["width"] / 2, s["steps"]
         if abs(x0 - x1) < 1e-6:  # sube a lo largo de y
-            stairs.append(SynthStair(x0 - half, min(y0, y1), x0 + half, max(y0, y1), s["steps"], "y"))
+            stairs.append(SynthStair(x0 - half, min(y0, y1), x0 + half, max(y0, y1), n, "y"))
         else:
-            stairs.append(SynthStair(min(x0, x1), y0 - half, max(x0, x1), y0 + half, s["steps"], "x"))
+            stairs.append(SynthStair(min(x0, x1), y0 - half, max(x0, x1), y0 + half, n, "x"))
     xs = sorted({p["x"] for r in level["rooms"] for p in r["polygon"]} - {0.0, width})
     ys = sorted({p["y"] for r in level["rooms"] for p in r["polygon"]} - {0.0, height})
     mark = f"N+{level['elevation']:.2f}".replace(".", ",")
