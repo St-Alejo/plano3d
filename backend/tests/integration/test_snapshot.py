@@ -80,7 +80,7 @@ def test_ida_y_vuelta_exacta() -> None:
         await seed_demo(container, "clave-demo-1")
         data = await encode_state(container.repo, container.users)
         repo, users = InMemoryProjectRepository(), InMemoryUserRepository()
-        assert await decode_state(data, repo, users) == 1
+        assert await decode_state(data, repo, users) == 2  # casa demo + destacada
         assert await repo.get(DEMO_PROJECT_ID) == await container.repo.get(DEMO_PROJECT_ID)
         assert await users.list() == await container.users.list()
         assert await repo.list_revisions(DEMO_PROJECT_ID) == await container.repo.list_revisions(

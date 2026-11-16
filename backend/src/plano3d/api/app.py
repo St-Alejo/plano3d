@@ -54,6 +54,7 @@ from plano3d.application.dto import (
     CorrectionStatsDTO,
     DuplicateLevelDTO,
     FacadeDTO,
+    FeaturedDTO,
     FurnishDTO,
     PhotoDTO,
     PhotosDTO,
@@ -103,7 +104,7 @@ from plano3d.domain.errors import (
     EntityNotFoundError,
     InvalidStateTransitionError,
 )
-from plano3d.infrastructure.demo import seed_demo
+from plano3d.infrastructure.demo import FEATURED_INFO, featured_projects, seed_demo
 from plano3d.infrastructure.snapshot import enable_snapshots
 
 log = logging.getLogger(__name__)
@@ -132,6 +133,37 @@ signed = APIRouter(prefix="/api", dependencies=[Depends(current_user)])
 @router.get("/health", tags=["sistema"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get("/featured", response_model=list[FeaturedDTO], tags=["destacados"])
+async def list_featured() -> list[FeaturedDTO]:
+    """Proyectos destacados (públicos, de solo lectura) para la portada."""
+    out = []
+    for p in featured_projects():
+        assert p.model is not None
+        info = FEATURED_INFO.get(p.id, {})
+        out.append(
+            FeaturedDTO(
+                id=p.id,
+                name=p.name,
+                summary=info.get("summary", ""),
+                levels=len(p.model.levels),
+                rooms=sum(len(lv.rooms) for lv in p.model.levels),
+                total_area=p.model.total_area,
+                cover=info.get("cover"),
+                video=info.get("video"),
+            )
+        )
+    return out
+
+
+@router.get("/featured/{project_id}", response_model=ProjectDTO, tags=["destacados"])
+async def get_featured(project_id: str) -> ProjectDTO:
+    """Un proyecto destacado completo, sin cuenta: verlo, recorrerlo, no editarlo."""
+    for p in featured_projects():
+        if p.id == project_id:
+            return project_to_dto(p)
+    raise HTTPException(status.HTTP_404_NOT_FOUND, "No hay un proyecto destacado con ese id")
 
 
 @signed.post("/corners", response_model=CornersDTO, tags=["captura"])

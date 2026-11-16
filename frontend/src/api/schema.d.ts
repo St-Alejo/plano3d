@@ -246,6 +246,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/featured": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Featured
+         * @description Proyectos destacados (públicos, de solo lectura) para la portada.
+         */
+        get: operations["list_featured_api_featured_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/featured/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Featured
+         * @description Un proyecto destacado completo, sin cuenta: verlo, recorrerlo, no editarlo.
+         */
+        get: operations["get_featured_api_featured__project_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1067,6 +1107,28 @@ export interface components {
             color?: string | null;
             /** Material */
             material?: ("panete" | "concreto" | "ladrillo" | "madera" | "porcelanato") | null;
+        };
+        /**
+         * FeaturedDTO
+         * @description Proyecto destacado: se ve sin cuenta (solo lectura) desde la portada.
+         */
+        FeaturedDTO: {
+            /** Cover */
+            cover?: string | null;
+            /** Id */
+            id: string;
+            /** Levels */
+            levels: number;
+            /** Name */
+            name: string;
+            /** Rooms */
+            rooms: number;
+            /** Summary */
+            summary: string;
+            /** Total Area */
+            total_area: number;
+            /** Video */
+            video?: string | null;
         };
         /** FurnishDTO */
         FurnishDTO: {
@@ -2070,6 +2132,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CornersDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_featured_api_featured_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturedDTO"][];
+                };
+            };
+        };
+    };
+    get_featured_api_featured__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectDTO"];
                 };
             };
             /** @description Validation Error */

@@ -850,6 +850,67 @@
         "title": "FacadeSurfaceDTO",
         "type": "object"
       },
+      "FeaturedDTO": {
+        "description": "Proyecto destacado: se ve sin cuenta (solo lectura) desde la portada.",
+        "properties": {
+          "cover": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "levels": {
+            "title": "Levels",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rooms": {
+            "title": "Rooms",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "total_area": {
+            "title": "Total Area",
+            "type": "number"
+          },
+          "video": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "summary",
+          "levels",
+          "rooms",
+          "total_area"
+        ],
+        "title": "FeaturedDTO",
+        "type": "object"
+      },
       "FurnishDTO": {
         "properties": {
           "level_id": {
@@ -2797,6 +2858,75 @@
         "summary": "Suggest Corners",
         "tags": [
           "captura"
+        ]
+      }
+    },
+    "/api/featured": {
+      "get": {
+        "description": "Proyectos destacados (públicos, de solo lectura) para la portada.",
+        "operationId": "list_featured_api_featured_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeaturedDTO"
+                  },
+                  "title": "Response List Featured Api Featured Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Featured",
+        "tags": [
+          "destacados"
+        ]
+      }
+    },
+    "/api/featured/{project_id}": {
+      "get": {
+        "description": "Un proyecto destacado completo, sin cuenta: verlo, recorrerlo, no editarlo.",
+        "operationId": "get_featured_api_featured__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Featured",
+        "tags": [
+          "destacados"
         ]
       }
     },

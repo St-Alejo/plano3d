@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from plano3d.api.app import create_app
 from plano3d.config import Settings
 from plano3d.container import memory_container
-from plano3d.infrastructure.demo import DEMO_PROJECT_ID
+from plano3d.infrastructure.demo import DEMO_PROJECT_ID, FEATURED_PROJECT_ID
 
 SECRET = "x" * 40
 
@@ -97,7 +97,7 @@ def test_cuenta_demo_con_la_casa_de_tres_pisos(client: TestClient) -> None:
     demo = client.post("/api/auth/demo").json()
     assert demo["user"]["is_demo"] is True
     projects = client.get("/api/projects", headers=_bearer(demo)).json()
-    assert [p["id"] for p in projects] == [DEMO_PROJECT_ID]
+    assert {p["id"] for p in projects} == {DEMO_PROJECT_ID, FEATURED_PROJECT_ID}
     project = client.get(f"/api/projects/{DEMO_PROJECT_ID}", headers=_bearer(demo)).json()
     levels = project["model"]["levels"]
     assert len(levels) == 3
@@ -112,11 +112,28 @@ def test_restaurar_la_demo(client: TestClient) -> None:
     assert (
         client.delete(f"/api/projects/{DEMO_PROJECT_ID}", headers=_bearer(demo)).status_code == 204
     )
-    assert client.get("/api/projects", headers=_bearer(demo)).json() == []
+    assert [p["id"] for p in client.get("/api/projects", headers=_bearer(demo)).json()] == [
+        FEATURED_PROJECT_ID
+    ]
     assert client.post("/api/auth/demo/reset", headers=_bearer(demo)).status_code == 204
-    assert len(client.get("/api/projects", headers=_bearer(demo)).json()) == 1
+    assert len(client.get("/api/projects", headers=_bearer(demo)).json()) == 2
     other = _register(client)
     assert client.post("/api/auth/demo/reset", headers=_bearer(other)).status_code == 403
+
+
+def test_casa_destacada_se_ve_sin_cuenta(client: TestClient) -> None:
+    featured = client.get("/api/featured").json()
+    assert [f["id"] for f in featured] == [FEATURED_PROJECT_ID]
+    casa = featured[0]
+    assert casa["levels"] == 4 and casa["rooms"] > 30 and casa["total_area"] > 500
+    assert casa["video"].endswith(".mp4")
+    project = client.get(f"/api/featured/{FEATURED_PROJECT_ID}").json()
+    levels = project["model"]["levels"]
+    assert [lv["name"] for lv in levels] == ["Piso 1", "Piso 2", "Piso 3", "Azotea"]
+    assert all(s["to_level_id"] for lv in levels[:3] for s in lv["stairs"])
+    assert client.get("/api/featured/prj_otro").status_code == 404
+    # sin cuenta solo se ve: el proyecto en sí sigue siendo de la demo
+    assert client.get(f"/api/projects/{FEATURED_PROJECT_ID}").status_code == 401
 
 
 def test_demo_deshabilitada() -> None:

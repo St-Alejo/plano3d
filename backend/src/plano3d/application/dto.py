@@ -270,6 +270,20 @@ class ProjectDTO(ProjectSummaryDTO):
     revision: int = Field(0, description="versión del modelo; enviarla en If-Match al guardar")
 
 
+class FeaturedDTO(_DTO):
+    """Proyecto destacado: se ve sin cuenta (solo lectura) desde la portada."""
+
+    id: str
+    name: str
+    summary: str
+    levels: int
+    rooms: int
+    total_area: float
+    #: rutas de la web (carpeta public/destacados/…): portada y video del recorrido
+    cover: str | None = None
+    video: str | None = None
+
+
 class RevisionDTO(_DTO):
     number: int
     summary: str

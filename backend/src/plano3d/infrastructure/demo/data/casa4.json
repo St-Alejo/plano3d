@@ -1,0 +1,5206 @@
+{
+ "name": "Casa Mirador — 4 pisos",
+ "original_image_key": "",
+ "files": {},
+ "model": {
+  "project_id": "prj_destacado_casa4",
+  "scale": {
+   "meters_per_pixel": 0.01,
+   "source": "vector",
+   "confidence": 1.0
+  },
+  "levels": [
+   {
+    "id": "lvl_casa4_1",
+    "name": "Piso 1",
+    "elevation": 0.0,
+    "walls": [
+     {
+      "id": "w_piso1_4",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_1",
+        "kind": "window",
+        "offset": 0.8,
+        "width": 3.6,
+        "height": 2.6,
+        "sill": 0.1,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_2",
+        "kind": "door",
+        "offset": 5.1,
+        "width": 1.8,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_3",
+        "kind": "window",
+        "offset": 7.6,
+        "width": 3.6,
+        "height": 2.6,
+        "sill": 0.1,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_9",
+      "start": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_5",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 2.4,
+        "height": 2.2,
+        "sill": 0.4,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_6",
+        "kind": "window",
+        "offset": 8.0,
+        "width": 2.0,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_7",
+        "kind": "window",
+        "offset": 12.1,
+        "width": 0.8,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_8",
+        "kind": "window",
+        "offset": 15.0,
+        "width": 2.0,
+        "height": 1.5,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_13",
+      "start": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_10",
+        "kind": "window",
+        "offset": 1.2,
+        "width": 2.6,
+        "height": 1.5,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_11",
+        "kind": "door",
+        "offset": 5.35,
+        "width": 1.3,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_12",
+        "kind": "door",
+        "offset": 7.5,
+        "width": 4.0,
+        "height": 2.5,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_16",
+      "start": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_14",
+        "kind": "window",
+        "offset": 7.6,
+        "width": 1.8,
+        "height": 1.1,
+        "sill": 1.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_15",
+        "kind": "window",
+        "offset": 14.25,
+        "width": 2.5,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_18",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_17",
+        "kind": "door",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_19",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_21",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_20",
+        "kind": "door",
+        "offset": 0.8,
+        "width": 2.4,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_23",
+      "start": {
+       "x": 0.0,
+       "y": 12.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 12.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_22",
+        "kind": "door",
+        "offset": 0.55,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_25",
+      "start": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_24",
+        "kind": "door",
+        "offset": 2.5,
+        "width": 1.0,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_28",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_26",
+        "kind": "door",
+        "offset": 1.1,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso1_27",
+        "kind": "door",
+        "offset": 4.5,
+        "width": 1.0,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_30",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso1_29",
+        "kind": "door",
+        "offset": 3.35,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_31",
+      "start": {
+       "x": 9.5,
+       "y": 11.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso1_32",
+      "start": {
+       "x": 7.0,
+       "y": 14.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_piso1_33",
+      "label": "Sala",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 0.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 84.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 3.5
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_34",
+      "label": "Cocina",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 12.0
+       },
+       {
+        "x": 0.0,
+        "y": 12.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 25.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 9.5
+      },
+      "room_type": "kitchen",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_35",
+      "label": "Estudio",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 12.0
+       },
+       {
+        "x": 5.0,
+        "y": 12.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       },
+       {
+        "x": 0.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 30.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 15.0
+      },
+      "room_type": "study",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_36",
+      "label": "Punto fijo",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 5.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 9.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_37",
+      "label": "Hall de acceso",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 14.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 14.5
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_38",
+      "label": "Comedor",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 9.0
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_39",
+      "label": "Baño social",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 9.5,
+        "y": 11.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       },
+       {
+        "x": 7.0,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 7.5,
+      "centroid": {
+       "x": 8.25,
+       "y": 12.5
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_40",
+      "label": "Ropas",
+      "polygon": [
+       {
+        "x": 9.5,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 7.5,
+      "centroid": {
+       "x": 10.75,
+       "y": 12.5
+      },
+      "room_type": "laundry",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso1_41",
+      "label": "Garaje",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 18.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 16.0
+      },
+      "room_type": "garage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 3.0,
+    "columns": [
+     {
+      "id": "c_piso1_43",
+      "center": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_44",
+      "center": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_45",
+      "center": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_46",
+      "center": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_47",
+      "center": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_48",
+      "center": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_49",
+      "center": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_50",
+      "center": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_51",
+      "center": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_52",
+      "center": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_53",
+      "center": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_54",
+      "center": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_55",
+      "center": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_56",
+      "center": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_57",
+      "center": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso1_58",
+      "center": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_piso1_42",
+      "start": {
+       "x": 6.0,
+       "y": 10.8
+      },
+      "end": {
+       "x": 6.0,
+       "y": 7.2
+      },
+      "width": 1.1,
+      "steps": 17,
+      "riser": 0.1765,
+      "to_level_id": "lvl_casa4_2",
+      "confidence": 1.0,
+      "tread": 0.21176470588235297,
+      "base": 0.0
+     }
+    ],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_piso1_33_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 7.9,
+       "y": 0.47000000000000003
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso1_33_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 6.0,
+       "y": 3.5
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso1_34_c1",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 2.7,
+       "y": 11.68
+      },
+      "width": 2.4,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_piso1_34_c2",
+      "catalog_id": "nevera",
+      "position": {
+       "x": 4.3,
+       "y": 11.629999999999999
+      },
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 1.8,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_piso1_35_c1",
+      "catalog_id": "escritorio",
+      "position": {
+       "x": 4.68,
+       "y": 12.8
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 0.75,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso1_38_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 10.5,
+       "y": 7.47
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso1_38_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 10.1,
+       "y": 9.3
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso1_39_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.03,
+       "y": 12.5
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso1_39_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.13,
+       "y": 11.8
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso1_39_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.255,
+       "y": 13.3
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso1_40_c1",
+      "catalog_id": "lavadora",
+      "position": {
+       "x": 11.68,
+       "y": 12.5
+      },
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     }
+    ]
+   },
+   {
+    "id": "lvl_casa4_2",
+    "name": "Piso 2",
+    "elevation": 3.0,
+    "walls": [
+     {
+      "id": "w_piso2_3",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_1",
+        "kind": "window",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 2.2,
+        "sill": 0.4,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_2",
+        "kind": "window",
+        "offset": 6.5,
+        "width": 4.0,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_7",
+      "start": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_4",
+        "kind": "window",
+        "offset": 2.5,
+        "width": 2.0,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_5",
+        "kind": "window",
+        "offset": 8.0,
+        "width": 2.0,
+        "height": 1.4,
+        "sill": 1.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_6",
+        "kind": "window",
+        "offset": 14.8,
+        "width": 2.4,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_11",
+      "start": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_8",
+        "kind": "window",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_9",
+        "kind": "window",
+        "offset": 5.4,
+        "width": 1.2,
+        "height": 1.2,
+        "sill": 1.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_10",
+        "kind": "window",
+        "offset": 8.0,
+        "width": 3.0,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_15",
+      "start": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_12",
+        "kind": "window",
+        "offset": 6.85,
+        "width": 0.8,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_13",
+        "kind": "window",
+        "offset": 9.35,
+        "width": 0.8,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_14",
+        "kind": "window",
+        "offset": 14.0,
+        "width": 2.0,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_17",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_16",
+        "kind": "door",
+        "offset": 3.75,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_19",
+      "start": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_18",
+        "kind": "door",
+        "offset": 5.55,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_20",
+      "start": {
+       "x": 0.0,
+       "y": 9.5
+      },
+      "end": {
+       "x": 5.0,
+       "y": 9.5
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_22",
+      "start": {
+       "x": 0.0,
+       "y": 12.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 12.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_21",
+        "kind": "door",
+        "offset": 3.75,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_23",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_25",
+      "start": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_24",
+        "kind": "door",
+        "offset": 1.55,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_27",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_26",
+        "kind": "door",
+        "offset": 1.0,
+        "width": 2.0,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_29",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_28",
+        "kind": "door",
+        "offset": 4.05,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_32",
+      "start": {
+       "x": 7.0,
+       "y": 14.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso2_30",
+        "kind": "door",
+        "offset": 0.85,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso2_31",
+        "kind": "door",
+        "offset": 3.35,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_33",
+      "start": {
+       "x": 9.5,
+       "y": 11.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_34",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso2_35",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_piso2_36",
+      "label": "Alcoba 3",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 0.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 35.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 3.5
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_37",
+      "label": "Sala familiar",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 49.0,
+      "centroid": {
+       "x": 8.5,
+       "y": 3.5
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_38",
+      "label": "Baño alcoba 3",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 9.5
+       },
+       {
+        "x": 0.0,
+        "y": 9.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 12.5,
+      "centroid": {
+       "x": 2.5,
+       "y": 8.25
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_39",
+      "label": "Baño alcoba 1",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 9.5
+       },
+       {
+        "x": 5.0,
+        "y": 9.5
+       },
+       {
+        "x": 5.0,
+        "y": 12.0
+       },
+       {
+        "x": 0.0,
+        "y": 12.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 12.5,
+      "centroid": {
+       "x": 2.5,
+       "y": 10.75
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_40",
+      "label": "Alcoba 1",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 12.0
+       },
+       {
+        "x": 5.0,
+        "y": 12.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       },
+       {
+        "x": 0.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 30.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 15.0
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_41",
+      "label": "Punto fijo",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 5.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 9.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_42",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 14.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 14.5
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_43",
+      "label": "Estar de lectura",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 9.0
+      },
+      "room_type": "study",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_44",
+      "label": "Baño alcoba 2",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 9.5,
+        "y": 11.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       },
+       {
+        "x": 7.0,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 7.5,
+      "centroid": {
+       "x": 8.25,
+       "y": 12.5
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_45",
+      "label": "Vestier alcoba 2",
+      "polygon": [
+       {
+        "x": 9.5,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 7.5,
+      "centroid": {
+       "x": 10.75,
+       "y": 12.5
+      },
+      "room_type": "storage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso2_46",
+      "label": "Alcoba 2",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 18.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 16.0
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 3.0,
+    "columns": [
+     {
+      "id": "c_piso2_48",
+      "center": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_49",
+      "center": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_50",
+      "center": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_51",
+      "center": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_52",
+      "center": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_53",
+      "center": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_54",
+      "center": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_55",
+      "center": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_56",
+      "center": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_57",
+      "center": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_58",
+      "center": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_59",
+      "center": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_60",
+      "center": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_61",
+      "center": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_62",
+      "center": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso2_63",
+      "center": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_piso2_47",
+      "start": {
+       "x": 6.0,
+       "y": 10.8
+      },
+      "end": {
+       "x": 6.0,
+       "y": 7.2
+      },
+      "width": 1.1,
+      "steps": 17,
+      "riser": 0.1765,
+      "to_level_id": "lvl_casa4_3",
+      "confidence": 1.0,
+      "tread": 0.21176470588235297,
+      "base": 0.0
+     }
+    ],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_piso2_36_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 4.005,
+       "y": 3.5
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_36_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 4.68,
+       "y": 2.0999999999999996
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_36_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 4.779999999999999,
+       "y": 4.475
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_37_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 8.5,
+       "y": 0.47000000000000003
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_37_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 8.5,
+       "y": 3.5
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_38_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 2.5,
+       "y": 7.47
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_38_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 1.7999999999999998,
+       "y": 7.37
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_38_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 3.3,
+       "y": 7.245
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_39_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 2.5,
+       "y": 9.97
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_39_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 1.7999999999999998,
+       "y": 9.87
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_39_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 3.3,
+       "y": 9.745
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_40_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 4.005,
+       "y": 15.0
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_40_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 4.68,
+       "y": 16.3
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_40_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 4.779999999999999,
+       "y": 14.025
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_43_c1",
+      "catalog_id": "escritorio",
+      "position": {
+       "x": 9.5,
+       "y": 7.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 0.75,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_44_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.03,
+       "y": 12.5
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_44_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.13,
+       "y": 11.8
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_44_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.255,
+       "y": 13.3
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso2_46_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 9.5,
+       "y": 14.995
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso2_46_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 7.32,
+       "y": 16.6
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": -1.5707963267948966
+     }
+    ]
+   },
+   {
+    "id": "lvl_casa4_3",
+    "name": "Piso 3",
+    "elevation": 6.0,
+    "walls": [
+     {
+      "id": "w_piso3_3",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_1",
+        "kind": "window",
+        "offset": 1.0,
+        "width": 5.0,
+        "height": 2.6,
+        "sill": 0.1,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_2",
+        "kind": "window",
+        "offset": 8.5,
+        "width": 2.0,
+        "height": 0.8,
+        "sill": 1.6,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_7",
+      "start": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_4",
+        "kind": "window",
+        "offset": 1.4,
+        "width": 1.2,
+        "height": 0.8,
+        "sill": 1.6,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_5",
+        "kind": "window",
+        "offset": 7.8,
+        "width": 2.4,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_6",
+        "kind": "window",
+        "offset": 14.8,
+        "width": 2.4,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_10",
+      "start": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_8",
+        "kind": "window",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_9",
+        "kind": "window",
+        "offset": 8.0,
+        "width": 3.0,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_13",
+      "start": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_11",
+        "kind": "window",
+        "offset": 7.75,
+        "width": 2.5,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_12",
+        "kind": "window",
+        "offset": 13.75,
+        "width": 2.5,
+        "height": 1.6,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 18.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_16",
+      "start": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_14",
+        "kind": "door",
+        "offset": 1.55,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_15",
+        "kind": "door",
+        "offset": 4.9,
+        "width": 1.2,
+        "height": 2.4,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_18",
+      "start": {
+       "x": 7.0,
+       "y": 4.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 4.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_17",
+        "kind": "door",
+        "offset": 2.1,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_20",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_19",
+        "kind": "door",
+        "offset": 3.5,
+        "width": 1.0,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_22",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_21",
+        "kind": "door",
+        "offset": 0.5,
+        "width": 1.0,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_23",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_24",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_26",
+      "start": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_25",
+        "kind": "door",
+        "offset": 0.7,
+        "width": 1.6,
+        "height": 2.4,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_28",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_27",
+        "kind": "door",
+        "offset": 1.55,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_31",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_29",
+        "kind": "door",
+        "offset": 0.6,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_piso3_30",
+        "kind": "door",
+        "offset": 3.05,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_32",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_piso3_34",
+      "start": {
+       "x": 7.0,
+       "y": 13.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 13.0
+      },
+      "thickness": 0.12,
+      "height": 3.0,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_piso3_33",
+        "kind": "door",
+        "offset": 3.6,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_piso3_35",
+      "label": "Suite principal",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 0.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 49.0,
+      "centroid": {
+       "x": 3.5,
+       "y": 3.5
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_36",
+      "label": "Baño suite",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 4.0
+       },
+       {
+        "x": 7.0,
+        "y": 4.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 2.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_37",
+      "label": "Vestier",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 4.0
+       },
+       {
+        "x": 12.0,
+        "y": 4.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 15.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 5.5
+      },
+      "room_type": "storage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_38",
+      "label": "Sala de cine",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       },
+       {
+        "x": 0.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 55.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 12.5
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_39",
+      "label": "Punto fijo",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 5.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 9.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_40",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       },
+       {
+        "x": 5.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 14.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 14.5
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_41",
+      "label": "Estudio principal",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 20.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 9.0
+      },
+      "room_type": "study",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_42",
+      "label": "Baño huéspedes",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 11.0
+       },
+       {
+        "x": 12.0,
+        "y": 13.0
+       },
+       {
+        "x": 7.0,
+        "y": 13.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 10.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 12.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_piso3_43",
+      "label": "Alcoba de huéspedes",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 13.0
+       },
+       {
+        "x": 12.0,
+        "y": 13.0
+       },
+       {
+        "x": 12.0,
+        "y": 18.0
+       },
+       {
+        "x": 7.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 25.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 15.5
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 3.0,
+    "columns": [
+     {
+      "id": "c_piso3_45",
+      "center": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_46",
+      "center": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_47",
+      "center": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_48",
+      "center": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_49",
+      "center": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_50",
+      "center": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_51",
+      "center": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_52",
+      "center": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_53",
+      "center": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_54",
+      "center": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_55",
+      "center": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_56",
+      "center": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_57",
+      "center": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_58",
+      "center": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_59",
+      "center": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_piso3_60",
+      "center": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_piso3_44",
+      "start": {
+       "x": 6.0,
+       "y": 10.8
+      },
+      "end": {
+       "x": 6.0,
+       "y": 7.2
+      },
+      "width": 1.1,
+      "steps": 17,
+      "riser": 0.1765,
+      "to_level_id": "lvl_casa4_4",
+      "confidence": 1.0,
+      "tread": 0.21176470588235297,
+      "base": 0.0
+     }
+    ],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_piso3_35_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 3.5,
+       "y": 0.995
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_35_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 6.68,
+       "y": 3.5
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso3_35_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 4.475,
+       "y": 0.22000000000000008
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_36_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 8.0,
+       "y": 0.47000000000000003
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_36_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.5,
+       "y": 0.37
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_36_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.0,
+       "y": 0.245
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_38_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 4.53,
+       "y": 10.6
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_piso3_38_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 2.5,
+       "y": 12.5
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_41_c1",
+      "catalog_id": "escritorio",
+      "position": {
+       "x": 9.5,
+       "y": 7.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 0.75,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_42_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.5,
+       "y": 11.47
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_42_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 8.8,
+       "y": 11.37
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_42_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 10.3,
+       "y": 11.245
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_43_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 9.5,
+       "y": 13.995
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_piso3_43_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 8.2,
+       "y": 13.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 0.0
+     }
+    ]
+   },
+   {
+    "id": "lvl_casa4_4",
+    "name": "Azotea",
+    "elevation": 9.0,
+    "walls": [
+     {
+      "id": "w_azotea_1",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_2",
+      "start": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_4",
+      "start": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 14.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_3",
+        "kind": "window",
+        "offset": 1.5,
+        "width": 4.0,
+        "height": 2.2,
+        "sill": 0.4,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_5",
+      "start": {
+       "x": 12.0,
+       "y": 14.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_6",
+      "start": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_7",
+      "start": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 14.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_9",
+      "start": {
+       "x": 0.0,
+       "y": 14.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_8",
+        "kind": "window",
+        "offset": 3.0,
+        "width": 3.0,
+        "height": 2.2,
+        "sill": 0.4,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_10",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 1.1,
+      "material": "concreto",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_12",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_11",
+        "kind": "window",
+        "offset": 0.7,
+        "width": 3.6,
+        "height": 2.4,
+        "sill": 0.2,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_14",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_13",
+        "kind": "door",
+        "offset": 0.2,
+        "width": 1.6,
+        "height": 2.4,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_16",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_15",
+        "kind": "door",
+        "offset": 0.7,
+        "width": 3.6,
+        "height": 2.6,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_17",
+      "start": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_19",
+      "start": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_18",
+        "kind": "door",
+        "offset": 1.0,
+        "width": 1.0,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_20",
+      "start": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_22",
+      "start": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_21",
+        "kind": "door",
+        "offset": 0.1,
+        "width": 0.8,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_24",
+      "start": {
+       "x": 7.0,
+       "y": 12.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 12.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_23",
+        "kind": "door",
+        "offset": 2.9,
+        "width": 1.2,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_25",
+      "start": {
+       "x": 9.5,
+       "y": 12.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_azotea_29",
+      "start": {
+       "x": 0.0,
+       "y": 14.0
+      },
+      "end": {
+       "x": 12.0,
+       "y": 14.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_azotea_26",
+        "kind": "window",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 1.0,
+        "sill": 1.1,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_azotea_27",
+        "kind": "door",
+        "offset": 5.2,
+        "width": 1.6,
+        "height": 2.4,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_azotea_28",
+        "kind": "window",
+        "offset": 9.75,
+        "width": 2.0,
+        "height": 1.0,
+        "sill": 1.1,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 12.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_azotea_30",
+      "label": "Terraza BBQ",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 0.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 0.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 84.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 3.5
+      },
+      "room_type": "patio",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_31",
+      "label": "Gimnasio",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 5.0,
+        "y": 14.0
+       },
+       {
+        "x": 0.0,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 35.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 10.5
+      },
+      "room_type": "other",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_32",
+      "label": "Punto fijo",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 5.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 9.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_33",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 11.0
+       },
+       {
+        "x": 7.0,
+        "y": 14.0
+       },
+       {
+        "x": 5.0,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 6.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 12.5
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_34",
+      "label": "Sala de juegos",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 7.0
+       },
+       {
+        "x": 12.0,
+        "y": 12.0
+       },
+       {
+        "x": 7.0,
+        "y": 12.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 25.0,
+      "centroid": {
+       "x": 9.5,
+       "y": 9.5
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_35",
+      "label": "Baño azotea",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 12.0
+       },
+       {
+        "x": 9.5,
+        "y": 12.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       },
+       {
+        "x": 7.0,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 5.0,
+      "centroid": {
+       "x": 8.25,
+       "y": 13.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_36",
+      "label": "Bar",
+      "polygon": [
+       {
+        "x": 9.5,
+        "y": 12.0
+       },
+       {
+        "x": 12.0,
+        "y": 12.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 9.5,
+        "y": 14.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 5.0,
+      "centroid": {
+       "x": 10.75,
+       "y": 13.0
+      },
+      "room_type": "kitchen",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_azotea_37",
+      "label": "Solárium y piscina",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 14.0
+       },
+       {
+        "x": 12.0,
+        "y": 18.0
+       },
+       {
+        "x": 0.0,
+        "y": 18.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 48.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 16.0
+      },
+      "room_type": "patio",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 3.2,
+    "columns": [
+     {
+      "id": "c_azotea_38",
+      "center": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_39",
+      "center": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_40",
+      "center": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_41",
+      "center": {
+       "x": 0.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_42",
+      "center": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_43",
+      "center": {
+       "x": 5.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_44",
+      "center": {
+       "x": 5.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_45",
+      "center": {
+       "x": 5.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_46",
+      "center": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_47",
+      "center": {
+       "x": 7.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_48",
+      "center": {
+       "x": 7.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_49",
+      "center": {
+       "x": 7.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_50",
+      "center": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_51",
+      "center": {
+       "x": 12.0,
+       "y": 7.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_52",
+      "center": {
+       "x": 12.0,
+       "y": 11.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     },
+     {
+      "id": "c_azotea_53",
+      "center": {
+       "x": 12.0,
+       "y": 18.0
+      },
+      "width": 0.35,
+      "depth": 0.35,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 1.0
+     }
+    ],
+    "stairs": [],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_azotea_34_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 8.8,
+       "y": 11.53
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_azotea_35_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 8.25,
+       "y": 12.47
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_azotea_35_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 7.55,
+       "y": 12.37
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_azotea_35_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.05,
+       "y": 12.245
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_azotea_36_c1",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 10.75,
+       "y": 13.68
+      },
+      "width": 2.4,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_azotea_36_c2",
+      "catalog_id": "nevera",
+      "position": {
+       "x": 11.63,
+       "y": 13.0
+      },
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 1.8,
+      "rotation": 1.5707963267948966
+     }
+    ]
+   }
+  ],
+  "source_image": null,
+  "total_area": 864.0,
+  "schema_version": 2,
+  "facade": "moderna_contemporanea",
+  "facade_custom": {
+   "ground": {
+    "material": "concreto",
+    "color": "#b9b5ad"
+   },
+   "upper": {
+    "material": "panete",
+    "color": "#f2efe8"
+   },
+   "front": {
+    "material": "madera",
+    "color": "#8a5a3b"
+   },
+   "gate": {
+    "material": "madera",
+    "color": "#5b3a26"
+   },
+   "frame": "#1f1f1f",
+   "band": "#2b2b2b",
+   "accent": "#c79a5b",
+   "features": [
+    "listones",
+    "jardinera",
+    "marco_ventana",
+    "alero",
+    "luces"
+   ]
+  }
+ }
+}
