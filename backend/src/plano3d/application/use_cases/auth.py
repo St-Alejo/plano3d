@@ -12,6 +12,7 @@ El WebSocket del navegador no puede mandar cabeceras: recibe un **ticket** corto
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from plano3d.application.ports import (
@@ -76,7 +77,9 @@ class Register(_Sessions):
             )
         if password.strip().lower() == normalize_email(email):
             raise WeakPasswordError("La contraseña no puede ser tu correo")
-        user = User.create(email, name, self._hasher.hash(password))
+        # argon2 tarda y gasta CPU: en un hilo, para no congelar la API ni las salas en vivo
+        password_hash = await asyncio.to_thread(self._hasher.hash, password)
+        user = User.create(email, name, password_hash)
         await self._users.add(user)  # EmailTakenError si ya existe
         return self._session(user)
 
@@ -89,8 +92,11 @@ class Login(_Sessions):
     async def execute(self, email: str, password: str) -> Session:
         user = await self._users.get_by_email(normalize_email(email))
         # se verifica aunque el correo no exista, para no revelar por el tiempo qué cuentas hay
-        stored = user.password_hash if user else _DUMMY_HASH.get(self._hasher)
-        if not self._hasher.verify(stored, password) or user is None:
+        stored = (
+            user.password_hash if user else await asyncio.to_thread(_DUMMY_HASH.get, self._hasher)
+        )
+        ok = await asyncio.to_thread(self._hasher.verify, stored, password)
+        if not ok or user is None:
             raise InvalidCredentialsError()
         return self._session(user)
 
