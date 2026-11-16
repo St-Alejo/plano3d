@@ -9,6 +9,7 @@ import { useAsync } from '@/hooks/useAsync'
 import { usePlanImage } from '@/hooks/usePlanImage'
 import { listProjects, relativeTime, SORT_LABEL, totalArea, type ProjectSort } from './listing'
 import { STATUS_LABEL } from './status'
+import { HouseUpload } from './HouseUploadDialog'
 
 const dateFmt = new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -120,12 +121,15 @@ export function ProjectsPage() {
             </p>
           )}
         </div>
-        <Link
-          to="/nuevo"
-          className="group inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-card transition-[filter,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:brightness-110"
-        >
-          <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" aria-hidden /> Convertir un plano
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <HouseUpload />
+          <Link
+            to="/nuevo"
+            className="group inline-flex h-12 items-center gap-2 rounded-full bg-brand px-6 font-medium text-brand-ink shadow-card transition-[filter,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:brightness-110"
+          >
+            <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" aria-hidden /> Convertir un plano
+          </Link>
+        </div>
       </header>
 
       {data && data.length > 1 && (
