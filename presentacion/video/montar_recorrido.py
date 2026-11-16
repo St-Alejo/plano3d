@@ -41,7 +41,9 @@ SHOTS = [
 
 def _title(text: str) -> str:
     safe = text.replace(":", "\\:").replace("'", "’")
+    # franja oscura al pie para que el rótulo se lea también sobre renders claros
     return (
+        "drawbox=x=0:y=ih-230:w=iw:h=230:color=black@0.38:t=fill,"
         f"drawtext=fontfile='{FONT}':text='{safe}':fontsize=46:fontcolor=white:"
         f"x=80:y=h-140:shadowcolor=black@0.55:shadowx=2:shadowy=2:"
         f"alpha='min(1,max(0,(t-0.4)/0.6))'"
