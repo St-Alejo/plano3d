@@ -73,7 +73,7 @@ public sealed record BuildingModel(string ProjectId, double MetersPerPixel, stri
 
     public Level? FindLevel(string id) => Levels.FirstOrDefault(l => l.Id == id);
 
-    internal static Level ParseLevel(JsonObject lv) => new(
+    public static Level ParseLevel(JsonObject lv) => new(
         lv.Str("id") ?? "",
         lv.Str("name") ?? "",
         Num(lv, "elevation", 0),
@@ -84,7 +84,7 @@ public sealed record BuildingModel(string ProjectId, double MetersPerPixel, stri
         lv.Items("stairs").OfType<JsonObject>().Select(ParseStair).ToList(),
         lv.Items("furniture").OfType<JsonObject>().Select(ParseFurniture).ToList());
 
-    internal static Wall ParseWall(JsonObject w) => new(
+    public static Wall ParseWall(JsonObject w) => new(
         w.Str("id") ?? "",
         Pt(w["start"]),
         Pt(w["end"]),
@@ -100,20 +100,20 @@ public sealed record BuildingModel(string ProjectId, double MetersPerPixel, stri
             Num(o, "sill", 0))).ToList(),
         w["bulge"] is null ? null : Num(w, "bulge", 0));
 
-    internal static Room ParseRoom(JsonObject r) => new(
+    public static Room ParseRoom(JsonObject r) => new(
         r.Str("id") ?? "",
         r.Str("label") ?? "",
         r.Items("polygon").Select(Pt).ToList(),
         r.Str("floor_material"),
         r.Str("room_type"));
 
-    internal static Column ParseColumn(JsonObject c) => new(
+    public static Column ParseColumn(JsonObject c) => new(
         c.Str("id") ?? "", Pt(c["center"]), Num(c, "width", 0.3), Num(c, "depth", 0.3), Num(c, "rotation", 0), Bool(c, "round"));
 
-    internal static Stair ParseStair(JsonObject s) => new(
+    public static Stair ParseStair(JsonObject s) => new(
         s.Str("id") ?? "", Pt(s["start"]), Pt(s["end"]), Num(s, "width", 1), (int)Num(s, "steps", 16), Num(s, "riser", 0.17), Num(s, "base", 0), s.Str("to_level_id"));
 
-    internal static Furniture ParseFurniture(JsonObject f) => new(
+    public static Furniture ParseFurniture(JsonObject f) => new(
         f.Str("id") ?? "", f.Str("catalog_id") ?? "", Pt(f["position"]), Num(f, "width", 0.5), Num(f, "depth", 0.5), Num(f, "height", 0.8), Num(f, "rotation", 0));
 
     private static Point2 Pt(JsonNode? n) => n is JsonObject o ? new Point2(Num(o, "x", 0), Num(o, "y", 0)) : default;

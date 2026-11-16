@@ -45,7 +45,14 @@ public sealed class CollabClient : IAsyncDisposable
     public LiveDocument Document { get; } = new();
     public LiveStatus Status { get; private set; } = LiveStatus.Off;
     public Peer? Me { get; private set; }
-    public IReadOnlyCollection<Peer> Peers => _peers.Values;
+    /// <summary>Copia de quién está en la sala (se puede leer desde cualquier hilo).</summary>
+    public IReadOnlyList<Peer> Peers
+    {
+        get
+        {
+            lock (_peers) return _peers.Values.ToList();
+        }
+    }
     public TimeSpan PingEvery { get; init; } = TimeSpan.FromSeconds(25);
 
     public event Action<LiveStatus, string?>? StatusChanged;
@@ -191,8 +198,11 @@ public sealed class CollabClient : IAsyncDisposable
         {
             case "welcome":
                 Me = ParsePeer(msg["you"]);
-                _peers.Clear();
-                foreach (var p in (msg["peers"] as JsonArray ?? []).Select(ParsePeer).OfType<Peer>()) _peers[p.Id] = p;
+                lock (_peers)
+                {
+                    _peers.Clear();
+                    foreach (var p in (msg["peers"] as JsonArray ?? []).Select(ParsePeer).OfType<Peer>()) _peers[p.Id] = p;
+                }
                 var resend = Document.Welcome(
                     msg["model"] as JsonObject,
                     (msg["missed"] as JsonArray)?.OfType<JsonObject>(),
@@ -207,7 +217,10 @@ public sealed class CollabClient : IAsyncDisposable
                 if (fromOther)
                 {
                     var author = msg.Str("author");
-                    RemoteEdit?.Invoke(author is null ? null : _peers.GetValueOrDefault(author));
+                    Peer? who = null;
+                    if (author is not null)
+                        lock (_peers) who = _peers.GetValueOrDefault(author);
+                    RemoteEdit?.Invoke(who);
                     if (author is not null) Preview?.Invoke(author, null);
                 }
                 break;
@@ -221,20 +234,23 @@ public sealed class CollabClient : IAsyncDisposable
                 Document.Saved((int?)msg["revision"] ?? 0);
                 break;
             case "peer_joined":
-                if (ParsePeer(msg["peer"]) is { } joined) _peers[joined.Id] = joined;
+                if (ParsePeer(msg["peer"]) is { } joined)
+                    lock (_peers) _peers[joined.Id] = joined;
                 PeersChanged?.Invoke();
                 break;
             case "peer_left":
-                _peers.Remove(msg.Str("peer_id") ?? "");
+                lock (_peers) _peers.Remove(msg.Str("peer_id") ?? "");
                 PeersChanged?.Invoke();
                 break;
             case "presence":
                 var id = msg.Str("peer_id") ?? "";
-                if (_peers.TryGetValue(id, out var peer))
+                bool known;
+                lock (_peers)
                 {
-                    _peers[id] = peer with { Level = msg["state"].Str("level"), Selection = msg["state"].Str("selection") };
-                    PeersChanged?.Invoke();
+                    known = _peers.TryGetValue(id, out var peer);
+                    if (known) _peers[id] = peer! with { Level = msg["state"].Str("level"), Selection = msg["state"].Str("selection") };
                 }
+                if (known) PeersChanged?.Invoke();
                 break;
             case "preview":
                 Preview?.Invoke(msg.Str("peer_id") ?? "", msg["entity"] as JsonObject);
