@@ -68,17 +68,18 @@ test('de la foto de un plano a un modelo 3D recorrible', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Ambiente' })).toBeVisible()
   await page.getByLabel('Nombre').fill('Cocina E2E')
   await page.getByRole('button', { name: 'Renombrar' }).click()
-  await expect(page.getByText('cambios sin guardar')).toBeVisible()
+  // edición en vivo: no hay que guardar a mano, cada cambio viaja solo al servidor
+  await expect(page.getByRole('button', { name: 'Se guarda solo (en vivo)' })).toBeDisabled()
+  const label = async () =>
+    ((await (await page.request.get(`/api/projects/${projectId}`)).json()) as ApiProject).model.levels[0]!.rooms.find((r) => r.id === room.id)!.label
+  await expect.poll(label).toBe('Cocina E2E')
 
-  // deshacer / rehacer con teclado
+  // deshacer / rehacer con teclado también viajan
   await page.keyboard.press('Control+z')
-  await expect(page.getByText('guardado', { exact: true })).toBeVisible()
+  await expect.poll(label).not.toBe('Cocina E2E')
   await page.keyboard.press('Control+Shift+z')
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect.poll(label).toBe('Cocina E2E')
   await expect(page.getByText('guardado', { exact: true })).toBeVisible()
-
-  const saved = (await (await page.request.get(`/api/projects/${projectId}`)).json()) as ApiProject
-  expect(saved.model.levels[0]!.rooms.find((r) => r.id === room.id)!.label).toBe('Cocina E2E')
 
   // 4. Recorrido 3D + exportación GLB
   await page.getByRole('link', { name: 'Recorrer' }).click()

@@ -90,14 +90,23 @@ test.describe('escritorio', () => {
     await item.focus()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('heading', { name: 'Ambiente' })).toBeVisible()
-    await page.getByLabel('Nombre').fill('Dormitorio')
+    await page.getByLabel('Nombre').fill('Teclado E2E')
     await page.keyboard.press('Enter')
-    await expect(page.getByText('cambios sin guardar')).toBeVisible()
+    // en vivo se guarda solo: se comprueba en el servidor el cambio y que Ctrl+Z lo deshace
+    const names = async () => {
+      const p = (await (await page.request.get(`/api/projects/${projectId}`)).json()) as {
+        model: { levels: { rooms: { label: string }[] }[] }
+      }
+      return p.model.levels.flatMap((l) => l.rooms.map((r) => r.label))
+    }
+    await expect.poll(names).toContain('Teclado E2E')
     await page.keyboard.press('Control+z')
-    await expect(page.getByText('guardado', { exact: true })).toBeVisible()
+    await expect.poll(names).not.toContain('Teclado E2E')
   })
 
   test('avisa antes de perder cambios al navegar dentro de la app', async ({ page }) => {
+    // el aviso es del guardado manual (sin edición en vivo, que guarda sola)
+    await page.addInitScript(() => window.localStorage.setItem('plano3d.live', 'off'))
     await page.goto(`/p/${projectId}`)
     await page.getByRole('region', { name: 'Ambientes' }).getByRole('button').first().click()
     await page.getByLabel('Nombre').fill('Temporal')

@@ -57,7 +57,7 @@ test('modo obra: selector, enlace, leyenda y ficha al tocar un elemento', async 
   await expect(obra.getByRole('list', { name: 'Leyenda' })).toContainText('Columneta')
   await expect(obra).toContainText('no reemplaza el diseño firmado por un ingeniero')
   // en obra no se ofrece la cubierta de teja
-  await expect(page.getByRole('checkbox', { name: 'Cubierta (techo de teja)' })).toHaveCount(0)
+  await expect(page.getByRole('checkbox', { name: /^Cubierta/ })).toHaveCount(0)
 
   // vista en planta: tocar sobre los muros hasta dar con un elemento (ladrillo, viga o columneta)
   await page.getByRole('tab', { name: 'Vista' }).click()

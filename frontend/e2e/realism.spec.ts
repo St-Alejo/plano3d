@@ -67,8 +67,11 @@ test('calidad alta con texturas, cielo y cubierta; se recuerda al volver', async
   await expect.poll(() => assets.some((a) => a.includes('/texturas/panete/color.webp')), { timeout: 30_000 }).toBe(true)
   expect(assets.filter((a) => !a.startsWith('200') && !a.startsWith('304'))).toEqual([])
 
-  await page.getByRole('checkbox', { name: 'Cubierta (techo de teja)' }).check()
-  await expect.poll(() => assets.some((a) => a.includes('/texturas/teja/')), { timeout: 30_000 }).toBe(true)
+  // con fachada (siempre hay una) la cubierta es losa con antepecho; la teja es sin fachada
+  const roof = page.getByRole('checkbox', { name: /^Cubierta/ })
+  await roof.check()
+  await expect(roof).toBeChecked()
+  expect(assets.filter((a) => !a.startsWith('200') && !a.startsWith('304'))).toEqual([])
 
   await quality.selectOption('baja')
   await page.reload()

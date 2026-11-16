@@ -28,7 +28,7 @@ test('sol, corte, vistas, medir y exportar sin errores', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(`/p/${projectId}/3d`)
-  await expect(page.getByRole('radio', { name: 'Orbitar' })).toBeVisible()
+  await expect(page.getByRole('radio', { name: 'Orbitar' })).toBeVisible({ timeout: 60_000 }) // sin GPU y con otras pruebas a la vez, la escena tarda
 
   await page.getByRole('tab', { name: 'Análisis' }).click()
   const sun = page.getByRole('region', { name: 'Estudio solar' })

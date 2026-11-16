@@ -12,6 +12,8 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
+  // el 3D sin GPU es pesado: con un worker por núcleo las pruebas se estorban y fallan por tiempo
+  workers: process.env.CI ? undefined : 4,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',

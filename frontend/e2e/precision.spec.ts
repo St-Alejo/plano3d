@@ -7,6 +7,13 @@ import { fileURLToPath } from 'node:url'
 
 test.skip(({ isMobile }) => isMobile, 'flujos de escritorio')
 
+// esta suite prueba el guardado manual con bloqueo optimista (el camino de respaldo cuando
+// no hay edición en vivo): se apaga la sala en este navegador
+const classicSave = () => window.localStorage.setItem('plano3d.live', 'off')
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(classicSave)
+})
+
 const PHOTO = fileURLToPath(new URL('./fixtures/plano-foto.jpg', import.meta.url))
 
 interface Pt {
@@ -88,8 +95,14 @@ test('largo exacto: la esquina se arrastra, los ambientes se recalculan y queda 
 })
 
 test('dos personas editando: la segunda recibe el aviso y puede sobrescribir', async ({ browser }) => {
-  const a = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage()
-  const b = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage()
+  // contextos propios (dos personas): llevan la sesión de la corrida y el guardado clásico
+  const open = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, storageState: 'e2e/.auth/state.json' })
+    await ctx.addInitScript(classicSave)
+    return ctx.newPage()
+  }
+  const a = await open()
+  const b = await open()
   await openEditor(a)
   await openEditor(b)
 
