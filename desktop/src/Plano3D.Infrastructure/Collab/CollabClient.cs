@@ -42,6 +42,12 @@ public sealed class CollabClient : IAsyncDisposable
         Document.Rejected += reason => Error?.Invoke($"El servidor no aceptó un cambio: {reason}");
     }
 
+    /// <summary>
+    /// El documento lo tocan el hilo de red (lo que llega) y el de la interfaz (lo que se edita):
+    /// todo acceso que lo cambie pasa por este candado.
+    /// </summary>
+    private readonly object _docLock = new();
+
     public LiveDocument Document { get; } = new();
     public LiveStatus Status { get; private set; } = LiveStatus.Off;
     public Peer? Me { get; private set; }
@@ -96,7 +102,8 @@ public sealed class CollabClient : IAsyncDisposable
     /// <summary>Edición local: manda el lote si hay cambios (se reenvía solo al reconectar).</summary>
     public async Task EditAsync(JsonObject edited)
     {
-        var batch = Document.Edit(edited);
+        Batch? batch;
+        lock (_docLock) batch = Document.Edit(edited);
         if (batch is not null) await SendAsync(OpsMessage(batch));
     }
 
@@ -203,17 +210,20 @@ public sealed class CollabClient : IAsyncDisposable
                     _peers.Clear();
                     foreach (var p in (msg["peers"] as JsonArray ?? []).Select(ParsePeer).OfType<Peer>()) _peers[p.Id] = p;
                 }
-                var resend = Document.Welcome(
-                    msg["model"] as JsonObject,
-                    (msg["missed"] as JsonArray)?.OfType<JsonObject>(),
-                    (long?)msg["seq"] ?? 0,
-                    (int?)msg["revision"] ?? 0);
+                IReadOnlyList<Batch> resend;
+                lock (_docLock)
+                    resend = Document.Welcome(
+                        msg["model"] as JsonObject,
+                        (msg["missed"] as JsonArray)?.OfType<JsonObject>(),
+                        (long?)msg["seq"] ?? 0,
+                        (int?)msg["revision"] ?? 0);
                 foreach (var b in resend) await SendAsync(OpsMessage(b));
                 SetStatus(LiveStatus.Live, null);
                 PeersChanged?.Invoke();
                 break;
             case "applied":
-                var fromOther = Document.Applied((long?)msg["seq"] ?? 0, msg.Str("op_id") ?? "", (JsonArray)msg["ops"]!);
+                bool fromOther;
+                lock (_docLock) fromOther = Document.Applied((long?)msg["seq"] ?? 0, msg.Str("op_id") ?? "", (JsonArray)msg["ops"]!);
                 if (fromOther)
                 {
                     var author = msg.Str("author");
@@ -225,13 +235,13 @@ public sealed class CollabClient : IAsyncDisposable
                 }
                 break;
             case "reject":
-                Document.Reject(msg.Str("op_id") ?? "", msg.Str("reason") ?? "");
+                lock (_docLock) Document.Reject(msg.Str("op_id") ?? "", msg.Str("reason") ?? "");
                 break;
             case "snapshot":
-                Document.Snapshot((JsonObject)msg["model"]!, (long?)msg["seq"] ?? 0, (int?)msg["revision"] ?? 0);
+                lock (_docLock) Document.Snapshot((JsonObject)msg["model"]!, (long?)msg["seq"] ?? 0, (int?)msg["revision"] ?? 0);
                 break;
             case "saved":
-                Document.Saved((int?)msg["revision"] ?? 0);
+                lock (_docLock) Document.Saved((int?)msg["revision"] ?? 0);
                 break;
             case "peer_joined":
                 if (ParsePeer(msg["peer"]) is { } joined)
