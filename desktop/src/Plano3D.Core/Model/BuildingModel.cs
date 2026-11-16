@@ -14,9 +14,14 @@ public readonly record struct Point2(double X, double Y)
     public Point2 Normalized => Length > 1e-12 ? this * (1 / Length) : new Point2(1, 0);
 }
 
-public sealed record Opening(string Id, string Kind, double Offset, double Width, double Height, double Sill = 0)
+/// <param name="Operation">cómo abre: swing (batiente), folding (portón de garaje), sliding, casement, none (vano sin hoja)…</param>
+public sealed record Opening(string Id, string Kind, double Offset, double Width, double Height, double Sill = 0, string? Operation = null)
 {
     public bool IsDoor => Kind is "door" or "garage";
+    /// <summary>Portón de garaje: sube en vez de girar.</summary>
+    public bool IsGate => Kind == "garage" || (Kind == "door" && Operation == "folding");
+    /// <summary>Vano de puerta sin hoja (paso abierto).</summary>
+    public bool NoLeaf => Operation == "none";
 }
 
 public sealed record Wall(
@@ -27,8 +32,10 @@ public sealed record Wall(
     double Height = 2.6,
     string Material = "plaster",
     IReadOnlyList<Opening>? Openings = null,
-    double? Bulge = null)
+    double? Bulge = null,
+    string Kind = "interior")
 {
+    public bool IsExterior => Kind == "exterior";
     public IReadOnlyList<Opening> OpeningsOrEmpty => Openings ?? [];
     public double Length => (End - Start).Length;
     public Point2 Direction => (End - Start).Normalized;
@@ -58,7 +65,7 @@ public sealed record Level(
 /// JSON (<see cref="JsonObject"/>) para no perder campos que este cliente aún no conoce;
 /// esta vista se reconstruye cuando cambia.
 /// </summary>
-public sealed record BuildingModel(string ProjectId, double MetersPerPixel, string Facade, IReadOnlyList<Level> Levels)
+public sealed record BuildingModel(string ProjectId, double MetersPerPixel, string Facade, IReadOnlyList<Level> Levels, bool FacadeCustom = false)
 {
     public static BuildingModel From(JsonObject json)
     {
@@ -68,7 +75,8 @@ public sealed record BuildingModel(string ProjectId, double MetersPerPixel, stri
             json.Str("project_id") ?? "",
             Num(scale, "meters_per_pixel", 0.01),
             json.Str("facade") ?? "moderna_blanca",
-            levels);
+            levels,
+            json["facade_custom"] is JsonObject);
     }
 
     public Level? FindLevel(string id) => Levels.FirstOrDefault(l => l.Id == id);
@@ -97,8 +105,10 @@ public sealed record BuildingModel(string ProjectId, double MetersPerPixel, stri
             Num(o, "offset", 0),
             Num(o, "width", 0.9),
             Num(o, "height", 2.1),
-            Num(o, "sill", 0))).ToList(),
-        w["bulge"] is null ? null : Num(w, "bulge", 0));
+            Num(o, "sill", 0),
+            o.Str("operation"))).ToList(),
+        w["bulge"] is null ? null : Num(w, "bulge", 0),
+        w.Str("kind") ?? "interior");
 
     public static Room ParseRoom(JsonObject r) => new(
         r.Str("id") ?? "",

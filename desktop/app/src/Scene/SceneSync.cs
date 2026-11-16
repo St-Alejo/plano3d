@@ -148,7 +148,10 @@ public partial class SceneSync : Node3D
         foreach (var o in wall.OpeningsOrEmpty)
         {
             var infill = BuildingGeometry.OpeningInfill(wall, o, elev);
-            if (o.IsDoor) n.AddChild(BuildDoor(wall, o, infill, elev));
+            if (o.IsDoor)
+            {
+                if (!o.NoLeaf) n.AddChild(BuildDoor(wall, o, infill, elev)); // un vano de paso no lleva hoja
+            }
             else
             {
                 var glass = MeshFactory.Box(infill, Materials.Glass, o.Id);
@@ -167,7 +170,7 @@ public partial class SceneSync : Node3D
     /// <summary>Hoja de puerta con bisagra (o portón que sube) para abrirse en el recorrido.</summary>
     private static Node3D BuildDoor(Wall wall, Opening o, Box infill, double elev)
     {
-        var lifts = o.Kind == "garage";
+        var lifts = o.IsGate;
         var dir = wall.Direction;
         var anchor = lifts ? wall.Start + dir * (o.Offset + o.Width / 2) : wall.Start + dir * o.Offset;
         var pivot = new DoorLeaf

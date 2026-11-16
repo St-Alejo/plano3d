@@ -1,0 +1,462 @@
+{
+  "version": 1,
+  "name": "Casa 3 pisos",
+  "units": "m",
+  "height": 7.8,
+  "floors": [
+    {
+      "number": 1,
+      "name": "Piso 1",
+      "collection": "Piso 1",
+      "elevation": 0,
+      "height": 2.6
+    },
+    {
+      "number": 2,
+      "name": "Piso 2",
+      "collection": "Piso 2",
+      "elevation": 2.6,
+      "height": 2.6
+    },
+    {
+      "number": 3,
+      "name": "Piso 3",
+      "collection": "Piso 3",
+      "elevation": 5.2,
+      "height": 2.6
+    }
+  ],
+  "cameras": [
+    {
+      "name": "Fachada principal",
+      "location": [
+        5.568,
+        -30.11,
+        1.6
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        1.6
+      ],
+      "lens": 28,
+      "level": true
+    },
+    {
+      "name": "Calle (altura de ojos)",
+      "location": [
+        -0.049,
+        -25.43,
+        1.6
+      ],
+      "target": [
+        6.816,
+        -8.269,
+        1.6
+      ],
+      "lens": 24,
+      "level": true
+    },
+    {
+      "name": "Aérea 3/4",
+      "location": [
+        -7.538,
+        -23.871,
+        19.033
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        3.12
+      ],
+      "lens": 35,
+      "level": false
+    },
+    {
+      "name": "Planta Piso 1",
+      "location": [
+        5.568,
+        -8.269,
+        14.6
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        0
+      ],
+      "lens": 0,
+      "level": false,
+      "ortho_scale": 24.852,
+      "floor": 1,
+      "lines": true
+    },
+    {
+      "name": "Planta Piso 2",
+      "location": [
+        5.568,
+        -8.269,
+        17.2
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        2.6
+      ],
+      "lens": 0,
+      "level": false,
+      "ortho_scale": 24.852,
+      "floor": 2,
+      "lines": true
+    },
+    {
+      "name": "Planta Piso 3",
+      "location": [
+        5.568,
+        -8.269,
+        19.8
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        5.2
+      ],
+      "lens": 0,
+      "level": false,
+      "ortho_scale": 24.852,
+      "floor": 3,
+      "lines": true
+    },
+    {
+      "name": "Alzado frontal",
+      "location": [
+        5.568,
+        -54.51,
+        3.9
+      ],
+      "target": [
+        5.568,
+        -8.269,
+        3.9
+      ],
+      "lens": 0,
+      "level": false,
+      "ortho_scale": 16.64,
+      "lines": true
+    },
+    {
+      "name": "Interior Sala-comedor / cocina (Piso 2)",
+      "location": [
+        5.667,
+        -8.826,
+        4.05
+      ],
+      "target": [
+        8.749,
+        -2.09,
+        3.8
+      ],
+      "lens": 16,
+      "level": true,
+      "interior": true
+    },
+    {
+      "name": "Interior Alcoba 3 (Piso 2)",
+      "location": [
+        4.954,
+        -5.701,
+        4.05
+      ],
+      "target": [
+        2.387,
+        -9.371,
+        3.8
+      ],
+      "lens": 16,
+      "level": true,
+      "interior": true
+    },
+    {
+      "name": "Interior Sala-comedor / cocina (Piso 3)",
+      "location": [
+        5.667,
+        -8.826,
+        6.65
+      ],
+      "target": [
+        8.749,
+        -2.09,
+        6.4
+      ],
+      "lens": 16,
+      "level": true,
+      "interior": true
+    },
+    {
+      "name": "Interior Alcoba 3 (Piso 3)",
+      "location": [
+        4.954,
+        -5.701,
+        6.65
+      ],
+      "target": [
+        2.387,
+        -9.371,
+        6.4
+      ],
+      "lens": 16,
+      "level": true,
+      "interior": true
+    }
+  ],
+  "sun": {
+    "direction": [
+      0.595,
+      -0.159,
+      0.788
+    ],
+    "altitude": 52,
+    "azimuth": 105
+  },
+  "lamps": [
+    {
+      "room": "Parqueadero 1",
+      "collection": "Piso 1",
+      "location": [
+        6.679,
+        -9.883,
+        2.48
+      ],
+      "area": 22.219
+    },
+    {
+      "room": "Hall",
+      "collection": "Piso 1",
+      "location": [
+        5.267,
+        -3.59,
+        2.48
+      ],
+      "area": 17.279
+    },
+    {
+      "room": "Baño 1",
+      "collection": "Piso 1",
+      "location": [
+        7.397,
+        -5.81,
+        2.48
+      ],
+      "area": 1.801
+    },
+    {
+      "room": "Parqueadero 2",
+      "collection": "Piso 1",
+      "location": [
+        3.855,
+        -9.883,
+        2.48
+      ],
+      "area": 22.215
+    },
+    {
+      "room": "Baño 2",
+      "collection": "Piso 1",
+      "location": [
+        3.138,
+        -5.81,
+        2.48
+      ],
+      "area": 1.804
+    },
+    {
+      "room": "ALCOBA 1",
+      "collection": "Piso 2",
+      "location": [
+        7.256,
+        -12.76,
+        5.08
+      ],
+      "area": 10.684
+    },
+    {
+      "room": "Baño 1",
+      "collection": "Piso 2",
+      "location": [
+        7.543,
+        -10.09,
+        5.08
+      ],
+      "area": 2.892
+    },
+    {
+      "room": "SALA-COMEDOR / COCINA",
+      "collection": "Piso 2",
+      "location": [
+        7.133,
+        -5.797,
+        5.08
+      ],
+      "area": 23.487
+    },
+    {
+      "room": "Pasillo",
+      "collection": "Piso 2",
+      "location": [
+        5.818,
+        -10.55,
+        5.08
+      ],
+      "area": 1.696
+    },
+    {
+      "room": "ALCOBA 2",
+      "collection": "Piso 2",
+      "location": [
+        3.925,
+        -12.606,
+        5.08
+      ],
+      "area": 11.126
+    },
+    {
+      "room": "Escalera",
+      "collection": "Piso 2",
+      "location": [
+        3.953,
+        -3.59,
+        5.08
+      ],
+      "area": 9.4
+    },
+    {
+      "room": "Baño 2",
+      "collection": "Piso 2",
+      "location": [
+        4.123,
+        -10.09,
+        5.08
+      ],
+      "area": 2.818
+    },
+    {
+      "room": "ALCOBA 3",
+      "collection": "Piso 2",
+      "location": [
+        3.839,
+        -7.301,
+        5.08
+      ],
+      "area": 12.045
+    },
+    {
+      "room": "ALCOBA 1",
+      "collection": "Piso 3",
+      "location": [
+        7.256,
+        -12.76,
+        7.68
+      ],
+      "area": 10.684
+    },
+    {
+      "room": "Baño 1",
+      "collection": "Piso 3",
+      "location": [
+        7.543,
+        -10.09,
+        7.68
+      ],
+      "area": 2.892
+    },
+    {
+      "room": "SALA-COMEDOR / COCINA",
+      "collection": "Piso 3",
+      "location": [
+        7.133,
+        -5.797,
+        7.68
+      ],
+      "area": 23.487
+    },
+    {
+      "room": "Pasillo",
+      "collection": "Piso 3",
+      "location": [
+        5.818,
+        -10.55,
+        7.68
+      ],
+      "area": 1.696
+    },
+    {
+      "room": "ALCOBA 2",
+      "collection": "Piso 3",
+      "location": [
+        3.925,
+        -12.606,
+        7.68
+      ],
+      "area": 11.126
+    },
+    {
+      "room": "Escalera",
+      "collection": "Piso 3",
+      "location": [
+        3.953,
+        -3.59,
+        7.68
+      ],
+      "area": 9.4
+    },
+    {
+      "room": "Baño 2",
+      "collection": "Piso 3",
+      "location": [
+        4.123,
+        -10.09,
+        7.68
+      ],
+      "area": 2.818
+    },
+    {
+      "room": "ALCOBA 3",
+      "collection": "Piso 3",
+      "location": [
+        3.839,
+        -7.301,
+        7.68
+      ],
+      "area": 12.045
+    }
+  ],
+  "facade": {
+    "style": "moderna_contemporanea",
+    "custom": false
+  },
+  "site": {
+    "center": [
+      5.568,
+      -8.269
+    ],
+    "front": [
+      0,
+      -1
+    ],
+    "side": [
+      -1,
+      0
+    ],
+    "depth": 6.241,
+    "width": 6.481,
+    "gates": [
+      {
+        "offset": 1.726,
+        "width": 1.999
+      },
+      {
+        "offset": -1.124,
+        "width": 1.999
+      }
+    ]
+  }
+}
