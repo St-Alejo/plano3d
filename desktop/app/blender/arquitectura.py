@@ -3,7 +3,7 @@
 Se ejecuta dentro de Blender 4.x o 5.x (pestaña Scripting → Abrir → Ejecutar) o sin interfaz:
 
     blender -b -P blender/arquitectura.py -- casa.glb [--render] [--calidad borrador|final|alta]
-        [--hora dia|atardecer|noche] [--camara "Fachada"]
+        [--hora dia|atardecer|noche] [--camara "Fachada"] [--vuelta SEGUNDOS]
 
 Lee ``casa.glb`` y ``proyecto.json`` de la carpeta del paquete y:
 
@@ -18,6 +18,7 @@ Lee ``casa.glb`` y ``proyecto.json`` de la carpeta del paquete y:
   los dibujos técnicos (una planta por piso y el alzado) con líneas Freestyle; sin marcadores
   de línea de tiempo (fijarían la cámara del cuadro y el render de todas saldría igual);
 - configura Cycles en la tarjeta de video si la hay (muestreo adaptativo, denoise, AgX);
+- con ``--vuelta`` graba una vuelta completa alrededor de la casa en ``renders/vuelta.mp4``;
 - agrega el panel "Plano 3D" en la barra lateral (tecla N) de la vista 3D.
 """
 
@@ -942,6 +943,107 @@ def render_all(folder: str, only: str | None = None) -> list[str]:
 # --------------------------------------------------------------------------- panel
 
 
+# muestras por cuadro en video: el ruido entre cuadros lo esconde el movimiento
+VIDEO_SAMPLES = {"borrador": 16, "final": 64, "alta": 192}
+
+
+def house_bounds() -> tuple[Vector, Vector]:
+    """Caja que encierra la casa importada (todas las mallas de la colección Casa)."""
+    casa = bpy.data.collections.get("Casa")
+    objs = [o for o in (casa.all_objects if casa else bpy.data.objects) if o.type == "MESH"]
+    lo = Vector((math.inf, math.inf, math.inf))
+    hi = Vector((-math.inf, -math.inf, -math.inf))
+    for o in objs:
+        for corner in o.bound_box:
+            p = o.matrix_world @ Vector(corner)
+            lo = Vector((min(lo.x, p.x), min(lo.y, p.y), min(lo.z, p.z)))
+            hi = Vector((max(hi.x, p.x), max(hi.y, p.y), max(hi.z, p.z)))
+    if not objs:
+        return Vector((-5, -5, 0)), Vector((5, 5, 6))
+    return lo, hi
+
+
+def _video_output(path: str) -> bool:
+    """Deja la salida en mp4 (H.264) con el ffmpeg que trae Blender; False si esta versión no puede."""
+    settings = bpy.context.scene.render.image_settings
+    try:
+        _attr(settings, "media_type", "VIDEO")  # Blender 5: primero el tipo de medio
+        settings.file_format = "FFMPEG"
+    except TypeError:
+        return False
+    ff = bpy.context.scene.render.ffmpeg
+    ff.format = "MPEG4"
+    ff.codec = "H264"
+    _attr(ff, "constant_rate_factor", "HIGH")
+    _attr(ff, "ffmpeg_preset", "GOOD")
+    bpy.context.scene.render.filepath = path
+    return True
+
+
+def render_orbit(folder: str, seconds: float, quality: str, fps: int = 24) -> str | None:
+    """Una vuelta completa alrededor de la casa, a mp4 en renders/vuelta.mp4."""
+    scene = bpy.context.scene
+    lo, hi = house_bounds()
+    center = (lo + hi) / 2
+    size = hi - lo
+    radius = max(size.x, size.y) * 1.2 + 8
+    coll = collection("Cámaras")
+    pivot = bpy.data.objects.new("Vuelta · centro", None)
+    pivot.location = (center.x, center.y, lo.z + size.z * 0.42)
+    coll.objects.link(pivot)
+    cam = bpy.data.cameras.new("Vuelta a la casa")
+    cam.lens = 26
+    cam.sensor_width = 36
+    cam.clip_end = 1000
+    obj = bpy.data.objects.new("Vuelta a la casa", cam)
+    coll.objects.link(obj)
+    obj.parent = pivot
+    obj.location = (0.0, -radius, size.z * 0.35 + 1.6)
+    track = obj.constraints.new("TRACK_TO")
+    track.target = pivot
+    track.track_axis = "TRACK_NEGATIVE_Z"
+    track.up_axis = "UP_Y"
+    frames = max(24, int(round(seconds * fps)))
+    scene.frame_start = 1
+    scene.frame_end = frames
+    scene.render.fps = fps
+    pivot.rotation_euler = (0.0, 0.0, 0.0)
+    pivot.keyframe_insert("rotation_euler", index=2, frame=1)
+    # el último cuadro queda un paso antes de 360°: la vuelta se puede repetir sin salto
+    pivot.rotation_euler = (0.0, 0.0, math.tau * frames / (frames + 1))
+    pivot.keyframe_insert("rotation_euler", index=2, frame=frames)
+    action = pivot.animation_data.action if pivot.animation_data else None
+    for fc in getattr(action, "fcurves", []) or []:
+        for k in fc.keyframe_points:
+            k.interpolation = "LINEAR"
+    prepare_camera(obj)
+    scene.cycles.samples = VIDEO_SAMPLES.get(quality, 64)
+    _attr(scene.render, "use_persistent_data", True)
+    out = os.path.join(folder, "renders", "vuelta.mp4")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    if not _video_output(out):
+        print("Error: esta versión de Blender no escribe video", flush=True)
+        return None
+
+    def on_frame(sc: bpy.types.Scene, *_args: object) -> None:
+        # la app de escritorio lee estas líneas para mostrar el avance
+        print(f"camara: {sc.frame_current}/{frames} Vuelta a la casa", flush=True)
+
+    bpy.app.handlers.render_pre.append(on_frame)
+    try:
+        bpy.ops.render.render(animation=True)
+    finally:
+        bpy.app.handlers.render_pre.remove(on_frame)
+    if not os.path.exists(out):
+        # algunas versiones agregan el rango de cuadros al nombre
+        cands = sorted(f for f in os.listdir(os.path.dirname(out)) if f.startswith("vuelta") and f.endswith(".mp4"))
+        if not cands:
+            return None
+        os.replace(os.path.join(os.path.dirname(out), cands[-1]), out)
+    print("render:", out, flush=True)
+    return out
+
+
 def _camera_items(_self: object, _context: object) -> list[tuple[str, str, str]]:
     return [(o.name, o.name, "") for o in bpy.data.objects if o.type == "CAMERA"]
 
@@ -1084,7 +1186,9 @@ def main() -> None:
     blend = os.path.join(folder, "casa.blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend)
     print(f"Plano 3D: escena lista en {blend} ({len(meshes)} mallas, {len(project['cameras'])} cámaras, {device})")
-    if "--render" in _script_args():
+    if "--vuelta" in _script_args():
+        render_orbit(folder, float(_option("vuelta", "8")), props.quality)
+    elif "--render" in _script_args():
         only = _option("camara", "")
         render_all(folder, only or None)
 

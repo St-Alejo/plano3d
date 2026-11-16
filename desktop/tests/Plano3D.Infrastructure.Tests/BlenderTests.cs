@@ -35,8 +35,11 @@ public class BlenderTests
         var args = BlenderRunner.Arguments(new RenderRequest(@"C:\paq", RenderQuality.Borrador, RenderHour.Atardecer, "Fachada"));
         Assert.Equal("-b", args[0]);
         Assert.Contains(Path.Combine(@"C:\paq", "blender", "arquitectura.py"), args);
-        Assert.Equal(["--calidad", "borrador", "--hora", "atardecer", "--camara", "Fachada"], args.Skip(args.ToList().IndexOf("--calidad")));
+        Assert.Equal(["--calidad", "borrador", "--hora", "atardecer", "--render", "--camara", "Fachada"], args.Skip(args.ToList().IndexOf("--calidad")));
         Assert.DoesNotContain("--camara", BlenderRunner.Arguments(new RenderRequest(@"C:\paq", RenderQuality.Final, RenderHour.Dia)));
+        // la vuelta en video no lleva --render ni cámara
+        var orbit = BlenderRunner.Arguments(new RenderRequest(@"C:\paq", RenderQuality.Final, RenderHour.Noche, "Fachada", 7.5));
+        Assert.Equal(["--calidad", "final", "--hora", "noche", "--vuelta", "7.5"], orbit.Skip(orbit.ToList().IndexOf("--calidad")));
     }
 
     [Fact]

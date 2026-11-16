@@ -10,7 +10,8 @@ public enum RenderQuality { Borrador, Final, Alta }
 /// <summary>Hora de la escena: el sol del estudio solar, sol rasante o solo las luces de la casa.</summary>
 public enum RenderHour { Dia, Atardecer, Noche }
 
-public sealed record RenderRequest(string PackageDir, RenderQuality Quality, RenderHour Hour, string? Camera = null)
+/// <param name="OrbitSeconds">si viene, en vez de fotos se graba una vuelta a la casa de esa duración (mp4)</param>
+public sealed record RenderRequest(string PackageDir, RenderQuality Quality, RenderHour Hour, string? Camera = null, double? OrbitSeconds = null)
 {
     public static string Arg(RenderQuality q) => q.ToString().ToLowerInvariant();
     public static string Arg(RenderHour h) => h.ToString().ToLowerInvariant();
@@ -113,9 +114,15 @@ public sealed class BlenderRunner(string blenderExe)
         var args = new List<string>
         {
             "-b", "--factory-startup", "-P", Path.Combine(r.PackageDir, "blender", "arquitectura.py"), "--",
-            Path.Combine(r.PackageDir, "casa.glb"), "--render", "--calidad", RenderRequest.Arg(r.Quality), "--hora", RenderRequest.Arg(r.Hour),
+            Path.Combine(r.PackageDir, "casa.glb"), "--calidad", RenderRequest.Arg(r.Quality), "--hora", RenderRequest.Arg(r.Hour),
         };
-        if (!string.IsNullOrWhiteSpace(r.Camera)) args.AddRange(["--camara", r.Camera]);
+        if (r.OrbitSeconds is { } secs)
+            args.AddRange(["--vuelta", secs.ToString("0.#", CultureInfo.InvariantCulture)]);
+        else
+        {
+            args.Add("--render");
+            if (!string.IsNullOrWhiteSpace(r.Camera)) args.AddRange(["--camara", r.Camera]);
+        }
         return args;
     }
 

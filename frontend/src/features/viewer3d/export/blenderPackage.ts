@@ -345,6 +345,8 @@ Sin abrir la interfaz:
   blender -b -P blender/arquitectura.py -- casa.glb --render
   opciones: --calidad borrador|final|alta  --hora dia|atardecer|noche
             --camara "Interior"  (sólo las cámaras con ese texto en el nombre)
+  video: blender -b -P blender/arquitectura.py -- casa.glb --vuelta 8
+         (una vuelta de 8 s alrededor de la casa, en renders/vuelta.mp4)
 
 Qué arma el script
   - Materiales fotorrealistas a escala real: pañete con grano, concreto con poros,

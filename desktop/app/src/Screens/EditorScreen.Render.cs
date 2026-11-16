@@ -12,7 +12,8 @@ namespace Plano3D.App.Screens;
 /// </summary>
 public partial class EditorScreen
 {
-    public sealed record RenderJob(RenderQuality Quality, RenderHour Hour, string? Camera, bool Upload);
+    /// <param name="Orbit">segundos de la vuelta en video; null = fotos</param>
+    public sealed record RenderJob(RenderQuality Quality, RenderHour Hour, string? Camera, bool Upload, double? Orbit = null);
 
     private PanelContainer _renderPanel = null!;
     private Label _blenderLabel = null!;
@@ -47,7 +48,10 @@ public partial class EditorScreen
         ("Plantas (dibujo)", "Planta"),
         ("Alzado frontal", "Alzado"),
         ("Todas las cámaras", null),
+        ("Vuelta a la casa (video de 8 s)", OrbitChoice),
     ];
+    private const string OrbitChoice = "@vuelta";
+    private const double OrbitSeconds = 8;
 
     private void BuildRenderPanel()
     {
@@ -100,17 +104,23 @@ public partial class EditorScreen
         _renderCamera = new OptionButton();
         foreach (var (label, _) in CameraChoices) _renderCamera.AddItem(label);
         col.AddChild(_renderCamera);
-        col.AddChild(Ui.Text("Los marcadores de vista (Ctrl+1…9) también van como cámaras «Marcador N».", 11, Ui.Muted, wrap: true));
+        col.AddChild(Ui.Text("Los marcadores de vista (Ctrl+1…9) también van como cámaras «Marcador N». La vuelta en video tarda unos 3 s por cuadro en borrador.", 11, Ui.Muted, wrap: true));
 
         _renderUpload = new CheckButton { Text = "Subir a la galería del proyecto", ButtonPressed = true, TooltipText = "La web la muestra al instante en «Renders»" };
         col.AddChild(_renderUpload);
 
         var go = Ui.Primary("Renderizar");
-        go.Pressed += () => EnqueueRender(new RenderJob(
-            (RenderQuality)_renderQuality.GetSelectedId(),
-            (RenderHour)_renderHour.GetSelectedId(),
-            CameraChoices[_renderCamera.Selected].Filter,
-            _renderUpload.ButtonPressed));
+        go.Pressed += () =>
+        {
+            var filter = CameraChoices[_renderCamera.Selected].Filter;
+            var orbit = filter == OrbitChoice;
+            EnqueueRender(new RenderJob(
+                (RenderQuality)_renderQuality.GetSelectedId(),
+                (RenderHour)_renderHour.GetSelectedId(),
+                orbit ? null : filter,
+                _renderUpload.ButtonPressed,
+                orbit ? OrbitSeconds : null));
+        };
         col.AddChild(go);
 
         _renderBar = new ProgressBar { MinValue = 0, MaxValue = 1, Step = 0.001, Visible = false, ShowPercentage = false, CustomMinimumSize = new Vector2(0, 8) };
@@ -263,7 +273,7 @@ public partial class EditorScreen
         var runner = new BlenderRunner(_blender!);
         var progress = new Progress<RenderProgress>(p => OnMain(() => ShowRenderProgress(p)));
         await Task.Run(() => runner.RenderAsync(
-            new RenderRequest(package.Folder, job.Quality, job.Hour, job.Camera),
+            new RenderRequest(package.Folder, job.Quality, job.Hour, job.Camera, job.Orbit),
             progress,
             (path, camera) => OnMain(() => OnRenderedAsync(path, camera, quality, hour, job.Upload).ContinueWith(
                 t => OnMain(() => Toast($"El render salió pero no se pudo guardar: {t.Exception?.GetBaseException().Message}")),
@@ -277,11 +287,18 @@ public partial class EditorScreen
         _renderBar.Value = p.Fraction;
         _renderStatus.Text = p.Cameras == 0
             ? $"{p.Stage}: materiales, cielo, luces y cámaras…"
-            : $"Cámara {p.Camera}/{p.Cameras} · {p.CameraName}" + (p.Samples > 0 ? $" · muestra {p.Sample}/{p.Samples}" : "");
+            : p.CameraName.StartsWith("Vuelta", StringComparison.Ordinal)
+                ? $"Vuelta a la casa · cuadro {p.Camera}/{p.Cameras}"
+                : $"Cámara {p.Camera}/{p.Cameras} · {p.CameraName}" + (p.Samples > 0 ? $" · muestra {p.Sample}/{p.Samples}" : "");
     }
 
     private async Task OnRenderedAsync(string png, string camera, string quality, string hour, bool upload)
     {
+        if (png.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+        {
+            OnVideo(png);
+            return;
+        }
         if (!System.IO.File.Exists(png))
         {
             GD.PrintErr($"[render] Blender dijo {png} pero no está");
@@ -311,6 +328,23 @@ public partial class EditorScreen
             GD.PrintErr($"[render] no se pudo subir: {e}");
             Toast($"No se pudo subir el render: {_main.Friendly(e)}");
         }
+    }
+
+    /// <summary>La vuelta en video va a Videos\Plano 3D (la galería web solo guarda imágenes).</summary>
+    private void OnVideo(string mp4)
+    {
+        if (!System.IO.File.Exists(mp4)) return;
+        var dir = System.IO.Path.Combine(OS.GetSystemDir(OS.SystemDir.Movies), "Plano 3D");
+        System.IO.Directory.CreateDirectory(dir);
+        var keep = System.IO.Path.Combine(dir, $"{string.Concat(_title.Text.Select(c => char.IsLetterOrDigit(c) ? c : '_'))}-vuelta-{DateTime.Now:yyyyMMdd-HHmmss}.mp4");
+        System.IO.File.Copy(mp4, keep, overwrite: true);
+        Renders.Add(keep);
+        var open = Ui.Flat("▶ Vuelta");
+        open.TooltipText = $"{System.IO.Path.GetFileName(keep)}\nClic: abrir";
+        open.Pressed += () => OS.ShellOpen(keep);
+        _renderGallery.AddChild(open);
+        _renderGallery.MoveChild(open, 0);
+        Toast(@"Video listo: Videos\Plano 3D");
     }
 
     private void AddThumbnail(Image img, string path)
