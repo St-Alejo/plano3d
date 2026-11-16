@@ -108,7 +108,7 @@ export function RenderGallery({ open, onOpenChange, projectId, fileBase }: Rende
             <div className="mt-5">
               <figure className="relative mx-auto overflow-hidden rounded-lg bg-raised">
                 {url ? (
-                  <img src={url} alt={`${shown.label}: render de Blender`} className="max-h-[calc(94dvh-19rem)] w-full object-contain" />
+                  <img src={url} alt={`${shown.label}: render de Blender`} className="max-h-[max(14rem,calc(94dvh-19rem))] w-full object-contain" />
                 ) : (
                   <span className="block aspect-[16/9] w-full animate-pulse" />
                 )}
