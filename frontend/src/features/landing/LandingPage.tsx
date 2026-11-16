@@ -15,6 +15,7 @@ import { Formats } from './Formats'
 import { HowItWorks } from './HowItWorks'
 import { Quantities } from './Quantities'
 import { EASE } from './ease'
+import { FeaturedProjects } from './Featured'
 import { BeforeAfter, CapabilitiesSection, Closing, Footer } from './sections'
 import { useSmoothScroll } from './useSmoothScroll'
 import { Walkthrough } from './Walkthrough'
@@ -119,6 +120,7 @@ export function LandingPage() {
           <Formats />
           <BeforeAfter />
           <Quantities />
+          <FeaturedProjects />
           <Closing />
         </main>
         <Footer />

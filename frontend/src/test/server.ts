@@ -18,6 +18,8 @@ export const handlers = [
   http.get('/api/projects/:id/progress', () => HttpResponse.json([])),
   http.post('/api/corners', () => HttpResponse.json({ corners: null })),
   http.get('/api/projects/:id/image', () => new HttpResponse(new Uint8Array([137, 80, 78, 71]), { headers: { 'Content-Type': 'image/png' } })),
+  // la portada pide los destacados: por defecto no hay ninguno
+  http.get('/api/featured', () => HttpResponse.json([])),
   // por defecto el servidor de prueba corre sin cuentas (como el backend en sus pruebas)
   http.get('/api/auth/config', () => HttpResponse.json({ auth_required: false, demo_enabled: true })),
 ]

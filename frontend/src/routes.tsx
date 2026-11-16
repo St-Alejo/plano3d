@@ -4,6 +4,7 @@ import { NotFound } from '@/components/NotFound'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { LazyViewerPage } from '@/features/viewer3d/LazyViewerPage'
+import { LazyFeaturedViewerPage } from '@/features/featured/LazyFeaturedViewerPage'
 import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { DesktopPage } from '@/features/desktop/DesktopPage'
 import { LandingPage } from '@/features/landing/LandingPage'
@@ -16,6 +17,8 @@ export const routes: RouteObject[] = [
   { index: true, element: <LandingPage />, errorElement: <NotFound /> },
   { path: 'entrar', element: <AuthPage mode="login" />, errorElement: <NotFound /> },
   { path: 'registro', element: <AuthPage mode="register" />, errorElement: <NotFound /> },
+  // proyectos destacados: públicos, sin cuenta y de solo lectura
+  { path: 'destacados/:id', element: <LazyFeaturedViewerPage />, errorElement: <NotFound /> },
   // todo lo que muestra proyectos pide sesión (ADR-020)
   {
     element: <RequireAuth />,

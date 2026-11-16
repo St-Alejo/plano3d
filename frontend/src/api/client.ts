@@ -16,6 +16,7 @@ const BASE = `${apiOrigin()}/api`
 
 export type AuthConfig = components['schemas']['AuthConfigDTO']
 export type LinkCode = components['schemas']['LinkCodeDTO']
+export type Featured = components['schemas']['FeaturedDTO']
 
 /** Rutas que reciben credenciales: un 401 ahí es la respuesta, no un token vencido. */
 const NO_RETRY = new Set(['/auth/login', '/auth/register', '/auth/demo', '/auth/refresh', '/auth/link-codes/exchange'])
@@ -168,6 +169,12 @@ export const api = {
     linkCode: () => request<LinkCode>('/auth/link-codes', { method: 'POST' }),
     /** Ticket de 60 s para un WebSocket (el navegador no le pone cabeceras). */
     wsTicket: () => request<{ ticket: string; expires_in: number }>('/auth/ws-ticket', { method: 'POST' }),
+  },
+
+  /** Proyectos destacados: públicos y de solo lectura, sin cuenta. */
+  featured: {
+    list: () => request<Featured[]>('/featured'),
+    get: (id: string) => request<Project>(`/featured/${encodeURIComponent(id)}`),
   },
 
   listProjects: () => request<ProjectSummary[]>('/projects'),
