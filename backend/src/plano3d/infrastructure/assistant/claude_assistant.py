@@ -408,7 +408,7 @@ class ClaudePlanAssistant(PlanAssistant):
         key = ResponseCache.key(self._model, system, user)
         data = self._cache.get(key)
         if data is None:
-            pin, pout = PRICES.get(self._model, PRICES["claude-opus-5-5"])
+            pin, pout = PRICES.get(self._model, PRICES["claude-opus-5"])
             estimate = ((len(system) + len(user)) / 3 * pin + 800 * pout) / 1e6
             if not self._budget.allows(estimate):
                 raise AssistantUnavailableError("Se agotó el presupuesto del asistente con IA")

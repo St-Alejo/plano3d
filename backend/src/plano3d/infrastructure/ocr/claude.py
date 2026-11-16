@@ -105,7 +105,7 @@ class ClaudeTextReader(TextReader):
         key = ResponseCache.key(self._model, _PROMPT, *pngs)
         cached = self._cache.get(key)
         if cached is None:
-            pin, pout = PRICES.get(self._model, PRICES["claude-opus-5-5"])
+            pin, pout = PRICES.get(self._model, PRICES["claude-opus-5"])
             estimate = (len(crops) * TOKENS_PER_CROP * pin + len(crops) * 30 * pout) / 1e6
             if not self._budget.allows(estimate):
                 log.warning("Tope de gasto de Claude alcanzado: se sigue con el OCR local")

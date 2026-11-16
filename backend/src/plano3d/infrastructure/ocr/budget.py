@@ -23,11 +23,14 @@ log = logging.getLogger(__name__)
 #: escribir); en desarrollo, ``backend/data``
 DATA = Path(os.environ.get("PLANO3D_DATA_DIR") or Path(__file__).resolve().parents[4] / "data")
 DEFAULT_BUDGET_USD = 1.0
-#: USD por millón de tokens (entrada, salida), precio de lista
+#: USD por millón de tokens (entrada, salida), precio de lista de la API (nov-2026)
 PRICES: dict[str, tuple[float, float]] = {
     "claude-haiku-4-5": (1.0, 5.0),
-    "claude-sonnet-5-5": (3.0, 15.0),
-    "claude-opus-5-5": (5.0, 25.0),
+    "claude-haiku-5-5": (0.1, 0.5),
+    "claude-sonnet-5-5": (2.0, 10.0),
+    "claude-opus-5-5": (4.0, 20.0),
+    # modelo desconocido: se cobra como este (el más caro), para nunca quedarse corto
+    "claude-opus-5": (5.0, 25.0),
 }
 
 
@@ -53,7 +56,7 @@ class ClaudeBudget:
         return self.spent + estimate_usd <= self.limit
 
     def record(self, model: str, input_tokens: int, output_tokens: int) -> float:
-        pin, pout = PRICES.get(model, PRICES["claude-opus-5-5"])
+        pin, pout = PRICES.get(model, PRICES["claude-opus-5"])
         cost = (input_tokens * pin + output_tokens * pout) / 1_000_000
         with self._lock:
             data = self._load()
