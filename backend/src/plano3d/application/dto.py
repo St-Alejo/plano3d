@@ -792,6 +792,23 @@ class PhotoDTO(_DTO):
     image: str
 
 
+class RenderDTO(_DTO):
+    """Un render de Blender subido por la app de escritorio (la imagen va aparte)."""
+
+    id: str
+    label: str
+    camera: str = ""
+    #: borrador, final o alta
+    quality: str = ""
+    #: dia, atardecer o noche
+    hour: str = ""
+    media_type: str
+    size_bytes: int
+    width: int
+    height: int
+    created_at: str
+
+
 class PhotosDTO(_DTO):
     photos: list[PhotoDTO]
     #: vistas que OpenAI no pudo hacer (las demás sí salieron)

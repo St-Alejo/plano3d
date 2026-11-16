@@ -8,6 +8,7 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from typing import Annotated
 
 from fastapi import (
@@ -62,6 +63,7 @@ from plano3d.application.dto import (
     ProjectDTO,
     ProjectSummaryDTO,
     ReanalyzeDTO,
+    RenderDTO,
     RevisionDTO,
     SolveReportDTO,
     SolveResultDTO,
@@ -80,15 +82,18 @@ from plano3d.application.use_cases.errors import (
     EmailTakenError,
     FileTooLargeError,
     InvalidPhotoRequestError,
+    InvalidRenderError,
     NoDetectorAvailableError,
     PhotosUnavailableError,
     ProjectNotFoundError,
+    RenderNotFoundError,
     UnsupportedFileError,
     WeakPasswordError,
 )
 from plano3d.application.use_cases.photos import MAX_BYTES as PHOTO_MAX_BYTES
 from plano3d.application.use_cases.photos import Shot
 from plano3d.application.use_cases.projects import normalize_content_type
+from plano3d.application.use_cases.renders import MAX_BYTES as RENDER_MAX_BYTES
 from plano3d.config import Settings
 from plano3d.container import Container, build_container, snapshot_store
 from plano3d.domain import Point2D
@@ -296,6 +301,45 @@ async def generate_photos(
     )
 
 
+@owned.post(
+    "/projects/{project_id}/renders",
+    response_model=RenderDTO,
+    status_code=status.HTTP_201_CREATED,
+    responses={422: {"description": "No es JPEG/PNG, está vacío o pesa demasiado"}},
+    tags=["renders"],
+)
+async def add_render(
+    project_id: str,
+    c: ContainerDep,
+    image: Annotated[UploadFile, File(description="El render en JPEG o PNG")],
+    label: Annotated[str, Form()] = "",
+    camera: Annotated[str, Form()] = "",
+    quality: Annotated[str, Form()] = "",
+    hour: Annotated[str, Form()] = "",
+) -> RenderDTO:
+    """Sube un render de Blender (lo hace la app de escritorio); la web lo ve al instante."""
+    data = await image.read(RENDER_MAX_BYTES + 1)
+    render = await c.renders.add(project_id, data, label, camera, quality, hour)
+    return RenderDTO(**asdict(render))
+
+
+@owned.get("/projects/{project_id}/renders", response_model=list[RenderDTO], tags=["renders"])
+async def list_renders(project_id: str, c: ContainerDep) -> list[RenderDTO]:
+    """Galería de renders del proyecto, del más viejo al más nuevo."""
+    return [RenderDTO(**asdict(r)) for r in await c.renders.gallery(project_id)]
+
+
+@owned.get(
+    "/projects/{project_id}/renders/{render_id}",
+    response_class=Response,
+    responses={200: {"content": {"image/jpeg": {}, "image/png": {}}}},
+    tags=["renders"],
+)
+async def get_render(project_id: str, render_id: str, c: ContainerDep) -> Response:
+    data, media = await c.renders.image(project_id, render_id)
+    return Response(data, media_type=media, headers={"Cache-Control": "private, max-age=86400"})
+
+
 @owned.get(
     "/projects/{project_id}",
     response_model=ProjectDTO,
@@ -311,6 +355,7 @@ async def get_project(project_id: str, c: ContainerDep, response: Response) -> P
 @owned.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["proyectos"])
 async def delete_project(project_id: str, c: ContainerDep) -> Response:
     await c.delete_project.execute(project_id)
+    await c.renders.purge(project_id)
     await c.collab.close_project(project_id, "El proyecto se eliminó")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -644,6 +689,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         (AssistantUnavailableError, 503),
         (PhotosUnavailableError, 503),
         (InvalidPhotoRequestError, 422),
+        (InvalidRenderError, 422),
+        (RenderNotFoundError, 404),
         (UnsupportedFileError, 415),
         (FileTooLargeError, 413),
         (InvalidStateTransitionError, 409),

@@ -32,6 +32,14 @@ class InvalidPhotoRequestError(ApplicationError):
     """Las capturas enviadas no sirven (vista desconocida, archivo raro o demasiadas)."""
 
 
+class InvalidRenderError(ApplicationError):
+    """El render subido no sirve (vacío, demasiado grande o no es JPEG/PNG)."""
+
+
+class RenderNotFoundError(ApplicationError):
+    """Ese render no está en la galería del proyecto."""
+
+
 # ---- cuentas (ADR-020)
 class AuthError(ApplicationError):
     """Base de los errores de autenticación (la API responde 401)."""

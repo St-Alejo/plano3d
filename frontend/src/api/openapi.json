@@ -115,6 +115,41 @@
         "title": "Body_add_level_api_projects__project_id__levels_post",
         "type": "object"
       },
+      "Body_add_render_api_projects__project_id__renders_post": {
+        "properties": {
+          "camera": {
+            "default": "",
+            "title": "Camera",
+            "type": "string"
+          },
+          "hour": {
+            "default": "",
+            "title": "Hour",
+            "type": "string"
+          },
+          "image": {
+            "contentMediaType": "application/octet-stream",
+            "description": "El render en JPEG o PNG",
+            "title": "Image",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "quality": {
+            "default": "",
+            "title": "Quality",
+            "type": "string"
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "title": "Body_add_render_api_projects__project_id__renders_post",
+        "type": "object"
+      },
       "Body_check_capture_api_capture_check_post": {
         "properties": {
           "file": {
@@ -1642,6 +1677,65 @@
           "password"
         ],
         "title": "RegisterDTO",
+        "type": "object"
+      },
+      "RenderDTO": {
+        "description": "Un render de Blender subido por la app de escritorio (la imagen va aparte).",
+        "properties": {
+          "camera": {
+            "default": "",
+            "title": "Camera",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "hour": {
+            "default": "",
+            "title": "Hour",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "media_type": {
+            "title": "Media Type",
+            "type": "string"
+          },
+          "quality": {
+            "default": "",
+            "title": "Quality",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "media_type",
+          "size_bytes",
+          "width",
+          "height",
+          "created_at"
+        ],
+        "title": "RenderDTO",
         "type": "object"
       },
       "RevisionDTO": {
@@ -3728,6 +3822,160 @@
         "summary": "Reanalyze",
         "tags": [
           "proyectos"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/renders": {
+      "get": {
+        "description": "Galería de renders del proyecto, del más viejo al más nuevo.",
+        "operationId": "list_renders_api_projects__project_id__renders_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RenderDTO"
+                  },
+                  "title": "Response List Renders Api Projects  Project Id  Renders Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Renders",
+        "tags": [
+          "renders"
+        ]
+      },
+      "post": {
+        "description": "Sube un render de Blender (lo hace la app de escritorio); la web lo ve al instante.",
+        "operationId": "add_render_api_projects__project_id__renders_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_add_render_api_projects__project_id__renders_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "No es JPEG/PNG, está vacío o pesa demasiado"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Render",
+        "tags": [
+          "renders"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/renders/{render_id}": {
+      "get": {
+        "operationId": "get_render_api_projects__project_id__renders__render_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "render_id",
+            "required": true,
+            "schema": {
+              "title": "Render Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Render",
+        "tags": [
+          "renders"
         ]
       }
     },

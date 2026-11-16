@@ -545,6 +545,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/renders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Renders
+         * @description Galería de renders del proyecto, del más viejo al más nuevo.
+         */
+        get: operations["list_renders_api_projects__project_id__renders_get"];
+        put?: never;
+        /**
+         * Add Render
+         * @description Sube un render de Blender (lo hace la app de escritorio); la web lo ve al instante.
+         */
+        post: operations["add_render_api_projects__project_id__renders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/renders/{render_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Render */
+        get: operations["get_render_api_projects__project_id__renders__render_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/revisions": {
         parameters: {
             query?: never;
@@ -694,6 +735,34 @@ export interface components {
             file: string;
             /** Name */
             name?: string | null;
+        };
+        /** Body_add_render_api_projects__project_id__renders_post */
+        Body_add_render_api_projects__project_id__renders_post: {
+            /**
+             * Camera
+             * @default
+             */
+            camera: string;
+            /**
+             * Hour
+             * @default
+             */
+            hour: string;
+            /**
+             * Image
+             * @description El render en JPEG o PNG
+             */
+            image: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /**
+             * Quality
+             * @default
+             */
+            quality: string;
         };
         /** Body_check_capture_api_capture_check_post */
         Body_check_capture_api_capture_check_post: {
@@ -1343,6 +1412,41 @@ export interface components {
             name: string;
             /** Password */
             password: string;
+        };
+        /**
+         * RenderDTO
+         * @description Un render de Blender subido por la app de escritorio (la imagen va aparte).
+         */
+        RenderDTO: {
+            /**
+             * Camera
+             * @default
+             */
+            camera: string;
+            /** Created At */
+            created_at: string;
+            /** Height */
+            height: number;
+            /**
+             * Hour
+             * @default
+             */
+            hour: string;
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Media Type */
+            media_type: string;
+            /**
+             * Quality
+             * @default
+             */
+            quality: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Width */
+            width: number;
         };
         /** RevisionDTO */
         RevisionDTO: {
@@ -2597,6 +2701,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectCreatedDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_renders_api_projects__project_id__renders_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenderDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_render_api_projects__project_id__renders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_add_render_api_projects__project_id__renders_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenderDTO"];
+                };
+            };
+            /** @description No es JPEG/PNG, está vacío o pesa demasiado */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_render_api_projects__project_id__renders__render_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                render_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                    "image/png": unknown;
                 };
             };
             /** @description Validation Error */

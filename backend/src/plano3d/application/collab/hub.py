@@ -360,6 +360,12 @@ class CollabHub:
                     p.close()
 
     # ------------------------------------------------------------ difusión
+    def announce(self, project_id: str, message: Json) -> None:
+        """Aviso a todos los conectados al proyecto (p. ej. ``render_added``); sin sala, nada."""
+        room = self._rooms.get(project_id)
+        if room is not None:
+            self._broadcast(room, message)
+
     def _broadcast(self, room: Room, message: Json, skip: str | None = None) -> None:
         slow = [p for pid, p in room.peers.items() if pid != skip and not p.deliver(message)]
         for p in slow:

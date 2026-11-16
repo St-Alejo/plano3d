@@ -60,6 +60,7 @@ from plano3d.application.use_cases.projects import (
     SuggestCorners,
     UpdateBuildingModel,
 )
+from plano3d.application.use_cases.renders import RenderGallery
 from plano3d.config import Settings, ai_provider
 from plano3d.infrastructure.auth import (
     Argon2PasswordHasher,
@@ -219,6 +220,10 @@ class Container:
     @property
     def generate_photos(self) -> GeneratePhotos:
         return GeneratePhotos(self.repo, self.photos)
+
+    @property
+    def renders(self) -> RenderGallery:
+        return RenderGallery(self.repo, self.storage, self.collab.announce)
 
     @property
     def check_capture(self) -> CheckCapture:
