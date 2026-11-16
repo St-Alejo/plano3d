@@ -4,7 +4,16 @@ namespace Plano3D.Core.Editing;
 public sealed record CatalogItem(string Id, string Name, string Category, double Width, double Depth, double Height);
 
 /// <summary>Un acabado de muro o de piso (mismos ids que <c>frontend/src/domain/materials.ts</c>).</summary>
-public sealed record FinishSpec(string Id, string Name, string Color, double Roughness);
+/// <summary>Acabado: color plano y, si hay, la foto PBR (<c>Texture</c>, carpeta de assets/texturas) teñida con <c>Tint</c>.</summary>
+public sealed record FinishSpec(string Id, string Name, string Color, double Roughness, string? Texture = null, string? Tint = null)
+{
+    /// <summary>Lado real de cada textura en metros (igual que TEXTURES de la web).</summary>
+    public static readonly IReadOnlyDictionary<string, double> TileMeters = new Dictionary<string, double>
+    {
+        ["ladrillo"] = 1.1, ["panete"] = 2, ["concreto"] = 1.1, ["madera_piso"] = 1.8, ["porcelanato"] = 1,
+        ["baldosa"] = 0.8, ["pasto"] = 2, ["tierra"] = 2.1, ["madera"] = 0.8, ["teja"] = 1.6,
+    };
+}
 
 /// <summary>
 /// Catálogo de muebles y acabados compartido con la web: los ids viajan en el modelo, así que
@@ -38,20 +47,20 @@ public static class Catalog
 
     public static readonly IReadOnlyList<FinishSpec> WallFinishes =
     [
-        new("plaster", "Pañete blanco", "eef0e6", 0.9),
-        new("pintura_arena", "Pintura arena", "e3d5bd", 0.85),
-        new("pintura_verde", "Pintura verde salvia", "b9c4ad", 0.85),
-        new("ladrillo", "Ladrillo a la vista", "a65a3c", 0.95),
-        new("concreto", "Concreto", "a7a7a1", 0.95),
+        new("plaster", "Pañete blanco", "eef0e6", 0.9, "panete", "f4f3ee"),
+        new("pintura_arena", "Pintura arena", "e3d5bd", 0.85, "panete", "e8d9bf"),
+        new("pintura_verde", "Pintura verde salvia", "b9c4ad", 0.85, "panete", "bfcab2"),
+        new("ladrillo", "Ladrillo a la vista", "a65a3c", 0.95, "ladrillo"),
+        new("concreto", "Concreto", "a7a7a1", 0.95, "concreto", "c4c4bd"),
     ];
 
     public static readonly IReadOnlyList<FinishSpec> FloorFinishes =
     [
-        new("madera_roble", "Madera roble", "b08a64", 0.6),
-        new("madera_oscura", "Madera oscura", "6f4e37", 0.55),
-        new("porcelanato", "Porcelanato claro", "d9d4c7", 0.3),
-        new("baldosa_gris", "Baldosa gris", "9aa0a0", 0.4),
-        new("cemento", "Cemento pulido", "a3a39b", 0.7),
+        new("madera_roble", "Madera roble", "b08a64", 0.6, "madera_piso"),
+        new("madera_oscura", "Madera oscura", "6f4e37", 0.55, "madera_piso", "7a5a42"),
+        new("porcelanato", "Porcelanato claro", "d9d4c7", 0.3, "porcelanato", "f1ece2"),
+        new("baldosa_gris", "Baldosa gris", "9aa0a0", 0.4, "baldosa", "b9bebe"),
+        new("cemento", "Cemento pulido", "a3a39b", 0.7, "concreto", "b8b8b0"),
     ];
 
     public static CatalogItem? Item(string id) => Items.FirstOrDefault(i => i.Id == id);

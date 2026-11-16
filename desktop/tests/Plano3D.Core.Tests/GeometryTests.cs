@@ -96,4 +96,30 @@ public class GeometryTests
         Assert.InRange(max.X - min.X, 5, 30);
         Assert.InRange(max.Y - min.Y, 5, 30);
     }
+
+    [Fact]
+    public void WindowGetsFrameAndProtrudingSill()
+    {
+        var w = new Wall("w", new Point2(0, 0), new Point2(4, 0), 0.2, 2.6, Openings: [new Opening("o", "window", 1, 1.2, 1.2, 0.9)]);
+        var trim = BuildingGeometry.OpeningTrim(w, w.OpeningsOrEmpty[0], 0);
+        Assert.Equal(4, trim.Count(b => b.Part == "window_frame"));
+        var sill = Assert.Single(trim, b => b.Part == "sill_stone");
+        Assert.True(sill.Size.Z > w.Thickness); // sobresale del muro
+        Assert.Equal(0.88, sill.Center.Y, 9);
+        var door = new Opening("d", "door", 1, 0.9, 2.1);
+        Assert.Equal(3, BuildingGeometry.OpeningTrim(w, door, 0).Count); // sin travesaño ni alféizar
+    }
+
+    [Fact]
+    public void StairRailingRisesWithTheSteps()
+    {
+        var s = new Stair("s", new Point2(0, 0), new Point2(3, 0), 1, 10, 0.17);
+        var parts = BuildingGeometry.StairRailing(s, 0);
+        var rail = Assert.Single(parts, p => p.Part == "handrail");
+        Assert.True(rail.Pitch > 0.4 && rail.Pitch < 0.6); // ~27°
+        var posts = parts.Where(p => p.Part == "post").ToList();
+        Assert.True(posts.Count >= 4);
+        Assert.True(posts.All(p => p.Size.Y > 0.8 && p.Size.Y < 1.0)); // ~0,9 m sobre cada huella
+        Assert.True(posts.Zip(posts.Skip(1)).All(p => p.Second.Center.Y > p.First.Center.Y));
+    }
 }

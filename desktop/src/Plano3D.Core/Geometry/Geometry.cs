@@ -5,8 +5,11 @@ namespace Plano3D.Core.Geometry;
 /// <summary>Punto 3D en metros. Convención de Godot: Y hacia arriba; el "y" del plano va a Z.</summary>
 public readonly record struct Vec3(double X, double Y, double Z);
 
-/// <summary>Caja orientada: centro, tamaño (largo X, alto Y, grueso Z) y giro sobre el eje vertical.</summary>
-public readonly record struct Box(Vec3 Center, Vec3 Size, double Yaw, string Part);
+/// <summary>
+/// Caja orientada: centro, tamaño (largo X, alto Y, grueso Z), giro sobre el eje vertical y,
+/// si hace falta, inclinación del eje X local hacia arriba (pasamanos de una escalera).
+/// </summary>
+public readonly record struct Box(Vec3 Center, Vec3 Size, double Yaw, string Part, double Pitch = 0);
 
 /// <summary>
 /// Geometría del edificio sin motor gráfico (testeable con xUnit). El escritorio la convierte
@@ -71,6 +74,36 @@ public static class BuildingGeometry
         return new Box(To3D(mid, elevation + sill + o.Height / 2), new Vec3(o.Width, o.Height, thick), YawOf(dir), o.IsDoor ? "door" : "glass");
     }
 
+    /// <summary>
+    /// Remates de un vano: marco (jambas y cabezal) y, en las ventanas, el alféizar que
+    /// sobresale del muro. Es lo que hace que un hueco se lea como puerta o ventana.
+    /// </summary>
+    public static List<Box> OpeningTrim(Wall wall, Opening o, double elevation)
+    {
+        var boxes = new List<Box>();
+        var dir = wall.Direction;
+        var yaw = YawOf(dir);
+        var t = wall.Thickness;
+        var sill = o.IsDoor ? 0 : o.Sill;
+        var top = sill + o.Height;
+        var frame = o.IsDoor ? 0.06 : 0.05;
+        var depth = o.IsDoor ? t + 0.02 : Math.Min(t, 0.08);
+        var part = o.IsDoor ? "door_frame" : "window_frame";
+        Point2 At(double along) => wall.Start + dir * along;
+        // jambas
+        boxes.Add(new Box(To3D(At(o.Offset + frame / 2), elevation + sill + o.Height / 2), new Vec3(frame, o.Height, depth), yaw, part));
+        boxes.Add(new Box(To3D(At(o.Offset + o.Width - frame / 2), elevation + sill + o.Height / 2), new Vec3(frame, o.Height, depth), yaw, part));
+        // cabezal
+        boxes.Add(new Box(To3D(At(o.Offset + o.Width / 2), elevation + top - frame / 2), new Vec3(o.Width, frame, depth), yaw, part));
+        if (!o.IsDoor)
+        {
+            boxes.Add(new Box(To3D(At(o.Offset + o.Width / 2), elevation + sill + frame / 2), new Vec3(o.Width, frame, depth), yaw, part));
+            // alféizar: 5 cm a cada lado del vano y 4 cm hacia afuera de cada cara
+            boxes.Add(new Box(To3D(At(o.Offset + o.Width / 2), elevation + sill - 0.02), new Vec3(o.Width + 0.1, 0.04, t + 0.08), yaw, "sill_stone"));
+        }
+        return boxes;
+    }
+
     public static Box ColumnBox(Column c, double elevation, double height) =>
         new(To3D(c.Center, elevation + height / 2), new Vec3(c.Width, height, c.Depth), -c.Rotation, c.Round ? "round" : "column");
 
@@ -92,6 +125,38 @@ public static class BuildingGeometry
             steps.Add(new Box(To3D(mid, elevation + top / 2), new Vec3(tread, top, s.Width), YawOf(dir), "step"));
         }
         return steps;
+    }
+
+    /// <summary>
+    /// Baranda de una escalera por su lado derecho (mirando hacia arriba): parales cada
+    /// ~0,9 m y un pasamanos inclinado a 0,9 m sobre la nariz de los peldaños.
+    /// </summary>
+    public static List<Box> StairRailing(Stair s, double elevation, double height = 0.9)
+    {
+        var parts = new List<Box>();
+        var runVec = s.End - s.Start;
+        var run = runVec.Length;
+        if (run < 1e-6 || s.Steps <= 0) return parts;
+        var dir = runVec.Normalized;
+        var side = new Point2(-dir.Y, dir.X) * (s.Width / 2 - 0.04);
+        var tread = run / s.Steps;
+        var rise = s.Riser * s.Steps;
+        double StepTop(double along) => s.Base + s.Riser * Math.Clamp(Math.Ceiling(along / tread - 1e-9), 1, s.Steps);
+        var posts = Math.Max(2, (int)Math.Ceiling(run / 0.9) + 1);
+        for (var i = 0; i < posts; i++)
+        {
+            var along = Math.Clamp(run * i / (posts - 1), tread / 2, run - tread / 2);
+            var floor = StepTop(along);
+            var railY = s.Base + s.Riser + (rise - s.Riser) * (along / run) + height;
+            var p = s.Start + dir * along + side;
+            parts.Add(new Box(To3D(p, elevation + (floor + railY) / 2), new Vec3(0.03, railY - floor, 0.03), YawOf(dir), "post"));
+        }
+        var pitch = Math.Atan2(rise - s.Riser, run);
+        var mid = s.Start + dir * (run / 2) + side;
+        var midY = s.Base + s.Riser + (rise - s.Riser) / 2 + height;
+        var length = Math.Sqrt(run * run + (rise - s.Riser) * (rise - s.Riser));
+        parts.Add(new Box(To3D(mid, elevation + midY), new Vec3(length, 0.04, 0.05), YawOf(dir), "handrail", pitch));
+        return parts;
     }
 
     /// <summary>Altura de cada nivel (lo declarado o la distancia al siguiente).</summary>
