@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import time
 from collections import defaultdict, deque
+from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, WebSocket, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from plano3d.application.use_cases.errors import ProjectNotFoundError
+from plano3d.application.use_cases.errors import AuthError, ProjectNotFoundError
 from plano3d.container import Container
 from plano3d.domain.user import User
 
@@ -92,3 +93,28 @@ class RateLimiter:
                 headers={"Retry-After": str(int(self.window_s))},
             )
         hits.append(now)
+
+
+async def collab_sync(project_id: str, c: ContainerDep) -> AsyncIterator[None]:
+    """Edición por REST con gente editando en vivo: antes se guarda lo pendiente de la sala
+    (la edición parte de lo último) y después todos reciben el modelo resultante."""
+    await c.collab.flush(project_id)
+    yield
+    await c.collab.reload(project_id)
+
+
+async def ws_user(websocket: WebSocket, ticket: str | None) -> tuple[bool, User | None]:
+    """(permitido, usuario) para un WebSocket: el ticket viene de POST /api/auth/ws-ticket."""
+    container: Container = websocket.app.state.container
+    if not container.auth_required:
+        return True, None
+    if not ticket:
+        return False, None
+    try:
+        return True, await container.authenticate.execute(ticket, "ws")
+    except AuthError:
+        return False, None
+
+
+#: cierre por falta de sesión (rango 4000-4999 = códigos de la aplicación)
+WS_UNAUTHORIZED = 4401

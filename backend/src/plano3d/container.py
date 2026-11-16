@@ -12,6 +12,7 @@ import secrets
 from dataclasses import dataclass, field
 from datetime import timedelta
 
+from plano3d.application.collab.hub import CollabHub
 from plano3d.application.ports import (
     FileStorage,
     JobQueue,
@@ -148,6 +149,17 @@ class Container:
     #: False = API sin login (pruebas): todos los proyectos son visibles
     auth_required: bool = True
     demo_enabled: bool = True
+    _hub: CollabHub | None = None
+
+    @property
+    def collab(self) -> CollabHub:
+        """Salas de edición en vivo (una réplica: viven en memoria del proceso).
+
+        Se crea al primer uso para tomar el repositorio ya envuelto (copia en Blob).
+        """
+        if self._hub is None:
+            self._hub = CollabHub(self.repo)
+        return self._hub
 
     def configure(self, settings: Settings) -> Container:
         """Ajusta lo que depende de la configuración (secreto de tokens, login, demo)."""
@@ -281,6 +293,8 @@ class Container:
         return AnalyzeFloorPlan(self.repo, self.storage, self.selector, self.progress)
 
     async def aclose(self) -> None:
+        if self._hub is not None:
+            await self._hub.aclose()  # antes que la copia: lo último editado entra en ella
         for c in [*self._closers, self.photos]:
             close = getattr(c, "aclose", None) or getattr(c, "dispose", None)
             if close is not None:

@@ -29,13 +29,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from plano3d.api.auth import router as auth_router
+from plano3d.api.collab import router as collab_router
 from plano3d.api.deps import (
+    WS_UNAUTHORIZED,
     ContainerDep,
     CurrentUser,
+    collab_sync,
     current_user,
     ensure_access,
     owner_of,
     require_project_access,
+    ws_user,
 )
 from plano3d.application.dto import (
     AssistantReplyDTO,
@@ -93,7 +97,6 @@ from plano3d.domain.errors import (
     EntityNotFoundError,
     InvalidStateTransitionError,
 )
-from plano3d.domain.user import User
 from plano3d.infrastructure.demo import seed_demo
 from plano3d.infrastructure.snapshot import enable_snapshots
 
@@ -302,11 +305,13 @@ async def get_project(project_id: str, c: ContainerDep, response: Response) -> P
 @owned.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["proyectos"])
 async def delete_project(project_id: str, c: ContainerDep) -> Response:
     await c.delete_project.execute(project_id)
+    await c.collab.close_project(project_id, "El proyecto se eliminó")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @owned.put(
     "/projects/{project_id}/model",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
     tags=["modelo"],
@@ -342,6 +347,7 @@ async def get_revision(project_id: str, number: int, c: ContainerDep) -> Buildin
 
 @owned.post(
     "/projects/{project_id}/revisions/{number}/restore",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     tags=["modelo"],
 )
@@ -358,7 +364,12 @@ async def correction_quality(project_id: str, c: ContainerDep) -> CorrectionStat
     return stats_to_dto(await c.correction_stats.execute(project_id))
 
 
-@owned.post("/projects/{project_id}/solve", response_model=SolveResultDTO, tags=["modelo"])
+@owned.post(
+    "/projects/{project_id}/solve",
+    response_model=SolveResultDTO,
+    tags=["modelo"],
+    dependencies=[Depends(collab_sync)],
+)
 async def solve_dimensions(
     project_id: str,
     response: Response,
@@ -382,7 +393,12 @@ async def solve_dimensions(
     )
 
 
-@owned.post("/projects/{project_id}/scale", response_model=ProjectDTO, tags=["modelo"])
+@owned.post(
+    "/projects/{project_id}/scale",
+    response_model=ProjectDTO,
+    tags=["modelo"],
+    dependencies=[Depends(collab_sync)],
+)
 async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: ContainerDep) -> ProjectDTO:
     project = await c.calibrate_scale.execute(
         project_id, Point2D(body.a.x, body.a.y), Point2D(body.b.x, body.b.y), body.meters
@@ -392,6 +408,7 @@ async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: Container
 
 @owned.put(
     "/projects/{project_id}/facade",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
     tags=["modelo"],
@@ -413,6 +430,7 @@ async def set_facade(
 
 @owned.post(
     "/projects/{project_id}/furnish",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
     tags=["modelo"],
@@ -434,6 +452,7 @@ async def furnish(
 
 @owned.post(
     "/projects/{project_id}/levels",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     status_code=status.HTTP_201_CREATED,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
@@ -462,6 +481,7 @@ async def add_level(
 
 @owned.post(
     "/projects/{project_id}/levels/{level_id}/duplicate",
+    dependencies=[Depends(collab_sync)],
     response_model=ProjectDTO,
     status_code=status.HTTP_201_CREATED,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
@@ -498,6 +518,8 @@ async def reanalyze(
     if corners is not None and not all(0 <= v <= 1 for c in corners for v in c):
         raise HTTPException(422, "Las esquinas deben estar normalizadas entre 0 y 1")
     project = await c.reanalyze.execute(project_id, corners)
+    # el análisis reemplaza el modelo: quien edita en vivo vuelve a abrirlo al terminar
+    await c.collab.close_project(project_id, "Se está volviendo a analizar el plano")
     return ProjectCreatedDTO(id=project.id, status=project.status)
 
 
@@ -536,23 +558,6 @@ async def get_image(
 async def get_progress(project_id: str, c: ContainerDep) -> list[ProgressEventDTO]:
     await c.get_project.execute(project_id)  # 404 si no existe
     return await c.progress.history(project_id)
-
-
-async def ws_user(websocket: WebSocket, ticket: str | None) -> tuple[bool, User | None]:
-    """(permitido, usuario) para un WebSocket: el ticket viene de POST /api/auth/ws-ticket."""
-    container: Container = websocket.app.state.container
-    if not container.auth_required:
-        return True, None
-    if not ticket:
-        return False, None
-    try:
-        return True, await container.authenticate.execute(ticket, "ws")
-    except AuthError:
-        return False, None
-
-
-#: cierre por falta de sesión (rango 4000-4999 = códigos de la aplicación)
-WS_UNAUTHORIZED = 4401
 
 
 @router.websocket("/ws/projects/{project_id}")
@@ -617,6 +622,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     app.include_router(owned)
     app.include_router(signed)
     app.include_router(auth_router)
+    app.include_router(collab_router)
 
     handlers: list[tuple[type[Exception], int]] = [
         (AuthError, 401),
