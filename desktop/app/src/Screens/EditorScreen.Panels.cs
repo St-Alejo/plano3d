@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using Godot;
 using Plano3D.App.Plan;
+using Plano3D.App.Scene;
 using Plano3D.Core.Editing;
 using Plano3D.Core.Geometry;
 using Plano3D.Core.Json;
@@ -21,6 +22,8 @@ public partial class EditorScreen
     private Label _toast = null!;
     private Label _loading = null!;
     private Label _help = null!;
+    private HBoxContainer _topRow = null!;
+    private Button _commandButton = null!;
     private PlanView _plan = null!;
     private Button _undoButton = null!;
     private Button _redoButton = null!;
@@ -124,6 +127,8 @@ public partial class EditorScreen
         cmd.TooltipText = "Buscar cualquier acción (Ctrl+K)";
         cmd.Pressed += OpenPalette;
         row.AddChild(cmd);
+        _topRow = row;
+        _commandButton = cmd;
         _peers = new HBoxContainer();
         _peers.AddThemeConstantOverride("separation", 6);
         row.AddChild(_peers);
@@ -603,8 +608,16 @@ public partial class EditorScreen
             new("Piso de abajo", "AvPág", () => SetLevel(_levelPick.Selected - 1)),
             new("Encuadrar la casa", "F", () => FrameHouse(false)),
             new("Imán a la rejilla (5 cm): activar o quitar", "G", ToggleGrid),
+            new("Modo foto", "", () => SetPhotoMode(true)),
+            new("Capturar la vista en 4K", "F12", () => _ = CaptureAsync(0)),
+            new("Luz, hora y calidad", "L", ToggleLightPanel),
+            new("Hora: mañana (8:00)", "", () => SetHour(8)),
+            new("Hora: mediodía", "", () => SetHour(12)),
+            new("Hora: atardecer", "", () => SetHour(17.0)),
+            new("Hora: noche (luces encendidas)", "", () => SetHour(20.5)),
             new("Volver a los proyectos", "", () => _main.ShowProjects()),
         ]);
+        foreach (var q in Enum.GetValues<Quality>()) list.Add(new($"Calidad gráfica: {Atmosphere.Label(q)}", "", () => SetQuality(q)));
         for (var i = 1; i <= 4; i++)
         {
             var n = i;
@@ -672,6 +685,14 @@ public partial class EditorScreen
             if (k.Keycode == Key.Escape) ClosePalette();
             return;
         }
+        if (PhotoMode)
+        {
+            if (k.Keycode == Key.Escape) SetPhotoMode(false);
+            else if (k.Keycode == Key.F12) _ = CaptureAsync(0);
+            else if (k.Keycode == Key.F) FrameHouse(false);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (_plan.Tool.OnKey(k))
         {
             _plan.QueueRedraw();
@@ -712,6 +733,12 @@ public partial class EditorScreen
                 break;
             case Key.F:
                 FrameHouse(false);
+                break;
+            case Key.L when !k.CtrlPressed:
+                ToggleLightPanel();
+                break;
+            case Key.F12:
+                _ = CaptureAsync(0);
                 break;
             case Key.G:
                 ToggleGrid();

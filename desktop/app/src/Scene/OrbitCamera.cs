@@ -42,6 +42,9 @@ public partial class OrbitCamera : Camera3D
 
     public View Bookmark => new(_goalTarget, _goalDistance, _goalYaw, _goalPitch);
 
+    /// <summary>Distancia actual al punto que se mira (foco del modo foto).</summary>
+    public float OrbitDistance => _distance;
+
     public void GoTo(View v)
     {
         _goalTarget = v.Target;

@@ -73,7 +73,7 @@ public partial class SceneSync : Node3D
             for (var i = 0; i < level.Rooms.Count; i++)
             {
                 var room = level.Rooms[i];
-                Upsert("room", room.Id, jRooms[i], () => BuildRoom(room, elev));
+                Upsert("room", room.Id, jRooms[i], () => BuildRoom(room, elev, storey));
             }
             var jCols = jl.Items("columns");
             for (var i = 0; i < level.Columns.Count; i++)
@@ -148,16 +148,66 @@ public partial class SceneSync : Node3D
         foreach (var o in wall.OpeningsOrEmpty)
         {
             var infill = BuildingGeometry.OpeningInfill(wall, o, elev);
-            n.AddChild(MeshFactory.Box(infill, o.IsDoor ? Materials.Door : Materials.Glass, o.Id));
+            var glass = MeshFactory.Box(infill, o.IsDoor ? Materials.Door : Materials.Glass, o.Id);
+            if (!o.IsDoor) glass.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off; // el vidrio deja pasar el sol
+            n.AddChild(glass);
+            foreach (var trim in BuildingGeometry.OpeningTrim(wall, o, elev))
+            {
+                var m = trim.Part switch { "door_frame" => Materials.DoorFrame, "sill_stone" => Materials.Sill, _ => Materials.WindowFrame };
+                n.AddChild(MeshFactory.Box(trim, m, o.Id));
+            }
         }
         return n;
     }
 
-    private static Node3D BuildRoom(Room room, double elev)
+    /// <summary>Si las lámparas de los ambientes están encendidas (de noche); las nuevas nacen igual.</summary>
+    public static bool LampsOn { get; private set; }
+
+    public void SetLamps(bool on)
+    {
+        LampsOn = on;
+        foreach (var lamp in GetTree().GetNodesInGroup(LampGroup).OfType<Node3D>()) lamp.Visible = on;
+    }
+
+    private const string LampGroup = "lamparas";
+
+    /// <summary>Capa visual del terreno exterior (las lámparas de adentro no la alumbran).</summary>
+    public const uint OutdoorLayer = 1u << 1;
+
+    private static Node3D BuildRoom(Room room, double elev, double storey)
     {
         var n = new Node3D();
-        if (room.Polygon.Count >= 3 && MeshFactory.Floor(room.Polygon, (float)elev + 0.01f, Materials.Floor(room.FloorMaterial, room.RoomType), room.Id) is { } floor)
+        if (room.Polygon.Count < 3) return n;
+        if (MeshFactory.Floor(room.Polygon, (float)elev + 0.01f, Materials.Floor(room.FloorMaterial, room.Label + " " + room.RoomType), room.Id) is { } floor)
             n.AddChild(floor);
+        if (elev > 0.05 && MeshFactory.Slab(room.Polygon, (float)elev, (float)BuildingGeometry.SlabThickness, Materials.Slab) is { } slab)
+            n.AddChild(slab);
+        // lámpara de techo: luz cálida (2 700 K) que se prende de noche
+        var area = Math.Abs(BuildingGeometry.SignedArea(room.Polygon));
+        if (area >= 1.5)
+        {
+            var c = Plano3D.Core.Editing.Shapes.Centroid(room.Polygon);
+            var lamp = new Node3D { Position = new Vector3((float)c.X, (float)(elev + storey - BuildingGeometry.SlabThickness - 0.06), (float)c.Y), Visible = LampsOn };
+            lamp.AddToGroup(LampGroup);
+            lamp.AddChild(new MeshInstance3D
+            {
+                Mesh = new CylinderMesh { TopRadius = 0.16f, BottomRadius = 0.2f, Height = 0.05f },
+                MaterialOverride = Materials.Bulb,
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            });
+            lamp.AddChild(new OmniLight3D
+            {
+                Position = new Vector3(0, -0.15f, 0),
+                LightColor = Kelvin(2700),
+                LightEnergy = (float)Math.Clamp(0.6 + area / 25, 0.7, 2.2),
+                OmniRange = (float)Math.Clamp(Math.Sqrt(area) * 1.6, 3, 9),
+                OmniAttenuation = 1.2f,
+                ShadowEnabled = false,
+                // sin sombras la luz atravesaría los muros: que no alumbre el terreno de afuera
+                LightCullMask = ~OutdoorLayer,
+            });
+            n.AddChild(lamp);
+        }
         return n;
     }
 
@@ -165,6 +215,17 @@ public partial class SceneSync : Node3D
     {
         var n = new Node3D();
         foreach (var step in BuildingGeometry.StairSteps(s, elev)) n.AddChild(MeshFactory.Box(step, Materials.Stair, s.Id));
+        foreach (var part in BuildingGeometry.StairRailing(s, elev)) n.AddChild(MeshFactory.Box(part, Materials.Railing, s.Id, pickable: false));
         return n;
+    }
+
+    /// <summary>Color de una luz a cierta temperatura (aproximación de Tanner Helland).</summary>
+    public static Color Kelvin(double k)
+    {
+        var t = k / 100;
+        double r = t <= 66 ? 255 : 329.698727446 * Math.Pow(t - 60, -0.1332047592);
+        double g = t <= 66 ? 99.4708025861 * Math.Log(t) - 161.1195681661 : 288.1221695283 * Math.Pow(t - 60, -0.0755148492);
+        double b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.Log(t - 10) - 305.0447927307;
+        return new Color((float)Math.Clamp(r, 0, 255) / 255, (float)Math.Clamp(g, 0, 255) / 255, (float)Math.Clamp(b, 0, 255) / 255);
     }
 }

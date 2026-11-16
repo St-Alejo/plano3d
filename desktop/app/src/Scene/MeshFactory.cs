@@ -22,7 +22,7 @@ public static class MeshFactory
             Mesh = mesh,
             MaterialOverride = material,
             Position = V(b.Center),
-            Rotation = new Vector3(0, (float)b.Yaw, 0),
+            Rotation = new Vector3(0, (float)b.Yaw, (float)b.Pitch),
         };
         if (pickable)
         {
@@ -32,6 +32,46 @@ public static class MeshFactory
             mi.AddChild(body);
         }
         return mi;
+    }
+
+    /// <summary>
+    /// Losa bajo el piso de un ambiente (prisma del polígono, de <paramref name="top"/> hacia
+    /// abajo): desde afuera los pisos de arriba se ven apoyados, no flotando.
+    /// </summary>
+    public static MeshInstance3D? Slab(IReadOnlyList<Point2> polygon, float top, float thickness, Material material)
+    {
+        var tri = BuildingGeometry.Triangulate(polygon);
+        if (tri.Count < 3) return null;
+        var bottom = top - thickness;
+        var st = new SurfaceTool();
+        st.Begin(Mesh.PrimitiveType.Triangles);
+        Vector3 At(Point2 p, float y) => new((float)p.X, y, (float)p.Y);
+        // cara de abajo (mirando hacia abajo: orden invertido)
+        for (var i = 0; i < tri.Count; i += 3)
+        {
+            foreach (var k in new[] { tri[i], tri[i + 2], tri[i + 1] })
+            {
+                st.SetNormal(Vector3.Down);
+                st.AddVertex(At(polygon[k], bottom));
+            }
+        }
+        // cantos
+        var ccw = BuildingGeometry.SignedArea(polygon) > 0;
+        for (var i = 0; i < polygon.Count; i++)
+        {
+            var a = polygon[i];
+            var b = polygon[(i + 1) % polygon.Count];
+            if (!ccw) (a, b) = (b, a);
+            var edge = new Vector3((float)(b.X - a.X), 0, (float)(b.Y - a.Y));
+            var n = new Vector3(edge.Z, 0, -edge.X).Normalized();
+            Vector3[] quad = [At(a, top), At(b, top), At(b, bottom), At(a, top), At(b, bottom), At(a, bottom)];
+            foreach (var v in quad)
+            {
+                st.SetNormal(n);
+                st.AddVertex(v);
+            }
+        }
+        return new MeshInstance3D { Mesh = st.Commit(), MaterialOverride = material };
     }
 
     /// <summary>Piso de un ambiente: el polígono triangulado a la altura del nivel.</summary>

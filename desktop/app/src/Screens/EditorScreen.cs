@@ -28,6 +28,7 @@ public partial class EditorScreen : Control, IEditorHost
     private string _projectId = "";
     private Node3D _world = null!;
     private SceneSync _sync = null!;
+    private Atmosphere _atmosphere = null!;
     private OrbitCamera _camera = null!;
     private CollabClient? _collab;
     private bool _framed;
@@ -89,20 +90,14 @@ public partial class EditorScreen : Control, IEditorHost
         // ---------------------------------------------------------------- mundo 3D
         _world = new Node3D { Name = "Escena" };
         worldHost.AddChild(_world);
-        _world.AddChild(new WorldEnvironment { Environment = MakeEnvironment() });
-        var sun = new DirectionalLight3D
-        {
-            ShadowEnabled = true,
-            LightEnergy = 1.15f,
-            RotationDegrees = new Vector3(-52, -38, 0),
-            DirectionalShadowMaxDistance = 90,
-        };
-        _world.AddChild(sun);
+        _atmosphere = new Atmosphere();
+        _world.AddChild(_atmosphere);
         var ground = new MeshInstance3D
         {
             Mesh = new PlaneMesh { Size = new Vector2(400, 400) },
             MaterialOverride = Materials.Ground,
             Position = new Vector3(0, -0.02f, 0),
+            Layers = SceneSync.OutdoorLayer,
         };
         _world.AddChild(ground);
         _sync = new SceneSync { Name = "Casa" };
@@ -114,30 +109,11 @@ public partial class EditorScreen : Control, IEditorHost
         _camera.TryGrab = TryGrab;
         _camera.Grabbed += GrabMove;
         _camera.Released += GrabEnd;
+        _camera.Attributes = _atmosphere.CameraAttributes;
+        _atmosphere.NightChanged += on => _sync.SetLamps(on);
 
         BuildPanels(name);
-    }
-
-    private static Godot.Environment MakeEnvironment()
-    {
-        var sky = new ProceduralSkyMaterial
-        {
-            SkyTopColor = new Color("8fb3d9"),
-            SkyHorizonColor = new Color("e9e4da"),
-            GroundHorizonColor = new Color("e9e4da"),
-            GroundBottomColor = new Color("cfc8ba"),
-        };
-        return new Godot.Environment
-        {
-            BackgroundMode = Godot.Environment.BGMode.Sky,
-            Sky = new Sky { SkyMaterial = sky },
-            AmbientLightSource = Godot.Environment.AmbientSource.Sky,
-            AmbientLightEnergy = 0.9f,
-            TonemapMode = Godot.Environment.ToneMapper.Agx,
-            SsaoEnabled = true,
-            SsaoRadius = 0.8f,
-            SsaoIntensity = 1.6f,
-        };
+        BuildScenePanels();
     }
 
     // ------------------------------------------------------------------ carga y sala en vivo
@@ -505,6 +481,7 @@ public partial class EditorScreen : Control, IEditorHost
     {
         foreach (var o in _overlays.Where(GodotObject.IsInstanceValid)) o.MaterialOverlay = null;
         _overlays.Clear();
+        if (_photo is { Visible: true }) return; // la foto sale limpia
         void Mark(string id, Color color)
         {
             foreach (var d in _sync.Find(id))
@@ -559,6 +536,7 @@ public partial class EditorScreen : Control, IEditorHost
     public override void _Process(double delta)
     {
         if (_toastLeft > 0 && (_toastLeft -= delta) <= 0) ((Control)_toast.GetParent()).Visible = false;
+        UpdateFps(delta);
     }
 
     /// <summary>Fantasma de lo que otra persona arrastra (muro, mueble o abertura).</summary>

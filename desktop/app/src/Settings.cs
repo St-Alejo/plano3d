@@ -45,11 +45,20 @@ public sealed class AppSettings
 
     public string ApiUrl { get; set; } = DefaultApi;
 
+    /// <summary>Calidad gráfica (0 Baja … 4 Presentación); Alta por defecto.</summary>
+    public int Quality { get; set; } = 2;
+    public bool ShowFps { get; set; }
+
     public static AppSettings Load(LaunchOptions launch)
     {
         var s = new AppSettings();
         var cfg = new ConfigFile();
-        if (cfg.Load(Path) == Error.Ok) s.ApiUrl = (string)cfg.GetValue("servidor", "api", DefaultApi);
+        if (cfg.Load(Path) == Error.Ok)
+        {
+            s.ApiUrl = (string)cfg.GetValue("servidor", "api", DefaultApi);
+            s.Quality = Math.Clamp((int)cfg.GetValue("graficos", "calidad", 2), 0, 4);
+            s.ShowFps = (bool)cfg.GetValue("graficos", "fps", false);
+        }
         var env = System.Environment.GetEnvironmentVariable("PLANO3D_API");
         if (!string.IsNullOrWhiteSpace(env)) s.ApiUrl = env;
         if (!string.IsNullOrWhiteSpace(launch.Api)) s.ApiUrl = launch.Api;
@@ -60,6 +69,8 @@ public sealed class AppSettings
     {
         var cfg = new ConfigFile();
         cfg.SetValue("servidor", "api", ApiUrl);
+        cfg.SetValue("graficos", "calidad", Quality);
+        cfg.SetValue("graficos", "fps", ShowFps);
         cfg.Save(Path);
     }
 }

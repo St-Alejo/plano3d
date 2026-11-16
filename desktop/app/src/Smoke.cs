@@ -32,6 +32,25 @@ public static class Smoke
             GD.Print($"[humo] entidades: {string.Join(" ", kinds)}");
             Shot(main, output);
 
+            // gráficos: atardecer, noche con lámparas y una captura 4K del modo foto
+            editor.SetHour(17.0);
+            await Frames(tree, 40);
+            Shot(main, output.Replace(".png", "-atardecer.png"));
+            editor.SetHour(20.5);
+            await Frames(tree, 40);
+            if (!editor.Atmosphere.IsNight) throw new InvalidOperationException("a las 8:30 p. m. debería ser de noche");
+            Shot(main, output.Replace(".png", "-noche.png"));
+            editor.SetHour(10.5);
+            editor.SetPhotoMode(true);
+            await Frames(tree, 20);
+            var sw4k = Stopwatch.StartNew();
+            var big = await editor.CaptureAsync(0, output.Replace(".png", "-4k.png"));
+            var img4k = big is null ? null : Image.LoadFromFile(big);
+            if (img4k is null || img4k.GetWidth() != 3840) throw new InvalidOperationException("la captura 4K no salió");
+            GD.Print($"[humo] captura 4K en {sw4k.ElapsedMilliseconds} ms");
+            editor.SetPhotoMode(false);
+            await Frames(tree, 5);
+
             // otra persona, como si fuera la web, agrega un muro en el primer piso
             using var webApi = new ApiClient(main.Api.BaseUrl, new MemoryTokenStore());
             await webApi.DemoAsync();
@@ -105,7 +124,7 @@ public static class Smoke
         }
         catch (Exception e)
         {
-            GD.PrintErr($"[humo] FALLÓ: {e.Message}");
+            GD.PrintErr($"[humo] FALLÓ: {e}");
             tree.Quit(1);
         }
     }
