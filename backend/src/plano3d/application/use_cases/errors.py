@@ -30,3 +30,32 @@ class PhotosUnavailableError(ApplicationError):
 
 class InvalidPhotoRequestError(ApplicationError):
     """Las capturas enviadas no sirven (vista desconocida, archivo raro o demasiadas)."""
+
+
+# ---- cuentas (ADR-020)
+class AuthError(ApplicationError):
+    """Base de los errores de autenticación (la API responde 401)."""
+
+
+class InvalidCredentialsError(AuthError):
+    def __init__(self) -> None:
+        super().__init__("Correo o contraseña incorrectos")
+
+
+class InvalidTokenError(AuthError):
+    def __init__(self, reason: str = "La sesión venció o no es válida") -> None:
+        super().__init__(reason)
+
+
+class EmailTakenError(ApplicationError):
+    def __init__(self) -> None:
+        super().__init__("Ya hay una cuenta con ese correo")
+
+
+class WeakPasswordError(ApplicationError):
+    pass
+
+
+class DemoUnavailableError(ApplicationError):
+    def __init__(self) -> None:
+        super().__init__("La cuenta demo no está habilitada en este servidor")

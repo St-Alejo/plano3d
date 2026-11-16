@@ -44,6 +44,8 @@ class Project:
     #: versión del modelo: sube en cada guardado (bloqueo optimista + historial)
     revision: int = 0
     error: str | None = None
+    #: cuenta dueña (ADR-020); None = proyecto anterior a las cuentas o servidor sin login
+    owner_id: str | None = None
     created_at: datetime = field(default_factory=_now)
     updated_at: datetime = field(default_factory=_now)
 
@@ -54,6 +56,7 @@ class Project:
         original_image_key: str,
         corners: list[tuple[float, float]] | None = None,
         project_id: str | None = None,
+        owner_id: str | None = None,
     ) -> Project:
         clean = name.strip()
         if not clean:
@@ -65,15 +68,18 @@ class Project:
             name=clean[:120],
             original_image_key=original_image_key,
             corners=corners,
+            owner_id=owner_id,
         )
 
     @classmethod
-    def create_blank(cls, name: str, project_id: str | None = None) -> Project:
+    def create_blank(
+        cls, name: str, project_id: str | None = None, owner_id: str | None = None
+    ) -> Project:
         """Plano dibujado desde cero: sin foto que analizar, listo para editar.
 
         El editor trabaja en metros: la "imagen" es virtual a 1 cm por píxel.
         """
-        project = cls.create(name, "", project_id=project_id)
+        project = cls.create(name, "", project_id=project_id, owner_id=owner_id)
         project.status = ProjectStatus.READY
         project.model = BuildingModel(
             project_id=project.id,

@@ -17,6 +17,7 @@ import numpy.typing as npt
 
 from plano3d.application.dto import ProgressEventDTO
 from plano3d.domain import BuildingModel, ModelRevision, Project
+from plano3d.domain.user import User
 
 Image = npt.NDArray[np.uint8]
 DetectorName = Literal[
@@ -269,3 +270,62 @@ class PhotoGenerator(ABC):
     @abstractmethod
     def remaining_usd(self) -> float:
         """Lo que queda del tope de gasto."""
+
+
+# ---------------------------------------------------------------- cuentas (ADR-020)
+TokenKind = Literal["access", "refresh", "ws"]
+
+
+@dataclass(frozen=True)
+class TokenClaims:
+    user_id: str
+    kind: TokenKind
+    #: ``User.token_version`` cuando se emitió: si la cuenta cerró sesión en todos lados, ya no vale
+    version: int
+
+
+class UserRepository(ABC):
+    @abstractmethod
+    async def add(self, user: User) -> None:
+        """Lanza ``EmailTakenError`` si el correo ya está registrado."""
+
+    @abstractmethod
+    async def get(self, user_id: str) -> User | None: ...
+
+    @abstractmethod
+    async def get_by_email(self, email: str) -> User | None: ...
+
+    @abstractmethod
+    async def save(self, user: User) -> None: ...
+
+    @abstractmethod
+    async def list(self) -> builtins.list[User]: ...
+
+
+class PasswordHasher(ABC):
+    @abstractmethod
+    def hash(self, password: str) -> str: ...
+
+    @abstractmethod
+    def verify(self, password_hash: str, password: str) -> bool: ...
+
+
+class TokenService(ABC):
+    @abstractmethod
+    def issue(self, user: User, kind: TokenKind) -> tuple[str, int]:
+        """Token firmado y sus segundos de vida."""
+
+    @abstractmethod
+    def verify(self, token: str, kind: TokenKind) -> TokenClaims:
+        """Lanza ``InvalidTokenError`` si está vencido, alterado o es de otro tipo."""
+
+
+class LinkCodeStore(ABC):
+    """Códigos cortos de un solo uso para abrir la sesión de la web en el escritorio."""
+
+    @abstractmethod
+    async def create(self, user_id: str, ttl_seconds: int) -> str: ...
+
+    @abstractmethod
+    async def consume(self, code: str) -> str | None:
+        """El id del usuario si el código existe y no venció; el código deja de valer."""

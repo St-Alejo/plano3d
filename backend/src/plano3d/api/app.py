@@ -19,7 +19,6 @@ from fastapi import (
     Header,
     HTTPException,
     Query,
-    Request,
     Response,
     UploadFile,
     WebSocket,
@@ -29,6 +28,15 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from plano3d.api.auth import router as auth_router
+from plano3d.api.deps import (
+    ContainerDep,
+    CurrentUser,
+    current_user,
+    ensure_access,
+    owner_of,
+    require_project_access,
+)
 from plano3d.application.dto import (
     AssistantReplyDTO,
     AssistantRequestDTO,
@@ -62,12 +70,16 @@ from plano3d.application.dto import (
 )
 from plano3d.application.use_cases.errors import (
     AssistantUnavailableError,
+    AuthError,
+    DemoUnavailableError,
+    EmailTakenError,
     FileTooLargeError,
     InvalidPhotoRequestError,
     NoDetectorAvailableError,
     PhotosUnavailableError,
     ProjectNotFoundError,
     UnsupportedFileError,
+    WeakPasswordError,
 )
 from plano3d.application.use_cases.photos import MAX_BYTES as PHOTO_MAX_BYTES
 from plano3d.application.use_cases.photos import Shot
@@ -81,16 +93,10 @@ from plano3d.domain.errors import (
     EntityNotFoundError,
     InvalidStateTransitionError,
 )
+from plano3d.domain.user import User
+from plano3d.infrastructure.demo import seed_demo
 
 log = logging.getLogger(__name__)
-
-
-def get_container(request: Request) -> Container:
-    container: Container = request.app.state.container
-    return container
-
-
-ContainerDep = Annotated[Container, Depends(get_container)]
 
 
 def _parse_corners(raw: str | None) -> list[tuple[float, float]] | None:
@@ -107,6 +113,10 @@ def _parse_corners(raw: str | None) -> list[tuple[float, float]] | None:
 
 
 router = APIRouter(prefix="/api")
+#: rutas de un proyecto: solo su dueño las ve (las de otra cuenta responden 404)
+owned = APIRouter(prefix="/api", dependencies=[Depends(require_project_access)])
+#: rutas que necesitan sesión aunque no toquen un proyecto (procesan archivos: cuestan CPU)
+signed = APIRouter(prefix="/api", dependencies=[Depends(current_user)])
 
 
 @router.get("/health", tags=["sistema"])
@@ -114,7 +124,7 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.post("/corners", response_model=CornersDTO, tags=["captura"])
+@signed.post("/corners", response_model=CornersDTO, tags=["captura"])
 async def suggest_corners(
     c: ContainerDep,
     file: Annotated[UploadFile, File(description="Foto del plano")],
@@ -126,7 +136,7 @@ async def suggest_corners(
     return CornersDTO(corners=corners)
 
 
-@router.post("/capture/check", response_model=CaptureCheckDTO, tags=["captura"])
+@signed.post("/capture/check", response_model=CaptureCheckDTO, tags=["captura"])
 async def check_capture(
     c: ContainerDep,
     file: Annotated[UploadFile, File(description="Foto del plano")],
@@ -147,8 +157,8 @@ async def check_capture(
 
 
 @router.get("/projects", response_model=list[ProjectSummaryDTO], tags=["proyectos"])
-async def list_projects(c: ContainerDep) -> list[ProjectSummaryDTO]:
-    return [project_to_summary(p) for p in await c.list_projects.execute()]
+async def list_projects(c: ContainerDep, user: CurrentUser) -> list[ProjectSummaryDTO]:
+    return [project_to_summary(p) for p in await c.list_projects.execute(owner_of(user))]
 
 
 @router.post(
@@ -159,6 +169,7 @@ async def list_projects(c: ContainerDep) -> list[ProjectSummaryDTO]:
 )
 async def create_project(
     c: ContainerDep,
+    user: CurrentUser,
     file: Annotated[UploadFile, File(description="Foto, imagen, PDF o DXF del plano")],
     name: Annotated[str, Form()] = "Plano sin nombre",
     corners: Annotated[str | None, Form(description="JSON [[x,y] x4] normalizado")] = None,
@@ -178,6 +189,7 @@ async def create_project(
         normalize_content_type(file.content_type or "", file.filename),
         _parse_corners(corners),
         more,
+        owner_id=owner_of(user),
     )
     return ProjectCreatedDTO(id=project.id, status=project.status)
 
@@ -188,12 +200,14 @@ async def create_project(
     status_code=status.HTTP_201_CREATED,
     tags=["proyectos"],
 )
-async def create_blank_project(body: BlankProjectDTO, c: ContainerDep) -> ProjectDTO:
+async def create_blank_project(
+    body: BlankProjectDTO, c: ContainerDep, user: CurrentUser
+) -> ProjectDTO:
     """Plano desde cero: sin foto, listo para dibujar en el editor o con el chat."""
-    return project_to_dto(await c.create_blank_project.execute(body.name))
+    return project_to_dto(await c.create_blank_project.execute(body.name, owner_of(user)))
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/assistant",
     response_model=AssistantReplyDTO,
     responses={503: {"description": "No hay asistente con IA (el chat usa el intérprete local)"}},
@@ -230,7 +244,7 @@ IfMatch = Annotated[
 ]
 
 
-@router.get("/photos/status", response_model=PhotosStatusDTO, tags=["fotos"])
+@signed.get("/photos/status", response_model=PhotosStatusDTO, tags=["fotos"])
 async def photos_status(c: ContainerDep) -> PhotosStatusDTO:
     """¿Se pueden pedir fotos con IA? (sin llamar a la API: solo clave y presupuesto)."""
     gen = c.photos
@@ -244,7 +258,7 @@ async def photos_status(c: ContainerDep) -> PhotosStatusDTO:
     )
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/photos",
     response_model=PhotosDTO,
     responses={503: {"description": "Sin clave de OpenAI, sin presupuesto o la API falló"}},
@@ -277,20 +291,20 @@ async def generate_photos(
     )
 
 
-@router.get("/projects/{project_id}", response_model=ProjectDTO, tags=["proyectos"])
+@owned.get("/projects/{project_id}", response_model=ProjectDTO, tags=["proyectos"])
 async def get_project(project_id: str, c: ContainerDep, response: Response) -> ProjectDTO:
     project = await c.get_project.execute(project_id)
     response.headers["ETag"] = _etag(project.revision)
     return project_to_dto(project)
 
 
-@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["proyectos"])
+@owned.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["proyectos"])
 async def delete_project(project_id: str, c: ContainerDep) -> Response:
     await c.delete_project.execute(project_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put(
+@owned.put(
     "/projects/{project_id}/model",
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
@@ -313,19 +327,19 @@ async def update_model(
     return project_to_dto(project)
 
 
-@router.get("/projects/{project_id}/revisions", response_model=list[RevisionDTO], tags=["modelo"])
+@owned.get("/projects/{project_id}/revisions", response_model=list[RevisionDTO], tags=["modelo"])
 async def list_revisions(project_id: str, c: ContainerDep) -> list[RevisionDTO]:
     return [revision_to_dto(r) for r in await c.list_revisions.execute(project_id)]
 
 
-@router.get(
+@owned.get(
     "/projects/{project_id}/revisions/{number}", response_model=BuildingModelDTO, tags=["modelo"]
 )
 async def get_revision(project_id: str, number: int, c: ContainerDep) -> BuildingModelDTO:
     return model_to_dto((await c.get_revision.execute(project_id, number)).model)
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/revisions/{number}/restore",
     response_model=ProjectDTO,
     tags=["modelo"],
@@ -338,12 +352,12 @@ async def restore_revision(
     return project_to_dto(project)
 
 
-@router.get("/projects/{project_id}/quality", response_model=CorrectionStatsDTO, tags=["modelo"])
+@owned.get("/projects/{project_id}/quality", response_model=CorrectionStatsDTO, tags=["modelo"])
 async def correction_quality(project_id: str, c: ContainerDep) -> CorrectionStatsDTO:
     return stats_to_dto(await c.correction_stats.execute(project_id))
 
 
-@router.post("/projects/{project_id}/solve", response_model=SolveResultDTO, tags=["modelo"])
+@owned.post("/projects/{project_id}/solve", response_model=SolveResultDTO, tags=["modelo"])
 async def solve_dimensions(
     project_id: str,
     response: Response,
@@ -367,7 +381,7 @@ async def solve_dimensions(
     )
 
 
-@router.post("/projects/{project_id}/scale", response_model=ProjectDTO, tags=["modelo"])
+@owned.post("/projects/{project_id}/scale", response_model=ProjectDTO, tags=["modelo"])
 async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: ContainerDep) -> ProjectDTO:
     project = await c.calibrate_scale.execute(
         project_id, Point2D(body.a.x, body.a.y), Point2D(body.b.x, body.b.y), body.meters
@@ -375,7 +389,7 @@ async def calibrate_scale(project_id: str, body: CalibrateScaleDTO, c: Container
     return project_to_dto(project)
 
 
-@router.put(
+@owned.put(
     "/projects/{project_id}/facade",
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
@@ -396,7 +410,7 @@ async def set_facade(
     return project_to_dto(project)
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/furnish",
     response_model=ProjectDTO,
     responses={409: {"description": "Otra persona guardó una versión más nueva"}},
@@ -417,7 +431,7 @@ async def furnish(
     return project_to_dto(project)
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/levels",
     response_model=ProjectDTO,
     status_code=status.HTTP_201_CREATED,
@@ -445,7 +459,7 @@ async def add_level(
     return project_to_dto(project)
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/levels/{level_id}/duplicate",
     response_model=ProjectDTO,
     status_code=status.HTTP_201_CREATED,
@@ -468,7 +482,7 @@ async def duplicate_level(
     return project_to_dto(project)
 
 
-@router.post(
+@owned.post(
     "/projects/{project_id}/reanalyze",
     response_model=ProjectCreatedDTO,
     status_code=status.HTTP_202_ACCEPTED,
@@ -486,7 +500,7 @@ async def reanalyze(
     return ProjectCreatedDTO(id=project.id, status=project.status)
 
 
-@router.get(
+@owned.get(
     "/projects/{project_id}/image",
     response_class=Response,
     responses={200: {"content": {"image/png": {}, "image/jpeg": {}}}},
@@ -515,7 +529,7 @@ async def get_image(
     return Response(data, media_type=media, headers={"Cache-Control": "private, max-age=300"})
 
 
-@router.get(
+@owned.get(
     "/projects/{project_id}/progress", response_model=list[ProgressEventDTO], tags=["proyectos"]
 )
 async def get_progress(project_id: str, c: ContainerDep) -> list[ProgressEventDTO]:
@@ -523,9 +537,37 @@ async def get_progress(project_id: str, c: ContainerDep) -> list[ProgressEventDT
     return await c.progress.history(project_id)
 
 
-@router.websocket("/ws/projects/{project_id}")
-async def progress_ws(websocket: WebSocket, project_id: str) -> None:
+async def ws_user(websocket: WebSocket, ticket: str | None) -> tuple[bool, User | None]:
+    """(permitido, usuario) para un WebSocket: el ticket viene de POST /api/auth/ws-ticket."""
     container: Container = websocket.app.state.container
+    if not container.auth_required:
+        return True, None
+    if not ticket:
+        return False, None
+    try:
+        return True, await container.authenticate.execute(ticket, "ws")
+    except AuthError:
+        return False, None
+
+
+#: cierre por falta de sesión (rango 4000-4999 = códigos de la aplicación)
+WS_UNAUTHORIZED = 4401
+
+
+@router.websocket("/ws/projects/{project_id}")
+async def progress_ws(
+    websocket: WebSocket, project_id: str, ticket: Annotated[str | None, Query()] = None
+) -> None:
+    container: Container = websocket.app.state.container
+    ok, user = await ws_user(websocket, ticket)
+    if ok:
+        try:
+            await ensure_access(container, user, project_id)
+        except ProjectNotFoundError:
+            ok = False
+    if not ok:
+        await websocket.close(code=WS_UNAUTHORIZED)
+        return
     await websocket.accept()
     try:
         async for event in container.progress.subscribe(project_id):
@@ -544,7 +586,9 @@ def create_app(settings: Settings | None = None, container: Container | None = N
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        app.state.container = container or await build_container(settings)
+        app.state.container = (container or await build_container(settings)).configure(settings)
+        if settings.demo_enabled:
+            await seed_demo(app.state.container, settings.demo_password)
         try:
             yield
         finally:
@@ -563,8 +607,15 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         allow_headers=["*"],
     )
     app.include_router(router)
+    app.include_router(owned)
+    app.include_router(signed)
+    app.include_router(auth_router)
 
     handlers: list[tuple[type[Exception], int]] = [
+        (AuthError, 401),
+        (EmailTakenError, 409),
+        (WeakPasswordError, 422),
+        (DemoUnavailableError, 404),
         (ProjectNotFoundError, 404),
         (AssistantUnavailableError, 503),
         (PhotosUnavailableError, 503),

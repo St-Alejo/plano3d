@@ -32,6 +32,26 @@ class Settings(BaseSettings):
     s3_secret_key: str = "plano3d-secret"
     s3_region: str = "us-east-1"
 
+    # ---- cuentas (ADR-020)
+    #: sin login (solo pruebas y desarrollo viejo): todos los proyectos son de todos
+    auth_required: bool = True
+    #: secreto de los tokens (≥ 32 caracteres). Vacío = uno al azar por proceso: las sesiones
+    #: se pierden al reiniciar la API
+    jwt_secret: str = ""
+    access_ttl_minutes: int = 60
+    refresh_ttl_days: int = 30
+    #: cuenta demo con la casa de 3 pisos (se entra con un botón, sin contraseña)
+    demo_enabled: bool = True
+    #: contraseña de la demo para entrar por el formulario; vacía = al azar (solo el botón)
+    demo_password: str = ""
+
+    # ---- copia del estado en modo memoria (ADR-021)
+    #: none = se pierde al reiniciar; file = archivo local; blob = Azure Blob Storage
+    snapshot: Literal["none", "file", "blob"] = "none"
+    snapshot_file: Path = Path("./data/state.json.gz")
+    blob_connection_string: str = ""
+    blob_container: str = "plano3d"
+
 
 #: variables de los proveedores de IA que se leen del entorno (Anthropic, Groq, OpenAI y cuál usar)
 _LOCAL_KEYS = (

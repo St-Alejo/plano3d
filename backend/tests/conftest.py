@@ -10,3 +10,8 @@ os.environ["PLANO3D_OPENAI"] = "0"  # fotos con IA: igual, solo con clientes fal
 # La red de muros va activada por defecto; las pruebas usan la CV clásica sola (o una red
 # falsa inyectada) para no depender del modelo publicado.
 os.environ["PLANO3D_SEG_MODEL"] = "0"
+# Las pruebas de siempre hablan con la API sin login y sin la cuenta demo precargada; las de
+# cuentas (test_auth*.py) crean su app con Settings(auth_required=True, demo_enabled=True).
+os.environ["PLANO3D_AUTH_REQUIRED"] = "0"
+os.environ["PLANO3D_DEMO_ENABLED"] = "0"
+os.environ["PLANO3D_SNAPSHOT"] = "none"

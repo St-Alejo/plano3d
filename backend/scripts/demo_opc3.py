@@ -41,8 +41,9 @@ def _if_match(p: dict[str, Any]) -> dict[str, str]:
     return {"If-Match": f'"{p["revision"]}"'}
 
 
-def main(base: str) -> str:
-    with httpx.Client(base_url=base, timeout=120) as c:
+def main(base: str, client: httpx.Client | None = None) -> str:
+    """Devuelve el id del proyecto. ``client``: uno ya abierto (p. ej. un TestClient)."""
+    with client or httpx.Client(base_url=base, timeout=120) as c:
         pdf1 = (REAL / "opc3p1" / "plano.pdf").read_bytes()
         p = _ok(
             c.post(
@@ -84,9 +85,8 @@ def main(base: str) -> str:
                 f"{len(lv['rooms'])} ambientes, {len(lv.get('furniture') or [])} muebles"
             )
         print(f"fachada {p['model']['facade']}, revisión {p['revision']}")
-        url = VIEWER.format(id=pid)
-        print(url)
-        return url
+        print(VIEWER.format(id=pid))
+        return str(pid)
 
 
 if __name__ == "__main__":

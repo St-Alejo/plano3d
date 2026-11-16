@@ -56,6 +56,25 @@
         "title": "AssistantRequestDTO",
         "type": "object"
       },
+      "AuthConfigDTO": {
+        "description": "Qué ofrece este servidor en la pantalla de entrada.",
+        "properties": {
+          "auth_required": {
+            "title": "Auth Required",
+            "type": "boolean"
+          },
+          "demo_enabled": {
+            "title": "Demo Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "auth_required",
+          "demo_enabled"
+        ],
+        "title": "AuthConfigDTO",
+        "type": "object"
+      },
       "BlankProjectDTO": {
         "properties": {
           "name": {
@@ -1005,6 +1024,60 @@
         "title": "LevelDTO",
         "type": "object"
       },
+      "LinkCodeDTO": {
+        "properties": {
+          "code": {
+            "description": "6 caracteres; vale una vez",
+            "title": "Code",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "expires_in"
+        ],
+        "title": "LinkCodeDTO",
+        "type": "object"
+      },
+      "LinkExchangeDTO": {
+        "properties": {
+          "code": {
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "LinkExchangeDTO",
+        "type": "object"
+      },
+      "LoginDTO": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginDTO",
+        "type": "object"
+      },
       "MeasureDTO": {
         "description": "Procedencia de una longitud: exacta (cota o vector), inferida (escala) o en conflicto.",
         "properties": {
@@ -1530,6 +1603,47 @@
         "title": "ReanalyzeDTO",
         "type": "object"
       },
+      "RefreshDTO": {
+        "properties": {
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshDTO",
+        "type": "object"
+      },
+      "RegisterDTO": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "password"
+        ],
+        "title": "RegisterDTO",
+        "type": "object"
+      },
       "RevisionDTO": {
         "properties": {
           "created_at": {
@@ -1715,6 +1829,40 @@
           "meters_per_pixel"
         ],
         "title": "ScaleDTO",
+        "type": "object"
+      },
+      "SessionDTO": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "segundos de vida del token de acceso",
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "bearer",
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDTO"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in",
+          "user"
+        ],
+        "title": "SessionDTO",
         "type": "object"
       },
       "SolveReportDTO": {
@@ -1912,6 +2060,34 @@
         "title": "TextLabelDTO",
         "type": "object"
       },
+      "UserDTO": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_demo": {
+            "default": false,
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name"
+        ],
+        "title": "UserDTO",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2065,6 +2241,31 @@
         ],
         "title": "WallKind",
         "type": "string"
+      },
+      "WsTicketDTO": {
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "expires_in"
+        ],
+        "title": "WsTicketDTO",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "Token de acceso de /api/auth/login",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -2075,6 +2276,342 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/auth/config": {
+      "get": {
+        "operationId": "auth_config_api_auth_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthConfigDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Config",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/demo": {
+      "post": {
+        "description": "Entra a la cuenta demo (con la casa de 3 pisos) sin escribir contraseña.",
+        "operationId": "demo_api_auth_demo_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "La demo no está habilitada"
+          }
+        },
+        "summary": "Demo",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/demo/reset": {
+      "post": {
+        "description": "Deja la casa demo como nueva (solo desde la cuenta demo).",
+        "operationId": "demo_reset_api_auth_demo_reset_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Demo Reset",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/link-codes": {
+      "post": {
+        "description": "Código de un solo uso (2 min) para abrir esta sesión en la app de escritorio.",
+        "operationId": "create_link_code_api_auth_link_codes_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkCodeDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Link Code",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/link-codes/exchange": {
+      "post": {
+        "operationId": "exchange_link_code_api_auth_link_codes_exchange_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkExchangeDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Exchange Link Code",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Correo o contraseña incorrectos"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Cierra la sesión en todos los dispositivos (web y escritorio).",
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "refresh_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "register_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Ya hay una cuenta con ese correo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
+    "/api/auth/ws-ticket": {
+      "post": {
+        "description": "Ticket de 60 s para abrir un WebSocket (el navegador no le pone cabeceras).",
+        "operationId": "ws_ticket_api_auth_ws_ticket_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WsTicketDTO"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ws Ticket",
+        "tags": [
+          "cuentas"
+        ]
+      }
+    },
     "/api/capture/check": {
       "post": {
         "description": "¿La foto sirve? Avisa si está movida, con reflejo o con poca resolución.",
@@ -2111,6 +2648,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Check Capture",
         "tags": [
           "captura"
@@ -2153,6 +2695,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Suggest Corners",
         "tags": [
           "captura"
@@ -2200,6 +2747,11 @@
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Photos Status",
         "tags": [
           "fotos"
@@ -2225,6 +2777,11 @@
             "description": "Successful Response"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Projects",
         "tags": [
           "proyectos"
@@ -2264,6 +2821,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Project",
         "tags": [
           "proyectos"
@@ -2306,6 +2868,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Blank Project",
         "tags": [
           "proyectos"
@@ -2341,6 +2908,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Delete Project",
         "tags": [
           "proyectos"
@@ -2381,6 +2953,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Project",
         "tags": [
           "proyectos"
@@ -2437,6 +3014,11 @@
             "description": "No hay asistente con IA (el chat usa el intérprete local)"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Assistant",
         "tags": [
           "modelo"
@@ -2511,6 +3093,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Set Facade",
         "tags": [
           "modelo"
@@ -2592,6 +3179,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Furnish",
         "tags": [
           "modelo"
@@ -2642,6 +3234,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Image",
         "tags": [
           "proyectos"
@@ -2716,6 +3313,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Add Level",
         "tags": [
           "modelo"
@@ -2806,6 +3408,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Duplicate Level",
         "tags": [
           "modelo"
@@ -2890,6 +3497,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Update Model",
         "tags": [
           "modelo"
@@ -2946,6 +3558,11 @@
             "description": "Sin clave de OpenAI, sin presupuesto o la API falló"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Generate Photos",
         "tags": [
           "fotos"
@@ -2992,6 +3609,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Progress",
         "tags": [
           "proyectos"
@@ -3034,6 +3656,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Correction Quality",
         "tags": [
           "modelo"
@@ -3093,6 +3720,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Reanalyze",
         "tags": [
           "proyectos"
@@ -3139,6 +3771,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Revisions",
         "tags": [
           "modelo"
@@ -3190,6 +3827,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Revision",
         "tags": [
           "modelo"
@@ -3259,6 +3901,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Restore Revision",
         "tags": [
           "modelo"
@@ -3311,6 +3958,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Calibrate Scale",
         "tags": [
           "modelo"
@@ -3370,6 +4022,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Solve Dimensions",
         "tags": [
           "modelo"

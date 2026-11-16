@@ -1,0 +1,7664 @@
+{
+ "name": "Casa de 3 pisos",
+ "original_image_key": "originals/prj_demo_casa3.pdf",
+ "files": {
+  "originals/prj_demo_casa3.pdf": "original.pdf",
+  "rectified/prj_demo_casa3.png": "rectificada.png"
+ },
+ "model": {
+  "project_id": "prj_demo_casa3",
+  "scale": {
+   "meters_per_pixel": 0.0071782001963578545,
+   "source": "vector",
+   "confidence": 1.0
+  },
+  "levels": [
+   {
+    "id": "lvl_0",
+    "name": "Piso 1",
+    "elevation": 0.0,
+    "walls": [
+     {
+      "id": "w_b081d9b930",
+      "start": {
+       "x": 2.32738408672772,
+       "y": 5.149787198240936
+      },
+      "end": {
+       "x": 6.58766122298638,
+       "y": 5.149787198240933
+      },
+      "thickness": 0.11939953810623473,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_55c87b4b34",
+        "kind": "door",
+        "offset": 3.09041570438799,
+        "width": 1.16986143187067,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.6,
+        "operation": "none",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 4.26027713625866,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_d6cb855bc1",
+      "start": {
+       "x": 6.58766122298638,
+       "y": 5.149787198240934
+      },
+      "end": {
+       "x": 8.205906026681529,
+       "y": 5.149787198240936
+      },
+      "thickness": 0.1193995381062347,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 1.6182448036951484,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_dad4fbf166",
+      "start": {
+       "x": 2.3273840867277196,
+       "y": 6.470803364522689
+      },
+      "end": {
+       "x": 4.007869075180375,
+       "y": 6.470803364522689
+      },
+      "thickness": 0.11939953810623471,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 1.6804849884526556,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_e223f60093",
+      "start": {
+       "x": 6.527961453933263,
+       "y": 6.4708033645226894
+      },
+      "end": {
+       "x": 8.205906026681529,
+       "y": 6.470803364522692
+      },
+      "thickness": 0.11939953810623471,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 1.6779445727482658,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_6472bdd562",
+      "start": {
+       "x": 2.3273840867277196,
+       "y": 2.0301567132524814
+      },
+      "end": {
+       "x": 5.2679152645568195,
+       "y": 2.030156713252481
+      },
+      "thickness": 0.11939953810623537,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.9405311778291,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f1d7aca3e2",
+      "start": {
+       "x": 5.2679152645568195,
+       "y": 2.030156713252481
+      },
+      "end": {
+       "x": 8.20590602668153,
+       "y": 2.0301567132524814
+      },
+      "thickness": 0.11939953810623538,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.937990762124711,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_b1d3992441",
+      "start": {
+       "x": 2.3273840867277205,
+       "y": 13.910410754822918
+      },
+      "end": {
+       "x": 5.266645056704625,
+       "y": 13.91041075482292
+      },
+      "thickness": 0.1219399538106245,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_1b115006c5",
+        "kind": "door",
+        "offset": 0.5144341801385668,
+        "width": 1.9993071593533491,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.5,
+        "operation": "folding",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.939260969976904,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_b738f204e5",
+      "start": {
+       "x": 5.266645056704625,
+       "y": 13.91041075482292
+      },
+      "end": {
+       "x": 8.205906026681534,
+       "y": 13.910410754822921
+      },
+      "thickness": 0.1219399538106245,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_6b2abb50ef",
+        "kind": "door",
+        "offset": 0.4255196304849891,
+        "width": 1.9993071593533482,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.5,
+        "operation": "folding",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.9392609699769094,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_681fdf6e26",
+      "start": {
+       "x": 6.58766122298638,
+       "y": 5.149787198240932
+      },
+      "end": {
+       "x": 6.58766122298638,
+       "y": 6.305579691945825
+      },
+      "thickness": 0.11939953810623471,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_96388c5b08",
+        "kind": "door",
+        "offset": 0.628793365330921,
+        "width": 0.5269991283739719,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 1.155792493704893,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_a5d4d3f80f",
+      "start": {
+       "x": 2.32738408672772,
+       "y": 13.910410754822916
+      },
+      "end": {
+       "x": 2.3273840867277196,
+       "y": 9.52057241764047
+      },
+      "thickness": 0.11939953810623516,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.3898383371824465,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_a42b3ea1ab",
+      "start": {
+       "x": 2.3273840867277196,
+       "y": 9.52057241764047
+      },
+      "end": {
+       "x": 2.327384086727719,
+       "y": 5.149787198240936
+      },
+      "thickness": 0.11939953810623516,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.370785219399534,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_4dd9f897ed",
+      "start": {
+       "x": 2.3273840867277196,
+       "y": 5.1497871982409364
+      },
+      "end": {
+       "x": 2.327384086727719,
+       "y": 2.0301567132524814
+      },
+      "thickness": 0.11939953810623517,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.119630484988455,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_cfe4ee2eef",
+      "start": {
+       "x": 5.266645056704623,
+       "y": 5.149787198240934
+      },
+      "end": {
+       "x": 5.266645056704624,
+       "y": 9.52057241764047
+      },
+      "thickness": 0.1193995381062356,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.370785219399536,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f555668f98",
+      "start": {
+       "x": 5.266645056704624,
+       "y": 9.52057241764047
+      },
+      "end": {
+       "x": 5.266645056704624,
+       "y": 13.910410754822916
+      },
+      "thickness": 0.1193995381062356,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.3898383371824465,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_efdd4e974f",
+      "start": {
+       "x": 3.948169306127257,
+       "y": 5.149787198240936
+      },
+      "end": {
+       "x": 3.9481693061272574,
+       "y": 6.305579238967068
+      },
+      "thickness": 0.1193995381062356,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_c16fead2ef",
+        "kind": "door",
+        "offset": 0.6287933817908291,
+        "width": 0.5269986589353035,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 1.1557920407261326,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_508de0897b",
+      "start": {
+       "x": 8.205906026681532,
+       "y": 13.910410754822921
+      },
+      "end": {
+       "x": 8.20590602668153,
+       "y": 9.520572417640471
+      },
+      "thickness": 0.1193995381062365,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_62717d87c1",
+        "kind": "window",
+        "offset": 1.1406466512702096,
+        "width": 2.200000000000001,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 4.38983833718245,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_3d4d1e0564",
+      "start": {
+       "x": 8.20590602668153,
+       "y": 9.520572417640471
+      },
+      "end": {
+       "x": 8.20590602668153,
+       "y": 2.0301567132524814
+      },
+      "thickness": 0.11939953810623649,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_3b6b649782",
+        "kind": "window",
+        "offset": 0.9297921478060047,
+        "width": 2.179676674364895,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_eb1001e367",
+        "kind": "window",
+        "offset": 4.430484988452655,
+        "width": 1.9205542725173217,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.85,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_d9d9d81f40",
+        "kind": "door",
+        "offset": 6.419891748438873,
+        "width": 0.7234970048818248,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 7.49041570438799,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_6a8f915d22",
+      "label": "Parqueadero 1",
+      "polygon": [
+       {
+        "x": 5.32634482575774,
+        "y": 5.209486967294051
+       },
+       {
+        "x": 6.527961453933263,
+        "y": 5.20948696729405
+       },
+       {
+        "x": 6.527961453933263,
+        "y": 6.411103595469572
+       },
+       {
+        "x": 6.4682616848801455,
+        "y": 6.411103595469572
+       },
+       {
+        "x": 6.4682616848801455,
+        "y": 6.530503133575807
+       },
+       {
+        "x": 8.146206257628412,
+        "y": 6.5305031335758095
+       },
+       {
+        "x": 8.146206257628414,
+        "y": 13.849440777917609
+       },
+       {
+        "x": 5.326344825757742,
+        "y": 13.849440777917607
+       }
+      ],
+      "confidence": 0.95,
+      "area": 22.21861685218869,
+      "centroid": {
+       "x": 6.678546168649505,
+       "y": 9.882534897393041
+      },
+      "room_type": "garage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_21b250ed08",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 8.146206257628412,
+        "y": 5.090087429187818
+       },
+       {
+        "x": 2.3870838557808374,
+        "y": 5.090087429187818
+       },
+       {
+        "x": 2.387083855780837,
+        "y": 2.089856482305599
+       },
+       {
+        "x": 8.146206257628412,
+        "y": 2.089856482305599
+       }
+      ],
+      "confidence": 0.95,
+      "area": 17.27869725690575,
+      "centroid": {
+       "x": 5.266645056704624,
+       "y": 3.5899719557467082
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_f90d86562b",
+      "label": "Baño 1",
+      "polygon": [
+       {
+        "x": 6.647360992039498,
+        "y": 6.411103595469573
+       },
+       {
+        "x": 6.647360992039498,
+        "y": 5.209486967294051
+       },
+       {
+        "x": 8.146206257628412,
+        "y": 5.209486967294053
+       },
+       {
+        "x": 8.146206257628412,
+        "y": 6.411103595469575
+       }
+      ],
+      "confidence": 0.95,
+      "area": 1.801037394193802,
+      "centroid": {
+       "x": 7.396783624833946,
+       "y": 5.810295281381808
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_340c37aa5f",
+      "label": "Parqueadero 2",
+      "polygon": [
+       {
+        "x": 4.007869075180375,
+        "y": 6.411103595469571
+       },
+       {
+        "x": 4.007869075180375,
+        "y": 5.209486967294052
+       },
+       {
+        "x": 5.206945287651505,
+        "y": 5.209486967294051
+       },
+       {
+        "x": 5.206945287651505,
+        "y": 13.849440777917607
+       },
+       {
+        "x": 2.387083855780838,
+        "y": 13.849440777917605
+       },
+       {
+        "x": 2.3870838557808365,
+        "y": 6.530503133575806
+       },
+       {
+        "x": 4.0675688442334925,
+        "y": 6.530503133575806
+       },
+       {
+        "x": 4.0675688442334925,
+        "y": 6.411103595469571
+       }
+      ],
+      "confidence": 0.95,
+      "area": 22.215260921974078,
+      "centroid": {
+       "x": 3.8547201897867516,
+       "y": 9.88314104844195
+      },
+      "room_type": "garage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_642ed2fe05",
+      "label": "Baño 2",
+      "polygon": [
+       {
+        "x": 2.3870838557808365,
+        "y": 5.209486967294054
+       },
+       {
+        "x": 3.888469537074139,
+        "y": 5.209486967294052
+       },
+       {
+        "x": 3.8884695370741396,
+        "y": 6.411103595469571
+       },
+       {
+        "x": 2.3870838557808365,
+        "y": 6.411103595469571
+       }
+      ],
+      "confidence": 0.95,
+      "area": 1.8040899999466626,
+      "centroid": {
+       "x": 3.1377766964274874,
+       "y": 5.810295281381811
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [
+     {
+      "id": "c_d552223504",
+      "center": {
+       "x": 2.4175688442334935,
+       "y": 2.1203414707582544
+      },
+      "width": 0.29976905311778235,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_fe50e31bc8",
+      "center": {
+       "x": 8.115721269175758,
+       "y": 2.1203414707582544
+      },
+      "width": 0.29976905311778235,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 1.5707963267948937,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_015d93bd50",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 2.1203414707582544
+      },
+      "width": 0.29976905311778235,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_547b8648e6",
+      "center": {
+       "x": 2.4175688442334935,
+       "y": 13.820225997317145
+      },
+      "width": 0.30230946882217147,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_06632260c9",
+      "center": {
+       "x": 8.115721269175758,
+       "y": 13.820225997317145
+      },
+      "width": 0.30230946882217147,
+      "depth": 0.29976905311778346,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4587ff4fdb",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 13.820225997317145
+      },
+      "width": 0.30230946882217147,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_7324262a94",
+      "center": {
+       "x": 2.4175688442334935,
+       "y": 5.239971955746707
+      },
+      "width": 0.2997690531177817,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_901462c9d2",
+      "center": {
+       "x": 8.115721269175758,
+       "y": 5.239971955746706
+      },
+      "width": 0.29976905311778346,
+      "depth": 0.2997690531177817,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_5320fe5dfc",
+      "center": {
+       "x": 5.267915264556819,
+       "y": 5.239971955746707
+      },
+      "width": 0.2997690531177817,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_423adc80e5",
+      "center": {
+       "x": 2.4175688442334935,
+       "y": 9.52057241764047
+      },
+      "width": 0.29976905311778257,
+      "depth": 0.29976905311778346,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_42b0c7d173",
+      "center": {
+       "x": 8.115721269175758,
+       "y": 9.520572417640471
+      },
+      "width": 0.29976905311778346,
+      "depth": 0.29976905311778257,
+      "round": false,
+      "rotation": 1.5707963267948937,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4a7d039518",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 9.52057241764047
+      },
+      "width": 0.29976905311778257,
+      "depth": 0.29976905311778346,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_d3de09aaa1",
+      "start": {
+       "x": 4.898284779568366,
+       "y": 2.6944754199499403
+      },
+      "end": {
+       "x": 3.7754210382288744,
+       "y": 2.6944754199499403
+      },
+      "width": 0.8484988452655897,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_a83fbbc53c",
+      "confidence": 1.0,
+      "tread": 0.22457274826789825,
+      "base": 0.0
+     },
+     {
+      "id": "s_2936ba5821",
+      "start": {
+       "x": 3.032349444695387,
+       "y": 3.1212652582871216
+      },
+      "end": {
+       "x": 3.032349444695387,
+       "y": 4.239048168217838
+      },
+      "width": 0.9297921478060047,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_a83fbbc53c",
+      "confidence": 1.0,
+      "tread": 0.2235565819861433,
+      "base": 0.8666666666666667
+     },
+     {
+      "id": "s_e776211feb",
+      "start": {
+       "x": 3.7754210382288744,
+       "y": 4.664567798702827
+      },
+      "end": {
+       "x": 4.898284779568366,
+       "y": 4.664567798702827
+      },
+      "width": 0.8510392609699782,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_a83fbbc53c",
+      "confidence": 1.0,
+      "tread": 0.22457274826789825,
+      "base": 1.7333333333333334
+     }
+    ],
+    "dimensions": [
+     {
+      "id": "d_62fcb41cc2",
+      "a": {
+       "x": 8.207176234533724,
+       "y": 12.769764103552712
+      },
+      "b": {
+       "x": 8.207176234533724,
+       "y": 10.56976410355271
+      },
+      "value": 2.2,
+      "text": "2.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 8.881784197001252e-16,
+      "wall_ids": [],
+      "measured": 2.200000000000001
+     },
+     {
+      "id": "d_005ec79b1c",
+      "a": {
+       "x": 2.267684317674602,
+       "y": 5.090087429187816
+      },
+      "b": {
+       "x": 2.267684317674602,
+       "y": 2.2702259973171457
+      },
+      "value": 2.82,
+      "text": "2.82",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00013856812932910856,
+      "wall_ids": [],
+      "measured": 2.8198614318706707
+     },
+     {
+      "id": "d_40c3e415d7",
+      "a": {
+       "x": 2.267684317674602,
+       "y": 9.370687891081579
+      },
+      "b": {
+       "x": 2.267684317674602,
+       "y": 5.389856482305598
+      },
+      "value": 3.98,
+      "text": "3.98",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0008314087759804245,
+      "wall_ids": [],
+      "measured": 3.9808314087759804
+     },
+     {
+      "id": "d_e82697a1e0",
+      "a": {
+       "x": 2.567453370792385,
+       "y": 3.1187248425827354
+      },
+      "b": {
+       "x": 3.4972455185983895,
+       "y": 3.1187248425827354
+      },
+      "value": 0.93,
+      "text": ".93",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00020785219399532817,
+      "wall_ids": [],
+      "measured": 0.9297921478060047
+     },
+     {
+      "id": "d_16549bcf06",
+      "a": {
+       "x": 2.567453370792385,
+       "y": 1.9704569441993633
+      },
+      "b": {
+       "x": 5.118030737997928,
+       "y": 1.9704569441993633
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0005773672055431334,
+      "wall_ids": [],
+      "measured": 2.550577367205543
+     },
+     {
+      "id": "d_7b8a8c6ae3",
+      "a": {
+       "x": 3.4972455185983895,
+       "y": 3.1187248425827354
+      },
+      "b": {
+       "x": 4.617568844233493,
+       "y": 3.1187248425827354
+      },
+      "value": 1.12,
+      "text": "1.12",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0003233256351036218,
+      "wall_ids": [],
+      "measured": 1.1203233256351037
+     },
+     {
+      "id": "d_6094b16385",
+      "a": {
+       "x": 8.207176234533724,
+       "y": 3.1695331566704947
+      },
+      "b": {
+       "x": 8.207176234533724,
+       "y": 5.090087429187816
+      },
+      "value": 1.92,
+      "text": "1.92",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0005542725173217633,
+      "wall_ids": [],
+      "measured": 1.9205542725173217
+     },
+     {
+      "id": "d_fa56f8d8f0",
+      "a": {
+       "x": 2.3870838557808374,
+       "y": 13.669071262906058
+      },
+      "b": {
+       "x": 2.3870838557808374,
+       "y": 9.670456944199362
+      },
+      "value": 4.0,
+      "text": "4.00",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00138568129330352,
+      "wall_ids": [],
+      "measured": 3.9986143187066965
+     },
+     {
+      "id": "d_e0f114589c",
+      "a": {
+       "x": 5.41779979111571,
+       "y": 1.9704569441993633
+      },
+      "b": {
+       "x": 7.965836742616865,
+       "y": 1.9704569441993633
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.001963048498844877,
+      "wall_ids": [],
+      "measured": 2.548036951501155
+     },
+     {
+      "id": "d_3bd61791d4",
+      "a": {
+       "x": 3.776691246081068,
+       "y": 5.090087429187816
+      },
+      "b": {
+       "x": 3.776691246081068,
+       "y": 4.239048168217838
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0010392609699781952,
+      "wall_ids": [],
+      "measured": 0.8510392609699782
+     },
+     {
+      "id": "d_51ef93e695",
+      "a": {
+       "x": 3.776691246081068,
+       "y": 3.1187248425827354
+      },
+      "b": {
+       "x": 3.776691246081068,
+       "y": 2.2702259973171457
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0015011547344102594,
+      "wall_ids": [],
+      "measured": 0.8484988452655897
+     }
+    ],
+    "labels": [
+     {
+      "id": "t_d6ab2cf560",
+      "position": {
+       "x": 3.6945005162889197,
+       "y": 13.923590721104674
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0d905e3893",
+      "position": {
+       "x": 7.497502825757742,
+       "y": 13.923590721104674
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4a7f367039",
+      "position": {
+       "x": 2.073715296889383,
+       "y": 13.834676171451095
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0a66299496",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 13.378351817063102
+      },
+      "text": "1.20",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_57e4228f5e",
+      "position": {
+       "x": 1.806971647928643,
+       "y": 11.671192463714375
+      },
+      "text": "4.30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6f27d114c5",
+      "position": {
+       "x": 7.494962410053356,
+       "y": 10.195210939464951
+      },
+      "text": "7.32",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_472ba3a0cc",
+      "position": {
+       "x": 3.6919601005845326,
+       "y": 10.195210939464951
+      },
+      "text": "7.32",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_028c086336",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 9.58805158611622
+      },
+      "text": "1.98",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2f230667b4",
+      "position": {
+       "x": 2.073715296889383,
+       "y": 9.533752383922227
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_06cdd867fc",
+      "position": {
+       "x": 8.716902363863976,
+       "y": 7.973670123414141
+      },
+      "text": "12.00",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_60f2b4841f",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 7.49220862999613
+      },
+      "text": "2.20",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_fd63a41dc9",
+      "position": {
+       "x": 1.806971647928643,
+       "y": 7.382970754707445
+      },
+      "text": "4.28",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_030104eedb",
+      "position": {
+       "x": 7.497502825757742,
+       "y": 6.48271312295225
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_82171da6dd",
+      "position": {
+       "x": 3.6945005162889197,
+       "y": 6.48271312295225
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_339d590856",
+      "position": {
+       "x": 3.6919601005845326,
+       "y": 5.810453433691279
+      },
+      "text": "1.20",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_3c91039fab",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 5.746943041081579
+      },
+      "text": "1.30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_13c6c1cbdf",
+      "position": {
+       "x": 7.494962410053356,
+       "y": 5.736781378264029
+      },
+      "text": "1.20",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_59e8b7aa64",
+      "position": {
+       "x": 2.073715296889383,
+       "y": 5.253151922028463
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c98fd705e1",
+      "position": {
+       "x": 3.6945005162889197,
+       "y": 5.164237372374883
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f12cc5a4f8",
+      "position": {
+       "x": 7.497502825757742,
+       "y": 5.164237372374883
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c6f8737591",
+      "position": {
+       "x": 3.6945005162889197,
+       "y": 3.68666590482292
+      },
+      "text": "1.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b83be981de",
+      "position": {
+       "x": 1.806971647928643,
+       "y": 3.6841254891185318
+      },
+      "text": "3.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_68bcc9be49",
+      "position": {
+       "x": 7.494962410053356,
+       "y": 3.592670523760563
+      },
+      "text": "3.00",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_11ac0828b0",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 2.7330595432755764
+      },
+      "text": ".90",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4e1aaf4d84",
+      "position": {
+       "x": 3.6932303084367266,
+       "y": 2.1195491506658755
+      },
+      "text": ".18.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_9b41a5ece0",
+      "position": {
+       "x": 2.073715296889383,
+       "y": 2.1335214370400095
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0c0eac0b95",
+      "position": {
+       "x": 8.465401209129567,
+       "y": 2.1335214370400095
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_345defe147",
+      "position": {
+       "x": 7.497502825757742,
+       "y": 2.044606887386429
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1099f8307a",
+      "position": {
+       "x": 1.4297020078513132,
+       "y": 9.530250459298935
+      },
+      "text": "2",
+      "kind": "axis",
+      "rotation": -0.02128168204832965,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c27fb97899",
+      "position": {
+       "x": 1.4285102918085513,
+       "y": 5.25091520285987
+      },
+      "text": "3",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_815be4ad50",
+      "position": {
+       "x": 1.4310507075129393,
+       "y": 2.1287443021670294
+      },
+      "text": "4",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6742a248aa",
+      "position": {
+       "x": 1.4361315389217153,
+       "y": 13.829899036578114
+      },
+      "text": "1",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1cf028a18e",
+      "position": {
+       "x": 2.312933912593771,
+       "y": 12.60119923981137
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_ef7914228b",
+      "position": {
+       "x": 2.3878761758732163,
+       "y": 3.249929031959178
+      },
+      "text": ".12.18",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2b79f69627",
+      "position": {
+       "x": 2.312933912593771,
+       "y": 8.876949817178579
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_5c7d4e4a7f",
+      "position": {
+       "x": 2.312933912593771,
+       "y": 5.94022926290606
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4cf508ddd1",
+      "position": {
+       "x": 2.4018484622473504,
+       "y": 1.7790283391185309
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_e32d2146de",
+      "position": {
+       "x": 2.4109540869586663,
+       "y": 1.1456034245688786
+      },
+      "text": "A",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2c3ec14baa",
+      "position": {
+       "x": 2.5415713259886896,
+       "y": 14.183878223645088
+      },
+      "text": ".58",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_833d9bdc94",
+      "position": {
+       "x": 3.4603118917657865,
+       "y": 16.22768047125885
+      },
+      "text": "ESCALA 1 - 50",
+      "kind": "scale",
+      "rotation": -0.0033600209556903186,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_ca58cd38fc",
+      "position": {
+       "x": 5.639188122922639,
+       "y": 15.803764652618499
+      },
+      "text": "PLANTA 1ER PISO  opc 3 b",
+      "kind": "room_name",
+      "rotation": -0.0035500205870620414,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d7063a6617",
+      "position": {
+       "x": 3.1299972970048566,
+       "y": 5.937688847201672
+      },
+      "text": "1.50",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0ee0dc9332",
+      "position": {
+       "x": 3.79558621155451,
+       "y": 8.876949817178577
+      },
+      "text": "2.82",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_af7de90fd1",
+      "position": {
+       "x": 3.8387732785291053,
+       "y": 1.4945017802270772
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_74608adfa2",
+      "position": {
+       "x": 3.8387732785291053,
+       "y": 14.183878223645088
+      },
+      "text": "2.00",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2c2489034a",
+      "position": {
+       "x": 3.9022836711388047,
+       "y": 12.598658824106984
+      },
+      "text": "2.82",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a9eb067dca",
+      "position": {
+       "x": 3.9337191319933087,
+       "y": 5.94022926290606
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_16f3428844",
+      "position": {
+       "x": 4.598357574141114,
+       "y": 5.937688847201672
+      },
+      "text": "1.20",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_fb64dc596c",
+      "position": {
+       "x": 5.051502041924024,
+       "y": 3.249929031959178
+      },
+      "text": ".90",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6e310b4db9",
+      "position": {
+       "x": 5.263946488690768,
+       "y": 14.394732727109291
+      },
+      "text": "6.00",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_92d5927d8e",
+      "position": {
+       "x": 5.252194882570676,
+       "y": 8.876949817178579
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_79c5beae29",
+      "position": {
+       "x": 5.252194882570676,
+       "y": 1.7790283391185309
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_acc273a066",
+      "position": {
+       "x": 5.252194882570676,
+       "y": 14.183878223645088
+      },
+      "text": ".85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d81f3b3261",
+      "position": {
+       "x": 5.252194882570676,
+       "y": 12.60119923981137
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c8516fb102",
+      "position": {
+       "x": 5.252194882570676,
+       "y": 5.94022926290606
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1a76bd6df0",
+      "position": {
+       "x": 5.258760091577604,
+       "y": 1.1456034245688786
+      },
+      "text": "B",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2cef26b94b",
+      "position": {
+       "x": 5.919373740422869,
+       "y": 5.937688847201672
+      },
+      "text": "1.20",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6e25235da7",
+      "position": {
+       "x": 6.573211048852429,
+       "y": 5.94022926290606
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1d0fcef11a",
+      "position": {
+       "x": 6.68911969885243,
+       "y": 1.4945017802270772
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_bcb62f19f2",
+      "position": {
+       "x": 6.68911969885243,
+       "y": 14.183878223645088
+      },
+      "text": "2.00",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2c85f268ea",
+      "position": {
+       "x": 6.734847181531415,
+       "y": 8.876949817178577
+      },
+      "text": "2.82",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d5fc5f1d86",
+      "position": {
+       "x": 6.734847181531415,
+       "y": 12.598658824106984
+      },
+      "text": "2.82",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_5db1652e1b",
+      "position": {
+       "x": 6.8288425625937705,
+       "y": 3.249929031959178
+      },
+      "text": "2.63",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_9d396df1d8",
+      "position": {
+       "x": 7.3877340175591275,
+       "y": 5.937688847201672
+      },
+      "text": "1.50",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b65e279349",
+      "position": {
+       "x": 7.965358854857049,
+       "y": 14.183878223645088
+      },
+      "text": ".58",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4ef85223d8",
+      "position": {
+       "x": 8.102541302894,
+       "y": 1.7790283391185309
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_81140ff552",
+      "position": {
+       "x": 8.109974101970215,
+       "y": 1.1481438402732667
+      },
+      "text": "C",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_976022863f",
+      "position": {
+       "x": 8.191455852547579,
+       "y": 3.249929031959178
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b0503aad52",
+      "position": {
+       "x": 8.191455852547579,
+       "y": 8.876949817178579
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_e4e110a6f7",
+      "position": {
+       "x": 8.191455852547579,
+       "y": 12.60119923981137
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1b91cbcbdf",
+      "position": {
+       "x": 8.191455852547579,
+       "y": 5.94022926290606
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     }
+    ],
+    "furniture": [
+     {
+      "id": "f_r_f90d86562b_1",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 7.79590602668153,
+       "y": 5.690895453266627
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_f90d86562b_2",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 6.945859837414833,
+       "y": 5.434787198240934
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_642ed2fe05_1",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 2.7373840867277193,
+       "y": 5.690895453140932
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_r_642ed2fe05_2",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 3.5848898605033748,
+       "y": 5.434787198240935
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 0.0
+     }
+    ]
+   },
+   {
+    "id": "lvl_a83fbbc53c",
+    "name": "Piso 2",
+    "elevation": 2.6,
+    "walls": [
+     {
+      "id": "w_e05e936b72",
+      "start": {
+       "x": 5.83831635006857,
+       "y": 13.094838425318923
+      },
+      "end": {
+       "x": 5.288241361145204,
+       "y": 13.09483842531891
+      },
+      "thickness": 0.11941581745679919,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.5500749889233667,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_d5aa32c746",
+      "start": {
+       "x": 2.326983164423902,
+       "y": 14.51004290028569
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 14.510042900285685
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_0f173ea1f2",
+        "kind": "window",
+        "offset": 0.5170450819672108,
+        "width": 1.9995797518830312,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_4f5fec4202",
+        "kind": "window",
+        "offset": 3.57104109437306,
+        "width": 1.9970389898094822,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 6.481484049623392,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_af0cfa0950",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 5.149875421331319
+      },
+      "end": {
+       "x": 5.358112318167807,
+       "y": 5.149875421331319
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.031129153743908,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_6b24097818",
+      "start": {
+       "x": 5.358112318167808,
+       "y": 5.149875421331319
+      },
+      "end": {
+       "x": 5.579158618566568,
+       "y": 5.149875421331317
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.2210463003987604,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_a9fb4d3334",
+      "start": {
+       "x": 2.3269831644238983,
+       "y": 10.749715031433226
+      },
+      "end": {
+       "x": 5.358112318167809,
+       "y": 10.749715031433226
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.0311291537439105,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_accb16951e",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 10.74971503143322
+      },
+      "end": {
+       "x": 8.808467214047297,
+       "y": 10.749715031433228
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.5305990252547685,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_4218cf5d5b",
+      "start": {
+       "x": 2.3269831644238983,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 8.118650311078753,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680276,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_27bfb9b7bf",
+        "kind": "door",
+        "offset": 2.09231756756757,
+        "width": 0.8791036774479384,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.95,
+        "operation": "swing",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_7a971e369c",
+        "kind": "door",
+        "offset": 3.090837062472309,
+        "width": 0.8003400531679237,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.6,
+        "operation": "none",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 5.791667146654854,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_07595a1c5f",
+      "start": {
+       "x": 8.118650311078753,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 9.431059515261305
+      },
+      "thickness": 0.11941581745680274,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_b5deb95a8e",
+      "start": {
+       "x": 5.579158618566567,
+       "y": 4.179304309235616
+      },
+      "end": {
+       "x": 6.2384863766525225,
+       "y": 4.179304309235617
+      },
+      "thickness": 0.11941581745680363,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6593277580859551,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_3d51a0ba1b",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 2.0285492139764214
+      },
+      "end": {
+       "x": 5.2679152645568195,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.9409321001329203,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f8b7eb35f0",
+      "start": {
+       "x": 5.2679152645568195,
+       "y": 2.028549213976422
+      },
+      "end": {
+       "x": 8.118650311078753,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.850735046521933,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f038d5ecd8",
+      "start": {
+       "x": 8.118650311078753,
+       "y": 2.028549213976422
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 2.0285492139764205
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_40c15222f4",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 11.670741283094726
+      },
+      "end": {
+       "x": 5.358112318167809,
+       "y": 11.67074128309472
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.9197558706247202,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_c1a41c6109",
+      "start": {
+       "x": 2.326983164423902,
+       "y": 14.510042900285688
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 13.820225997317143
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685448,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_db6d7d0090",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 13.820225997317143
+      },
+      "end": {
+       "x": 2.3269831644238987,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.389166482055828,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_aeb9854f28",
+      "start": {
+       "x": 2.3269831644238996,
+       "y": 9.431059515261317
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.281184093929998,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_8bdfcdebf5",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 5.14987542133132
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.121326207354898,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_b4a9f6991b",
+      "start": {
+       "x": 8.808467214047294,
+       "y": 14.510042900285685
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 2.0285492139764187
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_3551793b73",
+        "kind": "window",
+        "offset": 2.4988394993354,
+        "width": 1.3211962782454592,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_6d2e73ae92",
+        "kind": "window",
+        "offset": 4.325647430217101,
+        "width": 0.8130438635356683,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_4f67164091",
+        "kind": "window",
+        "offset": 5.921246012405849,
+        "width": 2.2002999556933984,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_cfd8457fcf",
+        "kind": "window",
+        "offset": 9.419875387682767,
+        "width": 2.200299955693398,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 12.481493686309266,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_bd54ec9dc1",
+      "start": {
+       "x": 5.579158618566567,
+       "y": 5.149875421331315
+      },
+      "end": {
+       "x": 5.579158618566567,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_2b8664b448",
+        "kind": "door",
+        "offset": 0.1314074383611894,
+        "width": 0.6816343680071428,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 3.1213262073548935,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f7cd566b3b",
+      "start": {
+       "x": 5.358112318167809,
+       "y": 11.670741283094722
+      },
+      "end": {
+       "x": 5.358112318167808,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_f3a9bf473e",
+        "kind": "door",
+        "offset": 0.13207519381607824,
+        "width": 0.6236789454221885,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.2396817678334067,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_e899bbb24b",
+      "start": {
+       "x": 5.358112318167808,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 5.358112318167808,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_59ac22636a",
+        "kind": "window",
+        "offset": 0.7406321444395214,
+        "width": 2.5001098803721753,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.85,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_62d2aa33cc",
+        "kind": "door",
+        "offset": 3.311838928879281,
+        "width": 0.6236789453830047,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 4.281184093929996,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_9655c26c7b",
+      "start": {
+       "x": 4.428193399248888,
+       "y": 5.7583879379462966
+      },
+      "end": {
+       "x": 4.428193399248888,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6085125166149767,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_5c28e3c74d",
+      "start": {
+       "x": 5.8383163500685695,
+       "y": 11.670741283094726
+      },
+      "end": {
+       "x": 5.838316350068562,
+       "y": 13.094838425318919
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 1.424097142224193,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_18a497d585",
+      "start": {
+       "x": 2.8884915826782187,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 2.8884915826782205,
+       "y": 10.749715031433226
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_741bfd08e5",
+        "kind": "window",
+        "offset": 0.24010201595037728,
+        "width": 0.6987095702259651,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 1.3186555161719102,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_2da24a83d0",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 11.670741283094728
+      },
+      "end": {
+       "x": 6.277868188792532,
+       "y": 9.591224283507305
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_b8656ef4ef",
+        "kind": "door",
+        "offset": 0.13207519383265343,
+        "width": 0.6236789453832561,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       },
+       {
+        "id": "op_b2c5b6b328",
+        "kind": "door",
+        "offset": 1.552446135436325,
+        "width": 0.5270708641510975,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.0795169995874225,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_0d049cc80f",
+      "start": {
+       "x": 5.288241361145204,
+       "y": 13.094838425318907
+      },
+      "end": {
+       "x": 5.288241361145212,
+       "y": 13.820225997317145
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.7253875719982386,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_2b5ab11df3",
+      "start": {
+       "x": 5.288241361145212,
+       "y": 13.820225997317145
+      },
+      "end": {
+       "x": 5.288241361145226,
+       "y": 14.510042900285686
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_8fb4018933",
+      "label": "ALCOBA 1",
+      "polygon": [
+       {
+        "x": 5.3492196509103795,
+        "y": 13.15454633404731
+       },
+       {
+        "x": 5.898024258796968,
+        "y": 13.154546334047323
+       },
+       {
+        "x": 5.898024258796969,
+        "y": 11.731719572859898
+       },
+       {
+        "x": 6.338846478557704,
+        "y": 11.7317195728599
+       },
+       {
+        "x": 6.33757609752093,
+        "y": 10.809422940161621
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 10.809422940161628
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 14.450334991557284
+       },
+       {
+        "x": 5.349219650910399,
+        "y": 14.450334991557288
+       }
+      ],
+      "confidence": 0.95,
+      "area": 10.684427357478597,
+      "centroid": {
+       "x": 7.2560559563092974,
+       "y": 12.759564456242675
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_8df3e821a1",
+      "label": "Baño 1",
+      "polygon": [
+       {
+        "x": 6.337576097520932,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 9.490767423989706
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 10.690007122704827
+       },
+       {
+        "x": 6.33757609752093,
+        "y": 10.69000712270482
+       }
+      ],
+      "confidence": 0.95,
+      "area": 2.8915866236665657,
+      "centroid": {
+       "x": 7.543167701419918,
+       "y": 10.090387273347268
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_181f4ecb26",
+      "label": "SALA-COMEDOR / COCINA",
+      "polygon": [
+       {
+        "x": 8.748759305318895,
+        "y": 9.371351606532905
+       },
+       {
+        "x": 5.417820226896208,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 5.4178202268962075,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.63886652729497,
+        "y": 5.209583330059717
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 4.239012217964017
+       },
+       {
+        "x": 6.298194285380924,
+        "y": 4.239012217964018
+       },
+       {
+        "x": 6.298194285380924,
+        "y": 4.119596400507215
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 4.1195964005072145
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 2.089527503741597
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 2.089527503741596
+       }
+      ],
+      "confidence": 0.95,
+      "area": 23.486901505538793,
+      "centroid": {
+       "x": 7.1326866646667,
+       "y": 5.796743100692136
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_b1ed53ab4e",
+      "label": "Pasillo",
+      "polygon": [
+       {
+        "x": 5.417820226896209,
+        "y": 11.609762993329547
+       },
+       {
+        "x": 5.417820226896208,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 6.218160280064131,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 6.2181602800641285,
+        "y": 11.609762993329552
+       }
+      ],
+      "confidence": 0.95,
+      "area": 1.695917026628031,
+      "centroid": {
+       "x": 5.817990253480165,
+       "y": 10.550265208659638
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_f5599117be",
+      "label": "ALCOBA 2",
+      "polygon": [
+       {
+        "x": 2.3866910731523023,
+        "y": 14.45033499155729
+       },
+       {
+        "x": 2.3866910731522992,
+        "y": 10.809422940161626
+       },
+       {
+        "x": 5.298404409439408,
+        "y": 10.809422940161626
+       },
+       {
+        "x": 5.297134028402634,
+        "y": 11.731719572859896
+       },
+       {
+        "x": 5.778608441340168,
+        "y": 11.731719572859898
+       },
+       {
+        "x": 5.778608441340163,
+        "y": 13.035130516590522
+       },
+       {
+        "x": 5.227263071380028,
+        "y": 13.033860135553732
+       },
+       {
+        "x": 5.227263071380049,
+        "y": 14.450334991557288
+       }
+      ],
+      "confidence": 0.95,
+      "area": 11.12557978329588,
+      "centroid": {
+       "x": 3.92498032308265,
+       "y": 12.60599406223202
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_91de6eca48",
+      "label": "Escalera",
+      "polygon": [
+       {
+        "x": 5.519450709838167,
+        "y": 5.090167512602917
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 5.090167512602918
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 2.0895275037415963
+       },
+       {
+        "x": 5.519450709838167,
+        "y": 2.089527503741597
+       }
+      ],
+      "confidence": 0.95,
+      "area": 9.400283903985471,
+      "centroid": {
+       "x": 3.953070891495233,
+       "y": 3.5898475081722574
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_fa5e79cb42",
+      "label": "Baño 2",
+      "polygon": [
+       {
+        "x": 5.298404409439408,
+        "y": 10.690007122704825
+       },
+       {
+        "x": 2.948199491406621,
+        "y": 10.690007122704825
+       },
+       {
+        "x": 2.948199491406619,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 9.490767423989718
+       }
+      ],
+      "confidence": 0.95,
+      "area": 2.8184590378204017,
+      "centroid": {
+       "x": 4.123301950423016,
+       "y": 10.090387273347277
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_e0d083c838",
+      "label": "ALCOBA 3",
+      "polygon": [
+       {
+        "x": 4.368485490520488,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 4.368485490520488,
+        "y": 5.818095846674697
+       },
+       {
+        "x": 4.487901307977289,
+        "y": 5.818095846674697
+       },
+       {
+        "x": 4.487901307977289,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 2.3866910731523,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 5.20958333005972
+       }
+      ],
+      "confidence": 0.95,
+      "area": 12.045210173539335,
+      "centroid": {
+       "x": 3.8390146739397135,
+       "y": 7.301185461132675
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [
+     {
+      "id": "c_ebcc5c8430",
+      "center": {
+       "x": 2.417180218034887,
+       "y": 2.118746267587411
+      },
+      "width": 0.302350686752328,
+      "depth": 0.29980992467877754,
+      "round": false,
+      "rotation": 8.881784197001252e-16,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4b311c052d",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 2.1187462675874107
+      },
+      "width": 0.302350686752328,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_021441db4b",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 2.118746267587411
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.3023506867523278,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4f8e8d0c20",
+      "center": {
+       "x": 2.4171802180348876,
+       "y": 13.820225997317143
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787773,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_f75141799b",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 13.820225997317145
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_aee45895f4",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 13.820225997317145
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_70129a39a4",
+      "center": {
+       "x": 2.417180218034887,
+       "y": 5.240072474942307
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.29980992467877754,
+      "round": false,
+      "rotation": 8.881784197001252e-16,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4df9884fed",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 5.240072474942306
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.299809924678776,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_4e40f83d07",
+      "center": {
+       "x": 5.26791526455682,
+       "y": 5.240072474942307
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_c06bb179e9",
+      "center": {
+       "x": 2.4171802180348876,
+       "y": 9.521256568872303
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787773,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_214e421e1d",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 9.521256568872303
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_24c0839472",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 9.521256568872305
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_36356ab749",
+      "start": {
+       "x": 4.896964001818671,
+       "y": 2.6942288772462506
+      },
+      "end": {
+       "x": 3.7790286894571303,
+       "y": 2.6942288772462506
+      },
+      "width": 0.8486145325653509,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_31b4f25c7f",
+      "confidence": 1.0,
+      "tread": 0.22358706247230814,
+      "base": 0.0
+     },
+     {
+      "id": "s_3e67ac50da",
+      "start": {
+       "x": 3.0320446398337353,
+       "y": 3.1176892228377433
+      },
+      "end": {
+       "x": 3.0320446398337353,
+       "y": 4.239012217964019
+      },
+      "width": 0.9299189189189185,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_31b4f25c7f",
+      "confidence": 1.0,
+      "tread": 0.22426459902525514,
+      "base": 0.8666666666666667
+     },
+     {
+      "id": "s_d8f7b3efd4",
+      "start": {
+       "x": 3.7790286894571303,
+       "y": 4.664589865283469
+      },
+      "end": {
+       "x": 4.896964001818671,
+       "y": 4.664589865283469
+      },
+      "width": 0.8511552946388994,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": "lvl_31b4f25c7f",
+      "confidence": 1.0,
+      "tread": 0.22358706247230814,
+      "base": 1.7333333333333334
+     }
+    ],
+    "dimensions": [
+     {
+      "id": "d_3297b7796f",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 13.970130959656533
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 14.569750809014089
+      },
+      "value": 0.6,
+      "text": ".60",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0003801506424444545,
+      "wall_ids": [],
+      "measured": 0.5996198493575555
+     },
+     {
+      "id": "d_6c021cab39",
+      "a": {
+       "x": 3.7968140239719723,
+       "y": 10.690007122704825
+      },
+      "b": {
+       "x": 3.7968140239719723,
+       "y": 9.490767423989718
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0007603012848924617,
+      "wall_ids": [],
+      "measured": 1.1992396987151075
+     },
+     {
+      "id": "d_e3e626a417",
+      "a": {
+       "x": 7.798514289811584,
+       "y": 10.690007122704825
+      },
+      "b": {
+       "x": 7.798514289811584,
+       "y": 9.490767423989718
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0007603012848924617,
+      "wall_ids": [],
+      "measured": 1.1992396987151075
+     },
+     {
+      "id": "d_da33660220",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 8.26855527341814,
+       "y": 1.967570924211247
+      },
+      "value": 0.6,
+      "text": ".60",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0003801506424453427,
+      "wall_ids": [],
+      "measured": 0.5996198493575555
+     },
+     {
+      "id": "d_5d2caf3fe0",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 12.011203400950285
+      },
+      "value": 2.56,
+      "text": "2.56",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0014525919361960682,
+      "wall_ids": [],
+      "measured": 2.558547408063804
+     },
+     {
+      "id": "d_768823b4a8",
+      "a": {
+       "x": 2.8440282463911126,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 4.843607998274144,
+       "y": 14.569750809014089
+      },
+      "value": 2.0,
+      "text": "2.00",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00042024811696883546,
+      "wall_ids": [],
+      "measured": 1.9995797518830312
+     },
+     {
+      "id": "d_109ebe7000",
+      "a": {
+       "x": 2.567085180374276,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 3.4970040992931946,
+       "y": 3.118536143528926
+      },
+      "value": 0.93,
+      "text": ".93",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -8.108108108151324e-05,
+      "wall_ids": [],
+      "measured": 0.9299189189189185
+     },
+     {
+      "id": "d_0fee477be9",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 6.388496932186437
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 5.090167512602918
+      },
+      "value": 1.3,
+      "text": "1.30",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00167058041648116,
+      "wall_ids": [],
+      "measured": 1.2983294195835189
+     },
+     {
+      "id": "d_2f4b832504",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 5.090167512602918
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 2.269921610963575
+      },
+      "value": 2.82,
+      "text": "2.82",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0002459016393436819,
+      "wall_ids": [],
+      "measured": 2.8202459016393435
+     },
+     {
+      "id": "d_5d46173ab1",
+      "a": {
+       "x": 8.748759305318895,
+       "y": 2.8898675569095205
+      },
+      "b": {
+       "x": 8.748759305318895,
+       "y": 5.090167512602918
+      },
+      "value": 2.2,
+      "text": "2.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.00029995569339780204,
+      "wall_ids": [],
+      "measured": 2.200299955693398
+     },
+     {
+      "id": "d_d891a16bcb",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 8.588796887879836
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 6.388496932186437
+      },
+      "value": 2.2,
+      "text": "2.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0002999556933982461,
+      "wall_ids": [],
+      "measured": 2.2002999556933984
+     },
+     {
+      "id": "d_7245ff12ee",
+      "a": {
+       "x": 5.898024258796962,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 7.895063248606444,
+       "y": 14.569750809014089
+      },
+      "value": 2.0,
+      "text": "2.00",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0029610101905177544,
+      "wall_ids": [],
+      "measured": 1.9970389898094822
+     },
+     {
+      "id": "d_dde03175d8",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 9.371351606532915
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 5.389977437281695
+      },
+      "value": 3.98,
+      "text": "3.98",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0013741692512199144,
+      "wall_ids": [],
+      "measured": 3.98137416925122
+     },
+     {
+      "id": "d_ad84e8d020",
+      "a": {
+       "x": 2.567085180374276,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 5.1180103022174315,
+       "y": 1.967570924211247
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0009251218431556296,
+      "wall_ids": [],
+      "measured": 2.5509251218431555
+     },
+     {
+      "id": "d_4f988e4b25",
+      "a": {
+       "x": 5.417820226896208,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 7.968745348739365,
+       "y": 1.967570924211247
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0009251218431565178,
+      "wall_ids": [],
+      "measured": 2.5509251218431563
+     },
+     {
+      "id": "d_7940e009f1",
+      "a": {
+       "x": 3.77902868945713,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 3.77902868945713,
+       "y": 2.269921610963575
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.001385467434649068,
+      "wall_ids": [],
+      "measured": 0.8486145325653509
+     },
+     {
+      "id": "d_da96ebb8aa",
+      "a": {
+       "x": 3.4970040992931946,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 4.617480173728286,
+       "y": 3.118536143528926
+      },
+      "value": 1.12,
+      "text": "1.12",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.00047607443509090075,
+      "wall_ids": [],
+      "measured": 1.120476074435091
+     },
+     {
+      "id": "d_c1b0f5c49c",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 13.670321034977755
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 9.67878381743234
+      },
+      "value": 4.0,
+      "text": "4.00",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.008462782454584428,
+      "wall_ids": [],
+      "measured": 3.9915372175454156
+     },
+     {
+      "id": "d_f5cdb3dd6c",
+      "a": {
+       "x": 3.77902868945713,
+       "y": 5.090167512602918
+      },
+      "b": {
+       "x": 3.77902868945713,
+       "y": 4.239012217964019
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0011552946388994068,
+      "wall_ids": [],
+      "measured": 0.8511552946388994
+     },
+     {
+      "id": "d_ca4a785c49",
+      "a": {
+       "x": 8.748759305318895,
+       "y": 12.011203400950285
+      },
+      "b": {
+       "x": 8.748759305318895,
+       "y": 10.809422940161626
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0017804607886582335,
+      "wall_ids": [],
+      "measured": 1.2017804607886582
+     },
+     {
+      "id": "d_3c9d072aeb",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 9.490767423989718
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 8.588796887879836
+      },
+      "value": 0.9,
+      "text": ".90",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0019705361098821816,
+      "wall_ids": [],
+      "measured": 0.9019705361098822
+     },
+     {
+      "id": "d_b3a58ed7e1",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 2.8898675569095205
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 1.967570924211247
+      },
+      "value": 0.92,
+      "text": ".92",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0022966326982735152,
+      "wall_ids": [],
+      "measured": 0.9222966326982736
+     },
+     {
+      "id": "d_88b2b8305d",
+      "a": {
+       "x": 4.843607998274144,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 5.898024258796962,
+       "y": 14.569750809014089
+      },
+      "value": 1.05,
+      "text": "1.05",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.004416260522818183,
+      "wall_ids": [],
+      "measured": 1.0544162605228182
+     },
+     {
+      "id": "d_e3cd7bb54f",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 2.8440282463911126,
+       "y": 14.569750809014089
+      },
+      "value": 0.58,
+      "text": ".58",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0032470093043860393,
+      "wall_ids": [],
+      "measured": 0.5767529906956139
+     }
+    ],
+    "labels": [
+     {
+      "id": "t_a73a9e486c",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 14.524496574992597
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_646a6eaba9",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 14.524496574992597
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_99300ecd11",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 14.211982839946074
+      },
+      "text": ".75",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_7c7902832f",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 13.835950053060829
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_247c45d408",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 12.63512104774908
+      },
+      "text": "3.64",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_04337e4e64",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 12.63512104774908
+      },
+      "text": "3.64",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_fa73fb6401",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 11.672172221874023
+      },
+      "text": "4.30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_450df40bb3",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 10.764168706140138
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_8c51b255a0",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 10.764168706140138
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_52feeb0b42",
+      "position": {
+       "x": 9.017183272325983,
+       "y": 10.512633260858792
+      },
+      "text": ".63",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_52679d4477",
+      "position": {
+       "x": 9.017183272325983,
+       "y": 9.852035121736062
+      },
+      "text": ".70",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_151cf7516d",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 9.534439862542442
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_dea525f562",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 9.44297242789468
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4edc0068d4",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 9.44297242789468
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6740f22016",
+      "position": {
+       "x": 9.29412633834282,
+       "y": 8.273956467749796
+      },
+      "text": "12.60",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_399679778f",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 7.759398628608624
+      },
+      "text": "3.61",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_bad25ed566",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 7.3833658417233785
+      },
+      "text": "4.28",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b88f09b9d3",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 7.23092011731044
+      },
+      "text": "4.28",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f28482fd39",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 5.499709689746695
+      },
+      "text": ".55",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6af210d92c",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 5.253255768612444
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_582085802f",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 5.164329096038232
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4278ffb1bc",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 3.686557024709641
+      },
+      "text": "1.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4e0e8c6cae",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 3.6840162626360917
+      },
+      "text": "3.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_36a4c1bc7f",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 3.5925488279883306
+      },
+      "text": "3.00",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a5a8be1169",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 2.1179553698530293
+      },
+      "text": ".18.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d16db4de2b",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 2.1331999422943237
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c4b61866b1",
+      "position": {
+       "x": 1.4279854012444573,
+       "y": 5.248477925664506
+      },
+      "text": "3",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d0be60ea94",
+      "position": {
+       "x": 1.4305261633180062,
+       "y": 9.529662019594502
+      },
+      "text": "2",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_51bb4e50f6",
+      "position": {
+       "x": 1.4305261633180062,
+       "y": 2.1284220993463836
+      },
+      "text": "4",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_708944f270",
+      "position": {
+       "x": 1.4356076874651036,
+       "y": 13.831172210112891
+      },
+      "text": "1",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_8f0b529b6e",
+      "position": {
+       "x": 2.312529489716987,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_261f5e1c10",
+      "position": {
+       "x": 2.387481970886682,
+       "y": 3.2497589585643722
+      },
+      "text": ".12.18",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d8a24a5ed0",
+      "position": {
+       "x": 2.312529489716987,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_048da23b8c",
+      "position": {
+       "x": 2.4039969243647503,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_e911ebf365",
+      "position": {
+       "x": 2.4105628641926184,
+       "y": 1.145147176882935
+      },
+      "text": "A",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_60cb256171",
+      "position": {
+       "x": 3.4599398684497666,
+       "y": 16.227903419651497
+      },
+      "text": "ESCALA 1 - 50",
+      "kind": "scale",
+      "rotation": -0.004990008482708926,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b50bcfaea7",
+      "position": {
+       "x": 5.3972597920825,
+       "y": 15.804083088827408
+      },
+      "text": "PLANTA 2do PISO  opc 3",
+      "kind": "room_name",
+      "rotation": -0.003450020812157115,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4e2422bccf",
+      "position": {
+       "x": 3.838576040443007,
+       "y": 1.4915516036684904
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f54f230383",
+      "position": {
+       "x": 3.8487390887372035,
+       "y": 8.13564442599902
+      },
+      "text": "2.91",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_abc48edfc2",
+      "position": {
+       "x": 3.902095092281731,
+       "y": 12.599763389224544
+      },
+      "text": "2.84",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_05af677bad",
+      "position": {
+       "x": 5.054011767076315,
+       "y": 3.2497589585643722
+      },
+      "text": ".90",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_fa24a61475",
+      "position": {
+       "x": 5.2547319708866835,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f325e5dba5",
+      "position": {
+       "x": 5.258757148641003,
+       "y": 1.145147176882935
+      },
+      "text": "B",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d851ec84b4",
+      "position": {
+       "x": 5.343658643460896,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a4fbca5e91",
+      "position": {
+       "x": 5.488482081653188,
+       "y": 12.599763389224544
+      },
+      "text": ".55",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c7f7a48922",
+      "position": {
+       "x": 5.5637534883827495,
+       "y": 14.934723734816037
+      },
+      "text": "6.60",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1f3c29dc55",
+      "position": {
+       "x": 5.564704943859655,
+       "y": 3.2497589585643722
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_760443e93a",
+      "position": {
+       "x": 5.823862675361649,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0172d5b999",
+      "position": {
+       "x": 6.689311086964941,
+       "y": 1.4915516036684904
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_31c08c0282",
+      "position": {
+       "x": 7.080588446291479,
+       "y": 8.13564442599902
+      },
+      "text": "3.33",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_bf7622007b",
+      "position": {
+       "x": 7.197463501674733,
+       "y": 3.2497589585643722
+      },
+      "text": "3.11",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_1e24897c58",
+      "position": {
+       "x": 7.225411884483769,
+       "y": 12.599763389224544
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_6d1bfe3a6d",
+      "position": {
+       "x": 8.105467017408616,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a5d61ca0fa",
+      "position": {
+       "x": 8.11035976378057,
+       "y": 1.147687938956484
+      },
+      "text": "C",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_ae30f5417f",
+      "position": {
+       "x": 8.367165510984162,
+       "y": 14.721299720637928
+      },
+      "text": ".98",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_208f5ceaec",
+      "position": {
+       "x": 8.478959042220314,
+       "y": 1.4940923657420395
+      },
+      "text": ".75",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_eec60a55df",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 3.2497589585643722
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_ab24da3b38",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c1d11fd198",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     }
+    ],
+    "furniture": [
+     {
+      "id": "f_be619ecb3c",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 7.742617524193507,
+       "y": 12.88903669736145
+      },
+      "width": 1.3999599025254774,
+      "depth": 1.9004900310146233,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_a4fbec9959",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 7.466945468564381,
+       "y": 10.339715031433224
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": -3.141592653589792
+     },
+     {
+      "id": "f_8d3f4fcaf3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 6.648819451413107,
+       "y": 10.464715031433222
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": -3.14159265358979
+     },
+     {
+      "id": "f_629191b396",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 8.232984604388456,
+       "y": 8.299785202013643
+      },
+      "width": 1.8585674568010626,
+      "depth": 0.5843752769162602,
+      "height": 0.82,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_e990642045",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 7.299254542359213,
+       "y": 6.0111937642644175
+      },
+      "width": 0.8714813912272925,
+      "depth": 1.6714813912272917,
+      "height": 0.9,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_7b8b97f9f6",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 5.938866527294968,
+       "y": 3.221787085044211
+      },
+      "width": 1.7956186309260065,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_ec90aa6304",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 7.153160723130148,
+       "y": 2.389527503741596
+      },
+      "width": 1.8000000000000003,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": -2.85597762719166e-16
+     },
+     {
+      "id": "f_d590663fda",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 3.405536664645433,
+       "y": 12.88903669736145
+      },
+      "width": 1.3999599025254774,
+      "depth": 1.9004900310146224,
+      "height": 1.0,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_425a3b0522",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 4.1283828451560876,
+       "y": 10.339715031433226
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_3fdb410874",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 4.969375720797146,
+       "y": 10.464715031433226
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 3.14159265358979
+     },
+     {
+      "id": "f_97600e9a4d",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 3.504626385513842,
+       "y": 7.380664521907306
+      },
+      "width": 1.3999599025254774,
+      "depth": 2.1901369073992036,
+      "height": 1.0,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_r_8fb4018933_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 7.743167701419912,
+       "y": 11.129422940161625
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 2.9468633219663546e-15
+     },
+     {
+      "id": "f_r_8fb4018933_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 8.49286253970082,
+       "y": 13.864016648624188
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_181f4ecb26_c1",
+      "catalog_id": "nevera",
+      "position": {
+       "x": 6.5832897661075505,
+       "y": 9.00135160653291
+      },
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 1.8,
+      "rotation": 3.1415926535897905
+     },
+     {
+      "id": "f_r_f5599117be_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 2.7066910731522995,
+       "y": 11.529878965859458
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": -1.5707963267948974
+     },
+     {
+      "id": "f_r_f5599117be_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 2.655291649138122,
+       "y": 13.864016648624188
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_r_e0d083c838_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 2.7066910731522995,
+       "y": 5.990467468296317
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": -1.5707963267948968
+     },
+     {
+      "id": "f_r_e0d083c838_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 2.6095579318142406,
+       "y": 8.355644473170045
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": -1.5707963267948966
+     }
+    ]
+   },
+   {
+    "id": "lvl_31b4f25c7f",
+    "name": "Piso 3",
+    "elevation": 5.2,
+    "walls": [
+     {
+      "id": "w_4d29a46ae7",
+      "start": {
+       "x": 5.83831635006857,
+       "y": 13.094838425318923
+      },
+      "end": {
+       "x": 5.288241361145204,
+       "y": 13.09483842531891
+      },
+      "thickness": 0.11941581745679919,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.5500749889233667,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ad6235cffa",
+      "start": {
+       "x": 2.326983164423902,
+       "y": 14.51004290028569
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 14.510042900285685
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_dc9048fecd",
+        "kind": "window",
+        "offset": 0.5170450819672108,
+        "width": 1.9995797518830312,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_0995c3f3b2",
+        "kind": "window",
+        "offset": 3.57104109437306,
+        "width": 1.9970389898094822,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 6.481484049623392,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_c69692663c",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 5.149875421331319
+      },
+      "end": {
+       "x": 5.358112318167807,
+       "y": 5.149875421331319
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.031129153743908,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_c897e9d5e7",
+      "start": {
+       "x": 5.358112318167808,
+       "y": 5.149875421331319
+      },
+      "end": {
+       "x": 5.579158618566568,
+       "y": 5.149875421331317
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.2210463003987604,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_1ca421d7fb",
+      "start": {
+       "x": 2.3269831644238983,
+       "y": 10.749715031433226
+      },
+      "end": {
+       "x": 5.358112318167809,
+       "y": 10.749715031433226
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.0311291537439105,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ca0d4f56b3",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 10.74971503143322
+      },
+      "end": {
+       "x": 8.808467214047297,
+       "y": 10.749715031433228
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.5305990252547685,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_f100944cbb",
+      "start": {
+       "x": 2.3269831644238983,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 8.118650311078753,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680276,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_07a7b1e74c",
+        "kind": "door",
+        "offset": 2.09231756756757,
+        "width": 0.8791036774479384,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.95,
+        "operation": "swing",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_08154015b8",
+        "kind": "door",
+        "offset": 3.090837062472309,
+        "width": 0.8003400531679237,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.6,
+        "operation": "none",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 5.791667146654854,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_a7a6c08312",
+      "start": {
+       "x": 8.118650311078753,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 9.431059515261305
+      },
+      "thickness": 0.11941581745680274,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_21bdd9dbc0",
+      "start": {
+       "x": 5.579158618566567,
+       "y": 4.179304309235616
+      },
+      "end": {
+       "x": 6.2384863766525225,
+       "y": 4.179304309235617
+      },
+      "thickness": 0.11941581745680363,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6593277580859551,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_4745b82fb4",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 2.0285492139764214
+      },
+      "end": {
+       "x": 5.2679152645568195,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.9409321001329203,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_5a00169556",
+      "start": {
+       "x": 5.2679152645568195,
+       "y": 2.028549213976422
+      },
+      "end": {
+       "x": 8.118650311078753,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 2.850735046521933,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_fa4c38211b",
+      "start": {
+       "x": 8.118650311078753,
+       "y": 2.028549213976422
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 2.0285492139764205
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_19b71e66b5",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 11.670741283094726
+      },
+      "end": {
+       "x": 5.358112318167809,
+       "y": 11.67074128309472
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.9197558706247202,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_5bbcb33961",
+      "start": {
+       "x": 2.326983164423902,
+       "y": 14.510042900285688
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 13.820225997317143
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685448,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ec243723af",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 13.820225997317143
+      },
+      "end": {
+       "x": 2.3269831644238987,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.389166482055828,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_5f330663bb",
+      "start": {
+       "x": 2.3269831644238996,
+       "y": 9.431059515261317
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 4.281184093929998,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_20a7b75fdf",
+      "start": {
+       "x": 2.326983164423899,
+       "y": 5.14987542133132
+      },
+      "end": {
+       "x": 2.326983164423899,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 3.121326207354898,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_6cdff5d6d3",
+      "start": {
+       "x": 8.808467214047294,
+       "y": 14.510042900285685
+      },
+      "end": {
+       "x": 8.808467214047294,
+       "y": 2.0285492139764187
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_e5c50f5c49",
+        "kind": "window",
+        "offset": 2.4988394993354,
+        "width": 1.3211962782454592,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_9bec9e8ec4",
+        "kind": "window",
+        "offset": 4.325647430217101,
+        "width": 0.8130438635356683,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_4b0e475cb6",
+        "kind": "window",
+        "offset": 5.921246012405849,
+        "width": 2.2002999556933984,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_2555183bb0",
+        "kind": "window",
+        "offset": 9.419875387682767,
+        "width": 2.200299955693398,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 12.481493686309266,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_77d3d53d09",
+      "start": {
+       "x": 5.579158618566567,
+       "y": 5.149875421331315
+      },
+      "end": {
+       "x": 5.579158618566567,
+       "y": 2.028549213976422
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_13c9f0b14a",
+        "kind": "door",
+        "offset": 0.1314074383611894,
+        "width": 0.6816343680071428,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 3.1213262073548935,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ad40436203",
+      "start": {
+       "x": 5.358112318167809,
+       "y": 11.670741283094722
+      },
+      "end": {
+       "x": 5.358112318167808,
+       "y": 9.431059515261316
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_054e33fc7a",
+        "kind": "door",
+        "offset": 0.13207519381607824,
+        "width": 0.6236789454221885,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.2396817678334067,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_36367b32dc",
+      "start": {
+       "x": 5.358112318167808,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 5.358112318167808,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680095,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_255487b244",
+        "kind": "window",
+        "offset": 0.7406321444395214,
+        "width": 2.5001098803721753,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.85,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_82843be51a",
+        "kind": "door",
+        "offset": 3.311838928879281,
+        "width": 0.6236789453830047,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": false
+       }
+      ],
+      "confidence": 0.95,
+      "length": 4.281184093929996,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_d88aa5f121",
+      "start": {
+       "x": 4.428193399248888,
+       "y": 5.7583879379462966
+      },
+      "end": {
+       "x": 4.428193399248888,
+       "y": 5.14987542133132
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6085125166149767,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_7dc59ef300",
+      "start": {
+       "x": 5.8383163500685695,
+       "y": 11.670741283094726
+      },
+      "end": {
+       "x": 5.838316350068562,
+       "y": 13.094838425318919
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 1.424097142224193,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_11621b893b",
+      "start": {
+       "x": 2.8884915826782187,
+       "y": 9.431059515261316
+      },
+      "end": {
+       "x": 2.8884915826782205,
+       "y": 10.749715031433226
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_5446e990e5",
+        "kind": "window",
+        "offset": 0.24010201595037728,
+        "width": 0.6987095702259651,
+        "height": 1.2,
+        "sill": 0.9,
+        "confidence": 0.9,
+        "operation": "casement",
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 1.3186555161719102,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_c29bf06813",
+      "start": {
+       "x": 6.277868188792529,
+       "y": 11.670741283094728
+      },
+      "end": {
+       "x": 6.277868188792532,
+       "y": 9.591224283507305
+      },
+      "thickness": 0.11941581745680097,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_3544f76759",
+        "kind": "door",
+        "offset": 0.13207519383265343,
+        "width": 0.6236789453832561,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       },
+       {
+        "id": "op_8907f2f35c",
+        "kind": "door",
+        "offset": 1.552446135436325,
+        "width": 0.5270708641510975,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 0.9,
+        "operation": "swing",
+        "hinge_at_end": true,
+        "opens_left": true
+       }
+      ],
+      "confidence": 0.95,
+      "length": 2.0795169995874225,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_e5a7996852",
+      "start": {
+       "x": 5.288241361145204,
+       "y": 13.094838425318907
+      },
+      "end": {
+       "x": 5.288241361145212,
+       "y": 13.820225997317145
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.7253875719982386,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_04c37cc182",
+      "start": {
+       "x": 5.288241361145212,
+       "y": 13.820225997317145
+      },
+      "end": {
+       "x": 5.288241361145226,
+       "y": 14.510042900285686
+      },
+      "thickness": 0.12195657953034988,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 0.95,
+      "length": 0.6898169029685413,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "exact",
+       "source": "vector",
+       "error": 0.001,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_d7021ea6d4",
+      "label": "ALCOBA 1",
+      "polygon": [
+       {
+        "x": 5.3492196509103795,
+        "y": 13.15454633404731
+       },
+       {
+        "x": 5.898024258796968,
+        "y": 13.154546334047323
+       },
+       {
+        "x": 5.898024258796969,
+        "y": 11.731719572859898
+       },
+       {
+        "x": 6.338846478557704,
+        "y": 11.7317195728599
+       },
+       {
+        "x": 6.33757609752093,
+        "y": 10.809422940161621
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 10.809422940161628
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 14.450334991557284
+       },
+       {
+        "x": 5.349219650910399,
+        "y": 14.450334991557288
+       }
+      ],
+      "confidence": 0.95,
+      "area": 10.684427357478597,
+      "centroid": {
+       "x": 7.2560559563092974,
+       "y": 12.759564456242675
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_6a5d487bf1",
+      "label": "Baño 1",
+      "polygon": [
+       {
+        "x": 6.337576097520932,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 9.490767423989706
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 10.690007122704827
+       },
+       {
+        "x": 6.33757609752093,
+        "y": 10.69000712270482
+       }
+      ],
+      "confidence": 0.95,
+      "area": 2.8915866236665657,
+      "centroid": {
+       "x": 7.543167701419918,
+       "y": 10.090387273347268
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_398bd88821",
+      "label": "SALA-COMEDOR / COCINA",
+      "polygon": [
+       {
+        "x": 8.748759305318895,
+        "y": 9.371351606532905
+       },
+       {
+        "x": 5.417820226896208,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 5.4178202268962075,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.63886652729497,
+        "y": 5.209583330059717
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 4.239012217964017
+       },
+       {
+        "x": 6.298194285380924,
+        "y": 4.239012217964018
+       },
+       {
+        "x": 6.298194285380924,
+        "y": 4.119596400507215
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 4.1195964005072145
+       },
+       {
+        "x": 5.638866527294968,
+        "y": 2.089527503741597
+       },
+       {
+        "x": 8.748759305318895,
+        "y": 2.089527503741596
+       }
+      ],
+      "confidence": 0.95,
+      "area": 23.486901505538793,
+      "centroid": {
+       "x": 7.1326866646667,
+       "y": 5.796743100692136
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_0cdc386a5e",
+      "label": "Pasillo",
+      "polygon": [
+       {
+        "x": 5.417820226896209,
+        "y": 11.609762993329547
+       },
+       {
+        "x": 5.417820226896208,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 6.218160280064131,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 6.2181602800641285,
+        "y": 11.609762993329552
+       }
+      ],
+      "confidence": 0.95,
+      "area": 1.695917026628031,
+      "centroid": {
+       "x": 5.817990253480165,
+       "y": 10.550265208659638
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_1664db3288",
+      "label": "ALCOBA 2",
+      "polygon": [
+       {
+        "x": 2.3866910731523023,
+        "y": 14.45033499155729
+       },
+       {
+        "x": 2.3866910731522992,
+        "y": 10.809422940161626
+       },
+       {
+        "x": 5.298404409439408,
+        "y": 10.809422940161626
+       },
+       {
+        "x": 5.297134028402634,
+        "y": 11.731719572859896
+       },
+       {
+        "x": 5.778608441340168,
+        "y": 11.731719572859898
+       },
+       {
+        "x": 5.778608441340163,
+        "y": 13.035130516590522
+       },
+       {
+        "x": 5.227263071380028,
+        "y": 13.033860135553732
+       },
+       {
+        "x": 5.227263071380049,
+        "y": 14.450334991557288
+       }
+      ],
+      "confidence": 0.95,
+      "area": 11.12557978329588,
+      "centroid": {
+       "x": 3.92498032308265,
+       "y": 12.60599406223202
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_106f690f35",
+      "label": "Escalera",
+      "polygon": [
+       {
+        "x": 5.519450709838167,
+        "y": 5.090167512602917
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 5.090167512602918
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 2.0895275037415963
+       },
+       {
+        "x": 5.519450709838167,
+        "y": 2.089527503741597
+       }
+      ],
+      "confidence": 0.95,
+      "area": 9.400283903985471,
+      "centroid": {
+       "x": 3.953070891495233,
+       "y": 3.5898475081722574
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_1fa44ed569",
+      "label": "Baño 2",
+      "polygon": [
+       {
+        "x": 5.298404409439408,
+        "y": 10.690007122704825
+       },
+       {
+        "x": 2.948199491406621,
+        "y": 10.690007122704825
+       },
+       {
+        "x": 2.948199491406619,
+        "y": 9.490767423989718
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 9.490767423989718
+       }
+      ],
+      "confidence": 0.95,
+      "area": 2.8184590378204017,
+      "centroid": {
+       "x": 4.123301950423016,
+       "y": 10.090387273347277
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_fdf07ae860",
+      "label": "ALCOBA 3",
+      "polygon": [
+       {
+        "x": 4.368485490520488,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 4.368485490520488,
+        "y": 5.818095846674697
+       },
+       {
+        "x": 4.487901307977289,
+        "y": 5.818095846674697
+       },
+       {
+        "x": 4.487901307977289,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 5.209583330059719
+       },
+       {
+        "x": 5.298404409439407,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 2.3866910731523,
+        "y": 9.371351606532913
+       },
+       {
+        "x": 2.3866910731522997,
+        "y": 5.20958333005972
+       }
+      ],
+      "confidence": 0.95,
+      "area": 12.045210173539335,
+      "centroid": {
+       "x": 3.8390146739397135,
+       "y": 7.301185461132675
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [
+     {
+      "id": "c_43ee97fa1e",
+      "center": {
+       "x": 2.417180218034887,
+       "y": 2.118746267587411
+      },
+      "width": 0.302350686752328,
+      "depth": 0.29980992467877754,
+      "round": false,
+      "rotation": 8.881784197001252e-16,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_7ea9de64f2",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 2.1187462675874107
+      },
+      "width": 0.302350686752328,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_b488e07cef",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 2.118746267587411
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.3023506867523278,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_f8f68663f2",
+      "center": {
+       "x": 2.4171802180348876,
+       "y": 13.820225997317143
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787773,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_14e181b0a8",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 13.820225997317145
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_521e48c3ed",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 13.820225997317145
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_e080d7fcb2",
+      "center": {
+       "x": 2.417180218034887,
+       "y": 5.240072474942307
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.29980992467877754,
+      "round": false,
+      "rotation": 8.881784197001252e-16,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_84fdbe02b6",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 5.240072474942306
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.299809924678776,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_b23cfb56eb",
+      "center": {
+       "x": 5.26791526455682,
+       "y": 5.240072474942307
+      },
+      "width": 0.2998099246787769,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_700ce6669c",
+      "center": {
+       "x": 2.4171802180348876,
+       "y": 9.521256568872303
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787773,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_aeb08865c4",
+      "center": {
+       "x": 8.118650311078753,
+       "y": 9.521256568872303
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 3.1086244689504383e-15,
+      "confidence": 0.95
+     },
+     {
+      "id": "c_e7183d97f3",
+      "center": {
+       "x": 5.2679152645568195,
+       "y": 9.521256568872305
+      },
+      "width": 0.29980992467877776,
+      "depth": 0.2998099246787769,
+      "round": false,
+      "rotation": 0.0,
+      "confidence": 0.95
+     }
+    ],
+    "stairs": [
+     {
+      "id": "s_64c0159ddc",
+      "start": {
+       "x": 4.896964001818671,
+       "y": 2.6942288772462506
+      },
+      "end": {
+       "x": 3.7790286894571303,
+       "y": 2.6942288772462506
+      },
+      "width": 0.8486145325653509,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": null,
+      "confidence": 1.0,
+      "tread": 0.22358706247230814,
+      "base": 0.0
+     },
+     {
+      "id": "s_1f1ed2d0d0",
+      "start": {
+       "x": 3.0320446398337353,
+       "y": 3.1176892228377433
+      },
+      "end": {
+       "x": 3.0320446398337353,
+       "y": 4.239012217964019
+      },
+      "width": 0.9299189189189185,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": null,
+      "confidence": 1.0,
+      "tread": 0.22426459902525514,
+      "base": 0.8666666666666667
+     },
+     {
+      "id": "s_bc79ea9d42",
+      "start": {
+       "x": 3.7790286894571303,
+       "y": 4.664589865283469
+      },
+      "end": {
+       "x": 4.896964001818671,
+       "y": 4.664589865283469
+      },
+      "width": 0.8511552946388994,
+      "steps": 5,
+      "riser": 0.17333333333333334,
+      "to_level_id": null,
+      "confidence": 1.0,
+      "tread": 0.22358706247230814,
+      "base": 1.7333333333333334
+     }
+    ],
+    "dimensions": [
+     {
+      "id": "d_f4cf0c0702",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 13.970130959656533
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 14.569750809014089
+      },
+      "value": 0.6,
+      "text": ".60",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0003801506424444545,
+      "wall_ids": [],
+      "measured": 0.5996198493575555
+     },
+     {
+      "id": "d_a3b8f953b3",
+      "a": {
+       "x": 3.7968140239719723,
+       "y": 10.690007122704825
+      },
+      "b": {
+       "x": 3.7968140239719723,
+       "y": 9.490767423989718
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0007603012848924617,
+      "wall_ids": [],
+      "measured": 1.1992396987151075
+     },
+     {
+      "id": "d_f7c92e9b76",
+      "a": {
+       "x": 7.798514289811584,
+       "y": 10.690007122704825
+      },
+      "b": {
+       "x": 7.798514289811584,
+       "y": 9.490767423989718
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0007603012848924617,
+      "wall_ids": [],
+      "measured": 1.1992396987151075
+     },
+     {
+      "id": "d_267b0eb58b",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 8.26855527341814,
+       "y": 1.967570924211247
+      },
+      "value": 0.6,
+      "text": ".60",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0003801506424453427,
+      "wall_ids": [],
+      "measured": 0.5996198493575555
+     },
+     {
+      "id": "d_8aed7d606d",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 12.011203400950285
+      },
+      "value": 2.56,
+      "text": "2.56",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0014525919361960682,
+      "wall_ids": [],
+      "measured": 2.558547408063804
+     },
+     {
+      "id": "d_18dd516114",
+      "a": {
+       "x": 2.8440282463911126,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 4.843607998274144,
+       "y": 14.569750809014089
+      },
+      "value": 2.0,
+      "text": "2.00",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00042024811696883546,
+      "wall_ids": [],
+      "measured": 1.9995797518830312
+     },
+     {
+      "id": "d_a55c20f811",
+      "a": {
+       "x": 2.567085180374276,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 3.4970040992931946,
+       "y": 3.118536143528926
+      },
+      "value": 0.93,
+      "text": ".93",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -8.108108108151324e-05,
+      "wall_ids": [],
+      "measured": 0.9299189189189185
+     },
+     {
+      "id": "d_ce1e7c3dff",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 6.388496932186437
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 5.090167512602918
+      },
+      "value": 1.3,
+      "text": "1.30",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.00167058041648116,
+      "wall_ids": [],
+      "measured": 1.2983294195835189
+     },
+     {
+      "id": "d_f7759b38f8",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 5.090167512602918
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 2.269921610963575
+      },
+      "value": 2.82,
+      "text": "2.82",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0002459016393436819,
+      "wall_ids": [],
+      "measured": 2.8202459016393435
+     },
+     {
+      "id": "d_8b9e7855ae",
+      "a": {
+       "x": 8.748759305318895,
+       "y": 2.8898675569095205
+      },
+      "b": {
+       "x": 8.748759305318895,
+       "y": 5.090167512602918
+      },
+      "value": 2.2,
+      "text": "2.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.00029995569339780204,
+      "wall_ids": [],
+      "measured": 2.200299955693398
+     },
+     {
+      "id": "d_00c3c8a387",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 8.588796887879836
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 6.388496932186437
+      },
+      "value": 2.2,
+      "text": "2.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0002999556933982461,
+      "wall_ids": [],
+      "measured": 2.2002999556933984
+     },
+     {
+      "id": "d_dbf97d50f0",
+      "a": {
+       "x": 5.898024258796962,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 7.895063248606444,
+       "y": 14.569750809014089
+      },
+      "value": 2.0,
+      "text": "2.00",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0029610101905177544,
+      "wall_ids": [],
+      "measured": 1.9970389898094822
+     },
+     {
+      "id": "d_61a2980498",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 9.371351606532915
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 5.389977437281695
+      },
+      "value": 3.98,
+      "text": "3.98",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0013741692512199144,
+      "wall_ids": [],
+      "measured": 3.98137416925122
+     },
+     {
+      "id": "d_809647d9cb",
+      "a": {
+       "x": 2.567085180374276,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 5.1180103022174315,
+       "y": 1.967570924211247
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0009251218431556296,
+      "wall_ids": [],
+      "measured": 2.5509251218431555
+     },
+     {
+      "id": "d_000dcc109b",
+      "a": {
+       "x": 5.417820226896208,
+       "y": 1.967570924211247
+      },
+      "b": {
+       "x": 7.968745348739365,
+       "y": 1.967570924211247
+      },
+      "value": 2.55,
+      "text": "2.55",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0009251218431565178,
+      "wall_ids": [],
+      "measured": 2.5509251218431563
+     },
+     {
+      "id": "d_df360eb116",
+      "a": {
+       "x": 3.77902868945713,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 3.77902868945713,
+       "y": 2.269921610963575
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.001385467434649068,
+      "wall_ids": [],
+      "measured": 0.8486145325653509
+     },
+     {
+      "id": "d_a9c0939cdf",
+      "a": {
+       "x": 3.4970040992931946,
+       "y": 3.118536143528926
+      },
+      "b": {
+       "x": 4.617480173728286,
+       "y": 3.118536143528926
+      },
+      "value": 1.12,
+      "text": "1.12",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.00047607443509090075,
+      "wall_ids": [],
+      "measured": 1.120476074435091
+     },
+     {
+      "id": "d_6c0ab3fecb",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 13.670321034977755
+      },
+      "b": {
+       "x": 2.2672752556954987,
+       "y": 9.67878381743234
+      },
+      "value": 4.0,
+      "text": "4.00",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.008462782454584428,
+      "wall_ids": [],
+      "measured": 3.9915372175454156
+     },
+     {
+      "id": "d_c84ceb2df1",
+      "a": {
+       "x": 3.77902868945713,
+       "y": 5.090167512602918
+      },
+      "b": {
+       "x": 3.77902868945713,
+       "y": 4.239012217964019
+      },
+      "value": 0.85,
+      "text": ".85",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0011552946388994068,
+      "wall_ids": [],
+      "measured": 0.8511552946388994
+     },
+     {
+      "id": "d_79a827bede",
+      "a": {
+       "x": 8.748759305318895,
+       "y": 12.011203400950285
+      },
+      "b": {
+       "x": 8.748759305318895,
+       "y": 10.809422940161626
+      },
+      "value": 1.2,
+      "text": "1.20",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0017804607886582335,
+      "wall_ids": [],
+      "measured": 1.2017804607886582
+     },
+     {
+      "id": "d_9c7b9e6126",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 9.490767423989718
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 8.588796887879836
+      },
+      "value": 0.9,
+      "text": ".90",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0019705361098821816,
+      "wall_ids": [],
+      "measured": 0.9019705361098822
+     },
+     {
+      "id": "d_85babec3de",
+      "a": {
+       "x": 8.868175122775696,
+       "y": 2.8898675569095205
+      },
+      "b": {
+       "x": 8.868175122775696,
+       "y": 1.967570924211247
+      },
+      "value": 0.92,
+      "text": ".92",
+      "axis": "vertical",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.0022966326982735152,
+      "wall_ids": [],
+      "measured": 0.9222966326982736
+     },
+     {
+      "id": "d_03712d4758",
+      "a": {
+       "x": 4.843607998274144,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 5.898024258796962,
+       "y": 14.569750809014089
+      },
+      "value": 1.05,
+      "text": "1.05",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": 0.004416260522818183,
+      "wall_ids": [],
+      "measured": 1.0544162605228182
+     },
+     {
+      "id": "d_be59934035",
+      "a": {
+       "x": 2.2672752556954987,
+       "y": 14.569750809014089
+      },
+      "b": {
+       "x": 2.8440282463911126,
+       "y": 14.569750809014089
+      },
+      "value": 0.58,
+      "text": ".58",
+      "axis": "horizontal",
+      "offset": 0.0,
+      "source": "vector",
+      "status": "exact",
+      "confidence": 1.0,
+      "residual": -0.0032470093043860393,
+      "wall_ids": [],
+      "measured": 0.5767529906956139
+     }
+    ],
+    "labels": [
+     {
+      "id": "t_2be903716d",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 14.524496574992597
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_3ad6ac154d",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 14.524496574992597
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_aef4f6ed0e",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 14.211982839946074
+      },
+      "text": ".75",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_43b11d3734",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 13.835950053060829
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d58d74f692",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 12.63512104774908
+      },
+      "text": "3.64",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_72616348e6",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 12.63512104774908
+      },
+      "text": "3.64",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a6a8216dad",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 11.672172221874023
+      },
+      "text": "4.30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f63c2c1a19",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 10.764168706140138
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_96738b5337",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 10.764168706140138
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0bd7dacddc",
+      "position": {
+       "x": 9.017183272325983,
+       "y": 10.512633260858792
+      },
+      "text": ".63",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_ff0254f104",
+      "position": {
+       "x": 9.017183272325983,
+       "y": 9.852035121736062
+      },
+      "text": ".70",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_8a44b9ed53",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 9.534439862542442
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d1b0dfb747",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 9.44297242789468
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2b1a3e747c",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 9.44297242789468
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_f4a08e1d9c",
+      "position": {
+       "x": 9.29412633834282,
+       "y": 8.273956467749796
+      },
+      "text": "12.60",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0567355c77",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 7.759398628608624
+      },
+      "text": "3.61",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_0c98aafff3",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 7.3833658417233785
+      },
+      "text": "4.28",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_3ad6cc095c",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 7.23092011731044
+      },
+      "text": "4.28",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d191faa3e2",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 5.499709689746695
+      },
+      "text": ".55",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4321738cda",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 5.253255768612444
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c9a64e71b8",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 5.164329096038232
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_9d9a850500",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 3.686557024709641
+      },
+      "text": "1.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d7332f28e5",
+      "position": {
+       "x": 1.8065005075940368,
+       "y": 3.6840162626360917
+      },
+      "text": "3.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2793711586",
+      "position": {
+       "x": 7.497807552343707,
+       "y": 3.5925488279883306
+      },
+      "text": "3.00",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_55bda091b0",
+      "position": {
+       "x": 3.6942867282409138,
+       "y": 2.1179553698530293
+      },
+      "text": ".18.12",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4ead28f970",
+      "position": {
+       "x": 2.0732805253166773,
+       "y": 2.1331999422943237
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -1.5707963267948966,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_bd75c5a0d0",
+      "position": {
+       "x": 1.4279854012444573,
+       "y": 5.248477925664506
+      },
+      "text": "3",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a0c28d223b",
+      "position": {
+       "x": 1.4305261633180062,
+       "y": 9.529662019594502
+      },
+      "text": "2",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_06c24301bd",
+      "position": {
+       "x": 1.4305261633180062,
+       "y": 2.1284220993463836
+      },
+      "text": "4",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_e67d7f66a4",
+      "position": {
+       "x": 1.4356076874651036,
+       "y": 13.831172210112891
+      },
+      "text": "1",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_52ec1f976c",
+      "position": {
+       "x": 2.312529489716987,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4584d9d2e0",
+      "position": {
+       "x": 2.387481970886682,
+       "y": 3.2497589585643722
+      },
+      "text": ".12.18",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_289d1185dc",
+      "position": {
+       "x": 2.312529489716987,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_7b74a7870b",
+      "position": {
+       "x": 2.4039969243647503,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a9b209f1f3",
+      "position": {
+       "x": 2.4105628641926184,
+       "y": 1.145147176882935
+      },
+      "text": "A",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a0bbbf8447",
+      "position": {
+       "x": 3.4599398684497666,
+       "y": 16.227903419651497
+      },
+      "text": "ESCALA 1 - 50",
+      "kind": "scale",
+      "rotation": -0.004990008482708926,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_173bcc0710",
+      "position": {
+       "x": 5.3972597920825,
+       "y": 15.804083088827408
+      },
+      "text": "PLANTA 2do PISO  opc 3",
+      "kind": "room_name",
+      "rotation": -0.003450020812157115,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_45fa61b2a8",
+      "position": {
+       "x": 3.838576040443007,
+       "y": 1.4915516036684904
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_36ef22872c",
+      "position": {
+       "x": 3.8487390887372035,
+       "y": 8.13564442599902
+      },
+      "text": "2.91",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_eed41174ca",
+      "position": {
+       "x": 3.902095092281731,
+       "y": 12.599763389224544
+      },
+      "text": "2.84",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_66eb5d7b13",
+      "position": {
+       "x": 5.054011767076315,
+       "y": 3.2497589585643722
+      },
+      "text": ".90",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_bba658ec57",
+      "position": {
+       "x": 5.2547319708866835,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_61a2c28625",
+      "position": {
+       "x": 5.258757148641003,
+       "y": 1.145147176882935
+      },
+      "text": "B",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_44c137c7a4",
+      "position": {
+       "x": 5.343658643460896,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_396ad662c1",
+      "position": {
+       "x": 5.488482081653188,
+       "y": 12.599763389224544
+      },
+      "text": ".55",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_2bf890b0a1",
+      "position": {
+       "x": 5.5637534883827495,
+       "y": 14.934723734816037
+      },
+      "text": "6.60",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_94cb0565f8",
+      "position": {
+       "x": 5.564704943859655,
+       "y": 3.2497589585643722
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_9f50cb65b9",
+      "position": {
+       "x": 5.823862675361649,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c1e7dfd235",
+      "position": {
+       "x": 6.689311086964941,
+       "y": 1.4915516036684904
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_4d41a1e390",
+      "position": {
+       "x": 7.080588446291479,
+       "y": 8.13564442599902
+      },
+      "text": "3.33",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_20242d3f8c",
+      "position": {
+       "x": 7.197463501674733,
+       "y": 3.2497589585643722
+      },
+      "text": "3.11",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b2e7049b48",
+      "position": {
+       "x": 7.225411884483769,
+       "y": 12.599763389224544
+      },
+      "text": "2.85",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_a5f140854c",
+      "position": {
+       "x": 8.105467017408616,
+       "y": 1.776116955905975
+      },
+      "text": ".30",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_529756dc74",
+      "position": {
+       "x": 8.11035976378057,
+       "y": 1.147687938956484
+      },
+      "text": "C",
+      "kind": "axis",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_aef2984be0",
+      "position": {
+       "x": 8.367165510984162,
+       "y": 14.721299720637928
+      },
+      "text": ".98",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_c3b0ff29db",
+      "position": {
+       "x": 8.478959042220314,
+       "y": 1.4940923657420395
+      },
+      "text": ".75",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_b91f472731",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 3.2497589585643722
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_5fa7684703",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 8.138185188072569
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     },
+     {
+      "id": "t_d10287c3ca",
+      "position": {
+       "x": 8.794013539340384,
+       "y": 12.602304151298092
+      },
+      "text": ".12",
+      "kind": "other",
+      "rotation": -0.0,
+      "confidence": 0.99
+     }
+    ],
+    "furniture": [
+     {
+      "id": "f_5f0ee967a1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 7.742617524193507,
+       "y": 12.88903669736145
+      },
+      "width": 1.3999599025254774,
+      "depth": 1.9004900310146233,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_d95072d73a",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 7.466945468564381,
+       "y": 10.339715031433224
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": -3.141592653589792
+     },
+     {
+      "id": "f_d5f050fbb8",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 6.648819451413107,
+       "y": 10.464715031433222
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": -3.14159265358979
+     },
+     {
+      "id": "f_f8d426d84c",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 8.232984604388456,
+       "y": 8.299785202013643
+      },
+      "width": 1.8585674568010626,
+      "depth": 0.5843752769162602,
+      "height": 0.82,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_c63e2dc12b",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 7.299254542359213,
+       "y": 6.0111937642644175
+      },
+      "width": 0.8714813912272925,
+      "depth": 1.6714813912272917,
+      "height": 0.9,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_960a1c2900",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 5.938866527294968,
+       "y": 3.221787085044211
+      },
+      "width": 1.7956186309260065,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_4ccfeba265",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 7.153160723130148,
+       "y": 2.389527503741596
+      },
+      "width": 1.8000000000000003,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": -2.85597762719166e-16
+     },
+     {
+      "id": "f_86c65e45bc",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 3.405536664645433,
+       "y": 12.88903669736145
+      },
+      "width": 1.3999599025254774,
+      "depth": 1.9004900310146224,
+      "height": 1.0,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_a75bfd0769",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 4.1283828451560876,
+       "y": 10.339715031433226
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_afb9d34131",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 4.969375720797146,
+       "y": 10.464715031433226
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 3.14159265358979
+     },
+     {
+      "id": "f_18c7e3d024",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 3.504626385513842,
+       "y": 7.380664521907306
+      },
+      "width": 1.3999599025254774,
+      "depth": 2.1901369073992036,
+      "height": 1.0,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_r_d7021ea6d4_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 7.743167701419912,
+       "y": 11.129422940161625
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 2.9468633219663546e-15
+     },
+     {
+      "id": "f_r_d7021ea6d4_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 8.49286253970082,
+       "y": 13.864016648624188
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_398bd88821_c1",
+      "catalog_id": "nevera",
+      "position": {
+       "x": 6.5832897661075505,
+       "y": 9.00135160653291
+      },
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 1.8,
+      "rotation": 3.1415926535897905
+     },
+     {
+      "id": "f_r_1664db3288_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 2.7066910731522995,
+       "y": 11.529878965859458
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": -1.5707963267948974
+     },
+     {
+      "id": "f_r_1664db3288_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 2.655291649138122,
+       "y": 13.864016648624188
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": -1.5707963267948966
+     },
+     {
+      "id": "f_r_fdf07ae860_c1",
+      "catalog_id": "closet",
+      "position": {
+       "x": 2.7066910731522995,
+       "y": 5.990467468296317
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": -1.5707963267948968
+     },
+     {
+      "id": "f_r_fdf07ae860_c2",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 2.6095579318142406,
+       "y": 8.355644473170045
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": -1.5707963267948966
+     }
+    ]
+   }
+  ],
+  "source_image": {
+   "key": "rectified/prj_demo_casa3.png",
+   "width_px": 1383,
+   "height_px": 2400
+  },
+  "total_area": 213.61443324911514,
+  "schema_version": 2,
+  "facade": "moderna_contemporanea",
+  "facade_custom": null
+ }
+}

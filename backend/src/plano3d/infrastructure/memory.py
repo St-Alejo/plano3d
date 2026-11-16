@@ -11,9 +11,17 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 
 from plano3d.application.dto import ProgressEventDTO
-from plano3d.application.ports import FileStorage, JobQueue, ProgressBroker, ProjectRepository
+from plano3d.application.ports import (
+    FileStorage,
+    JobQueue,
+    ProgressBroker,
+    ProjectRepository,
+    UserRepository,
+)
+from plano3d.application.use_cases.errors import EmailTakenError
 from plano3d.domain import ModelRevision, Project
 from plano3d.domain.errors import ConcurrencyError
+from plano3d.domain.user import User
 
 log = logging.getLogger(__name__)
 
@@ -53,6 +61,30 @@ class InMemoryProjectRepository(ProjectRepository):
 
     async def get_revision(self, project_id: str, number: int) -> ModelRevision | None:
         return next((r for r in self._revisions.get(project_id, []) if r.number == number), None)
+
+
+class InMemoryUserRepository(UserRepository):
+    def __init__(self) -> None:
+        self._items: dict[str, User] = {}
+
+    async def add(self, user: User) -> None:
+        if any(u.email == user.email for u in self._items.values()):
+            raise EmailTakenError()
+        self._items[user.id] = user
+
+    async def get(self, user_id: str) -> User | None:
+        return self._items.get(user_id)
+
+    async def get_by_email(self, email: str) -> User | None:
+        return next((u for u in self._items.values() if u.email == email), None)
+
+    async def save(self, user: User) -> None:
+        if user.id not in self._items:
+            raise KeyError(user.id)
+        self._items[user.id] = user
+
+    async def list(self) -> builtins.list[User]:
+        return list(self._items.values())
 
 
 class InMemoryFileStorage(FileStorage):

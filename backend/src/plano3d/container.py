@@ -6,20 +6,38 @@ S3 por disco, es cambiar una línea de configuración, no el código de negocio.
 
 from __future__ import annotations
 
+import logging
 import os
+import secrets
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from plano3d.application.ports import (
     FileStorage,
     JobQueue,
+    LinkCodeStore,
+    PasswordHasher,
     PhotoGenerator,
     PlanAssistant,
     ProgressBroker,
     ProjectRepository,
     TextReader,
+    TokenService,
+    UserRepository,
 )
 from plano3d.application.use_cases.analyze import AnalyzeFloorPlan, DetectorSelector
 from plano3d.application.use_cases.assistant import InterpretChat
+from plano3d.application.use_cases.auth import (
+    Authenticate,
+    CreateLinkCode,
+    CreateWsTicket,
+    DemoLogin,
+    ExchangeLinkCode,
+    Login,
+    Logout,
+    RefreshSession,
+    Register,
+)
 from plano3d.application.use_cases.levels import AddLevelFromFile, DuplicateLevel, FurnishLevels
 from plano3d.application.use_cases.photos import GeneratePhotos
 from plano3d.application.use_cases.projects import (
@@ -41,6 +59,11 @@ from plano3d.application.use_cases.projects import (
     UpdateBuildingModel,
 )
 from plano3d.config import Settings, ai_provider
+from plano3d.infrastructure.auth import (
+    Argon2PasswordHasher,
+    InMemoryLinkCodeStore,
+    JwtTokenService,
+)
 from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
@@ -54,6 +77,7 @@ from plano3d.infrastructure.memory import (
     InMemoryFileStorage,
     InMemoryProgressBroker,
     InMemoryProjectRepository,
+    InMemoryUserRepository,
     InProcessJobQueue,
     LocalFileStorage,
 )
@@ -63,6 +87,22 @@ from plano3d.infrastructure.ocr.consensus import ConsensusReader
 from plano3d.infrastructure.ocr.rapid import RapidOcrReader, RapidOcrSpotter
 from plano3d.infrastructure.ocr.rapid import available as ocr_available
 from plano3d.infrastructure.vector.detectors import DxfDetector, VectorPdfDetector
+
+log = logging.getLogger(__name__)
+
+
+def token_service(settings: Settings | None = None) -> TokenService:
+    """Tokens firmados con ``PLANO3D_JWT_SECRET``; sin él, con un secreto al azar."""
+    secret = settings.jwt_secret if settings else ""
+    if not secret:
+        secret = secrets.token_urlsafe(48)
+        if settings is not None and settings.auth_required:
+            log.warning("PLANO3D_JWT_SECRET vacío: las sesiones se pierden al reiniciar la API")
+    return JwtTokenService(
+        secret,
+        access_ttl=timedelta(minutes=settings.access_ttl_minutes if settings else 60),
+        refresh_ttl=timedelta(days=settings.refresh_ttl_days if settings else 30),
+    )
 
 
 def default_assistant() -> PlanAssistant | None:
@@ -99,6 +139,57 @@ class Container:
     assistant: PlanAssistant | None = field(default_factory=lambda: default_assistant())
     #: fotos realistas del modelo 3D (None: el botón avisa que no está configurado)
     photos: PhotoGenerator | None = field(default_factory=lambda: default_photos())
+    # ---- cuentas (ADR-020)
+    users: UserRepository = field(default_factory=InMemoryUserRepository)
+    hasher: PasswordHasher = field(default_factory=Argon2PasswordHasher)
+    tokens: TokenService = field(default_factory=token_service)
+    link_codes: LinkCodeStore = field(default_factory=InMemoryLinkCodeStore)
+    #: False = API sin login (pruebas): todos los proyectos son visibles
+    auth_required: bool = True
+    demo_enabled: bool = True
+
+    def configure(self, settings: Settings) -> Container:
+        """Ajusta lo que depende de la configuración (secreto de tokens, login, demo)."""
+        self.tokens = token_service(settings)
+        self.auth_required = settings.auth_required
+        self.demo_enabled = settings.demo_enabled
+        return self
+
+    @property
+    def register(self) -> Register:
+        return Register(self.users, self.tokens, self.hasher)
+
+    @property
+    def login(self) -> Login:
+        return Login(self.users, self.tokens, self.hasher)
+
+    @property
+    def refresh_session(self) -> RefreshSession:
+        return RefreshSession(self.users, self.tokens)
+
+    @property
+    def authenticate(self) -> Authenticate:
+        return Authenticate(self.users, self.tokens)
+
+    @property
+    def logout(self) -> Logout:
+        return Logout(self.users)
+
+    @property
+    def demo_login(self) -> DemoLogin:
+        return DemoLogin(self.users, self.tokens, self.demo_enabled)
+
+    @property
+    def create_link_code(self) -> CreateLinkCode:
+        return CreateLinkCode(self.link_codes)
+
+    @property
+    def exchange_link_code(self) -> ExchangeLinkCode:
+        return ExchangeLinkCode(self.users, self.tokens, self.link_codes)
+
+    @property
+    def create_ws_ticket(self) -> CreateWsTicket:
+        return CreateWsTicket(self.tokens)
 
     @property
     def create_project(self) -> CreateProject:
@@ -277,6 +368,7 @@ async def build_container(settings: Settings) -> Container:
     from plano3d.infrastructure.jobs.arq_queue import ArqJobQueue
     from plano3d.infrastructure.persistence.sqlalchemy_repository import (
         SqlAlchemyProjectRepository,
+        SqlAlchemyUserRepository,
     )
     from plano3d.infrastructure.realtime.redis_broker import RedisProgressBroker
     from plano3d.infrastructure.storage.s3_storage import S3FileStorage
@@ -293,5 +385,6 @@ async def build_container(settings: Settings) -> Container:
         queue=ArqJobQueue(arq_pool),
         progress=RedisProgressBroker(redis),
         selector=default_selector(),
+        users=SqlAlchemyUserRepository(engine),
         _closers=[engine, redis, arq_pool],
     )

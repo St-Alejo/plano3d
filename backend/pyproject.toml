@@ -28,6 +28,9 @@ dependencies = [
   "aioboto3>=13.2",
   "arq>=0.26",
   "redis>=5.2",
+  "PyJWT>=2.9",  # MIT: tokens de sesión (ADR-020)
+  "argon2-cffi>=23.1",  # MIT: hash de contraseñas
+  "azure-storage-blob>=12.23",  # MIT: copia del estado en Azure Blob (modo memoria)
 ]
 
 [project.optional-dependencies]

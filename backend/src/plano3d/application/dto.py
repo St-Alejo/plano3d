@@ -48,6 +48,7 @@ from plano3d.domain import (
 )
 from plano3d.domain.facade import FacadeCustom, FacadeSurface
 from plano3d.domain.quality import CorrectionStats
+from plano3d.domain.user import User
 
 
 class _DTO(BaseModel):
@@ -802,3 +803,59 @@ class PhotosStatusDTO(_DTO):
     available: bool
     remaining_usd: float
     cost_per_photo: float
+
+
+# ---------------------------------------------------------------- cuentas (ADR-020)
+class RegisterDTO(_DTO):
+    email: str = Field(max_length=254)
+    name: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginDTO(_DTO):
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
+
+
+class RefreshDTO(_DTO):
+    refresh_token: str
+
+
+class UserDTO(_DTO):
+    id: str
+    email: str
+    name: str
+    is_demo: bool = False
+
+
+class SessionDTO(_DTO):
+    access_token: str
+    refresh_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_in: int = Field(description="segundos de vida del token de acceso")
+    user: UserDTO
+
+
+class LinkCodeDTO(_DTO):
+    code: str = Field(description="6 caracteres; vale una vez")
+    expires_in: int
+
+
+class LinkExchangeDTO(_DTO):
+    code: str = Field(min_length=4, max_length=12)
+
+
+class WsTicketDTO(_DTO):
+    ticket: str
+    expires_in: int
+
+
+class AuthConfigDTO(_DTO):
+    """Qué ofrece este servidor en la pantalla de entrada."""
+
+    auth_required: bool
+    demo_enabled: bool
+
+
+def user_to_dto(u: User) -> UserDTO:
+    return UserDTO(id=u.id, email=u.email, name=u.name, is_demo=u.is_demo)

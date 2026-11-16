@@ -99,6 +99,7 @@ class CreateProject:
         content_type: str,
         corners: Sequence[tuple[float, float]] | None = None,
         extra: Sequence[tuple[bytes, str]] = (),
+        owner_id: str | None = None,
     ) -> Project:
         """``extra``: más fotos de la MISMA hoja (plano grande tomado por partes)."""
         if extra:
@@ -116,7 +117,7 @@ class CreateProject:
         project_id = new_id("prj")
         key = f"originals/{project_id}.{ext}"
         project = Project.create(
-            name, key, list(corners) if corners else None, project_id=project_id
+            name, key, list(corners) if corners else None, project_id=project_id, owner_id=owner_id
         )
         await self._storage.put(key, data, content_type)
         await self._repo.add(project)
@@ -134,8 +135,8 @@ class CreateBlankProject:
     def __init__(self, repo: ProjectRepository) -> None:
         self._repo = repo
 
-    async def execute(self, name: str) -> Project:
-        project = Project.create_blank(name)
+    async def execute(self, name: str, owner_id: str | None = None) -> Project:
+        project = Project.create_blank(name, owner_id=owner_id)
         assert project.model is not None
         await self._repo.add(project)
         await self._repo.add_revision(
@@ -201,10 +202,12 @@ class ListProjects:
     def __init__(self, repo: ProjectRepository) -> None:
         self._repo = repo
 
-    async def execute(self) -> list[Project]:
+    async def execute(self, owner_id: str | None = None) -> list[Project]:
+        """Con ``owner_id`` solo los proyectos de esa cuenta."""
+        items = [p for p in await self._repo.list() if owner_id is None or p.owner_id == owner_id]
         # orden estable ascendente y luego invertido: ante fechas iguales (mismo milisegundo)
         # el último creado queda primero; `reverse=True` conservaría el orden de inserción
-        return list(reversed(sorted(await self._repo.list(), key=lambda p: p.created_at)))
+        return list(reversed(sorted(items, key=lambda p: p.created_at)))
 
 
 class DeleteProject:
