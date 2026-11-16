@@ -129,6 +129,27 @@ public static partial class BlenderProject
         };
     }
 
+    /// <summary>
+    /// Agrega una cámara tomada de una vista del editor (la actual o un marcador). Recibe
+    /// coordenadas de la escena (x, y arriba, z = y del plano) y el campo de visión vertical;
+    /// Blender usa un sensor de 36 mm a lo ancho, así que la focal sale del campo horizontal.
+    /// </summary>
+    public static JsonObject AddViewCamera(JsonObject project, string name, (double X, double Y, double Z) eye, (double X, double Y, double Z) target, double vfovDeg, double aspect = 16.0 / 9)
+    {
+        var h = 2 * Math.Atan(Math.Tan(vfovDeg * Math.PI / 360) * aspect);
+        var cam = new JsonObject
+        {
+            ["name"] = name,
+            ["location"] = new JsonArray(R3(eye.X), R3(-eye.Z), R3(eye.Y)),
+            ["target"] = new JsonArray(R3(target.X), R3(-target.Z), R3(target.Y)),
+            ["lens"] = R3(18 / Math.Tan(h / 2)),
+            ["level"] = false,
+        };
+        if (project["cameras"] is not JsonArray cams) project["cameras"] = cams = [];
+        cams.Insert(0, cam);
+        return cam;
+    }
+
     /// <summary>Nombres de las cámaras (para elegir cuáles renderizar).</summary>
     public static List<string> CameraNames(JsonObject project) =>
         (project["cameras"] as JsonArray ?? []).OfType<JsonObject>().Select(c => (string?)c["name"] ?? "").ToList();

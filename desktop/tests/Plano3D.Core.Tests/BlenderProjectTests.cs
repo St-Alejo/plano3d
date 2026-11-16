@@ -40,6 +40,18 @@ public class BlenderProjectTests
         Assert.Equal(52, p["sun"]!["altitude"]!.GetValue<double>());
     }
 
+    [Fact]
+    public void La_vista_del_editor_pasa_a_Blender_con_su_focal()
+    {
+        var p = BlenderProject.Build(BuildingModel.From(Fixture.House()), "Casa");
+        // 50° verticales en 16:9 ≈ 79,3° horizontales ≈ 21,7 mm en sensor de 36 mm
+        var cam = BlenderProject.AddViewCamera(p, "Vista actual", (1, 2, 3), (4, 5, 6), 50);
+        Assert.Equal("Vista actual", BlenderProject.CameraNames(p)[0]);
+        Assert.Equal([1, -3, 2], cam["location"]!.AsArray().Select(n => n!.GetValue<double>()));
+        Assert.Equal([4, -6, 5], cam["target"]!.AsArray().Select(n => n!.GetValue<double>()));
+        Assert.InRange(cam["lens"]!.GetValue<double>(), 21.5, 21.9);
+    }
+
     [Theory]
     [InlineData("SALA COMEDOR", "Sala comedor")]
     [InlineData("Alcoba 3", "Alcoba 3")]

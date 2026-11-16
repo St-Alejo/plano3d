@@ -119,11 +119,11 @@ public sealed class BlenderRunner(string blenderExe)
         return args;
     }
 
-    /// <summary>Las imágenes que salieron (rutas PNG en renders/ del paquete).</summary>
+    /// <summary>Las imágenes que salieron (rutas PNG en renders/ del paquete). <paramref name="onImage"/> recibe cada una con su cámara.</summary>
     public async Task<IReadOnlyList<string>> RenderAsync(
         RenderRequest request,
         IProgress<RenderProgress>? progress = null,
-        Action<string>? onImage = null,
+        Action<string, string>? onImage = null,
         CancellationToken ct = default)
     {
         var psi = new ProcessStartInfo(Exe)
@@ -161,8 +161,10 @@ public sealed class BlenderRunner(string blenderExe)
                         state = state with { Sample = s.Done, Samples = s.Total };
                         break;
                     case BlenderEvent.Saved saved:
-                        images.Add(saved.Path);
-                        onImage?.Invoke(saved.Path);
+                        // el script imprime la ruta relativa a la carpeta del paquete
+                        var path = Path.GetFullPath(saved.Path, request.PackageDir);
+                        images.Add(path);
+                        onImage?.Invoke(path, state.CameraName);
                         break;
                     case BlenderEvent.Failure f:
                         errors.Add(f.Message);

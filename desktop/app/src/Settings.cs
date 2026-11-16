@@ -49,6 +49,9 @@ public sealed class AppSettings
     public int Quality { get; set; } = 2;
     public bool ShowFps { get; set; }
 
+    /// <summary>blender.exe elegido a mano (vacío: se busca solo).</summary>
+    public string BlenderPath { get; set; } = "";
+
     public static AppSettings Load(LaunchOptions launch)
     {
         var s = new AppSettings();
@@ -58,6 +61,7 @@ public sealed class AppSettings
             s.ApiUrl = (string)cfg.GetValue("servidor", "api", DefaultApi);
             s.Quality = Math.Clamp((int)cfg.GetValue("graficos", "calidad", 2), 0, 4);
             s.ShowFps = (bool)cfg.GetValue("graficos", "fps", false);
+            s.BlenderPath = (string)cfg.GetValue("blender", "ruta", "");
         }
         var env = System.Environment.GetEnvironmentVariable("PLANO3D_API");
         if (!string.IsNullOrWhiteSpace(env)) s.ApiUrl = env;
@@ -71,6 +75,7 @@ public sealed class AppSettings
         cfg.SetValue("servidor", "api", ApiUrl);
         cfg.SetValue("graficos", "calidad", Quality);
         cfg.SetValue("graficos", "fps", ShowFps);
+        cfg.SetValue("blender", "ruta", BlenderPath);
         cfg.Save(Path);
     }
 }

@@ -14,10 +14,18 @@ public static class GlbExtras
     private const uint Magic = 0x46546C67; // "glTF"
     private const uint JsonChunk = 0x4E4F534A; // "JSON"
 
-    /// <summary>Cuántos nodos recibieron extras y el GLB nuevo.</summary>
-    public static (byte[] Glb, int Tagged) Apply(byte[] glb)
+    /// <summary>
+    /// Cuántos nodos recibieron extras y el GLB nuevo. <paramref name="materialNames"/> devuelve
+    /// a cada material su nombre real (el exportador de Godot cambia «:» por «_» y numera los
+    /// repetidos, así que se exporta con una ficha segura y aquí se reemplaza).
+    /// </summary>
+    public static (byte[] Glb, int Tagged) Apply(byte[] glb, IReadOnlyDictionary<string, string>? materialNames = null)
     {
         var (json, bin) = Read(glb);
+        if (materialNames is not null)
+            foreach (var mat in (json["materials"] as JsonArray ?? []).OfType<JsonObject>())
+                if ((string?)mat["name"] is { } token && materialNames.TryGetValue(token, out var real))
+                    mat["name"] = real;
         var tagged = 0;
         foreach (var node in (json["nodes"] as JsonArray ?? []).OfType<JsonObject>())
         {

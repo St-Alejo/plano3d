@@ -131,6 +131,13 @@ public sealed class ApiClient : IDisposable
         return json.Str("id") ?? "";
     }
 
+    /// <summary>Ids de los renders de la galería del proyecto (del más viejo al más nuevo).</summary>
+    public async Task<IReadOnlyList<string>> RendersAsync(string projectId, CancellationToken ct = default)
+    {
+        var json = await SendAsync(HttpMethod.Get, $"projects/{Uri.EscapeDataString(projectId)}/renders", null, ct);
+        return (json["items"] as JsonArray ?? []).OfType<JsonObject>().Select(r => r.Str("id") ?? "").ToList();
+    }
+
     // ------------------------------------------------------------------ transporte
     private async Task<Session> EnterAsync(string path, JsonObject? body, CancellationToken ct)
     {

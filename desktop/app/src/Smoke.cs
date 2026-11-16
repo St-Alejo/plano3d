@@ -1,7 +1,10 @@
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Godot;
+using Plano3D.App.Scene;
 using Plano3D.App.Screens;
+using Plano3D.Core.Rendering;
+using Plano3D.Infrastructure.Blender;
 using Plano3D.Infrastructure.Api;
 using Plano3D.Infrastructure.Collab;
 
@@ -145,6 +148,27 @@ public static class Smoke
             await Until(main, () => !HasEntity(web.Document.View, drawn), 10, "deshacer en la web");
             GD.Print("[humo] deshacer llegó a la web");
             editor.SetTool("select");
+
+            // Blender: el paquete lleva cada malla marcada y los nombres de material de la web
+            var pack = BlenderPackage.Write(editor.Sync, System.IO.Path.Combine(OS.GetUserDataDir(), "blender", "humo"), "Humo", null, []);
+            var (glbJson, _) = GlbExtras.Read(System.IO.File.ReadAllBytes(System.IO.Path.Combine(pack.Folder, "casa.glb")));
+            var mats = ((JsonArray?)glbJson["materials"] ?? []).Select(m => (string?)m!["name"] ?? "").ToHashSet();
+            GD.Print($"[humo] paquete Blender: {pack.Meshes} mallas, {pack.Tagged} marcadas, materiales {string.Join(", ", mats.Take(8))}…");
+            if (pack.Meshes == 0 || pack.Tagged != pack.Meshes || !mats.Any(m => m.StartsWith("wall:", StringComparison.Ordinal)))
+                throw new InvalidOperationException("el paquete para Blender salió sin marcas o sin materiales de muro");
+            if (editor.BlenderExe is null) GD.Print("[humo] sin Blender en esta PC: no se renderiza");
+            else
+            {
+                sw.Restart();
+                if (!editor.EnqueueRender(new EditorScreen.RenderJob(RenderQuality.Borrador, RenderHour.Dia, "Fachada principal", true)))
+                    throw new InvalidOperationException("no arrancó el render");
+                await editor.WaitRendersAsync();
+                GD.Print($"[humo] Blender: {editor.RenderStatus}");
+                await Until(main, () => editor.UploadedRenders.Count > 0, 30, "el render subido a la galería");
+                var listed = await main.Api.RendersAsync(projectId);
+                if (!listed.Contains(editor.UploadedRenders[0])) throw new InvalidOperationException("la galería no tiene el render");
+                GD.Print($"[humo] render de Blender en {sw.Elapsed.TotalSeconds:0} s → {editor.Renders[0]} (galería: {listed.Count})");
+            }
             GD.Print("[humo] OK");
             main.ShowProjects();
             await Frames(tree, 5);

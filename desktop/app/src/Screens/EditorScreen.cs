@@ -119,6 +119,7 @@ public partial class EditorScreen : Control, IEditorHost
         BuildPanels(name);
         BuildScenePanels();
         BuildWalkPanels();
+        BuildRenderPanel();
     }
 
     // ------------------------------------------------------------------ carga y sala en vivo

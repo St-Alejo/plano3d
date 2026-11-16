@@ -75,4 +75,18 @@ public class BlenderExportTests
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 0, 0, 0 }, outBin);
         Assert.Throws<InvalidDataException>(() => GlbExtras.Read(new byte[24]));
     }
+
+    [Fact]
+    public void Los_materiales_recuperan_su_nombre_de_la_web()
+    {
+        var json = new JsonObject
+        {
+            ["asset"] = new JsonObject { ["version"] = "2.0" },
+            ["materials"] = new JsonArray(new JsonObject { ["name"] = "m0" }, new JsonObject { ["name"] = "m1" }, new JsonObject { ["name"] = "otro" }),
+        };
+        var names = new Dictionary<string, string> { ["m0"] = "wall:plaster:solid", ["m1"] = "door" };
+        var (glb, _) = GlbExtras.Apply(GlbExtras.Write(json, null), names);
+        var mats = GlbExtras.Read(glb).Json["materials"]!.AsArray().Select(m => (string?)m!["name"]).ToArray();
+        Assert.Equal(["wall:plaster:solid", "door", "otro"], mats);
+    }
 }
