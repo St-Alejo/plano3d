@@ -17,6 +17,7 @@ import asyncio
 import json
 import logging
 import re
+from collections.abc import Sequence
 from typing import Any
 
 from plano3d.application.ports import AssistantReply, PlanAssistant
@@ -67,39 +68,49 @@ _SYSTEM = (
     "- set_floor: room y material (madera roble, madera oscura, porcelanato claro, baldosa "
     "gris, cemento pulido).\n"
     "- duplicate_level: copia un piso entero encima del último (pisos iguales). level = "
-    "número del piso a copiar desde 1 (null = el piso que se está viendo) y count = cuántas "
-    "copias (null = 1). Ej.: 'otro piso igual al que ya está', 'duplica el piso 2', 'dos "
+    "número del piso a copiar desde 1 (omítelo = el piso que se está viendo) y count = cuántas "
+    "copias (omítelo = 1). Ej.: 'otro piso igual al que ya está', 'duplica el piso 2', 'dos "
     "pisos más iguales'.\n"
     "Si algo no se puede expresar con estas operaciones, no inventes: deja ops vacío y "
     "explícalo en reply. reply es una frase breve en español."
 )
 
-_NULLABLE_STR = {"type": ["string", "null"]}
-_NULLABLE_NUM = {"type": ["number", "null"]}
-_SIDE = {"type": ["string", "null"], "enum": [*SIDES, None]}
+# Campos opcionales (no "nullable"): la API de Claude limita a 16 los parámetros con
+# uniones (``type: [x, null]`` o ``anyOf``) en un esquema de salida. Solo ``op``/``a`` son
+# obligatorios; lo que falta se toma como "no se dijo".
+_STR = {"type": "string"}
+_NUM = {"type": "number"}
+_BOOL = {"type": "boolean"}
+
+
+def _enum(values: Sequence[str]) -> dict[str, Any]:
+    return {"type": "string", "enum": list(values)}
+
+
+_SIDE = _enum(SIDES)
 _OP_FIELDS: dict[str, Any] = {
     "op": {"type": "string", "enum": OPS},
-    "name": _NULLABLE_STR,
-    "width": _NULLABLE_NUM,
-    "depth": _NULLABLE_NUM,
-    "next_room": _NULLABLE_STR,
+    "name": _STR,
+    "width": _NUM,
+    "depth": _NUM,
+    "next_room": _STR,
     "next_side": _SIDE,
-    "kind": {"type": ["string", "null"], "enum": ["door", "window", None]},
-    "room": _NULLABLE_STR,
+    "kind": _enum(["door", "window"]),
+    "room": _STR,
     "side": _SIDE,
-    "between": _NULLABLE_STR,
+    "between": _STR,
     "from_side": _SIDE,
     "to_side": _SIDE,
-    "to_room": _NULLABLE_STR,
-    "item": _NULLABLE_STR,
-    "thickness": _NULLABLE_NUM,
-    "height": _NULLABLE_NUM,
-    "sill": _NULLABLE_NUM,
-    "wall_kind": {"type": ["string", "null"], "enum": [*WALL_KINDS, None]},
-    "structural": {"type": ["boolean", "null"]},
-    "material": _NULLABLE_STR,
-    "level": _NULLABLE_NUM,
-    "count": _NULLABLE_NUM,
+    "to_room": _STR,
+    "item": _STR,
+    "thickness": _NUM,
+    "height": _NUM,
+    "sill": _NUM,
+    "wall_kind": _enum(WALL_KINDS),
+    "structural": _BOOL,
+    "material": _STR,
+    "level": _NUM,
+    "count": _NUM,
 }
 SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -109,7 +120,7 @@ SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "properties": _OP_FIELDS,
-                "required": list(_OP_FIELDS),
+                "required": ["op"],
                 "additionalProperties": False,
             },
         },
@@ -205,11 +216,11 @@ _VIEWER_SYSTEM = (
 
 _VIEWER_ROW: dict[str, Any] = {
     "a": {"type": "string", "enum": VIEWER_ACTIONS},
-    "value": _NULLABLE_STR,
-    "number": _NULLABLE_NUM,
-    "on": {"type": ["boolean", "null"]},
-    "material": {"type": ["string", "null"], "enum": [*FACADE_MATERIALS, None]},
-    "color": _NULLABLE_STR,
+    "value": _STR,
+    "number": _NUM,
+    "on": _BOOL,
+    "material": _enum(FACADE_MATERIALS),
+    "color": _STR,
 }
 VIEWER_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -219,7 +230,7 @@ VIEWER_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "properties": _VIEWER_ROW,
-                "required": list(_VIEWER_ROW),
+                "required": ["a"],
                 "additionalProperties": False,
             },
         },
@@ -228,6 +239,63 @@ VIEWER_SCHEMA: dict[str, Any] = {
     "required": ["actions", "reply"],
     "additionalProperties": False,
 }
+
+
+def strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Versión "strict" (Groq/OpenAI): todos los campos obligatorios y los opcionales nulos."""
+    rows_key = next(k for k in schema["properties"] if k != "reply")
+    items = schema["properties"][rows_key]["items"]
+    fields: dict[str, Any] = {}
+    for name, spec in items["properties"].items():
+        if name in items["required"]:
+            fields[name] = spec
+        elif "enum" in spec:
+            fields[name] = {"type": [spec["type"], "null"], "enum": [*spec["enum"], None]}
+        else:
+            fields[name] = {"type": [spec["type"], "null"]}
+    row = {**items, "properties": fields, "required": list(fields)}
+    rows = {**schema["properties"][rows_key], "items": row}
+    return {**schema, "properties": {**schema["properties"], rows_key: rows}}
+
+
+STRICT_SCHEMA = strict_schema(SCHEMA)
+
+
+def json_instructions(schema: dict[str, Any]) -> str:
+    """Describe el JSON esperado en el prompt.
+
+    No se usa la salida estructurada de la API: con ~20 campos opcionales el esquema supera
+    sus límites ("Schema is too complex", máx. 16 uniones). Las filas se validan igual en
+    ``to_plan_op`` / ``to_viewer_action``.
+    """
+    rows_key = next(k for k in schema["properties"] if k != "reply")
+    items = schema["properties"][rows_key]["items"]
+    fields = []
+    for name, spec in items["properties"].items():
+        kind = "|".join(f'"{v}"' for v in spec["enum"]) if "enum" in spec else spec["type"]
+        fields.append(f"{name}: {kind}")
+    must = ", ".join(items["required"])
+    return (
+        "Responde SOLO con un objeto JSON, sin texto alrededor ni bloques de código: "
+        f'{{"{rows_key}": [...], "reply": "..."}}. Cada elemento de {rows_key} es un objeto '
+        f"plano con {must} (obligatorio) y solo los campos que apliquen de esta lista; omite "
+        "los demás.\nCampos: " + "; ".join(fields)
+    )
+
+
+def parse_json_object(text: str) -> dict[str, Any] | None:
+    """El primer objeto JSON del texto (tolera bloques ```json y texto alrededor)."""
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        data = json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+STRICT_VIEWER_SCHEMA = strict_schema(VIEWER_SCHEMA)
 
 _KEY = {
     "plan_mode": "id",
@@ -324,7 +392,7 @@ def _facade_edit(
 
 
 def to_plan_op(raw: dict[str, Any]) -> dict[str, object] | None:
-    """Fila plana (campos nulos) → la forma de ``PlanOp`` del frontend; None si es inválida."""
+    """Fila plana (campos opcionales o nulos) → ``PlanOp`` del frontend; None si es inválida."""
     op = raw.get("op")
     f = {k: v for k, v in raw.items() if v is not None and k != "op"}
     try:
@@ -444,8 +512,7 @@ class ClaudePlanAssistant(PlanAssistant):
             response = self._api().messages.create(
                 model=self._model,
                 max_tokens=1500,
-                system=system,
-                output_config={"format": {"type": "json_schema", "schema": schema}},
+                system=f"{system}\n\n{json_instructions(schema)}",
                 messages=[{"role": "user", "content": user}],
             )
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
@@ -459,8 +526,7 @@ class ClaudePlanAssistant(PlanAssistant):
         if response.stop_reason == "refusal":
             return {"ops": [], "actions": [], "reply": "No puedo ayudar con eso."}
         text = next((b.text for b in response.content if b.type == "text"), "")
-        try:
-            parsed: dict[str, Any] = json.loads(text)
-        except json.JSONDecodeError as exc:
-            raise AssistantUnavailableError("La respuesta del asistente no fue válida") from exc
+        parsed = parse_json_object(text)
+        if parsed is None:
+            raise AssistantUnavailableError("La respuesta del asistente no fue válida")
         return parsed

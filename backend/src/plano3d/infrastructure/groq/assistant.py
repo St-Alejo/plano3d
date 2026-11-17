@@ -16,8 +16,8 @@ from plano3d.application.use_cases.errors import AssistantUnavailableError
 from plano3d.infrastructure.assistant.claude_assistant import (
     _SYSTEM,
     _VIEWER_SYSTEM,
-    SCHEMA,
-    VIEWER_SCHEMA,
+    STRICT_SCHEMA,
+    STRICT_VIEWER_SCHEMA,
     to_plan_op,
     to_viewer_action,
 )
@@ -46,7 +46,9 @@ class GroqPlanAssistant(PlanAssistant):
 
     def _interpret(self, message: str, context: str, scope: str = "plan") -> AssistantReply:
         viewer = scope == "viewer"
-        system, schema = (_VIEWER_SYSTEM, VIEWER_SCHEMA) if viewer else (_SYSTEM, SCHEMA)
+        system, schema = (
+            (_VIEWER_SYSTEM, STRICT_VIEWER_SCHEMA) if viewer else (_SYSTEM, STRICT_SCHEMA)
+        )
         label = "Estado de la vista" if viewer else "Plano actual"
         user = f"{label}:\n{context or '(vacío)'}\n\nMensaje: {message}"
         key = ResponseCache.key("groq", self._model, system, user)
