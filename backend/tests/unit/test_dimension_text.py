@@ -132,3 +132,17 @@ def test_la_escala_sale_de_las_cotas_leidas_texto_primero() -> None:
     # los ticks a 45° se toman en su primer cruce (~2 px antes del centro, en cada extremo)
     assert fit.meters_per_unit == pytest.approx(0.01, rel=0.03)
     assert sorted(r.text for r in readings) == ["1.50", "2.00", "3.00"]
+
+
+def test_la_escala_por_texto_gana_si_discrepa_y_la_respaldan_mas_cotas() -> None:
+    """Plano de CAD con líneas finas: las dos cotas de 7,32 quedan partidas por la mitad, se
+    dan la razón y la escala por líneas sale al doble; la lectura por texto la corrige."""
+    from plano3d.domain.scale_fit import ScaleFit
+    from plano3d.infrastructure.cv.raster_vector_detector import _overrules
+
+    lines = ScaleFit(0.0208, (0, 1, 2))
+    text = ScaleFit(0.0106, tuple(range(8)))
+    assert _overrules(text, lines)
+    # con el mismo respaldo, o si casi coinciden, se queda la escala por líneas de cota
+    assert not _overrules(ScaleFit(0.0106, (0, 1, 2)), lines)
+    assert not _overrules(ScaleFit(0.0210, tuple(range(8))), lines)

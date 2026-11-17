@@ -86,6 +86,8 @@ class RasterContext(VectorContext):
     readings: list[DimReading] = field(default_factory=list)
     #: textos de toda la hoja (px de la imagen rectificada): cotas y nombres de ambientes
     spotted: list[SpottedText] = field(default_factory=list)
+    #: trazos que son líneas de cota y no deben llegar a la búsqueda de muros
+    dim_strokes: set[int] = field(default_factory=set)
 
 
 class _ClassicStage(PipelineStage[RasterContext]):
@@ -134,6 +136,7 @@ class DimensionScaleStage(PipelineStage[RasterContext]):
         if self._spotter is not None:
             ctx.spotted = self._spotter.spot(img)
         fit = None
+        dims: list[DimLine] = []
         if self._reader is not None:
             gray = as_u8(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
             dims = find_dimension_lines(v.strokes, ink, v.stroke_px)
@@ -148,8 +151,17 @@ class DimensionScaleStage(PipelineStage[RasterContext]):
                 ctx.readings = inliers
             else:
                 fit = None
-        if fit is None and self._spotter is not None:
-            fit, ctx.readings = _text_first(v, img, ink, self._spotter, ctx.spotted)
+        if self._spotter is not None:
+            # las líneas de cota se cortan donde las cruza otra cota: si dos cotas iguales
+            # quedan partidas igual, se dan la razón y la escala sale al doble. La lectura
+            # "texto primero" mide la cota entera; gana la que tenga más cotas a favor
+            alt, alt_readings = _text_first(v, img, ink, self._spotter, ctx.spotted)
+            if alt is not None and (fit is None or _overrules(alt, fit)):
+                fit, ctx.readings = alt, alt_readings
+                # sus lecturas no apuntan a trazos: se quitan todas las líneas de cota
+                # halladas, o se emparejan con las caras de los muros como muros falsos
+                found = dims or find_dimension_lines(v.strokes, ink, v.stroke_px)
+                ctx.dim_strokes = {d.index // 1000 for d in found}
         if fit is not None:
             ctx.mpp = fit.meters_per_unit
             ctx.scale_source = "dimensions"
@@ -200,6 +212,17 @@ def _text_first(
     return fit, readings
 
 
+#: diferencia relativa a partir de la cual dos escalas se consideran en desacuerdo
+SCALE_DISAGREE = 0.1
+
+
+def _overrules(text: ScaleFit, lines: ScaleFit) -> bool:
+    """¿La escala por texto reemplaza a la de líneas de cota? Solo si discrepan y la
+    respaldan estrictamente más cotas (si coinciden, se queda la de líneas)."""
+    differ = abs(text.meters_per_unit - lines.meters_per_unit) / lines.meters_per_unit
+    return differ > SCALE_DISAGREE and text.support > lines.support
+
+
 def _as_reading(d: TextDimension, value: float, k: int) -> DimReading:
     line = Line(d.p1[0], d.p1[1], d.p2[0], d.p2[1])
     # índice negativo: no corresponde a ningún trazo vectorizado (no se quita del dibujo)
@@ -245,7 +268,7 @@ class ToDrawingStage(PipelineStage[RasterContext]):
     def run(self, ctx: RasterContext) -> RasterContext:
         v = ctx.require(ctx.vec, "vec")
         f = ctx.mpp
-        dim_strokes = {r.dim.index // 1000 for r in ctx.readings}
+        dim_strokes = {r.dim.index // 1000 for r in ctx.readings} | ctx.dim_strokes
         d = Drawing(exact_scale=False)
         d.lines = [
             Line(ln.x1 * f, ln.y1 * f, ln.x2 * f, ln.y2 * f)
