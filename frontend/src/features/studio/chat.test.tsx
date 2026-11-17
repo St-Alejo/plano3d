@@ -53,6 +53,25 @@ describe('chat del estudio', () => {
     expect(level().rooms.map((r) => r.label)).toEqual(['Estudio'])
   })
 
+  it('a la IA le llega la conversación reciente («esa alcoba»)', async () => {
+    const sent: string[] = []
+    server.use(
+      http.post('/api/projects/:id/assistant', async ({ request }) => {
+        sent.push(((await request.json()) as { context: string }).context)
+        return sent.length === 1
+          ? HttpResponse.json({ ops: [{ op: 'add_room', name: 'Estudio', width: 3, depth: 3 }], reply: 'Te dibujé un estudio.' })
+          : HttpResponse.json({ ops: [], reply: 'Listo.' })
+      }),
+    )
+    render(<ChatPanel projectId="prj_b" defaultOpen />)
+    await say('quiero un lugar tranquilo para trabajar')
+    await screen.findByText('Te dibujé un estudio.')
+    await say('ponle algo bonito a ese cuarto')
+    await screen.findByText('Listo.')
+    expect(sent[0]).not.toContain('Conversación reciente')
+    expect(sent[1]).toContain('Conversación reciente:\nPersona: quiero un lugar tranquilo para trabajar\nAsistente: Te dibujé un estudio.')
+  })
+
   it('sin IA disponible explica y muestra ejemplos', async () => {
     server.use(http.post('/api/projects/:id/assistant', () => HttpResponse.json({ detail: 'no' }, { status: 503 })))
     render(<ChatPanel projectId="prj_b" defaultOpen />)

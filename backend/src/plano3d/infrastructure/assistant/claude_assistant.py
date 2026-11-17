@@ -51,7 +51,10 @@ _SYSTEM = (
     "pide la persona en operaciones del editor. Convención: norte = arriba del plano, sur = "
     "abajo, este = derecha, oeste = izquierda; medidas en metros, ancho (este-oeste) por fondo "
     "(norte-sur). Usa los nombres de ambientes que existen en el plano (te los doy) o los que "
-    "se crean en el mismo mensaje. Operaciones:\n"
+    "se crean en el mismo mensaje. Si el contexto trae «Conversación reciente», úsala para "
+    "resolver referencias como «esa alcoba», «la nueva» o «ahí». Si el nombre no coincide "
+    "exacto pero un ambiente lo contiene (p. ej. «sala» en «Sala-comedor / cocina»), usa ese. "
+    "Operaciones:\n"
     "- add_room: name, width, depth y opcional next_room+next_side (lado del ambiente de "
     "referencia donde va el nuevo).\n"
     "- add_opening: kind (door|window), room y side, o room+between (otro ambiente) para "
@@ -511,7 +514,7 @@ class ClaudePlanAssistant(PlanAssistant):
         try:
             response = self._api().messages.create(
                 model=self._model,
-                max_tokens=1500,
+                max_tokens=4000,
                 system=f"{system}\n\n{json_instructions(schema)}",
                 messages=[{"role": "user", "content": user}],
             )

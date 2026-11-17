@@ -15,6 +15,7 @@ import { ApiError, api } from '@/api/client'
 import { EXAMPLES, parseChat } from '@/domain/chatParser'
 import { CommandError, type Command } from '@/domain/commands'
 import { asChatOps, describeLevel, isLevelOp, opsToCommand, type ChatOp, type LevelOp, type PlanOp } from '@/domain/planOps'
+import { recentConversation } from '@/domain/chatHistory'
 import { selectIsDirty, selectLevel, useEditor } from '@/store/editorStore'
 
 interface Msg {
@@ -83,11 +84,15 @@ export function ChatPanel({ projectId, defaultOpen = false, onReload }: { projec
     return lines
   }
 
-  /** Resumen para la IA: los pisos del proyecto (para «duplica el piso 2») y el piso que se ve. */
+  /**
+   * Resumen para la IA: los pisos del proyecto (para «duplica el piso 2»), el piso que se ve y lo
+   * último que se habló (para «ponle una ventana a esa alcoba»).
+   */
   const context = (level: string): string => {
     const st = useEditor.getState()
     const floors = (st.model?.levels ?? []).map((l, i) => `${i + 1}. ${l.name}${l.id === st.levelId ? ' (el que se ve)' : ''}`)
-    return floors.length > 1 ? `Pisos: ${floors.join('; ')}\n${level}` : level
+    const parts = [floors.length > 1 ? `Pisos: ${floors.join('; ')}` : '', level, recentConversation(msgs)]
+    return parts.filter(Boolean).join('\n')
   }
 
   /** Aplica lo que entendió el chat; los pisos van al servidor y el resto al editor. */

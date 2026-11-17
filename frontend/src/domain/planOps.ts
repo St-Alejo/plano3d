@@ -162,8 +162,12 @@ function openingsOf(level: Level, room: Room, side?: Side, kind?: OpeningKind): 
   return out
 }
 
+/** Palabras de la gente que no están en el nombre del catálogo. */
+const CATALOG_SYNONYMS: [RegExp, string][] = [[/^(?:un |el |la )?(?:televisor|television|tele|tv|pantalla)\b/, 'mueble de tv']]
+
 export function findCatalogItem(text: string): CatalogItem {
-  const q = fold(text)
+  const raw = fold(text)
+  const q = CATALOG_SYNONYMS.find(([re]) => re.test(raw))?.[1] ?? raw
   const scored = CATALOG.map((c) => {
     const name = fold(c.name)
     const score = name === q ? 3 : name.startsWith(q) || q.startsWith(name) ? 2 : name.includes(q) || q.split(/\s+/).some((w) => w.length > 3 && name.includes(w)) ? 1 : 0
@@ -424,7 +428,9 @@ export function describeLevel(level: Level): string {
     .map((room) => {
       const r = roomRect(room, t)
       const ops = openingsOf(level, room).map((o) => `${KIND[o.opening.kind]} al ${o.side}`)
-      return `${room.label}: x ${fmt(r.x)}–${fmt(r.x + r.w)}, y ${fmt(r.y)}–${fmt(r.y + r.h)} (${fmt(r.w)} × ${fmt(r.h)} m)${ops.length ? `; ${ops.join(', ')}` : ''}`
+      // para que la IA no pida «el muro exterior del este» de un ambiente que no lo tiene
+      const ext = SIDES.filter((s) => wallsOnSide(level, room, s).some((sw) => sw.wall.kind === 'exterior'))
+      return `${room.label}: x ${fmt(r.x)}–${fmt(r.x + r.w)}, y ${fmt(r.y)}–${fmt(r.y + r.h)} (${fmt(r.w)} × ${fmt(r.h)} m)${ops.length ? `; ${ops.join(', ')}` : ''}${ext.length ? `; muros exteriores: ${ext.join(', ')}` : ''}`
     })
     .concat(`Muros: espesor ${fmt(t)} m, altura ${fmt(level.walls[0]?.height ?? DEFAULT_WALL.height)} m`)
     .join('\n')
