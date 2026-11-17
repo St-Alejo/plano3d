@@ -159,6 +159,8 @@ function Comparator() {
   const dragging = useRef(false)
   const id = useId()
   const seen = useInView(box, { once: true, amount: 0.6 })
+  // el modelo 3D (three.js + texturas, ~2 MB) se descarga cuando el comparador se acerca a la pantalla
+  const near = useInView(box, { once: true, margin: '800px 0px' })
   const reduce = useReducedMotion()
 
   // al verlo por primera vez el divisor hace un vaivén corto para sugerir que se puede arrastrar
@@ -195,9 +197,11 @@ function Comparator() {
           onPointerUp={() => (dragging.current = false)}
         >
           <div className="absolute inset-0">
-            <Suspense fallback={null}>
-              <ModelStill model={model} />
-            </Suspense>
+            {near && (
+              <Suspense fallback={null}>
+                <ModelStill model={model} />
+              </Suspense>
+            )}
           </div>
           <div className="absolute inset-0 bg-(--l-sheet)" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
             <PlanCanvas model={model} className="size-full" label="Plano del apartamento" />

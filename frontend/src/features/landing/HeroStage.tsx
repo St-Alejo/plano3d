@@ -69,6 +69,14 @@ const rise = (delay: number) => ({
   transition: { duration: 1, ease: EASE, delay },
 })
 
+// El título es el elemento más grande de la portada (LCP): solo sube, sin desvanecerse, para que
+// el navegador lo cuente pintado desde el primer cuadro.
+const riseVisible = (delay: number) => ({
+  initial: { y: 28 },
+  animate: { y: 0 },
+  transition: { duration: 1, ease: EASE, delay },
+})
+
 const pad = (n: number) => String(n).padStart(2, '0')
 
 export function Headline({ children }: { children?: ReactNode }) {
@@ -77,7 +85,7 @@ export function Headline({ children }: { children?: ReactNode }) {
       <motion.p {...rise(0.05)} className="t-label text-(--l-dim)">
         Plano 3D · de la foto al modelo
       </motion.p>
-      <motion.h1 {...rise(0.12)} id="hero-title" className="t-hero mt-5">
+      <motion.h1 {...riseVisible(0.12)} id="hero-title" className="t-hero mt-5">
         Tu casa, desde el <em className="text-(--l-text-accent)">plano</em>.
       </motion.h1>
       <motion.p {...rise(0.28)} className="t-lead mt-7 max-w-lg">

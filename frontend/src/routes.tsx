@@ -1,16 +1,31 @@
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
 import type { RouteObject } from 'react-router'
 import { AppShell } from '@/components/AppShell'
 import { NotFound } from '@/components/NotFound'
+import { Spinner } from '@/components/ui'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { LazyViewerPage } from '@/features/viewer3d/LazyViewerPage'
 import { LazyFeaturedViewerPage } from '@/features/featured/LazyFeaturedViewerPage'
-import { NewPlanPage } from '@/features/capture/NewPlanPage'
 import { DesktopPage } from '@/features/desktop/DesktopPage'
 import { LandingPage } from '@/features/landing/LandingPage'
-import { ProjectsPage } from '@/features/projects/ProjectsPage'
-import { StudioPage } from '@/features/studio/StudioPage'
-import { ProjectPage } from '@/features/workspace/ProjectPage'
+
+// Las páginas de trabajo (editor 2D con Konva, estudio, visor) se descargan al entrar a ellas:
+// así la portada no carga three.js ni konva (rendimiento en Lighthouse).
+function page(load: () => Promise<ComponentType>): () => ReactNode {
+  const Page = lazy(() => load().then((C) => ({ default: C })))
+  return function LazyPage() {
+    return (
+      <Suspense fallback={<div className="p-8"><Spinner label="Cargando" /></div>}>
+        <Page />
+      </Suspense>
+    )
+  }
+}
+const ProjectsPage = page(() => import('@/features/projects/ProjectsPage').then((m) => m.ProjectsPage))
+const NewPlanPage = page(() => import('@/features/capture/NewPlanPage').then((m) => m.NewPlanPage))
+const ProjectPage = page(() => import('@/features/workspace/ProjectPage').then((m) => m.ProjectPage))
+const StudioPage = page(() => import('@/features/studio/StudioPage').then((m) => m.StudioPage))
 
 export const routes: RouteObject[] = [
   // la landing tiene su propio cajetín: va fuera del AppShell
