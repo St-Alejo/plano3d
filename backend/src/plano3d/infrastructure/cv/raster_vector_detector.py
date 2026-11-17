@@ -16,6 +16,8 @@ from dataclasses import dataclass, field, replace
 
 import cv2
 import numpy as np
+from shapely.geometry import Point, Polygon
+from shapely.ops import unary_union
 
 from plano3d.application.dto import model_to_dto
 from plano3d.application.pipeline import Pipeline, PipelineStage
@@ -34,6 +36,16 @@ from plano3d.domain import LabelKind, MeasureSource
 from plano3d.domain.plan_text import classify_label, parse_length
 from plano3d.domain.scale_fit import ScaleFit, ScalePair, fit_scale
 from plano3d.domain.solver import solve_level
+from plano3d.infrastructure.cv.ai_walls import (
+    AIPlan,
+    ClaudeWallReader,
+    FitWall,
+    fit_to_ink,
+    mpp_from_dimensions,
+    mpp_from_doors,
+    rooms_from_ai,
+    to_candidates,
+)
 from plano3d.infrastructure.cv.band_openings import band_openings
 from plano3d.infrastructure.cv.band_rooms import band_rooms, wall_band
 from plano3d.infrastructure.cv.band_walls import band_walls
@@ -88,6 +100,9 @@ class RasterContext(VectorContext):
     spotted: list[SpottedText] = field(default_factory=list)
     #: trazos que son líneas de cota y no deben llegar a la búsqueda de muros
     dim_strokes: set[int] = field(default_factory=set)
+    #: lectura de Claude (px de la imagen rectificada) y sus muros ajustados a la tinta
+    ai_plan: AIPlan | None = None
+    ai_walls: list[FitWall] = field(default_factory=list)
 
 
 class _ClassicStage(PipelineStage[RasterContext]):
@@ -261,6 +276,158 @@ def estimate_mpp(v: Vectorized) -> float:
     return 12.0 / extent
 
 
+#: con menos muros ajustados que esto, la lectura de Claude no se usa
+MIN_AI_WALLS = 4
+#: fracción mínima de los muros de Claude que deben tener tinta debajo
+MIN_AI_KEPT = 0.5
+#: si la escala de las cotas de Claude y la del OCR difieren más que esto, se avisa
+AI_SCALE_DISAGREE = 0.15
+
+
+class AIReadStage(PipelineStage[RasterContext]):
+    """Claude mira la planta entera: muros, vanos, ambientes y cotas (ver ``ai_walls``).
+
+    Sus muros se ajustan a la tinta; si la escala no salió de las cotas, se toma la de las
+    cotas que leyó Claude. Sin lector (o si falla), no cambia nada.
+    """
+
+    key = "ai_walls"
+    title = "Lectura de muros con IA"
+
+    def __init__(self, reader: ClaudeWallReader | None) -> None:
+        self._reader = reader
+
+    def run(self, ctx: RasterContext) -> RasterContext:
+        if self._reader is None:
+            return ctx
+        cv = ctx.require(ctx.cv, "cv")
+        img = cv.require(cv.rectified, "rectified")
+        ink = cv.require(cv.ink, "ink")
+        try:
+            plan = self._reader.read(img)
+        except Exception:  # la IA nunca tumba la detección: queda la clásica
+            plan = None
+        if plan is None:
+            return ctx
+        # escala: la de las cotas del OCR manda; si no hubo, las cotas que leyó Claude; si
+        # el plano no tiene cotas, el ancho de sus puertas (mejor que el espesor supuesto)
+        mpp = ctx.mpp
+        by_dims = mpp_from_dimensions(plan)
+        if ctx.scale_source == "dimensions":
+            if by_dims is not None:
+                ctx.metrics["ai_scale_gap"] = round(abs(by_dims - mpp) / mpp, 3)
+        elif by_dims is not None:
+            mpp = by_dims
+        else:
+            mpp = mpp_from_doors(plan) or mpp
+        fitted = fit_to_ink(plan, ink, mpp)
+        ctx.metrics["ai_read"] = float(len(plan.walls))
+        ctx.metrics["ai_fit"] = float(len(fitted))
+        if len(fitted) < MIN_AI_WALLS or len(fitted) < MIN_AI_KEPT * len(plan.walls):
+            return ctx
+        ctx.ai_plan, ctx.ai_walls = plan, fitted
+        if ctx.scale_source != "dimensions" and mpp != ctx.mpp:
+            ctx.mpp = mpp
+            if by_dims is not None:
+                ctx.scale_source = "dimensions"
+                ctx.scale_confidence = 0.75
+                ctx.error_rel = 0.02
+            else:  # por las puertas: estimada, pero en el orden correcto
+                ctx.scale_confidence = 0.45
+                ctx.error_rel = 0.06
+            ctx.error_abs = 2 * mpp
+        return ctx
+
+    def metrics(self, ctx: RasterContext) -> dict[str, float]:
+        return {k: v for k, v in ctx.metrics.items() if k.startswith("ai_")}
+
+
+class AIWallsStage(PipelineStage[RasterContext]):
+    """Los muros de Claude, ya ajustados a la tinta, reemplazan a los de pares de caras;
+    sus nombres de ambientes reemplazan a los del OCR."""
+
+    key = "ai_apply"
+    title = "Muros de la IA"
+
+    def run(self, ctx: RasterContext) -> RasterContext:
+        plan = ctx.ai_plan
+        if plan is None or not ctx.ai_walls:
+            return ctx
+        f = ctx.mpp
+        ctx.walls = to_candidates(ctx.ai_walls, plan, f)
+        ctx.metrics["ai_walls"] = float(len(ctx.walls))
+        d = ctx.require(ctx.drawing, "drawing")
+        if plan.rooms:
+            size = max(0.15, 12 * f)
+            d.texts = [t for t in d.texts if classify_label(t.text) is not LabelKind.ROOM_NAME] + [
+                Text(r.x * f, r.y * f, r.name, size) for r in plan.rooms
+            ]
+        return ctx
+
+    def metrics(self, ctx: RasterContext) -> dict[str, float]:
+        return {"walls": float(len(ctx.walls)), "from_ai": float("ai_walls" in ctx.metrics)}
+
+
+#: los contornos de Claude reemplazan a los ambientes de los muros si cubren más área
+AI_ROOMS_GAIN = 1.1
+#: ...o si separan ambientes que los muros juntaron, sin perder más que esto del área
+AI_ROOMS_KEEP = 0.85
+
+
+#: un sobrante menor que esto (m²) no se reparte (rendijas entre contornos)
+LEFTOVER_M2 = 0.3
+
+
+def _absorb_leftovers(found: list[Polygon], walled: list[Polygon]) -> list[Polygon]:
+    """Lo que los muros encierran y Claude no dibujó (un pasillo, un rincón) se suma al
+    ambiente de Claude con el que comparte más borde: el piso no queda con huecos."""
+    if not walled:
+        return found
+    rooms = list(found)
+    rest = unary_union(walled).difference(unary_union(rooms))
+    for piece in getattr(rest, "geoms", [rest]):
+        if piece.geom_type != "Polygon" or piece.area < LEFTOVER_M2:
+            continue
+        touch = [piece.intersection(r.buffer(0.05)).area for r in rooms]
+        k = max(range(len(rooms)), key=touch.__getitem__)
+        if touch[k] <= 0:
+            continue
+        merged = rooms[k].union(piece).buffer(0.01).buffer(-0.01)
+        if merged.geom_type == "Polygon" and merged.is_valid:
+            rooms[k] = Polygon(merged.exterior).simplify(0.01)
+    return rooms
+
+
+class AIRoomsStage(PipelineStage[RasterContext]):
+    """Si los muros no encierran todos los ambientes (espacios abiertos, vanos sin muro),
+    los contornos que dibujó Claude, llevados a los ejes de los muros, los reemplazan."""
+
+    key = "ai_rooms"
+    title = "Ambientes de la IA"
+
+    def run(self, ctx: RasterContext) -> RasterContext:
+        plan = ctx.ai_plan
+        if plan is None or "ai_walls" not in ctx.metrics:
+            return ctx
+        found = rooms_from_ai(plan, ctx.walls, ctx.mpp)
+        current = sum(p.area for p in ctx.rooms)
+        area = sum(p.area for p in found)
+        # un ambiente de los muros que contiene dos rótulos de Claude junta dos ambientes
+        merged = any(
+            sum(room.contains(Point(r.x * ctx.mpp, r.y * ctx.mpp)) for r in plan.rooms) > 1
+            for room in ctx.rooms
+        )
+        if found and (
+            area > AI_ROOMS_GAIN * current or (merged and area >= AI_ROOMS_KEEP * current)
+        ):
+            ctx.rooms = _absorb_leftovers(found, ctx.rooms)
+            ctx.metrics["ai_rooms"] = float(len(found))
+        return ctx
+
+    def metrics(self, ctx: RasterContext) -> dict[str, float]:
+        return {"rooms": float(len(ctx.rooms)), "from_ai": float("ai_rooms" in ctx.metrics)}
+
+
 class ToDrawingStage(PipelineStage[RasterContext]):
     key = "to_meters"
     title = "Geometría en metros"
@@ -322,7 +489,8 @@ class BandRoomsStage(PipelineStage[RasterContext]):
     title = "Ambientes, muros y vanos desde la tinta"
 
     def run(self, ctx: RasterContext) -> RasterContext:
-        if ctx.scale_source != "dimensions":
+        # con los muros de la IA los ambientes ya cierran: la banda no los reemplaza
+        if ctx.scale_source != "dimensions" or "ai_walls" in ctx.metrics:
             return ctx
         cv = ctx.require(ctx.cv, "cv")
         v = ctx.require(ctx.vec, "vec")
@@ -394,7 +562,9 @@ class SolveStage(PipelineStage[RasterContext]):
 
 
 def raster_stages(
-    reader: TextReader | None, spotter: TextSpotter | None = None
+    reader: TextReader | None,
+    spotter: TextSpotter | None = None,
+    walls: ClaudeWallReader | None = None,
 ) -> list[PipelineStage[RasterContext]]:
     return [
         _ClassicStage(IngestStage()),
@@ -403,9 +573,12 @@ def raster_stages(
         _ClassicStage(PreprocessStage()),
         VectorizeStage(),
         DimensionScaleStage(reader, spotter),
+        AIReadStage(walls),
         ToDrawingStage(),
         WallsStage(),  # type: ignore[list-item]
+        AIWallsStage(),
         RoomsStage(),  # type: ignore[list-item]
+        AIRoomsStage(),
         BandRoomsStage(),
         RasterAssembleStage(),
         SolveStage(),
@@ -418,11 +591,12 @@ def run_sync(
     content_type: str,
     reader: TextReader | None,
     corners: list[tuple[float, float]] | None = None,
+    walls: ClaudeWallReader | None = None,
 ) -> RasterContext:
     """Corre el pipeline sin publicar progreso (scripts de evaluación y pruebas)."""
     ctx = RasterContext(project_id, data, _no_reader)
     ctx.cv = CVContext(project_id, data, content_type, corners)
-    for stage in raster_stages(reader):
+    for stage in raster_stages(reader, None, walls):
         ctx = stage.run(ctx)
     return ctx
 
@@ -438,10 +612,14 @@ class RasterVectorDetector(FloorPlanDetector):
     name: DetectorName = "raster-vector"
 
     def __init__(
-        self, reader: TextReader | None = None, spotter: TextSpotter | None = None
+        self,
+        reader: TextReader | None = None,
+        spotter: TextSpotter | None = None,
+        walls: ClaudeWallReader | None = None,
     ) -> None:
         self._reader = reader
         self._spotter = spotter
+        self._walls = walls
 
     def supports(self, quality: ImageQuality) -> bool:
         return quality.width >= 400 and quality.height >= 400
@@ -449,7 +627,7 @@ class RasterVectorDetector(FloorPlanDetector):
     async def detect(
         self, request: DetectionRequest, progress: ProgressPublisher
     ) -> DetectionResult:
-        stages = raster_stages(self._reader, self._spotter)
+        stages = raster_stages(self._reader, self._spotter, self._walls)
         pipeline = Pipeline(
             stages, preview=lambda c: model_to_dto(c.model) if c.model is not None else None
         )
@@ -466,6 +644,8 @@ class RasterVectorDetector(FloorPlanDetector):
             "rooms": float(len(lv.rooms)),
             "dimensions": float(len(lv.dimensions)),
             "meters_per_pixel": model.scale.meters_per_pixel,
+            # cuánto aportó la lectura con IA (muros leídos/ajustados, ambientes)
+            **{k: v for k, v in ctx.metrics.items() if k.startswith("ai_")},
         }
         img = cv.require(cv.rectified, "rectified")
         return DetectionResult(

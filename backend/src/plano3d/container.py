@@ -75,6 +75,7 @@ from plano3d.infrastructure.auth import (
     InMemoryLinkCodeStore,
     JwtTokenService,
 )
+from plano3d.infrastructure.cv.ai_walls import ClaudeWallReader
 from plano3d.infrastructure.cv.capture import OpenCVCaptureInspector, OpenCVStitcher
 from plano3d.infrastructure.cv.classic_cv_detector import ClassicCVDetector
 from plano3d.infrastructure.cv.imageio import OpenCVImageInspector, OpenCVPaperDetector
@@ -346,7 +347,8 @@ def default_selector() -> DetectorSelector:
     # una lámina con varias plantas se separa y cada planta pasa por el detector híbrido
     # fotos: además de la lectura por línea de cota, cotas "texto primero" y nombres
     spotter = RapidOcrSpotter() if ocr_available() else None
-    raster = RasterVectorDetector(reader, spotter)
+    # con Claude, además, la planta entera se lee con visión (muros, vanos y ambientes)
+    raster = RasterVectorDetector(reader, spotter, wall_reader())
     photo = MultiLevelDetector(HybridPhotoDetector(raster, classic))
     return DetectorSelector(
         [DxfDetector(), VectorPdfDetector(), photo, classic], OpenCVImageInspector()
@@ -362,6 +364,16 @@ def wall_segmenter() -> WallProbability | None:
         return None
     seg = WallSegmenter()
     return seg.probability if seg.available else None
+
+
+def wall_reader() -> ClaudeWallReader | None:
+    """Lectura de muros con Claude (solo con ``PLANO3D_AI=claude``; se apaga con
+    ``PLANO3D_AI_WALLS=0``)."""
+    if ai_provider() != "claude":
+        return None
+    if os.environ.get("PLANO3D_AI_WALLS", "1").lower() in ("0", "false", "no"):
+        return None
+    return ClaudeWallReader()
 
 
 def text_reader() -> TextReader | None:
