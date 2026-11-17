@@ -19,7 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Revisa cada archivo de dependencias del repo (package-lock.json, etc.) contra osv.dev.
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      # OSV necesita versiones exactas y el backend solo declara rangos en pyproject.toml:
+      # pip resuelve sus dependencias (sin instalarlas) y quedan en un requirements.txt temporal.
+      - name: Versiones exactas de Python
+        run: |
+          mkdir -p .osv-python/backend
+          pip install --quiet --dry-run --ignore-installed --report .osv-python/backend/report.json "./backend[ocr]"
+          python -c "import json,sys; r=json.load(open(sys.argv[1],encoding='utf-8')); open(sys.argv[2],'w').write(''.join(i['metadata']['name']+'=='+i['metadata']['version']+'\n' for i in r['install'] if 'dir_info' not in i.get('download_info',{})))" .osv-python/backend/report.json .osv-python/backend/requirements.txt
+      # Revisa cada archivo de dependencias (package-lock.json y los de Python) contra osv.dev.
       # Falla si encuentra una vulnerabilidad que no esté justificada en osv-scanner.toml.
       - uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:
