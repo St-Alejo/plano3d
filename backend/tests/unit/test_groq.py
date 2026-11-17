@@ -135,9 +135,9 @@ def test_lector_si_falla_devuelve_vacio(tmp_path: Any) -> None:
     ("ai", "claude", "groq", "expected"),
     [
         ("", True, True, "claude"),
-        ("", False, True, "groq"),
-        ("groq", True, True, "groq"),
-        ("groq", True, False, None),
+        ("", False, True, None),  # Groq ya no se usa: sin Claude, solo lo local
+        ("groq", True, True, "claude"),  # el valor antiguo del .env pasa a Claude
+        ("claude", True, False, "claude"),
         ("none", True, True, None),
         ("", False, False, None),
     ],

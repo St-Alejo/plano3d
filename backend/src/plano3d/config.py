@@ -70,25 +70,19 @@ _LOCAL_KEYS = (
 
 
 def ai_provider() -> str | None:
-    """Proveedor de IA a usar: ``claude``, ``groq`` o None (sin IA, solo lo local).
+    """Proveedor de IA a usar: ``claude`` o None (sin IA, solo lo local).
 
-    ``PLANO3D_AI`` lo fija (``claude`` | ``groq`` | ``none``); sin ella se prefiere Claude
-    si tiene credenciales y presupuesto, y si no Groq.
+    Solo Claude: Groq se quitó porque su cuota gratuita se puede agotar en plena demostración.
+    ``PLANO3D_AI=none`` (u ``off``) apaga la IA; cualquier otro valor, incluido el antiguo
+    ``groq``, usa Claude si tiene credenciales y presupuesto.
     """
-    from plano3d.infrastructure.groq.client import groq_available
     from plano3d.infrastructure.ocr.claude import claude_available
 
     load_local_env()
     wanted = os.environ.get("PLANO3D_AI", "").strip().lower()
     if wanted in ("none", "off", "0"):
         return None
-    if wanted == "groq":
-        return "groq" if groq_available() else None
-    if wanted == "claude":
-        return "claude" if claude_available() else None
-    if claude_available():
-        return "claude"
-    return "groq" if groq_available() else None
+    return "claude" if claude_available() else None
 
 
 def load_local_env(path: Path | None = None) -> None:
