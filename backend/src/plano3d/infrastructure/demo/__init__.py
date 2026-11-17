@@ -40,7 +40,7 @@ FEATURED_INFO: dict[str, dict[str, str]] = {
             "suite con vestier, sala de cine y azotea con BBQ, gimnasio y piscina."
         ),
         "cover": "/destacados/casa4/portada.webp",
-        # "video": se agrega cuando exista frontend/public/destacados/casa4/recorrido.mp4
+        "video": "/destacados/casa4/recorrido.mp4",
     }
 }
 

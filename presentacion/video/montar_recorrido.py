@@ -84,7 +84,9 @@ def build(folder: Path, out: Path) -> None:
                 f"fps={FPS},format=yuv420p,setpts=PTS-STARTPTS,{_title(title)}[v{i}]"
             )
         elif still.exists():
-            inputs += ["-loop", "1", "-t", f"{STILL}", "-i", str(still)]
+            # una sola imagen: zoompan saca de ella los cuadros de la toma (con -loop multiplicaría
+            # la duración por la cantidad de cuadros de entrada)
+            inputs += ["-i", str(still)]
             seconds = STILL
             frames = round(STILL * FPS)
             # acercamiento lento del 100 al 110 % con un paneo suave hacia la derecha

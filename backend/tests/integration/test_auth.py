@@ -127,6 +127,7 @@ def test_casa_destacada_se_ve_sin_cuenta(client: TestClient) -> None:
     casa = featured[0]
     assert casa["levels"] == 4 and casa["rooms"] > 30 and casa["total_area"] > 500
     assert casa["cover"].endswith(".webp")
+    assert casa["video"] == "/destacados/casa4/recorrido.mp4"
     project = client.get(f"/api/featured/{FEATURED_PROJECT_ID}").json()
     levels = project["model"]["levels"]
     assert [lv["name"] for lv in levels] == ["Piso 1", "Piso 2", "Piso 3", "Azotea"]
