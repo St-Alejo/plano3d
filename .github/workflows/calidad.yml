@@ -1,0 +1,48 @@
+# Seguridad de dependencias (OSV-Scanner) y calidad de la web publicada (Lighthouse CI).
+# Corre en cada push y PR, y cada lunes: aparecen vulnerabilidades nuevas aunque el código no cambie.
+name: Calidad
+
+on:
+  push:
+    branches: [main, redesign]
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  osv:
+    name: Dependencias (OSV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Revisa cada archivo de dependencias del repo (package-lock.json, etc.) contra osv.dev.
+      # Falla si encuentra una vulnerabilidad que no esté justificada en osv-scanner.toml.
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
+        with:
+          scan-args: |-
+            --config=osv-scanner.toml
+            --recursive
+            ./
+
+  lighthouse:
+    name: Lighthouse (web)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+      # Sirve el build de producción y mide portada, entrar y escritorio (3 corridas cada una).
+      # Umbrales en frontend/lighthouserc.json.
+      - run: npx -y @lhci/cli@0.15.1 autorun
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: frontend/.lighthouseci

@@ -1,0 +1,7 @@
+# Configuración de OSV-Scanner (job «Dependencias (OSV)» del CI).
+# Cada excepción lleva su motivo y vence sola: al vencer, el CI vuelve a fallar y hay que revisarla.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-15
+reason = "minimatch 10 solo lo usa ESLint (desarrollo) con patrones del propio repo; el arreglo exige minimatch 11, que ESLint aún no admite."
