@@ -1,0 +1,641 @@
+{
+ "name": "Local comercial con oficina",
+ "original_image_key": "",
+ "files": {},
+ "model": {
+  "project_id": "prj_ej_local",
+  "scale": {
+   "meters_per_pixel": 0.01,
+   "source": "vector",
+   "confidence": 1.0
+  },
+  "levels": [
+   {
+    "id": "lvl_ej_local_1",
+    "name": "Piso 1",
+    "elevation": 0.0,
+    "walls": [
+     {
+      "id": "w_ej_local_1_2",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_1",
+        "kind": "window",
+        "offset": 3.8,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 10.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_4",
+      "start": {
+       "x": 10.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 7.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_3",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_6",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_5",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_8",
+      "start": {
+       "x": 4.0,
+       "y": 10.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_7",
+        "kind": "window",
+        "offset": 1.1,
+        "width": 1.8,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_10",
+      "start": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_9",
+        "kind": "window",
+        "offset": 0.8,
+        "width": 1.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_12",
+      "start": {
+       "x": 8.0,
+       "y": 10.0
+      },
+      "end": {
+       "x": 4.0,
+       "y": 10.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_14",
+      "start": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "end": {
+       "x": 8.0,
+       "y": 10.0
+      },
+      "thickness": 0.25,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_13",
+        "kind": "window",
+        "offset": 0.7,
+        "width": 0.6,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_16",
+      "start": {
+       "x": 0.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_15",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_18",
+      "start": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 8.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_17",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_20",
+      "start": {
+       "x": 8.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_local_1_19",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_21",
+      "start": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 4.0,
+       "y": 10.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_local_1_22",
+      "start": {
+       "x": 8.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 8.0,
+       "y": 10.0
+      },
+      "thickness": 0.12,
+      "height": 3.2,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_ej_local_1_salon",
+      "label": "Salón de ventas",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 7.0
+       },
+       {
+        "x": 0.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 70.0,
+      "centroid": {
+       "x": 5.0,
+       "y": 3.5
+      },
+      "room_type": "other",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_local_1_oficina",
+      "label": "Oficina",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 7.0
+       },
+       {
+        "x": 4.0,
+        "y": 7.0
+       },
+       {
+        "x": 4.0,
+        "y": 10.0
+       },
+       {
+        "x": 0.0,
+        "y": 10.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 12.0,
+      "centroid": {
+       "x": 2.0,
+       "y": 8.5
+      },
+      "room_type": "study",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_local_1_bodega",
+      "label": "Bodega",
+      "polygon": [
+       {
+        "x": 4.0,
+        "y": 7.0
+       },
+       {
+        "x": 8.0,
+        "y": 7.0
+       },
+       {
+        "x": 8.0,
+        "y": 10.0
+       },
+       {
+        "x": 4.0,
+        "y": 10.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 12.0,
+      "centroid": {
+       "x": 6.0,
+       "y": 8.5
+      },
+      "room_type": "storage",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_local_1_bano",
+      "label": "Baño",
+      "polygon": [
+       {
+        "x": 8.0,
+        "y": 7.0
+       },
+       {
+        "x": 10.0,
+        "y": 7.0
+       },
+       {
+        "x": 10.0,
+        "y": 10.0
+       },
+       {
+        "x": 8.0,
+        "y": 10.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 6.0,
+      "centroid": {
+       "x": 9.0,
+       "y": 8.5
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 3.2,
+    "columns": [],
+    "stairs": [],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_ej_local_1_oficina_c1",
+      "catalog_id": "escritorio",
+      "position": {
+       "x": 2.0,
+       "y": 7.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 0.75,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_local_1_bano_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.53,
+       "y": 8.5
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_local_1_bano_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.63,
+       "y": 7.8
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_local_1_bano_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.755,
+       "y": 9.3
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     }
+    ]
+   }
+  ],
+  "source_image": null,
+  "total_area": 100.0,
+  "schema_version": 2,
+  "facade": "moderna_contemporanea",
+  "facade_custom": null
+ }
+}

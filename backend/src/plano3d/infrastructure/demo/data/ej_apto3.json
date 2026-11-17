@@ -1,0 +1,1584 @@
+{
+ "name": "Apartamento familiar de 3 alcobas",
+ "original_image_key": "",
+ "files": {},
+ "model": {
+  "project_id": "prj_ej_apto3",
+  "scale": {
+   "meters_per_pixel": 0.01,
+   "source": "vector",
+   "confidence": 1.0
+  },
+  "levels": [
+   {
+    "id": "lvl_ej_apto3_1",
+    "name": "Piso 1",
+    "elevation": 0.0,
+    "walls": [
+     {
+      "id": "w_ej_apto3_1_2",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_1",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_4",
+      "start": {
+       "x": 0.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_3",
+        "kind": "window",
+        "offset": 1.55,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_6",
+      "start": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 11.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_5",
+        "kind": "window",
+        "offset": 1.1,
+        "width": 1.8,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_8",
+      "start": {
+       "x": 11.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 15.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_7",
+        "kind": "window",
+        "offset": 1.1,
+        "width": 1.8,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_10",
+      "start": {
+       "x": 0.0,
+       "y": 9.5
+      },
+      "end": {
+       "x": 0.0,
+       "y": 5.5
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_9",
+        "kind": "window",
+        "offset": 1.1,
+        "width": 1.8,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_12",
+      "start": {
+       "x": 4.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_11",
+        "kind": "door",
+        "offset": 0.7,
+        "width": 1.0,
+        "height": 2.2,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_14",
+      "start": {
+       "x": 0.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 9.5
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 1.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_16",
+      "start": {
+       "x": 7.5,
+       "y": 11.0
+      },
+      "end": {
+       "x": 4.0,
+       "y": 11.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_15",
+        "kind": "window",
+        "offset": 0.95,
+        "width": 1.6,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_18",
+      "start": {
+       "x": 9.5,
+       "y": 11.0
+      },
+      "end": {
+       "x": 7.5,
+       "y": 11.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_17",
+        "kind": "window",
+        "offset": 0.7,
+        "width": 0.6,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_20",
+      "start": {
+       "x": 13.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 11.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_19",
+        "kind": "window",
+        "offset": 0.95,
+        "width": 1.6,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_22",
+      "start": {
+       "x": 15.0,
+       "y": 11.0
+      },
+      "end": {
+       "x": 13.0,
+       "y": 11.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_21",
+        "kind": "window",
+        "offset": 0.7,
+        "width": 0.6,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_24",
+      "start": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_23",
+        "kind": "door",
+        "offset": 1.25,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_26",
+      "start": {
+       "x": 0.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 4.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_25",
+        "kind": "door",
+        "offset": 0.5,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_28",
+      "start": {
+       "x": 4.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 7.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_27",
+        "kind": "door",
+        "offset": 0.2,
+        "width": 2.6,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_29",
+      "start": {
+       "x": 11.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 11.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_31",
+      "start": {
+       "x": 7.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 11.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_30",
+        "kind": "door",
+        "offset": 0.5,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_33",
+      "start": {
+       "x": 11.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 15.0,
+       "y": 5.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_32",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_35",
+      "start": {
+       "x": 0.0,
+       "y": 9.5
+      },
+      "end": {
+       "x": 4.0,
+       "y": 9.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_34",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_36",
+      "start": {
+       "x": 4.0,
+       "y": 5.5
+      },
+      "end": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 1.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_37",
+      "start": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 4.0,
+       "y": 9.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_38",
+      "start": {
+       "x": 4.0,
+       "y": 9.5
+      },
+      "end": {
+       "x": 4.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 1.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_40",
+      "start": {
+       "x": 4.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.5,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_39",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_42",
+      "start": {
+       "x": 7.5,
+       "y": 7.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_41",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_44",
+      "start": {
+       "x": 9.5,
+       "y": 7.0
+      },
+      "end": {
+       "x": 13.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_43",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_46",
+      "start": {
+       "x": 13.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 15.0,
+       "y": 7.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_apto3_1_45",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_47",
+      "start": {
+       "x": 7.5,
+       "y": 7.0
+      },
+      "end": {
+       "x": 7.5,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_48",
+      "start": {
+       "x": 9.5,
+       "y": 7.0
+      },
+      "end": {
+       "x": 9.5,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_apto3_1_49",
+      "start": {
+       "x": 13.0,
+       "y": 7.0
+      },
+      "end": {
+       "x": 13.0,
+       "y": 11.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_ej_apto3_1_sala",
+      "label": "Sala",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 5.5
+       },
+       {
+        "x": 0.0,
+        "y": 5.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 38.5,
+      "centroid": {
+       "x": 3.5,
+       "y": 2.75
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_comedor",
+      "label": "Comedor",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 11.0,
+        "y": 0.0
+       },
+       {
+        "x": 11.0,
+        "y": 5.5
+       },
+       {
+        "x": 7.0,
+        "y": 5.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 22.0,
+      "centroid": {
+       "x": 9.0,
+       "y": 2.75
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_alcoba1",
+      "label": "Alcoba principal",
+      "polygon": [
+       {
+        "x": 11.0,
+        "y": 0.0
+       },
+       {
+        "x": 15.0,
+        "y": 0.0
+       },
+       {
+        "x": 15.0,
+        "y": 5.5
+       },
+       {
+        "x": 11.0,
+        "y": 5.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 22.0,
+      "centroid": {
+       "x": 13.0,
+       "y": 2.75
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_cocina",
+      "label": "Cocina",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 5.5
+       },
+       {
+        "x": 4.0,
+        "y": 5.5
+       },
+       {
+        "x": 4.0,
+        "y": 9.5
+       },
+       {
+        "x": 0.0,
+        "y": 9.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 16.0,
+      "centroid": {
+       "x": 2.0,
+       "y": 7.5
+      },
+      "room_type": "kitchen",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_ropas",
+      "label": "Ropas",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 9.5
+       },
+       {
+        "x": 4.0,
+        "y": 9.5
+       },
+       {
+        "x": 4.0,
+        "y": 11.0
+       },
+       {
+        "x": 0.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 6.0,
+      "centroid": {
+       "x": 2.0,
+       "y": 10.25
+      },
+      "room_type": "laundry",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_hall",
+      "label": "Corredor",
+      "polygon": [
+       {
+        "x": 4.0,
+        "y": 5.5
+       },
+       {
+        "x": 15.0,
+        "y": 5.5
+       },
+       {
+        "x": 15.0,
+        "y": 7.0
+       },
+       {
+        "x": 4.0,
+        "y": 7.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 16.5,
+      "centroid": {
+       "x": 9.5,
+       "y": 6.25
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_alcoba2",
+      "label": "Alcoba 2",
+      "polygon": [
+       {
+        "x": 4.0,
+        "y": 7.0
+       },
+       {
+        "x": 7.5,
+        "y": 7.0
+       },
+       {
+        "x": 7.5,
+        "y": 11.0
+       },
+       {
+        "x": 4.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 14.0,
+      "centroid": {
+       "x": 5.75,
+       "y": 9.0
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_bano1",
+      "label": "Baño social",
+      "polygon": [
+       {
+        "x": 7.5,
+        "y": 7.0
+       },
+       {
+        "x": 9.5,
+        "y": 7.0
+       },
+       {
+        "x": 9.5,
+        "y": 11.0
+       },
+       {
+        "x": 7.5,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 8.5,
+       "y": 9.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_alcoba3",
+      "label": "Alcoba 3",
+      "polygon": [
+       {
+        "x": 9.5,
+        "y": 7.0
+       },
+       {
+        "x": 13.0,
+        "y": 7.0
+       },
+       {
+        "x": 13.0,
+        "y": 11.0
+       },
+       {
+        "x": 9.5,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 14.0,
+      "centroid": {
+       "x": 11.25,
+       "y": 9.0
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_apto3_1_bano2",
+      "label": "Baño principal",
+      "polygon": [
+       {
+        "x": 13.0,
+        "y": 7.0
+       },
+       {
+        "x": 15.0,
+        "y": 7.0
+       },
+       {
+        "x": 15.0,
+        "y": 11.0
+       },
+       {
+        "x": 13.0,
+        "y": 11.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 8.0,
+      "centroid": {
+       "x": 14.0,
+       "y": 9.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [],
+    "stairs": [],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_ej_apto3_1_sala_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 3.5,
+       "y": 0.47000000000000003
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_apto3_1_sala_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 1.3,
+       "y": 1.6
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_apto3_1_comedor_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 10.53,
+       "y": 1.45
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba1_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 14.005,
+       "y": 2.75
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba1_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 14.68,
+       "y": 1.3499999999999999
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba1_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 14.780000000000001,
+       "y": 3.725
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_cocina_c1",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 2.4,
+       "y": 9.18
+      },
+      "width": 2.4,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_ej_apto3_1_ropas_c1",
+      "catalog_id": "lavadora",
+      "position": {
+       "x": 1.9,
+       "y": 9.82
+      },
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.85,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba2_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 6.505,
+       "y": 9.0
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba2_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 7.18,
+       "y": 10.3
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba2_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 7.279999999999999,
+       "y": 8.025
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano1_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.03,
+       "y": 9.0
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano1_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.13,
+       "y": 9.7
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano1_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.255,
+       "y": 10.2
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba3_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 12.005,
+       "y": 9.0
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba3_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 12.68,
+       "y": 10.3
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_alcoba3_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 12.780000000000001,
+       "y": 8.025
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano2_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 14.53,
+       "y": 9.0
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano2_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 14.63,
+       "y": 8.3
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_apto3_1_bano2_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 14.755,
+       "y": 9.8
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     }
+    ]
+   }
+  ],
+  "source_image": null,
+  "total_area": 165.0,
+  "schema_version": 2,
+  "facade": "moderna_ladrillo",
+  "facade_custom": null
+ }
+}

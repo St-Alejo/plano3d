@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from plano3d.api.app import create_app
 from plano3d.config import Settings
 from plano3d.container import memory_container
-from plano3d.infrastructure.demo import DEMO_PROJECT_ID, FEATURED_PROJECT_ID
+from plano3d.infrastructure.demo import DEMO_PROJECT_ID, EXAMPLE_IDS, FEATURED_PROJECT_ID
 
 SECRET = "x" * 40
 
@@ -97,7 +97,7 @@ def test_cuenta_demo_con_la_casa_de_tres_pisos(client: TestClient) -> None:
     demo = client.post("/api/auth/demo").json()
     assert demo["user"]["is_demo"] is True
     projects = client.get("/api/projects", headers=_bearer(demo)).json()
-    assert {p["id"] for p in projects} == {DEMO_PROJECT_ID, FEATURED_PROJECT_ID}
+    assert {p["id"] for p in projects} == {DEMO_PROJECT_ID, FEATURED_PROJECT_ID, *EXAMPLE_IDS}
     project = client.get(f"/api/projects/{DEMO_PROJECT_ID}", headers=_bearer(demo)).json()
     levels = project["model"]["levels"]
     assert len(levels) == 3
@@ -107,16 +107,31 @@ def test_cuenta_demo_con_la_casa_de_tres_pisos(client: TestClient) -> None:
     assert image.headers["content-type"] == "image/png"
 
 
+def test_ejemplos_de_la_demo_listos_para_recorrer(client: TestClient) -> None:
+    demo = client.post("/api/auth/demo").json()
+    for pid in EXAMPLE_IDS:
+        p = client.get(f"/api/projects/{pid}", headers=_bearer(demo)).json()
+        assert p["status"] == "ready", pid
+        levels = p["model"]["levels"]
+        assert all(lv["rooms"] and lv["walls"] for lv in levels), pid
+        assert sum(len(lv.get("furniture") or []) for lv in levels) >= 4, pid
+        # en cada piso, puertas o vanos para unir todos sus ambientes
+        for lv in levels:
+            doors = sum(o["kind"] == "door" for w in lv["walls"] for o in w["openings"])
+            assert doors >= len(lv["rooms"]) - 1, (pid, lv["name"])
+    duplex = client.get("/api/projects/prj_ej_duplex", headers=_bearer(demo)).json()["model"]
+    assert duplex["levels"][0]["stairs"][0]["to_level_id"] == duplex["levels"][1]["id"]
+
+
 def test_restaurar_la_demo(client: TestClient) -> None:
     demo = client.post("/api/auth/demo").json()
     assert (
         client.delete(f"/api/projects/{DEMO_PROJECT_ID}", headers=_bearer(demo)).status_code == 204
     )
-    assert [p["id"] for p in client.get("/api/projects", headers=_bearer(demo)).json()] == [
-        FEATURED_PROJECT_ID
-    ]
+    left = {p["id"] for p in client.get("/api/projects", headers=_bearer(demo)).json()}
+    assert DEMO_PROJECT_ID not in left and FEATURED_PROJECT_ID in left
     assert client.post("/api/auth/demo/reset", headers=_bearer(demo)).status_code == 204
-    assert len(client.get("/api/projects", headers=_bearer(demo)).json()) == 2
+    assert len(client.get("/api/projects", headers=_bearer(demo)).json()) == 2 + len(EXAMPLE_IDS)
     other = _register(client)
     assert client.post("/api/auth/demo/reset", headers=_bearer(other)).status_code == 403
 

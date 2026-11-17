@@ -1,0 +1,1628 @@
+{
+ "name": "Dúplex de dos pisos",
+ "original_image_key": "",
+ "files": {},
+ "model": {
+  "project_id": "prj_ej_duplex",
+  "scale": {
+   "meters_per_pixel": 0.01,
+   "source": "vector",
+   "confidence": 1.0
+  },
+  "levels": [
+   {
+    "id": "lvl_ej_duplex_1",
+    "name": "Piso 1",
+    "elevation": 0.0,
+    "walls": [
+     {
+      "id": "w_ej_duplex_1_2",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_1",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 2.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 7.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_4",
+      "start": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_3",
+        "kind": "window",
+        "offset": 1.4,
+        "width": 2.2,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_6",
+      "start": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_5",
+        "kind": "window",
+        "offset": 0.8,
+        "width": 1.4,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_8",
+      "start": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_10",
+      "start": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_13",
+      "start": {
+       "x": 7.0,
+       "y": 9.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_11",
+        "kind": "door",
+        "offset": 0.7,
+        "width": 1.0,
+        "height": 2.2,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       },
+       {
+        "id": "op_ej_duplex_1_12",
+        "kind": "window",
+        "offset": 2.3,
+        "width": 1.6,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_15",
+      "start": {
+       "x": 10.0,
+       "y": 9.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_14",
+        "kind": "window",
+        "offset": 1.2,
+        "width": 0.6,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_17",
+      "start": {
+       "x": 7.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_16",
+        "kind": "door",
+        "offset": 1.0,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_18",
+      "start": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_20",
+      "start": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_19",
+        "kind": "door",
+        "offset": 0.75,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_21",
+      "start": {
+       "x": 7.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_23",
+      "start": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_22",
+        "kind": "door",
+        "offset": 0.5,
+        "width": 3.0,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_1_25",
+      "start": {
+       "x": 7.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 7.0,
+       "y": 9.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_1_24",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_ej_duplex_1_sala",
+      "label": "Sala-comedor",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 7.0,
+        "y": 5.0
+       },
+       {
+        "x": 0.0,
+        "y": 5.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 35.0,
+      "centroid": {
+       "x": 3.5,
+       "y": 2.5
+      },
+      "room_type": "living",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_1_cocina",
+      "label": "Cocina",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 5.0
+       },
+       {
+        "x": 7.0,
+        "y": 5.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 15.0,
+      "centroid": {
+       "x": 8.5,
+       "y": 2.5
+      },
+      "room_type": "kitchen",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_1_escalera",
+      "label": "Escalera",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 5.0
+       },
+       {
+        "x": 2.5,
+        "y": 5.0
+       },
+       {
+        "x": 2.5,
+        "y": 9.0
+       },
+       {
+        "x": 0.0,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 10.0,
+      "centroid": {
+       "x": 1.25,
+       "y": 7.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_1_hall",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 2.5,
+        "y": 5.0
+       },
+       {
+        "x": 7.0,
+        "y": 5.0
+       },
+       {
+        "x": 7.0,
+        "y": 9.0
+       },
+       {
+        "x": 2.5,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 18.0,
+      "centroid": {
+       "x": 4.75,
+       "y": 7.0
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_1_bano",
+      "label": "Baño social",
+      "polygon": [
+       {
+        "x": 7.0,
+        "y": 5.0
+       },
+       {
+        "x": 10.0,
+        "y": 5.0
+       },
+       {
+        "x": 10.0,
+        "y": 9.0
+       },
+       {
+        "x": 7.0,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 12.0,
+      "centroid": {
+       "x": 8.5,
+       "y": 7.0
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [],
+    "stairs": [
+     {
+      "id": "s_ej_duplex_1",
+      "start": {
+       "x": 1.25,
+       "y": 8.6
+      },
+      "end": {
+       "x": 1.25,
+       "y": 5.4
+      },
+      "width": 0.95,
+      "steps": 15,
+      "riser": 0.1733,
+      "to_level_id": "lvl_ej_duplex_2",
+      "confidence": 1.0,
+      "tread": 0.2133333333333333,
+      "base": 0.0
+     }
+    ],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_ej_duplex_1_sala_c1",
+      "catalog_id": "sofa_3",
+      "position": {
+       "x": 3.5,
+       "y": 0.47000000000000003
+      },
+      "width": 2.0,
+      "depth": 0.9,
+      "height": 0.82,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_1_sala_c2",
+      "catalog_id": "comedor_4",
+      "position": {
+       "x": 2.6,
+       "y": 2.5
+      },
+      "width": 1.2,
+      "depth": 1.6,
+      "height": 0.9,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_1_cocina_c1",
+      "catalog_id": "cocina_lineal",
+      "position": {
+       "x": 8.5,
+       "y": 0.32
+      },
+      "width": 2.4,
+      "depth": 0.6,
+      "height": 0.91,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_1_cocina_c2",
+      "catalog_id": "nevera",
+      "position": {
+       "x": 9.63,
+       "y": 4.4
+      },
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 1.8,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_duplex_1_bano_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 9.53,
+       "y": 7.0
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_duplex_1_bano_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 9.63,
+       "y": 6.3
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 1.5707963267948966
+     },
+     {
+      "id": "f_r_ej_duplex_1_bano_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 9.755,
+       "y": 7.8
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 1.5707963267948966
+     }
+    ]
+   },
+   {
+    "id": "lvl_ej_duplex_2",
+    "name": "Piso 2",
+    "elevation": 2.6,
+    "walls": [
+     {
+      "id": "w_ej_duplex_2_2",
+      "start": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_1",
+        "kind": "window",
+        "offset": 1.4,
+        "width": 2.2,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_4",
+      "start": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_3",
+        "kind": "window",
+        "offset": 1.4,
+        "width": 2.2,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_6",
+      "start": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 0.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_5",
+        "kind": "window",
+        "offset": 1.4,
+        "width": 2.2,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_8",
+      "start": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_10",
+      "start": {
+       "x": 0.0,
+       "y": 9.0
+      },
+      "end": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 4.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_12",
+      "start": {
+       "x": 5.5,
+       "y": 9.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_11",
+        "kind": "window",
+        "offset": 1.2,
+        "width": 0.6,
+        "height": 0.6,
+        "sill": 1.5,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_14",
+      "start": {
+       "x": 10.0,
+       "y": 9.0
+      },
+      "end": {
+       "x": 5.5,
+       "y": 9.0
+      },
+      "thickness": 0.25,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_13",
+        "kind": "window",
+        "offset": 1.25,
+        "width": 2.0,
+        "height": 1.4,
+        "sill": 0.9,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.5,
+      "bulge": 0.0,
+      "kind": "exterior",
+      "structural": true,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_15",
+      "start": {
+       "x": 5.0,
+       "y": 0.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_16",
+      "start": {
+       "x": 0.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_18",
+      "start": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "end": {
+       "x": 5.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_17",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_20",
+      "start": {
+       "x": 5.0,
+       "y": 5.0
+      },
+      "end": {
+       "x": 10.0,
+       "y": 5.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_19",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 5.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_22",
+      "start": {
+       "x": 2.5,
+       "y": 5.0
+      },
+      "end": {
+       "x": 2.5,
+       "y": 6.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_21",
+        "kind": "door",
+        "offset": 0.2,
+        "width": 1.1,
+        "height": 2.3,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 1.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_23",
+      "start": {
+       "x": 2.5,
+       "y": 6.5
+      },
+      "end": {
+       "x": 2.5,
+       "y": 9.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_25",
+      "start": {
+       "x": 2.5,
+       "y": 6.5
+      },
+      "end": {
+       "x": 5.5,
+       "y": 6.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_24",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 3.0,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_27",
+      "start": {
+       "x": 5.5,
+       "y": 6.5
+      },
+      "end": {
+       "x": 10.0,
+       "y": 6.5
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [
+       {
+        "id": "op_ej_duplex_2_26",
+        "kind": "door",
+        "offset": 0.25,
+        "width": 0.9,
+        "height": 2.1,
+        "sill": 0.0,
+        "confidence": 1.0,
+        "operation": null,
+        "hinge_at_end": false,
+        "opens_left": true
+       }
+      ],
+      "confidence": 1.0,
+      "length": 4.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     },
+     {
+      "id": "w_ej_duplex_2_28",
+      "start": {
+       "x": 5.5,
+       "y": 6.5
+      },
+      "end": {
+       "x": 5.5,
+       "y": 9.0
+      },
+      "thickness": 0.12,
+      "height": 2.6,
+      "material": "plaster",
+      "openings": [],
+      "confidence": 1.0,
+      "length": 2.5,
+      "bulge": 0.0,
+      "kind": "interior",
+      "structural": false,
+      "measure": {
+       "status": "inferred",
+       "source": "scale",
+       "error": 0.0,
+       "dimension_id": null
+      }
+     }
+    ],
+    "rooms": [
+     {
+      "id": "r_ej_duplex_2_alcoba1",
+      "label": "Alcoba principal",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 0.0
+       },
+       {
+        "x": 5.0,
+        "y": 5.0
+       },
+       {
+        "x": 0.0,
+        "y": 5.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 25.0,
+      "centroid": {
+       "x": 2.5,
+       "y": 2.5
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_2_estudio",
+      "label": "Estudio",
+      "polygon": [
+       {
+        "x": 5.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 5.0
+       },
+       {
+        "x": 5.0,
+        "y": 5.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 25.0,
+      "centroid": {
+       "x": 7.5,
+       "y": 2.5
+      },
+      "room_type": "study",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_2_escalera",
+      "label": "Escalera",
+      "polygon": [
+       {
+        "x": 0.0,
+        "y": 5.0
+       },
+       {
+        "x": 2.5,
+        "y": 5.0
+       },
+       {
+        "x": 2.5,
+        "y": 9.0
+       },
+       {
+        "x": 0.0,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 10.0,
+      "centroid": {
+       "x": 1.25,
+       "y": 7.0
+      },
+      "room_type": "stairs",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_2_hall",
+      "label": "Hall",
+      "polygon": [
+       {
+        "x": 2.5,
+        "y": 5.0
+       },
+       {
+        "x": 10.0,
+        "y": 5.0
+       },
+       {
+        "x": 10.0,
+        "y": 6.5
+       },
+       {
+        "x": 2.5,
+        "y": 6.5
+       }
+      ],
+      "confidence": 1.0,
+      "area": 11.25,
+      "centroid": {
+       "x": 6.25,
+       "y": 5.75
+      },
+      "room_type": "circulation",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_2_bano",
+      "label": "Baño",
+      "polygon": [
+       {
+        "x": 2.5,
+        "y": 6.5
+       },
+       {
+        "x": 5.5,
+        "y": 6.5
+       },
+       {
+        "x": 5.5,
+        "y": 9.0
+       },
+       {
+        "x": 2.5,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 7.5,
+      "centroid": {
+       "x": 4.0,
+       "y": 7.75
+      },
+      "room_type": "bathroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     },
+     {
+      "id": "r_ej_duplex_2_alcoba2",
+      "label": "Alcoba 2",
+      "polygon": [
+       {
+        "x": 5.5,
+        "y": 6.5
+       },
+       {
+        "x": 10.0,
+        "y": 6.5
+       },
+       {
+        "x": 10.0,
+        "y": 9.0
+       },
+       {
+        "x": 5.5,
+        "y": 9.0
+       }
+      ],
+      "confidence": 1.0,
+      "area": 11.25,
+      "centroid": {
+       "x": 7.75,
+       "y": 7.75
+      },
+      "room_type": "bedroom",
+      "holes": [],
+      "declared_area": null,
+      "floor_material": null
+     }
+    ],
+    "height": 2.6,
+    "columns": [],
+    "stairs": [],
+    "dimensions": [],
+    "labels": [],
+    "furniture": [
+     {
+      "id": "f_r_ej_duplex_2_alcoba1_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 2.5,
+       "y": 0.995
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_alcoba1_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 4.2,
+       "y": 0.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_alcoba1_c3",
+      "catalog_id": "mesa_noche",
+      "position": {
+       "x": 1.525,
+       "y": 0.22000000000000008
+      },
+      "width": 0.45,
+      "depth": 0.4,
+      "height": 0.55,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_estudio_c1",
+      "catalog_id": "escritorio",
+      "position": {
+       "x": 7.5,
+       "y": 0.32
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 0.75,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_bano_c1",
+      "catalog_id": "ducha",
+      "position": {
+       "x": 4.2,
+       "y": 6.97
+      },
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 2.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_bano_c2",
+      "catalog_id": "sanitario",
+      "position": {
+       "x": 4.9,
+       "y": 6.87
+      },
+      "width": 0.4,
+      "depth": 0.7,
+      "height": 0.78,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_bano_c3",
+      "catalog_id": "lavamanos",
+      "position": {
+       "x": 4.0,
+       "y": 8.755
+      },
+      "width": 0.55,
+      "depth": 0.45,
+      "height": 0.85,
+      "rotation": 3.141592653589793
+     },
+     {
+      "id": "f_r_ej_duplex_2_alcoba2_c1",
+      "catalog_id": "cama_doble",
+      "position": {
+       "x": 7.75,
+       "y": 7.495
+      },
+      "width": 1.4,
+      "depth": 1.95,
+      "height": 1.0,
+      "rotation": 0.0
+     },
+     {
+      "id": "f_r_ej_duplex_2_alcoba2_c2",
+      "catalog_id": "closet",
+      "position": {
+       "x": 9.05,
+       "y": 6.82
+      },
+      "width": 1.2,
+      "depth": 0.6,
+      "height": 2.2,
+      "rotation": 0.0
+     }
+    ]
+   }
+  ],
+  "source_image": null,
+  "total_area": 180.0,
+  "schema_version": 2,
+  "facade": "moderna_contemporanea",
+  "facade_custom": null
+ }
+}

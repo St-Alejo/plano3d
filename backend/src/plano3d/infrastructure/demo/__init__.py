@@ -1,4 +1,4 @@
-"""Cuenta demo con la casa de 3 pisos y la Casa Mirador destacada (ADR-020).
+"""Cuenta demo con la casa de 3 pisos, la Casa Mirador destacada y seis ejemplos (ADR-020).
 
 Al arrancar la API se asegura de que existan la cuenta ``demo@plano3d.app`` y su proyecto
 «Casa de 3 pisos» con un id fijo, cargados desde ``data/`` (generados una vez con
@@ -30,7 +30,20 @@ DEMO_PROJECT_ID = "prj_demo_casa3"
 FEATURED_PROJECT_ID = "prj_destacado_casa4"
 DEMO_SUMMARY = "Casa de demostración"
 #: proyecto → archivo de datos (generados con ``scripts/make_demo_fixture.py``)
-FIXTURES = {DEMO_PROJECT_ID: "casa3.json", FEATURED_PROJECT_ID: "casa4.json"}
+#: ejemplos dibujados en metros (``scripts/demo_ejemplos.py``)
+EXAMPLE_IDS = (
+    "prj_ej_apto1",
+    "prj_ej_apto2",
+    "prj_ej_apto3",
+    "prj_ej_campestre",
+    "prj_ej_local",
+    "prj_ej_duplex",
+)
+FIXTURES = {
+    DEMO_PROJECT_ID: "casa3.json",
+    FEATURED_PROJECT_ID: "casa4.json",
+    **{pid: f"{pid.removeprefix('prj_')}.json" for pid in EXAMPLE_IDS},
+}
 FEATURED = (FEATURED_PROJECT_ID,)
 #: textos y medios de cada destacado (los archivos viven en la web: public/destacados/)
 FEATURED_INFO: dict[str, dict[str, str]] = {

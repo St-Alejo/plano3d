@@ -1,7 +1,8 @@
-"""Genera los datos de la cuenta demo: python scripts/make_demo_fixture.py [casa3|casa4]
+"""Genera los datos de la cuenta demo: python scripts/make_demo_fixture.py [casa3|casa4|ejemplos]
 
 ``casa3`` (por defecto) es la casa de 3 pisos; ``casa4`` la Casa Mirador destacada de 4 pisos
-(``demo_casa4.py``, sin archivos: se dibuja en metros, no sale de un plano subido).
+(``demo_casa4.py``, sin archivos: se dibuja en metros, no sale de un plano subido);
+``ejemplos`` los seis proyectos de ``demo_ejemplos.py`` (apartamentos, campestre, local, dúplex).
 
 Corre el mismo flujo que ``demo_opc3.py`` (plano del piso 1, piso 2, piso 3 duplicado,
 muebles y fachada contemporánea) contra una API en memoria dentro del proceso y guarda el
@@ -22,7 +23,7 @@ from plano3d.config import Settings
 from plano3d.container import memory_container
 from plano3d.infrastructure.demo import DATA, DEMO_PROJECT_ID, FEATURED_PROJECT_ID
 from plano3d.infrastructure.memory import InMemoryFileStorage
-from scripts import demo_casa4, demo_opc3
+from scripts import demo_casa4, demo_ejemplos, demo_opc3
 
 #: casa → (generador, id fijo, nombre, archivo)
 HOUSES = {
@@ -77,6 +78,26 @@ def main(which: str = "casa3") -> None:
     print(f"archivos: {files}")
 
 
+def examples() -> None:
+    """Los ejemplos de ``demo_ejemplos.py``, cada uno en ``data/<id sin prj_>.json``."""
+    import asyncio
+
+    container = memory_container(InMemoryFileStorage())
+    settings = Settings(mode="memory", auth_required=False, demo_enabled=False, snapshot="none")
+    with TestClient(create_app(settings, container=container)) as client:
+        created = demo_ejemplos.main("", client=client)
+    for fixed_id, pid in created.items():
+        project = asyncio.run(container.repo.get(pid))
+        assert project is not None and project.model is not None
+        model = model_to_dto(project.model).model_dump(mode="json")
+        model["project_id"] = fixed_id
+        manifest = {"name": project.name, "original_image_key": "", "files": {}, "model": model}
+        out = DATA / f"{fixed_id.removeprefix('prj_')}.json"
+        out.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        print(f"{out.name}: {project.name}")
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    main(sys.argv[1] if len(sys.argv) > 1 else "casa3")
+    which = sys.argv[1] if len(sys.argv) > 1 else "casa3"
+    examples() if which == "ejemplos" else main(which)

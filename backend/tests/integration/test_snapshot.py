@@ -75,12 +75,13 @@ def test_cuentas_proyectos_y_versiones_sobreviven_al_reinicio(tmp_path: Path) ->
 def test_ida_y_vuelta_exacta() -> None:
     async def run() -> None:
         container = memory_container()
-        from plano3d.infrastructure.demo import seed_demo
+        from plano3d.infrastructure.demo import EXAMPLE_IDS, seed_demo
 
         await seed_demo(container, "clave-demo-1")
         data = await encode_state(container.repo, container.users)
         repo, users = InMemoryProjectRepository(), InMemoryUserRepository()
-        assert await decode_state(data, repo, users) == 2  # casa demo + destacada
+        # casa demo, destacada y ejemplos
+        assert await decode_state(data, repo, users) == 2 + len(EXAMPLE_IDS)
         assert await repo.get(DEMO_PROJECT_ID) == await container.repo.get(DEMO_PROJECT_ID)
         assert await users.list() == await container.users.list()
         assert await repo.list_revisions(DEMO_PROJECT_ID) == await container.repo.list_revisions(
