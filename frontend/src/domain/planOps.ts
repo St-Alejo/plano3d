@@ -51,6 +51,16 @@ export type PlanOp =
   | { op: 'set_opening'; kind?: OpeningKind; room: string; side?: Side; width?: number; height?: number; sill?: number }
   | { op: 'set_floor'; room: string; material: string }
 
+/**
+ * Operación sobre los pisos del proyecto («otro piso igual al que ya está»). No es un comando
+ * del editor: la hace el servidor (copia el piso encima del último) y el plano se recarga.
+ * `level` es el número del piso desde 1 (sin él, el piso que se está viendo).
+ */
+export type LevelOp = { op: 'duplicate_level'; level?: number; count?: number }
+/** Lo que puede pedir el chat: cambios del plano o de los pisos. */
+export type ChatOp = PlanOp | LevelOp
+export const isLevelOp = (o: ChatOp): o is LevelOp => o.op === 'duplicate_level'
+
 export interface PlanResult {
   command: Command
   /** resumen en español de lo que se hizo, para la respuesta del chat */
@@ -438,4 +448,13 @@ const OPS = new Set([
 export function asPlanOps(raw: unknown): PlanOp[] {
   if (!Array.isArray(raw)) return []
   return raw.filter((o): o is PlanOp => typeof o === 'object' && o !== null && OPS.has((o as { op?: string }).op ?? ''))
+}
+
+/** Como `asPlanOps`, pero conserva también las operaciones sobre pisos. */
+export function asChatOps(raw: unknown): ChatOp[] {
+  if (!Array.isArray(raw)) return []
+  return raw.filter((o): o is ChatOp => {
+    const op = typeof o === 'object' && o !== null ? (o as { op?: string }).op ?? '' : ''
+    return OPS.has(op) || op === 'duplicate_level'
+  })
 }

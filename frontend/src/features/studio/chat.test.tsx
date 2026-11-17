@@ -83,6 +83,45 @@ describe('chat del estudio', () => {
     expect(screen.queryByText(/No encuentro el ambiente/)).not.toBeInTheDocument()
   })
 
+  it('«otro piso igual» copia el piso en el servidor y recarga el proyecto', async () => {
+    const asked: string[] = []
+    let reloads = 0
+    server.use(
+      http.post('/api/projects/:id/levels/:level/duplicate', ({ params }) => {
+        asked.push(String(params.level))
+        const model = { ...blank(), levels: [...blank().levels, { ...blank().levels[0], id: 'lvl_1', name: 'Planta 2', elevation: 2.7 }] }
+        return HttpResponse.json({ id: 'prj_b', revision: 2, model })
+      }),
+    )
+    render(<ChatPanel projectId="prj_b" defaultOpen onReload={() => reloads++} />)
+    await say('coloca otro piso igual al que ya está')
+    expect(await screen.findByText('Agregué Planta 2, igual a Planta 1')).toBeInTheDocument()
+    expect(asked).toEqual(['lvl_0'])
+    expect(reloads).toBe(1)
+  })
+
+  it('con cambios sin guardar no copia el piso y lo explica', async () => {
+    let calls = 0
+    server.use(http.post('/api/projects/:id/levels/:level/duplicate', () => (calls++, HttpResponse.json({}))))
+    render(<ChatPanel projectId="prj_b" defaultOpen />)
+    await say('sala de 4x5')
+    await say('duplica el piso')
+    expect(await screen.findByText(/Guarda los cambios/)).toBeInTheDocument()
+    expect(calls).toBe(0)
+  })
+
+  it('la IA también puede pedir el piso nuevo (duplicate_level)', async () => {
+    let dup = 0
+    server.use(
+      http.post('/api/projects/:id/assistant', () => HttpResponse.json({ ops: [{ op: 'duplicate_level' }], reply: 'Subí una copia del piso.' })),
+      http.post('/api/projects/:id/levels/:level/duplicate', () => (dup++, HttpResponse.json({ id: 'prj_b', revision: 2, model: blank() }))),
+    )
+    render(<ChatPanel projectId="prj_b" defaultOpen />)
+    await say('quiero la casa un nivel más alta con la misma distribución')
+    expect(await screen.findByText('Subí una copia del piso.')).toBeInTheDocument()
+    expect(dup).toBe(1)
+  })
+
   it('cerrado muestra el botón para abrirlo', async () => {
     render(<ChatPanel projectId="prj_b" />)
     await userEvent.click(screen.getByRole('button', { name: /Dibujar escribiendo/ }))

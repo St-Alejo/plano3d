@@ -4,6 +4,9 @@
  *
  * Primero entiende el intérprete local (gratis, sin red). Lo que no entiende va al
  * asistente con IA del servidor; si no está disponible, se muestran ejemplos.
+ *
+ * «Otro piso igual al que ya está» no es un comando del editor: lo hace el servidor
+ * (copia el piso encima del último) y después se recarga el proyecto.
  */
 import { Undo2 } from 'lucide-react'
 import { ChatDock } from '@/components/ChatDock'
@@ -11,8 +14,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ApiError, api } from '@/api/client'
 import { EXAMPLES, parseChat } from '@/domain/chatParser'
 import { CommandError, type Command } from '@/domain/commands'
-import { asPlanOps, describeLevel, opsToCommand, type PlanOp } from '@/domain/planOps'
-import { selectLevel, useEditor } from '@/store/editorStore'
+import { asChatOps, describeLevel, isLevelOp, opsToCommand, type ChatOp, type LevelOp, type PlanOp } from '@/domain/planOps'
+import { selectIsDirty, selectLevel, useEditor } from '@/store/editorStore'
 
 interface Msg {
   id: number
@@ -27,7 +30,7 @@ interface Msg {
 
 let seq = 0
 
-export function ChatPanel({ projectId, defaultOpen = false }: { projectId: string; defaultOpen?: boolean }) {
+export function ChatPanel({ projectId, defaultOpen = false, onReload }: { projectId: string; defaultOpen?: boolean; onReload?: () => void }) {
   const [open, setOpen] = useState(defaultOpen)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -60,6 +63,46 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
     return r
   }
 
+  /** Copia pisos en el servidor (encima del último) y recarga el proyecto. */
+  const duplicate = async (ops: LevelOp[]): Promise<string[]> => {
+    const st = useEditor.getState()
+    if (!st.model) throw new CommandError('El plano todavía no está cargado')
+    if (selectIsDirty(st)) throw new CommandError('Guarda los cambios (Ctrl+S) antes de agregar un piso')
+    let revision = st.revision
+    const lines: string[] = []
+    for (const op of ops) {
+      const src = op.level ? st.model.levels[op.level - 1] : st.model.levels.find((l) => l.id === st.levelId)
+      if (!src) throw new CommandError(`El proyecto no tiene piso ${op.level}; tiene ${st.model.levels.length}`)
+      for (let i = 0; i < (op.count ?? 1); i++) {
+        const project = await api.duplicateLevel(projectId, src.id, undefined, revision)
+        revision = project.revision
+        lines.push(`Agregué ${project.model?.levels.at(-1)?.name ?? 'un piso'}, igual a ${src.name}`)
+      }
+    }
+    onReload?.()
+    return lines
+  }
+
+  /** Resumen para la IA: los pisos del proyecto (para «duplica el piso 2») y el piso que se ve. */
+  const context = (level: string): string => {
+    const st = useEditor.getState()
+    const floors = (st.model?.levels ?? []).map((l, i) => `${i + 1}. ${l.name}${l.id === st.levelId ? ' (el que se ve)' : ''}`)
+    return floors.length > 1 ? `Pisos: ${floors.join('; ')}\n${level}` : level
+  }
+
+  /** Aplica lo que entendió el chat; los pisos van al servidor y el resto al editor. */
+  const run = async (ops: ChatOp[]): Promise<{ lines: string[]; cmd?: Command }> => {
+    const levels = ops.filter(isLevelOp)
+    const plan = ops.filter((o): o is PlanOp => !isLevelOp(o))
+    if (levels.length === 0) {
+      const r = apply(plan)
+      return { lines: r.summary, cmd: r.command }
+    }
+    // el piso se copia tal como está guardado: primero los cambios del plano no van juntos
+    if (plan.length > 0) throw new CommandError('Pide el piso nuevo en un mensaje aparte de los cambios del plano')
+    return { lines: await duplicate(levels) }
+  }
+
   const send = async (message: string) => {
     const msg = message.trim()
     if (!msg || busy) return
@@ -70,26 +113,33 @@ export function ChatPanel({ projectId, defaultOpen = false }: { projectId: strin
     // probablemente se entendió mal: se le pasa el mensaje al asistente con IA
     let localError: string | null = null
     if (local.unknown.length === 0 && local.ops.length > 0) {
+      const remote = local.ops.some(isLevelOp)
+      if (remote) setBusy(true)
       try {
-        const r = apply(local.ops)
-        push({ from: 'bot', text: 'Hecho.', lines: r.summary, cmd: r.command })
+        const r = await run(local.ops)
+        push({ from: 'bot', text: 'Hecho.', lines: r.lines, cmd: r.cmd })
         return
       } catch (e) {
-        localError = e instanceof Error ? e.message : 'No se pudo aplicar'
+        const why = e instanceof Error ? e.message : 'No se pudo aplicar'
+        // un piso que el servidor no pudo copiar no se le pregunta a la IA: se explica el motivo
+        if (remote) return push({ from: 'bot', text: why, error: true })
+        localError = why
+      } finally {
+        if (remote) setBusy(false)
       }
     }
     // respaldo: el mensaje completo al asistente con IA
     setBusy(true)
     try {
       const lv = selectLevel(useEditor.getState())
-      const res = await api.assistant(projectId, msg, lv ? describeLevel(lv) : '')
-      const ops = asPlanOps(res.ops)
+      const res = await api.assistant(projectId, msg, context(lv ? describeLevel(lv) : ''))
+      const ops = asChatOps(res.ops)
       if (ops.length === 0) {
         push({ from: 'bot', text: res.reply || 'No encontré qué cambiar en el plano.', ai: true })
         return
       }
-      const r = apply(ops)
-      push({ from: 'bot', text: res.reply || 'Hecho.', lines: r.summary, cmd: r.command, ai: true })
+      const r = await run(ops)
+      push({ from: 'bot', text: res.reply || 'Hecho.', lines: r.lines, cmd: r.cmd, ai: true })
     } catch (e) {
       if (e instanceof ApiError && (e.status === 503 || e.status === 0)) {
         // sin asistente: se muestra el motivo de la lectura local, como antes

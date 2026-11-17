@@ -399,7 +399,7 @@ export function Workspace({ project, onReload, layout = 'classic' }: { project: 
           viewer={viewer}
           left={leftPanel}
           right={inspector}
-          overlay={<ChatPanel projectId={project.id} defaultOpen={project.has_source === false} />}
+          overlay={<ChatPanel projectId={project.id} defaultOpen={project.has_source === false} onReload={onReload} />}
           viewMode={desktop ? viewMode : '2d'}
           leftOpen={layersOpen && desktop}
           rightOpen={inspectorOpen}

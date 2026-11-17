@@ -1,5 +1,5 @@
 /**
- * Intérprete local del chat: frases frecuentes en español → `PlanOp`.
+ * Intérprete local del chat: frases frecuentes en español → `PlanOp` (y `duplicate_level`).
  *
  * Funciona sin red ni costo. Si alguna parte del mensaje no se entiende, el chat
  * puede pedirle el mensaje completo a Claude (respaldo). Las expresiones se aplican
@@ -8,10 +8,11 @@
  */
 import type { OpeningKind, WallKind } from '@/api/types'
 import { FLOOR_MATERIALS, WALL_MATERIALS, type MaterialSpec } from './materials'
-import { findMaterial, type PlanOp, type Side } from './planOps'
+import { findMaterial, type ChatOp, type Side } from './planOps'
 
 export interface ParseResult {
-  ops: PlanOp[]
+  /** cambios del plano y, si se piden, operaciones sobre pisos (`duplicate_level`) */
+  ops: ChatOp[]
   /** fragmentos que no se entendieron (vacío = todo entendido) */
   unknown: string[]
 }
@@ -47,7 +48,7 @@ const kindOf = (s: string): OpeningKind => (s === 'puerta' ? 'door' : 'window')
 type Grp = Record<string, string | undefined>
 interface Rule {
   re: RegExp
-  build: (g: Grp, ctx: Ctx) => PlanOp | null
+  build: (g: Grp, ctx: Ctx) => ChatOp | null
 }
 interface Ctx {
   lastRoom?: string
@@ -107,7 +108,36 @@ function roomOr(g: string | undefined, ctx: Ctx): string {
 }
 class NeedsRoom extends Error {}
 
+// ---- pisos: «otro piso igual al que ya está», «duplica el piso 2», «dos pisos más iguales»
+const LEVEL = `(?:pisos?|niveles?|plantas?)`
+const NUMBER_WORDS: Record<string, number> = { un: 1, una: 1, otro: 1, otra: 1, otros: 1, otras: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5 }
+const ORDINALS: Record<string, number> = { primer: 1, primero: 1, segundo: 2, tercer: 3, tercero: 3, cuarto: 4, quinto: 5 }
+const countOf = (w: string | undefined): number | undefined => (w ? (NUMBER_WORDS[w] ?? (Number(w) || undefined)) : undefined)
+
+/** «… al piso 2», «igual al segundo piso», «tres veces»: número de piso y de copias del resto de la frase. */
+function levelOp(g: Grp): ChatOp {
+  const rest = `${g.lvl ?? ''} ${g.rest ?? ''}`
+  const num = /(?:piso|nivel|planta)\s+(\d+)/.exec(rest)?.[1]
+  const ord = /\b(primer|primero|segundo|tercer|tercero|cuarto|quinto)\s+(?:piso|nivel|planta)/.exec(rest)?.[1]
+  const level = num ? Number(num) : ord ? ORDINALS[ord] : undefined
+  const times = /\b(\d+|dos|tres|cuatro|cinco)\s+veces/.exec(rest)?.[1]
+  const count = Math.min(5, countOf(times) ?? countOf(g.cnt) ?? 1)
+  return { op: 'duplicate_level', ...(level ? { level } : {}), ...(count > 1 ? { count } : {}) }
+}
+
 const RULES: Rule[] = [
+  // pisos iguales: «coloca otro piso igual al que ya está», «agrega dos pisos iguales al piso 1»
+  {
+    re: rx(
+      `(?:(?:agrega|agregale|anade|pon|ponle|coloca|crea|haz|hazle|construye|sube|levanta|quiero|necesito)\\s+)?(?:(?<cnt>otr[oa]s?|una?|dos|tres|cuatro|cinco|\\d+)\\s+)?${LEVEL}\\s+(?:mas\\s+)?(?:igual(?:es)?|identic[oa]s?|del mismo)(?<rest>.*)`,
+    ),
+    build: levelOp,
+  },
+  // «duplica el piso», «duplica el piso 2», «copia este piso encima», «repite la planta 1 dos veces»
+  {
+    re: rx(`(?:duplica|duplicale|copia|repite|clona)\\s+(?:(?:el|la|este|esta)\\s+)?(?<lvl>${LEVEL}(?:\\s+\\d+)?)(?<rest>.*)`),
+    build: levelOp,
+  },
   // muros: "muros de 20 cm", "sube los muros a 2,8 m", "el muro norte de la sala de 25 cm de espesor"
   {
     re: rx(
@@ -299,7 +329,7 @@ function groupsOf(m: RegExpExecArray, orig: string): Grp {
 }
 
 export function parseChat(message: string): ParseResult {
-  const ops: PlanOp[] = []
+  const ops: ChatOp[] = []
   const unknown: string[] = []
   const ctx: Ctx = {}
   for (const c of clauses(message)) {

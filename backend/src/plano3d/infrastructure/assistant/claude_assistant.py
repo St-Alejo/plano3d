@@ -40,6 +40,7 @@ OPS = [
     "resize_room",
     "set_opening",
     "set_floor",
+    "duplicate_level",
 ]
 SIDES = ["norte", "sur", "este", "oeste"]
 WALL_KINDS = ["exterior", "interior", "partition"]
@@ -65,6 +66,10 @@ _SYSTEM = (
     "- set_opening: room, kind y side opcionales, y width, height o sill (antepecho) en m.\n"
     "- set_floor: room y material (madera roble, madera oscura, porcelanato claro, baldosa "
     "gris, cemento pulido).\n"
+    "- duplicate_level: copia un piso entero encima del último (pisos iguales). level = "
+    "número del piso a copiar desde 1 (null = el piso que se está viendo) y count = cuántas "
+    "copias (null = 1). Ej.: 'otro piso igual al que ya está', 'duplica el piso 2', 'dos "
+    "pisos más iguales'.\n"
     "Si algo no se puede expresar con estas operaciones, no inventes: deja ops vacío y "
     "explícalo en reply. reply es una frase breve en español."
 )
@@ -93,6 +98,8 @@ _OP_FIELDS: dict[str, Any] = {
     "wall_kind": {"type": ["string", "null"], "enum": [*WALL_KINDS, None]},
     "structural": {"type": ["boolean", "null"]},
     "material": _NULLABLE_STR,
+    "level": _NULLABLE_NUM,
+    "count": _NULLABLE_NUM,
 }
 SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -372,6 +379,13 @@ def to_plan_op(raw: dict[str, Any]) -> dict[str, object] | None:
             return {"op": op, **{k: f[k] for k in ("kind", "room", "side", *sizes) if k in f}}
         if op == "set_floor":
             return {"op": op, "room": str(f["room"]), "material": str(f["material"])}
+        if op == "duplicate_level":
+            dup: dict[str, object] = {"op": op}
+            if "level" in f and int(f["level"]) >= 1:
+                dup["level"] = int(f["level"])
+            if "count" in f:
+                dup["count"] = max(1, min(int(f["count"]), 5))
+            return dup
     except (KeyError, TypeError, ValueError):
         return None
     return None

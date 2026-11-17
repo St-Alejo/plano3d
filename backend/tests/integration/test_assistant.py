@@ -104,6 +104,10 @@ def test_to_plan_op_normalizes_flat_rows() -> None:
     floor = nulls | {"op": "set_floor", "room": "Sala", "material": "madera"}
     assert to_plan_op(floor) == {"op": "set_floor", "room": "Sala", "material": "madera"}
     assert to_plan_op(nulls | {"op": "explotar"}) is None
+    # duplicar piso: sin campos = el piso que se ve, una copia; count acotado a 5
+    assert to_plan_op(nulls | {"op": "duplicate_level"}) == {"op": "duplicate_level"}
+    dup = nulls | {"op": "duplicate_level", "level": 2, "count": 9}
+    assert to_plan_op(dup) == {"op": "duplicate_level", "level": 2, "count": 5}
 
 
 def test_to_viewer_action_normalizes_flat_rows() -> None:

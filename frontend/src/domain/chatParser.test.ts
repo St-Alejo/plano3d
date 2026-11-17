@@ -3,7 +3,10 @@ import type { BuildingModel } from '@/api/types'
 import { selectLevel, useEditor } from '@/store/editorStore'
 import { EXAMPLES, parseChat } from './chatParser'
 import { findOpening } from './openings'
-import { opsToCommand, type PlanOp } from './planOps'
+import { opsToCommand, type ChatOp, type PlanOp } from './planOps'
+
+/** en estas frases no hay pisos: todo es cambio del plano */
+const planOnly = (ops: ChatOp[]) => ops as PlanOp[]
 
 describe('parseChat: frase → operaciones', () => {
   const cases: [string, PlanOp[]][] = [
@@ -73,7 +76,7 @@ describe('opsToCommand: del chat al plano', () => {
     const { ops, unknown } = parseChat(msg)
     expect(unknown).toEqual([])
     const st = useEditor.getState()
-    const r = opsToCommand(st.model!, st.levelId, ops)
+    const r = opsToCommand(st.model!, st.levelId, planOnly(ops))
     expect(st.dispatch(r.command)).toBe(true)
     return r.summary
   }
@@ -120,7 +123,7 @@ describe('opsToCommand: del chat al plano', () => {
   it('un error explica qué falta y no aplica nada', () => {
     say('sala de 4x5')
     const st = useEditor.getState()
-    expect(() => opsToCommand(st.model!, st.levelId, parseChat('puerta al sur del garaje').ops)).toThrow(/No encuentro el ambiente «garaje» \(hay: Sala\)/)
+    expect(() => opsToCommand(st.model!, st.levelId, planOnly(parseChat('puerta al sur del garaje').ops))).toThrow(/No encuentro el ambiente «garaje» \(hay: Sala\)/)
     expect(level().walls).toHaveLength(4)
   })
 })
@@ -175,7 +178,7 @@ describe('opsToCommand: ajustes', () => {
     const { ops, unknown } = parseChat(msg)
     expect(unknown).toEqual([])
     const st = useEditor.getState()
-    const r = opsToCommand(st.model!, st.levelId, ops)
+    const r = opsToCommand(st.model!, st.levelId, planOnly(ops))
     expect(st.dispatch(r.command)).toBe(true)
     return r.summary
   }
@@ -214,7 +217,27 @@ describe('opsToCommand: ajustes', () => {
   it('las medidas imposibles se explican', () => {
     say('sala de 4x5 con ventana al norte')
     const st = useEditor.getState()
-    expect(() => opsToCommand(st.model!, st.levelId, parseChat('la ventana de la sala de 9 m').ops)).toThrow(/no cabe/)
+    expect(() => opsToCommand(st.model!, st.levelId, planOnly(parseChat('la ventana de la sala de 9 m').ops))).toThrow(/no cabe/)
     expect(() => opsToCommand(st.model!, st.levelId, [{ op: 'set_floor', room: 'sala', material: 'oro' }])).toThrow(/No conozco el acabado «oro»/)
+  })
+})
+
+describe('parseChat: pisos iguales (duplicate_level)', () => {
+  it.each<[string, ChatOp]>([
+    ['coloca otro piso igual al que ya está', { op: 'duplicate_level' }],
+    ['agrega un piso igual a este', { op: 'duplicate_level' }],
+    ['otro piso igual', { op: 'duplicate_level' }],
+    ['agrega dos pisos iguales al piso 1', { op: 'duplicate_level', level: 1, count: 2 }],
+    ['un piso más igual al segundo piso', { op: 'duplicate_level', level: 2 }],
+    ['duplica el piso', { op: 'duplicate_level' }],
+    ['Duplica el piso 2', { op: 'duplicate_level', level: 2 }],
+    ['copia este piso encima', { op: 'duplicate_level' }],
+    ['repite la planta 1 tres veces', { op: 'duplicate_level', level: 1, count: 3 }],
+  ])('«%s»', (text, op) => {
+    expect(parseChat(text)).toEqual({ ops: [op], unknown: [] })
+  })
+
+  it('el piso de un ambiente sigue siendo acabado, no un piso nuevo', () => {
+    expect(parseChat('piso de madera en la sala').ops[0]).toMatchObject({ op: 'set_floor' })
   })
 })
