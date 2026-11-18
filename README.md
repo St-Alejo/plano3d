@@ -14,7 +14,7 @@ Proyecto final de Programación Orientada a la Web (semestre 7).
 | Aplicación en línea (demo en Azure) | https://lively-island-09e124b1e.5.azurestaticapps.net |
 | API en línea | https://ca-plano3d-api.bravefield-201b313a.brazilsouth.azurecontainerapps.io |
 | Salud de la API | https://ca-plano3d-api.bravefield-201b313a.brazilsouth.azurecontainerapps.io/api/health |
-| Repositorio principal (código completo, rama `redesign`) | https://github.com/St-Alejo/plano3d/tree/redesign |
+| Repositorio principal (código completo) | https://github.com/St-Alejo/plano3d |
 | Repositorio de despliegue del frontend | https://github.com/St-Alejo/plano3d-frontend |
 | Repositorio de despliegue del backend | https://github.com/St-Alejo/plano3d-backend |
 | Instalador de la app de escritorio | https://github.com/St-Alejo/plano3d-frontend/releases/latest |
@@ -196,8 +196,8 @@ desktop/
 ni Node.
 
 ```bash
-# 1. Clonar el repositorio (la versión final está en la rama redesign)
-git clone -b redesign https://github.com/St-Alejo/plano3d.git
+# 1. Clonar el repositorio
+git clone https://github.com/St-Alejo/plano3d.git
 cd plano3d
 
 # 2. Crear el archivo de configuración
