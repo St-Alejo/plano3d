@@ -5,3 +5,8 @@
 id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2027-02-15
 reason = "minimatch 10 solo lo usa ESLint (desarrollo) con patrones del propio repo; el arreglo exige minimatch 11, que ESLint aún no admite."
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2027-02-15
+reason = "picomatch solo llega por herramientas de desarrollo y compila patrones escritos en el repo, nunca datos de usuarios; no entra en la imagen de producción y aún no hay versión corregida (4.0.7 es la última)."
